@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jacquard+12&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--s:2;--u:calc(var(--s) * 1px)}
+:root{--s:2;--gw:480;--u:calc(var(--s) * 1px)}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:'Pixelify Sans',monospace;color:#3b1f0e}
-#stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(480 * var(--u));height:calc(270 * var(--u));overflow:hidden;font-size:calc(8 * var(--u));line-height:1.25}
+#stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(var(--gw) * var(--u));height:calc(270 * var(--u));overflow:hidden;font-size:calc(8 * var(--u));line-height:1.25}
 #game{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .hide{display:none!important}
 button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
@@ -148,7 +148,7 @@ input.tx{font-family:inherit;font-size:calc(9*var(--u));padding:calc(3*var(--u))
 <script>
 'use strict';
 // ================= CORE =================
-const W=480,H=270,TS=16;
+let W=480;const H=270,TS=16,MAXW=640;
 const cv=document.getElementById('game');const ctx=cv.getContext('2d');cv.width=W;cv.height=H;ctx.imageSmoothingEnabled=false;
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
@@ -158,8 +158,15 @@ function rnd(){_seed^=_seed<<13;_seed>>>=0;_seed^=_seed>>>17;_seed^=_seed<<5;_se
 function ri(a,b){return a+Math.floor(rnd()*(b-a+1))}
 function hsh(x,y){let h=(x*374761393+y*668265263)>>>0;h=((h^(h>>>13))*1274126177)>>>0;return h}
 function mk(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.imageSmoothingEnabled=false;return [c,x]}
-function fit(){const s=Math.min(innerWidth/W,innerHeight/H);document.documentElement.style.setProperty('--s',s)}
-addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));fit();
+function fit(){
+ const vw=innerWidth,vh=innerHeight;
+ // larghezza logica adattiva: riempie schermi larghi (es. telefoni 20:9) invece di lasciare bande nere
+ const nw=clamp(Math.round(H*vw/vh/2)*2,480,MAXW);
+ if(nw!==W){W=nw;cv.width=W;ctx.imageSmoothingEnabled=false}
+ const s=Math.min(vw/W,vh/H),r=document.documentElement.style;r.setProperty('--gw',W);r.setProperty('--s',s)}
+addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);
+// su telefono: entra in schermo intero da solo al primo tocco (serve un gesto dell'utente)
+addEventListener('touchend',function ff(){removeEventListener('touchend',ff);if(!document.fullscreenElement&&!document.webkitFullscreenElement&&typeof goFull==='function')goFull(true)},{passive:true});addEventListener('orientationchange',()=>setTimeout(fit,250));fit();
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const DIRV=[[0,1],[-1,0],[1,0],[0,-1]]; // down,left,right,up
@@ -206,14 +213,17 @@ if(matchMedia('(pointer:coarse)').matches){IN.touch=true;document.body.classList
  });
  $('#dlg').addEventListener('pointerdown',e=>{if(e.target.tagName!=='BUTTON')onActKey()});
 })();
-async function goFull(){
+let fsAutoT=0;
+async function goFull(auto){
  AU.resume();const el=document.documentElement;
+ if(!auto&&Date.now()-fsAutoT<1200)return; // il tocco che ha già attivato lo schermo intero automatico
  try{
   if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+   if(auto)fsAutoT=Date.now();
    if(el.requestFullscreen)await el.requestFullscreen({navigationUI:'hide'});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
    try{await screen.orientation.lock('landscape')}catch(_){}
   }else{if(document.exitFullscreen)await document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen()}
- }catch(e){UI.toast('Schermo intero non disponibile qui')}
+ }catch(e){if(!auto)UI.toast('Schermo intero non disponibile qui')}
  setTimeout(fit,300);
 }
 // ================= AUDIO (tutto sintetizzato) =================
@@ -444,8 +454,8 @@ function genObjects(){
   for(let i=0;i<8;i++)R_(x,'#1c1622',13-i-(f?1:0),5+i,3,3);
   for(let i=0;i<14;i++)R_(x,'#c9d1d9',22+i,8-Math.floor(i/2),1,1);R_(x,'#5a4a3a',21,8,2,2);
   return outline(c,'#000')});
- IMG.vignette=(()=>{const [c,x]=mk(W,H);const g=x.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,W*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,1)');x.fillStyle=g;x.fillRect(0,0,W,H);return c})();
- IMG.grain=[0,1,2,3].map(()=>{const [c,x]=mk(W/2,H/2);const d=x.createImageData(W/2,H/2);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=Math.random()<.5?40:0}x.putImageData(d,0,0);return c});
+ IMG.vignette=(()=>{const [c,x]=mk(MAXW,H);const g=x.createRadialGradient(MAXW/2,H/2,H*.25,MAXW/2,H/2,480*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,1)');x.fillStyle=g;x.fillRect(0,0,MAXW,H);return c})();
+ IMG.grain=[0,1,2,3].map(()=>{const [c,x]=mk(MAXW/2,H/2);const d=x.createImageData(MAXW/2,H/2);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=Math.random()<.5?40:0}x.putImageData(d,0,0);return c});
 }
 // ---------- personaggi ----------
 const LOOKS={
@@ -735,7 +745,7 @@ function spawnHorse(tx,ty,speed){const h=G.horse;h.on=true;setPos(h,tx,ty);h.pat
 function updateCam(dt){const m=G.map,p=G.player;let cx=p.x-W/2,cy=p.y-12-H/2;const mw=m.w*16,mh=m.h*16;
  cx=mw<=W?(mw-W)/2:clamp(cx,0,mw-W);cy=mh<=H?(mh-H)/2:clamp(cy,0,mh-H);G.cam.x=cx;G.cam.y=cy}
 // ---------- render ----------
-const [LC,LX]=mk(W,H);
+const [LC,LX]=mk(MAXW,H);
 const SHADOW=(()=>{const [c,x]=mk(14,5);x.fillStyle='rgba(0,0,0,.28)';x.fillRect(2,0,10,5);x.fillRect(0,1,14,3);return c})();
 const FOG=(()=>{const [c,x]=mk(96,40);const g=x.createRadialGradient(48,20,0,48,20,46);g.addColorStop(0,'rgba(200,205,225,.35)');g.addColorStop(1,'rgba(200,205,225,0)');x.fillStyle=g;x.scale(1,.42);x.fillRect(0,0,96,96);return c})();
 function drawSprite(key,x,y,dir,moving,anim){const fr=moving?[1,0,2,0][Math.floor(anim)%4]:0;ctx.drawImage(SHADOW,Math.round(x-7),Math.round(y-3));ctx.drawImage(SHEET[key],fr*18,dir*27,18,27,Math.round(x-9),Math.round(y-27),18,27)}
@@ -795,7 +805,7 @@ function postFX(){
  const Hh=G.horror;
  if(Hh>.05){ctx.globalCompositeOperation='saturation';ctx.fillStyle=`rgba(128,128,128,${clamp(Hh*.85,0,.85)})`;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
  if(G.st&&G.st.chapter>=2&&G.mode==='game'){ctx.globalCompositeOperation='multiply';ctx.fillStyle='rgba(255,235,225,1)';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
- ctx.globalAlpha=clamp(.25+Hh*.6+(G.chase?.3:0),0,1);ctx.drawImage(IMG.vignette,0,0);ctx.globalAlpha=1;
+ ctx.globalAlpha=clamp(.25+Hh*.6+(G.chase?.3:0),0,1);ctx.drawImage(IMG.vignette,(W-MAXW)/2,0);ctx.globalAlpha=1;
  if(Hh>.15||G.chase){ctx.globalAlpha=clamp(Hh*.45,.1,.4);ctx.drawImage(IMG.grain[Math.floor(G.t*24)%4],0,0,W,H);ctx.globalAlpha=1}
  if((Hh>.45&&Math.random()<Hh*.03)||G.glitch>0){const n=1+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const y=Math.random()*H|0,h=2+Math.random()*14|0,dx=(Math.random()-.5)*24|0;ctx.drawImage(cv,0,y,W,h,dx,y,W,h)}if(G.glitch>0)G.glitch--}
  if(G.scare>0){const a=Math.min(1,G.scare);ctx.fillStyle=`rgba(120,0,0,${a*.7})`;ctx.fillRect(0,0,W,H);const img=IMG.horse[Math.floor(G.t*20)%2];const s=5+(1-a)*2+Math.random()*.4;ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H/2+20);ctx.scale(s,s);ctx.drawImage(img,-22+(Math.random()-.5),-26);ctx.restore();ctx.globalAlpha=1;ctx.drawImage(IMG.grain[Math.floor(Math.random()*4)],0,0,W,H)}
