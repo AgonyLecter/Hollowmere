@@ -68,7 +68,7 @@ body.touch #energy{bottom:calc(84*var(--u))}
 .toast.bad{background:rgba(70,8,8,.9);color:#ffd0c0}
 @keyframes tin{from{opacity:0;transform:translateY(calc(-4*var(--u)))}}
 /* modal */
-#modal{z-index:5;position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#modal{z-index:7;position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;pointer-events:auto}
 #mbox{width:calc(300*var(--u));max-height:calc(240*var(--u));overflow:auto;padding:calc(8*var(--u)) calc(10*var(--u));position:relative}
 #mbox h2{margin:0 0 calc(4*var(--u));font-family:'Jacquard 12','Pixelify Sans',serif;font-weight:400;font-size:calc(18*var(--u));color:#5b2a0e;line-height:1}
 #mbox h3{margin:calc(6*var(--u)) 0 calc(2*var(--u));font-size:calc(8*var(--u));color:#8a4b1c}
@@ -91,7 +91,7 @@ input.tx{font-family:inherit;font-size:calc(9*var(--u));padding:calc(3*var(--u))
 .tabs .btn.on{background:#ffd98a}
 /* fade, card */
 #fade{z-index:5;position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s}
-#card{z-index:5;position:absolute;inset:0;background:#000;color:#e8d6c0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:auto;animation:fin 1.2s}
+#card{z-index:6;position:absolute;inset:0;background:#000;color:#e8d6c0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:auto;animation:fin 1.2s}
 @keyframes fin{from{opacity:0}}
 #cardk{font-size:calc(8*var(--u));letter-spacing:.3em;color:#a0896a;text-transform:uppercase}
 #cardt{font-family:'Jacquard 12',serif;font-size:calc(34*var(--u));line-height:1.05;margin:calc(4*var(--u)) 0;color:#f2e2c4}
@@ -165,8 +165,9 @@ function fit(){
  if(nw!==W){W=nw;cv.width=W;ctx.imageSmoothingEnabled=false}
  const s=Math.min(vw/W,vh/H),r=document.documentElement.style;r.setProperty('--gw',W);r.setProperty('--s',s)}
 addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);
-// su telefono: entra in schermo intero da solo al primo tocco (serve un gesto dell'utente)
-addEventListener('touchend',function ff(){removeEventListener('touchend',ff);if(!document.fullscreenElement&&!document.webkitFullscreenElement&&typeof goFull==='function')goFull(true)},{passive:true});addEventListener('orientationchange',()=>setTimeout(fit,250));fit();
+// su telefono: qualsiasi tocco nel menu iniziale attiva lo schermo intero (serve un gesto dell'utente)
+const fsTap=()=>{if(!matchMedia('(pointer:coarse)').matches)return;if(document.fullscreenElement||document.webkitFullscreenElement)return;const t=document.getElementById('title');if(t&&!t.classList.contains('hide'))goFull(true)};
+addEventListener('touchend',fsTap,{passive:true});addEventListener('click',fsTap);addEventListener('orientationchange',()=>setTimeout(fit,250));fit();
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const DIRV=[[0,1],[-1,0],[1,0],[0,-1]]; // down,left,right,up
