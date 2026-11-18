@@ -53,7 +53,8 @@ body.corrupt2 .panel{animation:jit .18s steps(2) infinite}
 .slot canvas{width:calc(16*var(--u));height:calc(16*var(--u));image-rendering:pixelated}
 .slot.sel{background:linear-gradient(#6a4a2a,#3a2414);box-shadow:inset 0 0 0 var(--u) #07040a,0 0 0 var(--u) var(--gold2),0 0 calc(6*var(--u)) rgba(246,200,100,.6);transform:translateY(calc(-2*var(--u)))}
 .slot i{position:absolute;right:calc(1*var(--u));bottom:0;font-style:normal;font-size:calc(6*var(--u));color:var(--gold2);text-shadow:1px 1px 0 #000,-1px 0 0 #000,0 -1px 0 #000}
-#itemname{position:absolute;left:50%;bottom:calc(33*var(--u));transform:translateX(-50%);color:#f6e6c0;background:rgba(18,11,16,.8);padding:calc(2*var(--u)) calc(6*var(--u));box-shadow:0 0 0 var(--u) var(--bronze);font-size:calc(6.5*var(--u));transition:opacity .4s;white-space:nowrap}
+#itemname:empty{display:none}
+#itemname{opacity:0;position:absolute;left:50%;bottom:calc(33*var(--u));transform:translateX(-50%);color:#f6e6c0;background:rgba(18,11,16,.8);padding:calc(2*var(--u)) calc(6*var(--u));box-shadow:0 0 0 var(--u) var(--bronze);font-size:calc(6.5*var(--u));transition:opacity .4s;white-space:nowrap}
 /* touch */
 #touch{position:absolute;inset:0;pointer-events:none;z-index:1}
 body:not(.touch) #touch{display:none}
@@ -345,6 +346,10 @@ const SFX={
  count:(a,t)=>{const g=a.osc('sine',1046,t,.5,.1);g.connect(a.rev)},
  wrongcount:(a,t)=>{const g=a.osc('sine',988,t,1.2,.14);g.connect(a.rev);const g2=a.osc('sine',1046,t,1.2,.1);g2.connect(a.rev)},
  eat:(a,t)=>{a.noise(t,.06,.2,'bandpass',1200,2);a.noise(t+.12,.06,.2,'bandpass',1000,2)},
+ caw:(a,t)=>{[0,.18].forEach(d=>{a.noise(t+d,.12,.08,'bandpass',1100,4);a.osc('sawtooth',520,t+d,.1,.025,null,.005,340)})},
+ cluck:(a,t)=>{[0,.09].forEach(d=>a.osc('square',720,t+d,.04,.015,null,.002,480))},
+ croak:(a,t)=>{[0,.13].forEach(d=>a.osc('sawtooth',105,t+d,.09,.03))},
+ meow:(a,t)=>a.osc('triangle',700,t,.35,.05,null,.04,520),
  slam:(a,t)=>{a.noise(t,.4,.9,'lowpass',200);a.osc('sine',45,t,.4,.8)},
 };
 // ================= ART (pixel art procedurale) =================
@@ -521,6 +526,109 @@ function genBushHD(berries){srand(berries?411:410);const [c,x]=mk(40,34);c.s=2;
  const bl=[[12,20,10],[28,20,10],[20,14,12],[20,22,10]];for(let i=0;i<20;i++){const b=bl[ri(0,3)],a=rnd()*6.28;bl.push([b[0]+Math.cos(a)*b[2]*.85,b[1]+Math.sin(a)*b[2]*.85,ri(3,5)])}
  paintBlobs(x,bl,['#1a2a10','#2a4419','#3c6024','#557e30','#76a044','#98be5e'],{ao:.5,noise:.2});
  if(berries)for(let i=0;i<14;i++){const a=ri(8,30),b=ri(8,25);R_(x,PAL.redD,a,b+1,3,2);R_(x,PAL.red,a,b,3,2);R_(x,'#ff7a6a',a,b,1,1)}return outline(c,'#0f180a')}
+// ================= FLORA E FAUNA =================
+function pxCanvas(P){const [c,x]=mk(P.w,P.h);P.put(x,0,0);c.s=2;return c}
+function genDeco(){
+ // panchina
+ let P=new PX(40,26),wd=ramp6('#8a5a32'),ir=ramp6('#3a3a40');
+ for(const lx of [6,32]){P.capsule(lx,14,lx,24,1.6,ir)}
+ P.body(3,7,()=>20,()=>18,wd,{nyF:()=>-.2,mod:(X,Y,v)=>Y===5?v-.25:v});P.body(11,15,()=>20,()=>18.5,wd,{nyF:()=>-.8,mod:(X,Y,v)=>(X%9===0)?v-.2:v});
+ P.outline();IMG.bench=pxCanvas(P);
+ // erba alta (tre varianti)
+ IMG.tuft=[0,1,2].map(v=>{srand(700+v);const [c,x]=mk(28,30);c.s=2;const cols=[GR[1],GR[2],GR[3],GR[4],GR[5],'#b8a050'];
+  for(let i=0;i<16;i++){const bx=ri(4,23),h=ri(12,26),lean=(rnd()-.5)*8,dry=v===2&&rnd()<.5;for(let k=0;k<h;k++){const t=k/h;x.fillStyle=dry?(t>.7?'#e2c878':'#b89a4a'):cols[Math.min(5,1+Math.floor(t*4.5))];x.fillRect(Math.round(bx+lean*t*t),29-k,1,1)}}
+  if(v===1)for(let i=0;i<3;i++){const a=ri(6,20),b=ri(4,12);x.fillStyle='#f3e27a';x.fillRect(a,b,2,2);x.fillStyle='#fff8c0';x.fillRect(a,b,1,1)}
+  c.canopyH=10;return outline(c,'#1e2a12')});
+ // funghi
+ IMG.mush=[0,1].map(v=>{P=new PX(22,18);const cap=ramp6(v?'#a07a5a':'#d8c8a0'),st=ramp6('#efe6d2');
+  for(const [mx,my,r] of (v?[[7,9,4.5],[15,11,3.5]]:[[8,10,4],[14,8,5],[4,13,2.5]])){P.capsule(mx,my,mx,17,1.4,st);P.ellipse(mx,my,r,r*.62,cap,{spec:.5,clip:(X,Y)=>Y<my+1});if(!v)P.set(mx-1,my-1,C('#fff8e8'))}
+  P.outline();return pxCanvas(P)});
+ // sassi
+ IMG.rock=[0,1,2].map(v=>{srand(720+v);P=new PX(30,22);const rr=ramp6(['#8a877d','#7d7a70','#94908a'][v]);
+  P.ellipse(15,13,12-v*2,7.5-v,rr,{spec:.15,mod:(X,Y,vv)=>vv+(rnd()-.5)*.15});for(let i=0;i<8;i++){const a=ri(6,24-v*3),b=ri(6,10);if(P.has(a,b))P.set(a,b,C(['#5a7a34','#4a6a2a','#6a8a3a'][ri(0,2)]))}
+  P.outline();return pxCanvas(P)});
+ // tronco caduto
+ P=new PX(64,26);const bk=ramp6('#6a4a2c'),inr=ramp6('#c9a070');P.capsule(8,15,56,15,7,bk,{mod:(X,Y,v)=>((X*3+Y*7)%11===0)?v-.2:v});
+ P.ellipse(57,15,4,6.5,inr,{mod:(X,Y,v,n)=>Math.abs(Math.hypot(n[0],n[1])-.5)<.1?v-.25:v});for(let i=0;i<6;i++){const a=10+i*7;P.set(a,9,C('#5a8a34'));P.set(a+1,9,C('#4a7a2a'))}
+ P.outline();IMG.log=pxCanvas(P);
+ // canne di palude
+ IMG.reed=[0,1].map(v=>{srand(740+v);const [c,x]=mk(20,34);c.s=2;for(let i=0;i<6;i++){const bx=ri(3,16),h=ri(18,32),lean=(rnd()-.5)*5;for(let k=0;k<h;k++){x.fillStyle=k>h-8?'#9aa858':'#5a7a34';x.fillRect(Math.round(bx+lean*k/h),33-k,1,1)}
+  if(rnd()<.6){const tx=Math.round(bx+lean),ty=33-h;x.fillStyle='#5a3a1e';x.fillRect(tx-1,ty,2,6);x.fillStyle='#7a5230';x.fillRect(tx-1,ty,1,5)}}c.canopyH=12;return outline(c,'#1a2410')});
+ // girasole
+ P=new PX(22,48);const stm=ramp6('#4a7a2a'),pet=ramp6('#e8b830'),ctr=ramp6('#5a3a1e');P.capsule(11,16,11,47,1.4,stm);P.ellipse(6,30,4,2,stm);P.ellipse(16,36,4,2,stm);
+ for(let i=0;i<10;i++){const a=i/10*6.283;P.ellipse(11+Math.cos(a)*6,11+Math.sin(a)*6,2.6,2.6,pet,{edge:false})}P.ellipse(11,11,4.2,4.2,ctr,{mod:(X,Y,v)=>((X+Y)&1)?v-.1:v});P.outline();IMG.sunflower=pxCanvas(P);IMG.sunflower.canopyH=14;
+ // ninfea
+ P=new PX(22,12);const lp=ramp6('#3f7a3a');P.ellipse(11,6,9,4.5,lp,{clip:(X,Y)=>!(X>11&&Math.abs(Y-6)<1.2)});P.ellipse(8,5,2,1.6,ramp6('#f0e0f0'),{spec:.5});P.outline();IMG.lily=pxCanvas(P);
+ // ortensia
+ P=new PX(30,26);const lf=ramp6('#3a6028'),fl=ramp6('#8a8ad0'),fl2=ramp6('#c8a0d8');P.ellipse(15,16,13,9,lf);srand(760);for(let i=0;i<9;i++)P.ellipse(ri(6,24),ri(7,16),3.4,3,i%2?fl:fl2,{mod:(X,Y,v)=>((X+Y)%3===0)?v-.12:v});P.outline();IMG.hydr=pxCanvas(P);
+ genCritters()}
+// ---------- animali: fotogrammi rivolti a destra (la sinistra è specchiata) ----------
+const CRIT={};
+function critFrames(w,h,n,fn){return Array.from({length:n},(_,f)=>{const P=new PX(w,h);fn(P,f);P.outline();return pxCanvas(P)})}
+function genCritters(){
+ const wh=ramp6('#f2ece0'),rd=ramp6('#c8402a'),yl=ramp6('#e8a83a'),bk=ramp6('#2a2630'),gy=ramp6('#8a8070'),or=ramp6('#c8803a'),br=ramp6('#8a6a48'),gr=ramp6('#4a7a3a'),dk=ramp6('#3a5a2a');
+ // gallina: 0-1 cammina, 2 becca
+ CRIT.chicken=critFrames(24,22,3,(P,f)=>{const peck=f===2,hx=peck?18:16,hy=peck?13:6;for(const k of [0,1]){const lx=10+k*3+(f===1?(k?-1:1):0);P.capsule(lx,15,lx+(f===1?(k?1:-1):0),20,.7,yl,{edge:false})}
+  P.ellipse(8,12,3.5,3,wh);P.ellipse(11,12,7,5,wh,{spec:.2});P.ellipse(9,11,4,2.6,wh,{mod:(X,Y,v)=>v-.12});P.ellipse(hx,hy+2,3.2,3.2,wh);P.set(hx+1,hy+1,C('#14100c'));P.set(hx+3,hy+2,yl[4]);P.set(hx+4,hy+2,yl[3]);P.set(hx+3,hy+3,yl[2]);P.ellipse(hx-.5,hy-1.2,1.6,1.4,rd,{edge:false});P.set(hx+1,hy+4,rd[3])});
+ // gatto: 0-1 cammina, 2 seduto, 3 dorme
+ CRIT.cat=critFrames(30,22,4,(P,f)=>{const c=bk;if(f===3){P.ellipse(15,16,10,5,c,{spec:.3});P.ellipse(23,15,4,3.5,c);P.set(25,12,c[2]);P.set(22,12,c[2]);P.capsule(6,18,14,20,1.3,c);return}
+  if(f===2){P.capsule(6,20,4,12,1.4,c,{r2:1});P.ellipse(13,15,5.5,6,c,{spec:.3});P.capsule(15,17,15,21,1.2,c);P.ellipse(16,8,4,3.6,c);P.ellipse(13.5,4.6,1.2,1.8,c);P.ellipse(18.5,4.6,1.2,1.8,c);P.set(15,8,C('#e8d040'));P.set(18,8,C('#e8d040'));return}
+  const st=f?1.5:-1.5;P.capsule(3,10,6,14,1.2,c,{r2:1.4});for(const k of [0,1])P.capsule(9+k*9,16,9+k*9+(k?st:-st),21,1.2,c);P.ellipse(14,14,9,4.5,c,{spec:.3});P.ellipse(24,10,4,3.6,c);P.ellipse(22,6.5,1.2,1.8,c);P.ellipse(26,6.5,1.2,1.8,c);P.set(26,10,C('#e8d040'));P.set(27,11,C('#e89090'))});
+ // corvo: 0 posato, 1-2 vola
+ CRIT.crow=critFrames(18,16,3,(P,f)=>{const c=bk;if(f===0){P.capsule(7,13,7,15,.5,yl,{edge:false});P.capsule(10,13,10,15,.5,yl,{edge:false});P.ellipse(8,10,4.5,3.5,c,{spec:.4});P.capsule(3,10,1,12,1.2,c);P.ellipse(12,7,2.6,2.4,c);P.set(13,6,C('#c0c0c0'));P.set(15,7,C('#3a3a40'));P.set(16,7,C('#3a3a40'));return}
+  P.ellipse(9,9,4.5,2.4,c,{spec:.4});P.ellipse(13.5,8,2.2,2,c);P.set(16,8,C('#3a3a40'));const wy=f===1?-5:4;P.capsule(8,8,5,8+wy,1.6,c,{r2:.8});P.capsule(10,8,12,8+wy*.8,1.4,c,{r2:.7})});
+ // anatra: 0-1 nuota
+ CRIT.duck=critFrames(26,18,2,(P,f)=>{const bob=f?1:0;P.ellipse(11,12+bob,8,4,br,{spec:.2,mod:(X,Y,v)=>Y>13+bob?v-.15:v});P.ellipse(9,10.5+bob,5,2.4,br,{mod:(X,Y,v)=>v+.08});P.ellipse(18,6+bob,3.2,3,gr,{spec:.5});P.set(19,5+bob,C('#14100c'));P.set(21,7+bob,yl[3]);P.set(22,7+bob,yl[4]);P.set(21,8+bob,yl[2]);for(let X=13;X<18;X++)P.set(X,8+bob,wh[3]);
+  for(let X=3;X<21;X++)P.set(X,16,C('#9cc8e0'),f?120:70)});
+ // coniglio: 0 seduto, 1-2 salta
+ CRIT.rabbit=critFrames(22,20,3,(P,f)=>{const c=ramp6('#9a8068'),lift=f===1?-3:f===2?-1:0,str=f===1?2:0;P.ellipse(9-str*.5,14+lift,6+str,4.5,c,{spec:.2});P.ellipse(4,13+lift,2,2,wh);P.ellipse(15,10+lift,3.6,3.2,c);P.capsule(14,7+lift,13,1+lift,1,c);P.capsule(16,7+lift,17,2+lift,1,c);P.set(17,9+lift,C('#14100c'));P.set(18,11+lift,C('#e09090'));if(!f){P.ellipse(12,18,2,1,c)}});
+ // rana
+ CRIT.frog=critFrames(14,10,2,(P,f)=>{const c=ramp6('#5a8a3a');P.ellipse(7,7,5,2.8,c,{spec:.4});P.ellipse(10,5,2,1.6,c);P.set(10,4,C('#e8e070'));P.set(11,4,C('#14100c'));if(f)P.ellipse(10,8,1.6,1.2,ramp6('#e8e0a0'))});
+}
+// ---------- posizionamento decorazioni ----------
+function addDeco(m,st){srand(5150);
+ const free=(x,y)=>{const g=m.get(x,y);return (g===1||g===12)&&!m.hit[x+','+y]&&!inFarm(x,y)};
+ const near=(x,y,k)=>{for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(m.hit[(x+i)+','+(y+j)]&&m.hit[(x+i)+','+(y+j)].kind===k)return true;return false};
+ // panchine
+ [[42,22],[45,16],[47,40],[27,21]].forEach(([x,y])=>m.add(OB('bench',x,y,IMG.bench,{act:'bench'})));
+ // girasoli e ortensie vicino alle case
+ [[6,10],[13,10],[32,29],[38,29],[56,17],[51,17]].forEach(([x,y],i)=>{if(free(x,y))m.add(OB(i<4?'sunflower':'hydr',x,y,i<4?IMG.sunflower:IMG.hydr,{act:i<4?'sunflower':'hydr'}))});
+ // sassi e tronchi
+ for(let i=0;i<40;i++){const x=ri(5,58),y=ri(5,40);if(free(x,y)&&free(x+1,y)&&rnd()<.5)m.add(OB('rock',x,y,IMG.rock[ri(0,2)],{act:'rock'}))}
+ [[24,38],[34,36],[17,7]].forEach(([x,y])=>{if(free(x,y)&&free(x+1,y)&&free(x+2,y)&&free(x+3,y))m.add(OB('log',x,y,IMG.log,{wt:4,act:'log',solid:[[x,y],[x+1,y],[x+2,y],[x+3,y]],hits:[[x,y],[x+1,y],[x+2,y],[x+3,y]]}))});
+ // canne e ninfee sul fiume
+ for(let x=4;x<60;x++){if(x>=42&&x<=47)continue;if(rnd()<.45){const o=OB('reed',x,43,IMG.reed[ri(0,1)],{solid:[],hits:[],lift:-9});o.dx+=ri(-4,4);m.add(o)}if(rnd()<.12)m.add({kind:'lily',tx:x,ty:44,img:IMG.lily,dx:x*16+ri(-3,3),dy:44*16+ri(0,6),sy:-1,solid:[],hits:[],deco:1})}
+}
+function addFlora(m){srand(5151);const free=(x,y)=>{const g=m.get(x,y);return (g===1||g===12)&&!m.hit[x+','+y]&&!inFarm(x,y)};
+ for(let i=0;i<260;i++){const x=ri(4,59),y=ri(4,41);if(!free(x,y))continue;const o=OB('tuft',x,y,IMG.tuft[ri(0,2)],{solid:[],hits:[]});o.dx+=ri(-5,5);o.dy+=ri(-4,2);o.sy+=ri(-4,2);m.add(o)}
+ for(const o of m.objs.slice()){if(o.kind==='tree'&&rnd()<.35){const x=o.tx+ri(-1,1),y=o.ty+1;if(free(x,y))m.add(Object.assign(OB('mush',x,y,IMG.mush[ri(0,1)],{solid:[],hits:[],act:'mush'}),{hits:[[x,y]]}))}}}
+// ---------- animali vivi ----------
+const CR_ZONE={chicken:[51,32,59,38],cat:[30,12,56,34],rabbit:[5,36,40,41],duck:[4,43,60,44],frog:[4,42,60,42]};
+function spawnCritters(){const L=[];const add=(k,n)=>{const z=CR_ZONE[k];for(let i=0;i<n;i++)L.push({k,x:(z[0]+Math.random()*(z[2]-z[0]))*16+8,y:(z[1]+Math.random()*(z[3]-z[1]))*16+12,dir:Math.random()<.5?1:-1,st:'idle',t:Math.random()*3,f:0,tx:null,ty:null,z})};
+ add('chicken',4);add('cat',1);add('rabbit',3);add('duck',3);
+ const perches=[[13,22,-10],[7,3,-12],[18,3,-12],[25,3,-12],[36,3,-12],[57,3,-12],[60,14,-8],[3,32,-8]];
+ for(let i=0;i<(G.st&&G.st.chapter>=2?7:4);i++){const p=perches[i%perches.length];L.push({k:'crow',x:p[0]*16+8,y:p[1]*16+14,oy:p[2],dir:Math.random()<.5?1:-1,st:'perch',t:0,f:0,home:p})}
+ G.critters=L}
+function updCritters(dt){const m=G.map;if(!m||m.id!=='main'||!G.critters)return;const p=G.player,night=G.night>.6,rain=G.st.weather==='pioggia';
+ for(const c of G.critters){c.t-=dt;const dx=c.x-p.x,dy=c.y-p.y,d=Math.hypot(dx,dy);
+  if(c.k==='crow'){if(c.st==='perch'){if(d<44&&G.mode==='game'){c.st='fly';c.vx=(dx<0?-1:1)*(50+Math.random()*20);c.vy=-40;c.dir=Math.sign(c.vx);AU.play('caw')}}
+   else{c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=6*dt;c.f+=dt*10;if(c.y<G.cam.y-60||c.x<G.cam.x-80||c.x>G.cam.x+W+80){if(c.t<-12){const h=c.home;c.x=h[0]*16+8;c.y=h[1]*16+14;c.st='perch'}}else c.t=0}continue}
+  if(c.k==='duck'){if(c.t<=0){c.t=2+Math.random()*4;c.vx=(Math.random()-.5)*14;if(c.vx)c.dir=Math.sign(c.vx)}c.x=clamp(c.x+c.vx*dt,c.z[0]*16,c.z[2]*16);if(c.x>=42*16&&c.x<=47*16)c.vx=c.x<44.5*16?-8:8;c.f+=dt*2;continue}
+  const flee=(c.k==='rabbit'&&d<60)||(c.k==='chicken'&&d<26);const sp={chicken:22,cat:24,rabbit:70}[c.k]*(flee?1.6:1);
+  if(flee){c.tx=c.x+dx/d*40;c.ty=c.y+dy/d*30;c.st='move'}
+  if(c.st==='idle'&&c.t<=0){c.t=1.5+Math.random()*4;const z=c.z;if(c.k==='cat'&&d<120&&Math.random()<.4&&G.mode==='game'){c.tx=p.x+(Math.random()-.5)*30;c.ty=p.y+10}else{c.tx=(z[0]+Math.random()*(z[2]-z[0]))*16+8;c.ty=(z[1]+Math.random()*(z[3]-z[1]))*16+12}c.st=(c.k==='cat'&&Math.random()<.35)?(Math.random()<.5?'sit':'sleep'):'move'}
+  if((c.st==='sit'||c.st==='sleep')&&c.t<=0){c.st='idle';c.t=4+Math.random()*6}
+  if(c.st==='move'){const ex=c.tx-c.x,ey=c.ty-c.y,e=Math.hypot(ex,ey);if(e<2){c.st='idle';c.t=night||rain?4:1+Math.random()*3}else{const nx=c.x+ex/e*sp*dt,ny=c.y+ey/e*sp*dt;const [ttx,tty]=[Math.floor(nx/16),Math.floor((ny-3)/16)];if(m.solid(ttx,tty)){c.st='idle';c.t=.5}else{c.x=nx;c.y=ny;c.dir=ex<0?-1:1;c.f+=dt*(c.k==='rabbit'?8:7)}}}
+  if(c.k==='chicken'&&c.st==='idle'&&Math.random()<dt*.6)c.peck=.5;if(c.peck>0)c.peck-=dt;
+  if(c.k==='chicken'&&d<140&&Math.random()<dt*.05)AU.play('cluck');}
+ // rane di notte e pesci che saltano
+ if(night&&Math.random()<dt*.25&&p.y>36*16)AU.play('croak');
+ if(!night&&Math.random()<dt*.08){const x=G.cam.x+Math.random()*W,y=43*16+6+Math.random()*16;if(y>G.cam.y&&y<G.cam.y+H&&m.get(Math.floor(x/16),Math.floor(y/16))===3){for(let i=0;i<6;i++)G.parts.push({k:'water',x,y,vx:(Math.random()-.5)*30,vy:-30-Math.random()*20,t:0,life:.5})}}}
+function critImg(c){const F=CRIT[c.k];if(c.k==='chicken')return F[c.peck>0?2:(c.st==='move'?Math.floor(c.f)%2:0)];if(c.k==='cat')return F[c.st==='sit'?2:c.st==='sleep'?3:(c.st==='move'?Math.floor(c.f)%2:2)];
+ if(c.k==='crow')return F[c.st==='perch'?0:1+Math.floor(c.f)%2];if(c.k==='duck')return F[Math.floor(c.f)%2];if(c.k==='rabbit')return F[c.st==='move'?1+Math.floor(c.f)%2:0];return F[0]}
+function drawCritter(c){const img=critImg(c),w=iw(img),h=ih(img),X=Math.round(c.x),Y=Math.round(c.y+(c.oy||0));
+ if(c.k!=='crow'&&c.k!=='duck'||c.st==='perch'){ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(X-w*.3,Math.round(c.y)-2,w*.6,2)}
+ if(c.dir<0){ctx.save();ctx.translate(X,0);ctx.scale(-1,1);ctx.drawImage(img,-w/2,Y-h,w,h);ctx.restore()}else ctx.drawImage(img,X-w/2,Y-h,w,h)}
 function genObjects(){
  IMG.tree=[0,1,2,3,4].map(genTreeHD);IMG.pine=[0,1,2].map(genPineHD);IMG.bush=genBushHD(false);IMG.bushR=genBushHD(true);
  IMG.fenceH=genFence('h');IMG.fenceV=genFence('v');IMG.fenceHg=genFence('h','#8d8a80');IMG.fenceVg=genFence('v','#8d8a80');
@@ -811,7 +919,7 @@ function genCrops(){
  CROPIMG.zucca=[seedI,sprout,S(x=>{R_(x,'#5a8a2a',2,10,12,2);disc(x,5,9,3,'#6a9a2a');disc(x,11,9,3,'#6a9a2a');disc(x,8,13,2,'#c9b03a')}),S(x=>{R_(x,'#4a6a2a',1,12,14,2);disc(x,8,11,6,'#e07a1a');R_(x,'#b85a10',5,6,1,11);R_(x,'#b85a10',10,6,1,11);R_(x,'#f29a3a',4,8,2,2);R_(x,'#4a6a2a',7,3,2,4)})];
  const [c,x]=mk2(16,18);x.drawImage(CROPIMG.zucca[3],0,0,16,18);R_(x,'#2b1205',5,9,2,2);R_(x,'#2b1205',10,9,2,2);R_(x,'#2b1205',5,13,7,1);CROPIMG.zuccaFace=c;
 }
-function genAll(){genTilesHD();genObjects();genIcons();genCrops();makeParch()}
+function genAll(){genTilesHD();genObjects();genDeco();genIcons();genCrops();makeParch()}
 function makeParch(){const [c,x]=mk(64,64);srand(31);x.fillStyle='#ead8ae';x.fillRect(0,0,64,64);
  for(let i=0;i<900;i++){x.fillStyle=['#e2cea0','#efdfb8','#dcc694','#f2e4c0'][ri(0,3)];x.fillRect(ri(0,63),ri(0,63),1,1)}
  for(let i=0;i<14;i++){x.fillStyle='rgba(150,110,60,.18)';const a=ri(0,60),b=ri(0,63);x.fillRect(a,b,ri(3,9),1)}
@@ -895,6 +1003,7 @@ function buildMain(st){
  if(st.day>=2)BUSHES.forEach(([x,y],i)=>{if(!(F.bush&&F.bush[i]))m.add(OB('bushR',x,y,IMG.bushR,{act:'bushR',bi:i,wt:1}))});
  // foglie (faccenda)
  if(st.chore==='foglie'&&!st.choreDone)LEAVES.forEach(([x,y],i)=>{if(!(st.leaves&&st.leaves[i]))m.add(OB('leaves',x,y,IMG.leaves,{act:'leaves',li:i}))});
+ addDeco(m,st);
  // alberi
  const reserved=[[4,11,23,36],[5,3,15,11],[38,3,60,12],[37,13,58,24],[46,23,60,33],[31,23,40,31],[31,7,39,16],[28,3,34,7],[42,24,47,42],[2,23,6,27],[10,2,24,5],[38,2,54,5]];
  const isRes=(x,y)=>reserved.some(([a,b,c,d])=>x>=a&&x<=c&&y>=b&&y<=d);
@@ -904,11 +1013,12 @@ function buildMain(st){
  // bosco esterno
  for(let y=-1;y<48;y++)for(let x=-1;x<65;x++){
   const band=(x<=2||x>=61||y<=2||y>=45);if(!band)continue;
-  if((x===30||x===31)&&y<=2)continue;if(m.get(x,y)===3)continue;if(x>=43&&x<=46&&y>=45)continue;
+  if((x===30||x===31)&&y<=2)continue;if(y>=45&&y<47)continue;if(m.get(x,y)===3)continue;if(x>=43&&x<=46&&y>=45)continue;
   if(((x*7+y*13)%3)!==0&&!(y<=1||y>=46||x<=1||x>=62))continue;
   if(POSTS.some(([px,py])=>Math.abs(px-x)<=1&&y>=py-1&&y<=py+2))continue;
   const o=OB('pine',x,y,IMG.pine[hsh(x,y)%3],{act:'pine'});o.dx+=(hsh(x,y)%7)-3;m.add(o);
  }
+ addFlora(m);
  return m;
 }
 function buildHouse(st){
@@ -1090,9 +1200,11 @@ function render(){
  for(const n of G.npcs)if(!n.hidden&&n.map===m.id)list.push({npc:n,sy:n.y});
  if(G.mode==='game')list.push({pl:1,sy:G.player.y});
  if(G.horse.on&&m.id==='main')list.push({horse:1,sy:G.horse.y});
+ if(m.id==='main'&&G.critters)for(const c of G.critters)if(c.x>cx-30&&c.x<cx+W+30&&c.y>cy-20&&c.y<cy+H+40)list.push({crit:c,sy:c.k==='crow'&&c.st!=='perch'?9e9:c.k==='duck'?43*16+2:c.y});
  list.sort((a,b)=>a.sy-b.sy);
  for(const e of list){
-  if(e.pl)drawSprite('player',G.player);
+  if(e.crit)drawCritter(e.crit);
+  else if(e.pl)drawSprite('player',G.player);
   else if(e.npc)drawSprite(e.npc.id,e.npc);
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
   else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
@@ -1182,6 +1294,9 @@ const ITEMS={
  bacche:{n:'Bacche rosse',t:'bad',d:'Il colore cattivo. Andrebbero seppellite.'},
  nastro:{n:'Nastro rosso',t:'bad',d:'Morbido. Bellissimo. Proibito.'},
  focaccia:{n:'Focaccia di zucca',t:'gift',d:'Per il ceppo, al tramonto. Non mangiarla.'},
+ vernice:{n:'Vernice gialla',t:'key',d:'Per i pali grigi del recinto. Avvicinati a un palo e usalo.'},
+ key:{n:'Chiave della cassa',t:'key',d:'La chiave della cassa del nonno, in casa.'},
+ keyI:{n:'Chiave del fienile',t:'key',d:'Fredda. Apre il fienile rosso dell\'Anziano.'},
 };
 const LIKES={ezekiel:{patata:2,rapa:1},agatha:{zucca:2,rapa:1},lucius:{rapa:2},clara:{zucca:2,patata:1},brom:{patata:2,zucca:1},tobia:{nastro:3,zucca:2,rapa:1}};
 const DAYN=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
@@ -1191,6 +1306,7 @@ function selItem(){const s=G.st.inv[G.st.sel];return s||null}
 function countItem(id){return G.st.inv.reduce((a,s)=>a+(s&&s.id===id?s.n:0),0)}
 function addItem(id,n=1){const inv=G.st.inv;let s=inv.find(s=>s&&s.id===id);if(s){s.n+=n}else{const i=inv.findIndex(s=>!s);if(i<0){UI.toast('Lo zaino è pieno!','bad');return false}inv[i]={id,n}}UI.hotbar();return true}
 function removeItem(id,n=1){const inv=G.st.inv;for(let i=0;i<inv.length&&n>0;i++){const s=inv[i];if(s&&s.id===id){const k=Math.min(n,s.n);s.n-=k;n-=k;if(s.n<=0)inv[i]=null}}UI.hotbar()}
+function giveItem(id,n=1){if(!addItem(id,n)){const inv=G.st.inv,i=inv.findIndex(s=>s&&ITEMS[s.id].t!=='key');if(i>=0){inv[i]={id,n};UI.hotbar()}}AU.play('pick');const p=G.player;floatText('+ '+ITEMS[id].n,p.x,p.y-32,'#f6d98a',2);UI.toast('Ottenuto: '+ITEMS[id].n);const k=G.st.inv.findIndex(s=>s&&s.id===id);if(k>=0){G.st.sel=k;UI.hotbar()}}
 function addFriend(id,n){const f=G.st.friends;f[id]=clamp((f[id]||0)+n,-4,20)}
 function hearts(id){return Math.max(0,Math.floor((G.st.friends[id]||0)/2))}
 function addQuiete(n){const st=G.st;st.quiete=clamp(st.quiete+n,0,100);if(n<=-8){G.glitch=6;AU.play('heart')}}
@@ -1211,6 +1327,9 @@ function farmAct(tx,ty){
 }
 // ================= AZIONI =================
 function doAction(){const [fx,fy]=frontTile();const p=G.player;
+ if(G.map.id==='main'&&G.critters){const ax=p.x+DIRV[p.dir][0]*14,ay=p.y+DIRV[p.dir][1]*14;for(const c of G.critters){if(Math.hypot(c.x-ax,c.y-ay)>14)continue;
+  if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
+  if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}
  for(const n of G.npcs){if(n.hidden||n.map!==G.map.id)continue;const [nx,ny]=ptile(n);const near=Math.hypot(n.x-(p.x+DIRV[p.dir][0]*14),n.y-(p.y+DIRV[p.dir][1]*14))<14;if((nx===fx&&ny===fy)||near){talkTo(n);return}}
  const o=G.map.objAt(fx,fy);if(o&&o.act){runAct(o);return}
  if(G.map.id==='main')farmAct(fx,fy);
@@ -1220,6 +1339,11 @@ const narr=(t,o)=>UI.say(null,t,null,o);
 const say=(id,t,mood,o)=>UI.say(id,t,mood,o);
 const ask=(id,t,opts,mood)=>UI.say(id,t,mood,opts);
 const ACT={
+ sunflower:()=>UI.toast(G.st.chapter>=2?'Il girasole non segue il sole. Segue te.':'Un girasole. Gira la testa verso la luce. Quasi sempre.'),
+ hydr:()=>UI.toast('Ortensie. Agatha dice che cambiano colore con la terra. Sotto, cosa c\'è?'),
+ rock:()=>UI.toast('Un sasso coperto di muschio. Sotto, formiche al lavoro.'),
+ log:()=>UI.toast('Un tronco caduto. Dentro è cavo. Qualcosa ci ha fatto la tana.'),
+ mush:()=>UI.toast('Funghi. Meglio non mangiarli. Meglio non toccarli.'),
  fence:()=>UI.toast(G.st.chapter>=2?'Il giallo protegge. Il giallo protegge. Il giallo…':'Il recinto giallo. Oltre, il bosco.'),
  pine:()=>UI.toast('Pini neri, fitti come denti.'),
  tree:()=>UI.toast(['Un albero d\'autunno. Le foglie cadono senza vento.','Corteccia ruvida. Qualcuno ci ha inciso delle tacche.','Un albero. Sembra ascoltare.'][hsh(G.st.day,G.st.time)%3]),
@@ -1233,7 +1357,7 @@ const ACT={
  post:async(o)=>{const F=G.st.flags;if(F.posts[o.pi]){UI.toast('Un palo giallo. Protetto.');return}
   if(!F.gotPaint){UI.toast('Un palo grigio, scrostato. Stona col resto del recinto.');return}
   AU.play('paint');F.posts[o.pi]=1;burst('spark',o.tx*16+8,o.tx*0+o.ty*16+6,12,PAL.yel);o.img=o.img===IMG.fenceHg?IMG.fenceH:IMG.fenceV;
-  const n=F.posts.filter(Boolean).length;UI.toast(`Palo dipinto di giallo (${n}/5)`);if(n===5){addQuiete(5);UI.toast('Il recinto è di nuovo tutto giallo. Ti senti… al sicuro?')}},
+  const n=F.posts.filter(Boolean).length;UI.toast(`Palo dipinto di giallo (${n}/5)`);if(n===5){addQuiete(5);removeItem('vernice',99);UI.toast('Il recinto è di nuovo tutto giallo. La vernice è finita.')}},
  bushR:async(o)=>{const st=G.st,F=st.flags;const it=selItem();
   if(it&&it.id==='hoe'){AU.play('bury');F.bush[o.bi]=1;F.buried++;burst('dust',o.tx*16+8,o.ty*16+8,14);rebuildMaps();UI.toast(`Bacche seppellite (${Math.min(F.buried,3)}/3)`);addQuiete(2);return}
   const c=await ask(null,'Un cespuglio carico di bacche rosse. Rosse come… il colore cattivo.',['Raccoglile','Lasciale lì']);
@@ -1269,7 +1393,7 @@ const ACT={
    case 'cottage':return narr('La casetta di Clara. Profuma di pane e di cera gialla.');
    case 'forge':return narr('La fucina di Brom. Fa caldo anche da fuori. Dentro, tanti ferri di cavallo appesi.');
    case 'elder':
-    if(F.tobiaTalk&&!F.barnKey){AU.play('pick');F.barnKey=1;addQuiete(-3);await narr('Sopra la porta dell\'Anziano è inchiodato un ferro di cavallo, come portafortuna.');return narr('Ci passi le dita dietro. C\'è una chiave di ferro, fredda.\n(Hai ottenuto: Chiave del fienile)')}
+    if(F.tobiaTalk&&!F.barnKey){F.barnKey=1;giveItem('keyI');addQuiete(-3);await narr('Sopra la porta dell\'Anziano è inchiodato un ferro di cavallo, come portafortuna.');return narr('Ci passi le dita dietro. C\'è una chiave di ferro, fredda.\n(Hai ottenuto: Chiave del fienile)')}
     return narr(t>=20*60?'Le luci sono spente. Ma qualcuno ti osserva dalla finestra.':'Bussi. Nessuno risponde. La tenda però si è mossa.');
    case 'barn':
     if(!F.barnKey){if(!F.sawBarn){F.sawBarn=1;addQuiete(-3)}return narr('Il fienile dell\'Anziano. È rosso.\nL\'unica cosa rossa in tutta Hollowmere. È chiuso a chiave.')}
@@ -1278,10 +1402,13 @@ const ACT={
     AU.play('door');return goMap('barn',4,6,3);
   }},
  // interni
- bed:async()=>{const c=await ask(null,G.st.time<18*60?'È ancora presto. Vuoi dormire comunque fino a domani?':'Il letto del nonno. Coperte gialle, che sanno di lavanda. Dormire?',['Dormi','Non ancora']);if(c===0)endDay(false)},
+ bed:async()=>{const t=G.st.time,o=[];if(t<20*60+30)o.push(['Riposa un\'ora',()=>rest(60)]);if(t<12*60)o.push(['Riposa fino a mezzogiorno',()=>rest(12*60-t)]);if(t<18*60)o.push(['Riposa fino alle 18:00',()=>rest(18*60-t)]);o.push(['Dormi fino a domani',()=>endDay(false)]);o.push(['Non ancora',null]);
+  const c=await ask(null,t<18*60?'Il letto del nonno. Coperte gialle, che sanno di lavanda. Puoi riposare un po\', o dormire fino a domattina.':'Il letto del nonno. Coperte gialle, che sanno di lavanda. Dormire?',o.map(a=>a[0]));const f=o[c]&&o[c][1];if(f)await f()},
+ bench:async()=>{const t=G.st.time;if(t>=20*60+30)return narr('È tardi. Non è un\'ora per stare seduti all\'aperto.');const o=[['Aspetta un\'ora',60]];if(t<12*60)o.push(['Aspetta fino a mezzogiorno',12*60-t]);if(t<18*60)o.push(['Aspetta fino alle 18:00',18*60-t]);o.push(['Alzati',0]);
+  const c=await ask(null,'Una panchina di legno, consumata da generazioni di attese. Ti siedi?',o.map(a=>a[0]));if(o[c]&&o[c][1])await rest(o[c][1],true)},
  chest:async(o)=>{const F=G.st.flags;if(F.openedChest)return narr('La cassa del nonno. Vuota, a parte un odore di tabacco e di terra.');
   if(!F.gotChestKey)return narr('La cassa del nonno. È chiusa a chiave. Qualcuno al villaggio forse ha la chiave.');
-  F.openedChest=1;o.img=IMG.chestO;AU.play('door');await narr('La chiave gira. Dentro: una pipa, un fazzoletto giallo, e una pagina strappata.');AU.play('page');await UI.paper(PAGES.p1);addQuiete(-8)},
+  F.openedChest=1;removeItem('key',9);o.img=IMG.chestO;AU.play('door');await narr('La chiave gira. Dentro: una pipa, un fazzoletto giallo, e una pagina strappata.');AU.play('page');await UI.paper(PAGES.p1);addQuiete(-8)},
  shelf:()=>narr(G.st.chapter>=2?'Libri del nonno. Su ogni dorso, qualcuno ha scritto a matita un numero. Tutti "8".':'Libri del nonno: almanacchi, un erbario, "Il buon contadino". Polvere.'),
  table:()=>narr('Un tavolo per una persona. Ci sono due sedie.'),
  fire:()=>narr(G.horror>.5?'Nel fuoco, per un attimo, vedi una forma a cavallo.':'Il fuoco scoppietta e ti scalda le mani.'),
@@ -1330,19 +1457,20 @@ const cyc=(t,t0,len,P)=>P[((Math.floor((t-t0)/len)%P.length)+P.length)%P.length]
 const SCHED={
  ezekiel(st){const t=st.time,F=st.flags;if(st.day<1||F.finaleChase)return null;if(F.ezWait&&t<20*60)return at(10,12,3,'',0,{snap:1});
   if(t<390)return null;if(t<540){const p=cyc(t,390,38,[[52,33],[46,30],[44,22],[38,20]]);return at(p[0],p[1],0,'walk')}
-  if(t<720)return at(44,21,0,'watch',1);if(t<780)return null;if(t<1020)return at(42,15,0,'watch',1);
-  if(t<1200){const p=cyc(t,1020,36,[[26,20],[14,20],[30,12],[38,27],[52,33]]);return at(p[0],p[1],0,'walk')}return null},
+  if(t<720)return at(44,21,0,'watch',1);if(t<780)return null;if(t<1020)return at(42,15,0,'watch',1);if(t<1060)return at(53,8,3,'pray');
+  if(t<1200){const p=cyc(t,1060,34,[[26,20],[14,20],[30,12],[38,27],[52,33]]);return at(p[0],p[1],0,'walk')}return null},
  agatha(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
-  if((t>=450&&t<750)||(t>=810&&t<1080))return at(49,20,0,'stall');if(t>=1080&&t<1200)return at(55,18,0,'chat',1);return null},
+  if((t>=450&&t<750)||(t>=810&&t<1080))return at(49,20,0,'stall');if(t>=1080&&t<1140)return at(37,30,1,'chat');if(t>=1140&&t<1200)return at(47,20,0,'idle',1);return null},
  lucius(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
   if(t>=360&&t<480)return at(52,9,0,'tend',2);if(t>=480&&t<720)return at(43,14,0,'sweep',2);if(t>=780&&t<1020)return at(54,9,0,'tend',3);if(t>=1020&&t<1260)return at(43,13,0,'watch',1);return null},
  clara(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
-  if(t>=420&&t<660)return at(46,19,2,'idle',1);if(t>=720&&t<900)return at(26,21,0,'flowers',3);if(t>=900&&t<1170)return at(36,30,0,'idle',1);return null},
+  if(t>=420&&t<480)return at(48,19,0,'deliver');if(t>=480&&t<660)return at(46,19,2,'idle',1);if(t>=720&&t<900)return at(26,21,0,'flowers',3);if(t>=900&&t<1020)return at(46,17,3,'idle');if(t>=1020&&t<1170)return at(36,30,2,'idle',1);return null},
  brom(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
-  if((t>=420&&t<720)||(t>=780&&t<1140))return at(36,14,2,'forge');if(t>=720&&t<780)return at(47,22,0,'idle',1);return null},
+  if((t>=420&&t<720)||(t>=780&&t<990))return at(36,14,2,'forge');if(t>=720&&t<780)return at(47,22,0,'idle',1);if(t>=990&&t<1020)return at(58,31,3,'deliver');if(t>=1020&&t<1140)return at(36,14,2,'forge');if(t>=1140&&t<1200)return at(46,40,0,'idle',1);return null},
  tobia(st){const t=st.time,F=st.flags;if(st.day<1||F.finaleChase)return null;
   if(st.day===1&&t>=1200&&t<1410)return at(31,5,3);
   if(F.ch1end&&!F.tobiaTalk&&t>=540&&t<1020)return at(32,7,3,'play',2);
+  if(t>=840&&t<960)return at(55,35,0,'play',3,{run:1});
   if(t>=480&&t<1200){const p=cyc(t,st.day*90,70,[[23,16],[29,6],[54,11],[40,24],[23,30],[16,35]]);return at(p[0],p[1],0,'play',3,{run:1})}return null},
  faceless(){return null},
 };
@@ -1393,6 +1521,59 @@ function npcBarks(dt){if(G.cut||UI.busy()||G.map.id!=='main')return;const p=G.pl
 function snapNPCs(){for(const n of G.npcs){if(n.script)continue;n.goal=null;const s=SCHED[n.id]?SCHED[n.id](G.st):null;
  if(s){const [gx,gy]=freeNear(G.maps.main,s.x,s.y);placeNPC(n,'main',gx,gy,s.d);n.goal=gx+','+gy;n.home=[gx,gy];n.path=[]}else{n.hidden=true;n.path=[]}}G.bubbles=[]}
 // ================= DIALOGHI =================
+// ================= DIALOGHI CONTESTUALI =================
+const LINES={
+ ezekiel:{mat:['Mattiniero, {n}. Bene. Chi si alza presto ha meno tempo per pensare.','La rugiada è sacra, a Hollowmere. Non calpestarla per niente.'],pom:['Il sole è alto. Le ombre sono corte. È l\'ora più sicura del giorno.','Hai mangiato, {n}? Un corpo debole fa pensieri deboli.'],sera:['Il sole cala. Ricorda la campana.','Al tramonto le lanterne gialle si accendono da sole. Quasi da sole.'],
+  pioggia:['La pioggia lava via tutto. Quasi tutto.','Acqua dal cielo: la Valle beve. Brutto segno, se non beve.'],nebbia:['Nella nebbia non allontanarti dai sentieri. I sentieri sanno dove portano.'],farm:['Ho visto i tuoi campi. Ordinati. Tuo nonno sarebbe… sollevato.','Il raccolto è il patto, {n}. Ricordalo.'],amico:['Sei una presenza gradita, {n}. Più di quanto immagini.','Ti chiamerò per nome alla Festa. È un onore.'],
+  ch2:['Contiamo le zucche, contiamo le teste. Ogni cosa ha il suo numero.','Il vento soffia dal bosco, oggi. Non è mai un buon vento.','Non ascoltare Tobia. Non ascoltare nessuno. Ascolta me.']},
+ agatha:{mat:['Ho appena aperto, tesoro! I semi migliori vanno via presto.','Clara mi ha portato il pane caldo. Che angelo, quella ragazza.'],pom:['Mezzogiorno passato e ancora nessuno ha comprato zucche. Si vede che le coltivano tutti, quest\'anno.'],sera:['Chiudo il banco tra poco. Le chiacchiere però restano aperte!'],
+  pioggia:['Con questa pioggia i semi si piantano da soli, tesoro.','Mi si sono bagnati i nastri della cuffia. Gialli, per fortuna. Il giallo non stinge.'],nebbia:['Nebbia! Mia nonna diceva che nella nebbia passeggiano quelli di prima.'],farm:['Hai venduto bene, ieri? Si sente l\'odore dei soldi. E della terra.'],amico:['Sai che ti voglio bene, tesoro? Un pochino. Il giusto.','Per te ho sempre un seme in più. Non dirlo agli altri.'],
+  ch2:['Pianta, tesoro. Pianta tanto. La Festa ha fame.','Hai l\'aria stanca. Dormi bene? Io no. Mai, in questa stagione.','Elias comprava sempre zucche. Ora capisco perché.']},
+ lucius:{mat:['Ho già spazzato due volte. Le foglie cadono soltanto qui, sai?','Le prime ore sono dei morti. Li saluto uno per uno.'],pom:['A mezzogiorno suono la campana. È la voce della cappella.'],sera:['Stasera conterò, come ogni sera. Conto bene. Quasi sempre.'],
+  pioggia:['La pioggia sulle tombe. Musica che solo io sento.'],nebbia:['Nella nebbia, {figliolo|figliola}, le lapidi sembrano persone in fila.'],farm:['Benedico il tuo raccolto. Che serva a ciò a cui è destinato.'],amico:['Pregherò per te per primo, stasera. Prima degli altri.'],
+  ch2:['Sette. Otto. Nove? No. Otto.','Hai sentito qualcuno camminare dietro di te, venendo qui? No? Bene. Bene.','Il registro del fienile… no. Niente. Non ho detto niente.']},
+ clara:{mat:['Buongiorno! Ho fatto il pane, vuoi annusarlo? Solo annusarlo!','Ho contato i fiori stamattina. Sono sempre di più. Non capisco.'],pom:['Raccolgo fiori gialli per la cappella. Solo gialli. Gli altri… li lascio.','Mi siedo un po\'. Mi piace guardare la gente passare. Passano sempre gli stessi.'],sera:['Agatha viene a trovarmi, la sera. Parla tanto. Mi fa compagnia.','Tra poco suona la campana. Ti accompagno a casa? Scherzo. Non si può.'],
+  pioggia:['Mi piace la pioggia. Copre i rumori. Anche quelli del bosco.'],nebbia:['La nebbia mi fa paura. Ma solo un po\'. Tu mi fai meno paura.'],farm:['Le tue rape sono le più belle della Valle! Non dirlo ad Agatha.'],amico:['Sei la prima persona nuova da… da tanto. Sono contenta che sei qui.','Un giorno mi porterai a vedere le città con le luci? Promettilo.'],
+  ch2:['Non dormo più bene. Sento zoccoli. Anche di giorno.','Ti prego, non fare come gli altri. Non sparire.','Ho trovato un nastro rosso vicino al pozzo. L\'ho seppellito subito. Subito!']},
+ brom:{mat:['Il ferro si batte caldo. Le parole, fredde.','Mh. Buongiorno.'],pom:['Pausa. Mangio. Poi ferro.'],sera:['Consegno al fienile. Poi a casa.','Quattro ferri. Sempre quattro.'],
+  pioggia:['Pioggia. Il fuoco della fucina non si spegne. Mai.'],nebbia:['Nebbia. Non vedo l\'incudine. Ma la sento.'],farm:['Zappa buona? Se si rompe, portala qui.'],amico:['…Sei a posto, tu.','Se ti serve qualcosa di ferro, chiedi. Per te, niente soldi.'],
+  ch2:['Non chiedermi dei ferri.','Il cavallo non c\'è. Ma i ferri si consumano. Spiegamelo tu.','Vai a casa presto. Te lo dico una volta sola.']},
+ tobia:{mat:['Hihi! Ho rincorso le galline! Sono più veloci di te!','Il gatto nero mi segue. O io seguo lui?'],pom:['Uno, due, tre corvi! Quattro corvi! Hihi!','Gioco a nascondino. Con chi? Con quelli. Hihi.'],sera:['Quando suona la campana io vado al Varco. Lì nessuno mi trova.'],
+  pioggia:['Pioggia! Le pozzanghere hanno le facce! Hihi!'],nebbia:['Nella nebbia c\'è più gente. Tanta gente. Hihi.'],farm:['Hai le mani sporche di terra! Come il nonno! Hihi!'],amico:['Sei mio amico. Gli amici non si contano. Hihi.'],
+  ch2:['Rosso, rosso, rosso! Hihi!','Il nonno ha bussato anche da me. Io non ho aperto. Brav{o|a} me.','Lui conta. Tu no. Non ancora. Hihi.']},
+};
+function pickLine(id,base){const st=G.st,L=LINES[id]||{},t=st.time,pool=[...(base||[])];
+ const tod=t<11*60?'mat':t<17*60?'pom':'sera';pool.push(...(L[tod]||[]));
+ if(st.weather==='pioggia'||st.weather==='nebbia')pool.push(...(L[st.weather]||[]),...(L[st.weather]||[]));
+ if(st.flags.harvested||st.shipped.length)pool.push(...(L.farm||[]));
+ if(hearts(id)>=2)pool.push(...(L.amico||[]));
+ if(st.chapter>=2)pool.push(...(L.ch2||[]),...(L.ch2||[]));
+ st.talkN=st.talkN||{};const k=st.talkN[id]=(st.talkN[id]||0)+1;return pool[(st.day*7+k*5+(t>>6))%pool.length]}
+// ---------- chiacchierate tra abitanti (fumetti) ----------
+const CHATS=[
+ ['agatha','clara',[['agatha','Il pane di oggi?'],['clara','Un po\' bruciato. Scusa!'],['agatha','Bruciato è buono. Copre il sapore.'],['clara','Il sapore di cosa?']]],
+ ['agatha','clara',[['clara','Hai venduto molte zucche?'],['agatha','Mai abbastanza, cara.'],['clara','Per la Festa?'],['agatha','Per la Festa.']]],
+ ['ezekiel','lucius',[['ezekiel','Quanti, ieri sera?'],['lucius','Il numero giusto.'],['ezekiel','Bene.']]],
+ ['ezekiel','agatha',[['agatha','Il forestiero compra semi.'],['ezekiel','Lascialo piantare.'],['agatha','Come il vecchio.'],['ezekiel','Come il vecchio.']]],
+ ['brom','agatha',[['agatha','Brom! Ancora ferri?'],['brom','Mh.'],['agatha','Per quale cavallo, eh?'],['brom','…']]],
+ ['clara','tobia',[['tobia','Clara! Gioca con me!'],['clara','Non vicino al Varco, Tobia.'],['tobia','Hihi. Allora sì.']]],
+ ['lucius','clara',[['lucius','Fiori gialli per l\'altare?'],['clara','I più belli!'],['lucius','Brava. Il giallo ci tiene insieme.']]],
+ ['ezekiel','brom',[['ezekiel','I ferri saranno pronti?'],['brom','Sempre.'],['ezekiel','Quattro.'],['brom','Quattro.']]],
+ ['tobia','lucius',[['tobia','Contami! Contami!'],['lucius','Uno. Vai via.'],['tobia','Hihi! Uno!']]],
+];
+const CHATS2=[
+ ['agatha','clara',[['clara','Hai sentito, stanotte?'],['agatha','Io dormo, tesoro. Dormo sempre.'],['clara','…Anche io. Certo.']]],
+ ['ezekiel','lucius',[['lucius','Otto, ieri.'],['ezekiel','Sette.'],['lucius','…Sette.']]],
+ ['brom','ezekiel',[['brom','Non voglio più farli.'],['ezekiel','Li farai.'],['brom','…Li farò.']]],
+];
+function updChats(dt){if(G.map.id!=='main')return;const p=G.player;
+ if(G.chat){const c=G.chat;c.t-=dt;if(c.t<=0){if(c.i>=c.lines.length){c.a.chatT=c.b.chatT=60+Math.random()*60;G.chat=null;return}const [who,txt]=c.lines[c.i++];const n=NPC(who);if(n&&!n.hidden){bubble(n,txt,2.5);n.barkT=Math.max(n.barkT,6)}c.t=2.6}return}
+ const vis=G.npcs.filter(n=>!n.hidden&&!n.script&&n.map==='main'&&!n.moving&&(n.chatT||0)<=0&&Math.hypot(n.x-p.x,n.y-p.y)<220);
+ for(const n of G.npcs)n.chatT=(n.chatT||0)-dt;
+ for(let i=0;i<vis.length;i++)for(let j=i+1;j<vis.length;j++){const a=vis[i],b=vis[j];if(Math.hypot(a.x-b.x,a.y-b.y)>44)continue;
+  const L=(G.st.chapter>=2?CHATS2.concat(CHATS):CHATS).filter(c=>(c[0]===a.id&&c[1]===b.id)||(c[0]===b.id&&c[1]===a.id));if(!L.length){a.chatT=b.chatT=30;continue}
+  const c=L[Math.floor(Math.random()*L.length)];G.chat={a,b,lines:c[2],i:0,t:.3};a.dir=a.x<b.x?2:1;b.dir=b.x<a.x?2:1;if(Math.abs(a.x-b.x)<Math.abs(a.y-b.y)){a.dir=a.y<b.y?0:3;b.dir=b.y<a.y?0:3}a.idleT=12;b.idleT=12;return}}
+
 const GIFTABLE=id=>{const t=ITEMS[id]&&ITEMS[id].t;return t==='crop'||t==='bad'};
 async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
  try{const it=selItem();
@@ -1416,30 +1597,30 @@ const TALK={
   if(st.chapter>=2){if(!F.ezFest){F.ezFest=1;return say('ezekiel','La Festa del Raccolto è tra pochi giorni. Quest\'anno sarà speciale. Coltiva zucche, {n}. Tante zucche.')}return say('ezekiel',['Hai visto Tobia? Quel ragazzo parla troppo. Le parole, a Hollowmere, sono come semi.','Dormi bene, la notte? Bene. Molto bene.','Tuo nonno firmava sempre con la mano sinistra. Anche tu sei mancin{o|a}, vero?'][st.day%3],'stern')}
   if(st.day>=3&&!F.vespro)return say('ezekiel','Stasera c\'è il Vespro, alle sei. Ci saremo tutti. È importante che ci siano tutti.');
   if(F.gotPaint&&F.posts.filter(Boolean).length<5)return say('ezekiel','I pali, {n}. Il giallo protegge. Il grigio… lascia passare.');
-  return say('ezekiel',['Il raccolto cresce bene, quest\'anno. La Valle è contenta.','Non c\'è niente oltre il bosco, {n}. Niente che valga la pena.','Ricorda: alla campana, a casa.'][st.day%3])},
+  return say('ezekiel',pickLine('ezekiel',['Il raccolto cresce bene, quest\'anno. La Valle è contenta.','Non c\'è niente oltre il bosco, {n}. Niente che valga la pena.','Ricorda: alla campana, a casa.']))},
  async agatha(n){const st=G.st,F=st.flags;
   if(!F.met.agatha){F.met.agatha=1;await say('agatha','Un volto nuovo! Oh, hai gli occhi di Elias. Sei {il|la} nipote, vero? Che tesoro!');await say('agatha','Io sono Agatha Crane. Tengo l\'emporio: semi, attrezzi, chiacchiere. Le chiacchiere sono gratis!');}
   if(F.sawNoBridge&&!F.agBridge){F.agBridge=1;await say('agatha','Il ponte? Tesoro, a Hollowmere non c\'è mai stato un ponte.');await say('agatha','…Come sei arrivat{o|a}, allora? Eh. Bella domanda. Bella domanda davvero.','dark');addQuiete(-5)}
   if(st.day>=3&&!F.gotChestKey){const ok=F.posts.filter(Boolean).length>=5&&F.buried>=3;
-   if(ok){F.gotChestKey=1;AU.play('pick');await say('agatha','Hai dipinto i pali e seppellito il rosso. Brav{o|a}, brav{o|a}. Elias mi lasciò questa, per te.');await say('agatha','La chiave della sua cassa. Disse: «Solo se rispetta le regole.» E tu le rispetti.\n(Hai ottenuto: Chiave della cassa)')}
+   if(ok){F.gotChestKey=1;giveItem('key');await say('agatha','Hai dipinto i pali e seppellito il rosso. Brav{o|a}, brav{o|a}. Elias mi lasciò questa, per te.');await say('agatha','La chiave della sua cassa. Disse: «Solo se rispetta le regole.» E tu le rispetti.\n(Hai ottenuto: Chiave della cassa)')}
    else await say('agatha','Ho una cosa di Elias per te. Ma prima finisci le faccende: i pali gialli, le bacche rosse. Elias è stato chiaro.')}
   const c=await ask('agatha',st.chapter>=2?'Cosa ti serve, tesoro? Semi? Abbiamo tanti semi. Ne pianti tanti, vero?':'Cosa ti serve, tesoro?',['Compra semi','Chiacchiera','Niente']);
-  if(c===0)return UI.shop();if(c===1)return say('agatha',st.chapter>=2?['Brom forgia ferri di cavallo tutto l\'anno. Per abitudine, dice.','Clara è una brava ragazza. Troppo curiosa. La curiosità è un colore, sai?','Tuo nonno comprava sempre semi di zucca. Sempre. Anche quando non piantava.'][st.day%3]:['Il rosso è il colore cattivo, tesoro. Non chiedermi perché: è così e basta.','Lucius conta. Ezekiel decide. Io vendo. Ognuno ha il suo posto.','Il pane di Clara è il migliore della Valle. Non dirle che l\'ho detto.'][st.day%3])},
+  if(c===0)return UI.shop();if(c===1)return say('agatha',pickLine('agatha',st.chapter>=2?['Brom forgia ferri di cavallo tutto l\'anno. Per abitudine, dice.','Clara è una brava ragazza. Troppo curiosa. La curiosità è un colore, sai?','Tuo nonno comprava sempre semi di zucca. Sempre. Anche quando non piantava.']:['Il rosso è il colore cattivo, tesoro. Non chiedermi perché: è così e basta.','Lucius conta. Ezekiel decide. Io vendo. Ognuno ha il suo posto.','Il pane di Clara è il migliore della Valle. Non dirle che l\'ho detto.']))},
  async lucius(n){const st=G.st,F=st.flags;
   if(!F.met.lucius){F.met.lucius=1;await say('lucius','Sono Fratello Lucius. Suono la campana alle nove di sera.');await say('lucius','Quando la senti, chiuditi in casa. Non è una minaccia, {figliolo|figliola}. È una ninna nanna.');return}
   if(st.day>=3&&!F.vespro)return say('lucius','Stasera, Vespro. Dalle sei alle sette e mezza, in cappella. Non mancare: ci contiamo, la sera di raccolto.');
   if(st.chapter>=2)return say('lucius',['Conto le teste ogni sera. A volte i numeri non tornano. Il Signore perdona chi sbaglia i conti.','Otto. Sette. Otto. …Scusa. Pensavo ad alta voce.','Tuo nonno sedeva sempre in fondo. Diceva che da lì si vedono tutti.'][st.day%3],st.quiete<50?'dark':'');
-  return say('lucius',['Le tombe vanno curate. I morti di Hollowmere sono molto… presenti.','Il sego delle candele lo facciamo noi. Non chiedere con cosa.','Dormi con la finestra chiusa.'][st.day%3])},
+  return say('lucius',pickLine('lucius',['Le tombe vanno curate. I morti di Hollowmere sono molto… presenti.','Il sego delle candele lo facciamo noi. Non chiedere con cosa.','Dormi con la finestra chiusa.']))},
  async clara(n){const st=G.st,F=st.flags;
   if(!F.met.clara){F.met.clara=1;await say('clara','Ciao! Tu devi essere {il nuovo|la nuova}… cioè, {il|la} nipote di Elias! Io sono Clara.');await say('clara','Tuo nonno mi raccontava storie. Di città con luci che non si spengono mai. Sono vere?');const c=await ask('clara','',['Sì, sono vere','Sono solo storie']);await say('clara',c===0?'Lo sapevo! Un giorno le vedrò. Un giorno…':'Oh. Già. Anche lui alla fine diceva così.','sad');return}
   if(st.day>=2&&!F.gotBread&&!F.offered){if(addItem('focaccia',1)){F.gotBread=1;await say('clara','Tieni: una focaccia di zucca. È per il ceppo vicino al Varco. Va lasciata al tramonto, dalle sei alle otto e mezza.');await say('clara','Non mangiarla! È per loro.');const c=await ask('clara','',['"Loro" chi?','Va bene']);if(c===0)await say('clara','…Quelli di cui non si parla. Appunto.','fear')}return}
   if(F.ch1end&&!F.claraBarn){F.claraBarn=1;await say('clara','{n}… posso dirti una cosa? Ma non ridere.','fear');await say('clara','L\'altra notte non dormivo. Ho visto una luce nel fienile dell\'Anziano. Una luce rossa. E ho sentito… zoccoli. Lì dentro.','fear');await say('clara','Tobia va dappertutto, di notte. Lui sa qualcosa. Lo trovi vicino al Varco, di giorno.');addQuiete(-4);return}
   if(F.claraBarn&&!F.ch2end)return say('clara','Stai attent{o|a}, ti prego. Se vai al fienile… vai dopo la campana, quando l\'Anziano dorme. E torna a casa in fretta.','fear');
-  return say('clara',['Il giallo mi sta bene, vero? Me lo ha cucito mia madre. Prima che…','Ti piace Hollowmere? A me sì. Quasi sempre.','Hai sentito il vento, stanotte? Sembrava che chiamasse un nome.'][st.day%3])},
+  return say('clara',pickLine('clara',['Il giallo mi sta bene, vero? Me lo ha cucito mia madre. Prima che…','Ti piace Hollowmere? A me sì. Quasi sempre.','Hai sentito il vento, stanotte? Sembrava che chiamasse un nome.']))},
  async brom(n){const st=G.st,F=st.flags;
   if(!F.met.brom){F.met.brom=1;await say('brom','Brom. Fabbro.');await say('brom','Ti serve qualcosa di ferro? No? Allora non mi serve parlare.');return}
   if(F.ch1end&&!F.bromShoes){F.bromShoes=1;await say('brom','Ferri di cavallo. Quattro, ogni anno, per la Festa.');const c=await ask('brom','',['Per quale cavallo?','Bel lavoro']);if(c===0){await say('brom','…');await say('brom','Non ci sono cavalli a Hollowmere, {ragazzo|ragazza}. Non ci sono mai stati.','dark');addQuiete(-10);AU.play('hooves')}else await say('brom','Mh. Nessuno me lo dice mai.');return}
-  return say('brom',['Clang. Clang. È un buon suono. Copre gli altri.','Tuo nonno mi ha insegnato a battere il ferro. Era bravo con le mani. Troppo bravo.','Torna a casa presto stasera.'][st.day%3])},
+  return say('brom',pickLine('brom',['Clang. Clang. È un buon suono. Copre gli altri.','Tuo nonno mi ha insegnato a battere il ferro. Era bravo con le mani. Troppo bravo.','Torna a casa presto stasera.']))},
  async tobia(n){const st=G.st,F=st.flags;
   if(st.day===1&&st.time>=1200){AU.play('laugh');await say('tobia','Hihi. Lui conta. Conta le teste.');await say('tobia','Tu ne hai una!','dark');addQuiete(-6);return}
   if(F.claraBarn&&!F.tobiaTalk){
@@ -1450,7 +1631,7 @@ const TALK={
    await say('tobia','Vuoi entrare nel fienile? La chiave dorme. Dorme sotto il ferro di cavallo. Sulla porta dell\'Anziano.');
    await say('tobia','Shhh. Vai dopo la campana. Il cavallo dorme, prima. Hihi.','dark');F.tobiaTalk=1;AU.play('laugh');return}
   if(!F.met.tobia){F.met.tobia=1;return say('tobia','Hihi! Ciao! Io sono Tobia. Conto le foglie. Una, due, tante.')}
-  return say('tobia',['Hihi. Le zucche ascoltano. Lo sapevi?','Il Vecchio Elias mi dava le caramelle. Adesso non può. Non ha le mani. Hihi.','Uno, due, tre… otto! Hihi!'][st.day%3],st.chapter>=2&&st.day%3===1?'dark':'')},
+  return say('tobia',pickLine('tobia',['Hihi. Le zucche ascoltano. Lo sapevi?','Il Vecchio Elias mi dava le caramelle. Adesso non può. Non ha le mani. Hihi.','Uno, due, tre… otto! Hihi!']),st.chapter>=2&&st.day%3===1?'dark':'')},
  async faceless(){},
 };
 async function ezekielPaint(n){const st=G.st,F=st.flags;F.ezWait=0;F.gotPaint=1;F.met.ezekiel=1;
@@ -1458,7 +1639,7 @@ async function ezekielPaint(n){const st=G.st,F=st.flags;F.ezWait=0;F.gotPaint=1;
  await say('ezekiel','Alcuni pali del recinto hanno perso il colore. Cinque, per l\'esattezza. Il giallo è il colore che protegge.');
  await say('ezekiel','Ecco della vernice. Dipingili, ti prego. Prima del tramonto.\n(Hai ottenuto: Vernice gialla)');
  if(st.day>=2){await say('ezekiel','E stamattina, nei tuoi campi… sono spuntate bacche rosse. Seppelliscile. Tutte.','stern');}
- AU.play('pick');UI.quest()}
+ giveItem('vernice');UI.quest()}
 // ================= OBIETTIVI =================
 const QUESTS=[
  {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Presentati agli abitanti (${metCount()}/5)`,d:st=>metCount()>=5},
@@ -1625,11 +1806,13 @@ const TITLE={
  opts(){UI.open(`<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`);const vm=$('#vm'),vs=$('#vs');vm.oninput=()=>{AU.vol.m=+vm.value;AU.applyVol();LS.set('hm_vol',JSON.stringify(AU.vol))};vs.oninput=()=>{AU.vol.s=+vs.value;AU.applyVol();AU.play('blip');LS.set('hm_vol',JSON.stringify(AU.vol))}},
  full(){goFull()},
 };
-function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];return st}
+function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];
+ const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
+ if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
- snapNPCs();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
-function toTitle(){G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
+ snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
+function toTitle(){G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // ---------- prologo ----------
 async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,44,46,3);
  const ez=NPC('ezekiel'),cl=NPC('clara');ez.script=cl.script=true;placeNPC(ez,'main',44,39,0);placeNPC(cl,'main',46,39,0);updateCam(0);G.cutMusic='title';
@@ -1648,7 +1831,7 @@ async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuil
  await say('ezekiel',['Perché è il colore cattivo. Non serve altro.','Niente. E quel niente non va disturbato.','{Bravo ragazzo|Brava ragazza}. Proprio come tuo nonno.'][c],c<2?'stern':'');
  await say('clara','Ti accompagniamo alla fattoria! È bellissima, vedrai. Un po\' polverosa. Il nonno non… insomma. Andiamo!');
  await UI.fade(1,1000);st.flags.arrived=1;ez.script=cl.script=false;G.cutMusic=null;
- st.day=1;st.time=6*60;morningSetup();rebuildMaps();snapNPCs();G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);NET.save(st);
+ st.day=1;st.time=6*60;morningSetup();rebuildMaps();snapNPCs();spawnCritters();G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);NET.save(st);
  await UI.card('Capitolo I','Il Recinto Giallo','Giorno 1 · Autunno',false,true,1400);
  UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,900);G.cut--;
  await sleep(300);G.cut++;await narr('La casa del nonno. Odora di legno, lavanda e di qualcosa di chiuso da tanto tempo.');await narr('Fuori ti aspettano i campi. E il villaggio. Esci dalla porta in basso.\n(Muoviti con WASD o il pollice sinistro. E / Spazio / A per agire.)');G.cut--}
@@ -1673,12 +1856,15 @@ async function endDay(passed,faded){const st=G.st;G.cut++;
   for(const k in st.farm){const f=st.farm[k];if(f.c&&f.w)f.c.a++;f.w=false;if(!f.c&&Math.random()<.08)delete st.farm[k]}
   const pay=st.shipped.reduce((a,[id,n])=>a+ITEMS[id].v*n,0);st.money+=pay;st.shipped=[];
   st.day++;st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
-  morningSetup();rebuildMaps();snapNPCs();G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
+  morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
   await UI.card('',`Giorno ${st.day}`,`${DAYN[(st.day+3)%7]} · Autunno${pay?` · Spedizione: +${pay}g`:''}`,false,false,1300);
   updateCam(0);await UI.fade(0,800);
  }finally{G.cut--}
  await morningEvents()}
+async function rest(min,outside){const st=G.st;const target=Math.min(st.time+min,20*60+30);if(target<=st.time)return;G.cut++;
+ try{await UI.fade(1,500);const h=(target-st.time)/60;while(st.time<target){st.time++;onMinute()}st.energy=Math.min(100,st.energy+Math.round(h*(outside?6:12)));snapNPCs();G.parts=[];UI.hud();UI.quest();await sleep(250);await UI.fade(0,600);
+  UI.toast(`${outside?'Hai aspettato':'Hai riposato'}. Sono le ${Math.floor(st.time/60)}:${String(st.time%60).padStart(2,'0')}.`)}finally{G.cut--}}
 async function passOut(){const st=G.st;if(G.cut)return;G.cut++;await narr('Sono le due di notte. Crolli dal sonno dove ti trovi.');G.cut--;await endDay(true)}
 async function caught(){const F=G.st.flags;G.cut++;G.chase=false;AU.play('scream');G.scare=1.6;G.shake=8;await sleep(1400);
  if(F.finaleChase&&!F.ch2end){G.cut--;return gameOver()}
@@ -1747,6 +1933,7 @@ async function finale(){const st=G.st,F=st.flags;G.cut++;G.chase=false;G.horse.o
 function clock(dt){if(G.cut||UI.busy())return;G.clockAcc+=dt;while(G.clockAcc>=SEC_PER_MIN){G.clockAcc-=SEC_PER_MIN;G.st.time++;onMinute()}}
 function onMinute(){const st=G.st,t=st.time,F=st.flags;if(st.day<1)return;
  if(t%10===0)UI.hud();
+ if(t===12*60&&!(st.chore==='campana'&&st.choreOk)){AU.play('bell');if(G.map.id==='main')UI.toast('🔔 Mezzogiorno. Fratello Lucius suona la campana.')}
  if(t===21*60){AU.play('bell');AU.play('bell',1.7);AU.play('bell',3.4);UI.toast('🔔 La campana della sera. Rientra a casa.','bad')}
  if(t===18*60&&F.gotBread&&!F.offered)UI.toast('Il sole cala. È l\'ora del ceppo.');
  if(t===20*60+31&&F.gotBread&&!F.offered&&!F.missedOffer){F.missedOffer=1;UI.quest()}
@@ -1762,13 +1949,13 @@ function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75
 let _last=performance.now(),_hudT=0;
 function update(dt){
  const frozen=UI.modalOpen;
- if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt)}
+ if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);
   if(G.st.weather==='pioggia'&&!G.map.interior&&!G.cut&&Math.random()<dt*.01){G.flash={a:.5,c:'#dfe8ff'};AU.play('thunder',.5)}if(!G.cut&&!UI.dlgOpen)updateHorse(dt);clock(dt)}
  updParts(dt);if(G.map)updateCam(dt);updHorror(dt);
  G.flash.a=Math.max(0,G.flash.a-dt*1.5);G.scare=Math.max(0,G.scare-dt*.7);
  _hudT-=dt;if(_hudT<=0){_hudT=.5;UI.hud();UI.quest()}
 }
-function updateTitle(dt){const t=G.t;G.cam.x=300+Math.sin(t*.05)*260;G.cam.y=150+Math.sin(t*.031)*90;G.st.time=19*60+10;updParts(dt)}
+function updateTitle(dt){if(G.critters)updCritters(dt);const t=G.t;G.cam.x=300+Math.sin(t*.05)*260;G.cam.y=150+Math.sin(t*.031)*90;G.st.time=19*60+10;updParts(dt)}
 function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  try{if(G.mode==='game'&&G.map)update(dt);else if(G.mode==='title')updateTitle(dt);render()}catch(e){console.error(e)}
  try{AU.setMode(chooseMusic());AU.tick()}catch(e){}
