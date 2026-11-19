@@ -63,7 +63,7 @@ function farmAct(tx,ty){
   UI.toast(`${n}: ${c.a<=0?'appena seminata, ':''}${l===1?'matura domani':'matura tra '+l+' notti'} bagnate.${f.w?' Annaffiata oggi.':cropWilt(f)?' È appassita: annaffiala per farla riprendere, o toglila con la zappa e ripianta.':' Va annaffiata.'}${f.f?' Terra concimata.':''}`,cropWilt(f)?'bad':'');return}
 }
 // ================= AZIONI =================
-function doAction(){const [fx,fy]=frontTile();const p=G.player;
+function doAction(){const [fx,fy]=frontTile();const p=G.player;toolSwing();
  if(G.map.id==='main'&&G.critters){const ax=p.x+DIRV[p.dir][0]*14,ay=p.y+DIRV[p.dir][1]*14;for(const c of G.critters){if(Math.hypot(c.x-ax,c.y-ay)>14)continue;
   if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');eggCat();floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
   if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}

@@ -129,7 +129,7 @@ function buildBarn(st){
  m.add({kind:'mat',tx:4,ty:7,img:IMG.mat,dx:4*16,dy:7*16+4,sy:-1,solid:[],hits:[],deco:1});
  m.doors.push({tx:4,ty:7,to:'main',x:58,y:31,dir:0});
  return m}
-function rebuildMaps(){const st=G.st;applySeasonLooks();if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);seasonDecor(G.maps.main,st);festDecor(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
+function rebuildMaps(){const st=G.st;applySeasonLooks();if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);seasonDecor(G.maps.main,st);festDecor(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}applyLook(G.maps.main,st);applyLook(G.maps.house,st);spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
 const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
@@ -318,7 +318,7 @@ function render(){
  list.sort((a,b)=>a.sy-b.sy);
  for(const e of list){
   if(e.crit)drawCritter(e.crit);
-  else if(e.pl){if(G.erede)drawEredeHorse();else drawSprite('player',G.player)}
+  else if(e.pl){if(G.erede)drawEredeHorse();else{const [ox,oy]=swingOffset();G.player.x+=ox;G.player.y+=oy;drawSprite('player',G.player);G.player.x-=ox;G.player.y-=oy;drawToolAnim()}}
   else if(e.prey)drawSprite('prey',G.prey);
   else if(e.coach)drawCoach();
   else if(e.deer)drawDeer(e.deer);
@@ -328,8 +328,8 @@ function render(){
   else if(e.sh)drawShadow(e.sh);
   else if(e.npc){drawSprite(e.npc.id,e.npc);favorMark(e.npc)}
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
-  else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
-  else{let img=e.img;if(e.anim==='fire')img=IMG.fire[Math.floor(G.t*5)%2];if(e.win&&G.night>.5)img=IMG.windowN;dImg(ctx,img,Math.round(e.dx),Math.round(e.dy));
+  else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind)+hitShake(e)*1.5);ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
+  else{let img=e.img;if(e.anim==='fire')img=IMG.fire[Math.floor(G.t*5)%2];if(e.frames)img=e.frames[Math.floor(G.t*3+e.tx)%e.frames.length];if(e.win&&G.night>.5)img=IMG.windowN;{const sh=hitShake(e),sc=popScale(e);if(sc!==1){ctx.save();ctx.translate(e.dx+iw(img)/2,e.dy+ih(img));ctx.scale(sc,sc);dImg(ctx,img,Math.round(-iw(img)/2),Math.round(-ih(img)));ctx.restore()}else dImg(ctx,img,Math.round(e.dx+sh),Math.round(e.dy))}
    if(e.kind==='bld'&&G.night>.25&&e.img.lights&&winLit(e.key)){const k=clamp((G.night-.25)*3,0,1);for(const [wx,wy] of e.img.lights){const X=Math.round(e.dx)+1+wx,Y=Math.round(e.dy)+wy;ctx.fillStyle=`rgba(255,196,110,${(.9*k).toFixed(2)})`;ctx.fillRect(X,Y,10,10);ctx.fillStyle=`rgba(255,236,170,${(.8*k).toFixed(2)})`;ctx.fillRect(X+1,Y+1,3,3);ctx.fillStyle=`rgba(90,50,20,${k.toFixed(2)})`;ctx.fillRect(X+4,Y,2,10);ctx.fillRect(X,Y+4,10,2)}}}
  }
  if(!m.interior&&G.mode!=='boot')drawClouds(cx,cy);

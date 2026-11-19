@@ -111,7 +111,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   const el=$('#lt');let i=0;const tick=setInterval(()=>{i+=2;el.textContent=txt.slice(0,i);if(i%8===0)AU.play('page');if(i>=txt.length){clearInterval(tick);setTimeout(()=>{el.innerHTML=esc(txt)+'\n\n<s style="opacity:.35">non venire</s>';$('#ltok').style.visibility='visible'},900)}},28);
   const skip=()=>{if(i<txt.length){i=txt.length-2}};$('#mbox').onclick=skip;$('#ltok').onclick=e=>{e.stopPropagation();AU.play('ui');clearInterval(tick);this.close()}})},
  showTitle(){$('#fade').style.transition='opacity .8s';$('#fade').style.opacity=0;$('#card').classList.add('hide');$('#title').classList.remove('hide');this.showHud(false);$('#tmenu [data-a="cont"]').disabled=!LS.get('hm_save');
-  {const done=JSON.parse(LS.get('hm_endings')||'[]').length>0;$('#tmenu [data-a="valle"]').classList.toggle('hide',!done&&!LS.get('hm_free'));$('#tmenu [data-a="finali"]').classList.toggle('hide',!done)}
+  {const done=JSON.parse(LS.get('hm_endings')||'[]').length>0||!!LS.get('hm_free'),vb=$('#tmenu [data-a="valle"]');vb.classList.remove('hide');vb.classList.toggle('locked',!done);vb.textContent=done?'La Valle · multiplayer':'🔒 La Valle · multiplayer';$('#tmenu [data-a="finali"]').classList.toggle('hide',!done)}
   clearInterval(this._tt);let n=0;this._tt=setInterval(()=>{n++;const s=$('#tsub');if(n>8&&Math.random()<.35){s.textContent='La Valle Affamata';s.classList.add('g');setTimeout(()=>{s.textContent='La Valle Quieta';s.classList.remove('g')},180+Math.random()*300)}},1500)},
  hideTitle(){$('#title').classList.add('hide');clearInterval(this._tt)},
 };
