@@ -850,7 +850,7 @@ function aimInfo(){const st=G.st,m=G.map;if(G.mode!=='game'||G.cut||UI.busy()||m
  const tool=it.id==='hoe'||it.id==='can'||def.t==='seed'||def.t==='bad'||def.t==='fert';if(!tool)return null;
  const [tx,ty]=frontTile(),k=tx+','+ty,f=st.farm[k],g=m.get(tx,ty),free=!m.objAt(tx,ty)&&(g===1||g===12);let ok=false;
  if(f&&f.c&&cropStage(f.c)===3)ok=true;
- else if(it.id==='hoe')ok=(inFarm(tx,ty)&&free&&!f)||!!(f&&f.c&&f.c.dead);
+ else if(it.id==='hoe')ok=(inFarm(tx,ty)&&free&&!f)||cropGone(f);
  else if(def.t==='fert')ok=!!(f&&!f.f);
  else if(it.id==='can')ok=!!(f&&!f.w);
  else if(def.t==='seed')ok=!!(f&&!f.c);
@@ -1429,8 +1429,9 @@ function drawBubbles(m){if(!G.bubbles.length)return;ctx.font='8px "Silkscreen","
   ctx.fillStyle='#3b1f0e';ctx.fillRect(bx-1,by-1,tw+2,13);ctx.fillRect(X-2,by+12,5,1);ctx.fillRect(X-1,by+13,3,1);ctx.fillStyle='#fff4dc';ctx.fillRect(bx,by,tw,11);ctx.fillRect(X-1,by+11,3,1);ctx.fillStyle='#3b1f0e';ctx.fillText(b.t,X,by+9)}}
 function cropImg(f){const c=f.c;if(c.dead)return CROPIMG.dead;const s=cropStage(c);if(c.t==='zucca'&&s===3&&G.st.chapter>=2)return CROPIMG.zuccaFace;return (cropWilt(f)?CROPW:CROPIMG)[c.t][s]}
 const cropWilt=f=>!!(f.c&&!f.c.dead&&!f.w&&(f.c.dry||0)>=2&&cropStage(f.c)<3);
+const cropGone=f=>!!(f&&f.c&&(f.c.dead||cropWilt(f)));
 const cropLeft=c=>Math.max(0,CROPS[c.t].days-c.a);
-function cropStatus(f){const c=f.c,l=cropLeft(c);if(c.dead)return 'secca';if(!l)return 'matura!';if(cropWilt(f))return 'ha sete!';
+function cropStatus(f){const c=f.c,l=cropLeft(c);if(c.dead)return 'secca';if(!l)return 'matura!';if(cropWilt(f))return 'appassita';
  return l===1?'domani':`${l} notti`}
 function drawDrop(X,Y,bad){const fl=bad&&Math.floor(G.t*4)%2;ctx.fillStyle='#14202a';ctx.fillRect(X-2,Y-2,5,6);ctx.fillRect(X-1,Y-4,3,2);ctx.fillRect(X,Y-5,1,1);
  ctx.fillStyle=bad?(fl?'#ffb060':'#e0602a'):'#5aa8f0';ctx.fillRect(X-1,Y-2,3,5);ctx.fillRect(X,Y-4,1,2);ctx.fillStyle=bad?'#ffe0b0':'#d8f0ff';ctx.fillRect(X-1,Y-1,1,2)}
@@ -1627,7 +1628,7 @@ function farmAct(tx,ty){
  if(f&&f.c&&cropStage(f.c)===3){harvest(tx,ty,f);return}
  const g=m.get(tx,ty),free=!m.objAt(tx,ty)&&(g===1||g===12);
  if(def&&def.t==='bad'){if(free||f){const n=countItem(id);removeItem(id,n);AU.play('bury');burst('dust',tx*16+8,ty*16+8,10);if(id==='bacche'){st.flags.buried+=n;UI.toast(`Hai seppellito ${n} bacche rosse.`)}else{st.flags.ribbonBuried=1;UI.toast('Hai seppellito il nastro. Ti senti più legger{o|a}. O più sol{o|a}.')}addQuiete(4);return}UI.toast('Non qui.');return}
- if(id==='hoe'&&f&&f.c&&f.c.dead){if(!useEnergy(1))return;f.c=null;AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);UI.toast('Hai ripulito la zolla. Puoi seminare di nuovo.');return}
+ if(id==='hoe'&&cropGone(f)){if(!useEnergy(1))return;f.c=null;f.w=false;AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);UI.toast('Hai tolto la pianta appassita. Puoi seminare di nuovo.');return}
  if(def&&def.t==='fert'){if(!f){UI.toast('Il concime va sulla terra dissodata.');return}if(f.f){UI.toast('Questa zolla è già concimata.');return}f.f=1;removeItem(id,1);AU.play('plant');burst('dust',tx*16+8,ty*16+10,6);floatText('Concimata',tx*16+8,ty*16-4,'#e8c23a');tip('tutFert','Concimata: il raccolto di questa zolla sarà più abbondante.');return}
  if(id==='hoe'){
   if(!inFarm(tx,ty)){if(free)UI.toast('La terra qui è troppo dura. Coltiva nei campi del nonno.');return}
@@ -1636,7 +1637,7 @@ function farmAct(tx,ty){
  if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
  if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0,dry:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
  if(f&&f.c){const c=f.c,n=CROPS[c.t].n;if(c.dead){UI.toast(`${n}: è seccata. Ripulisci la zolla con la zappa.`,'bad');return}const l=cropLeft(c);
-  UI.toast(`${n}: ${c.a<=0?'appena seminata, ':''}${l===1?'matura domani':'matura tra '+l+' notti'} bagnate.${f.w?' Annaffiata oggi.':cropWilt(f)?' Sta appassendo: annaffiala subito!':' Va annaffiata.'}${f.f?' Terra concimata.':''}`,cropWilt(f)?'bad':'');return}
+  UI.toast(`${n}: ${c.a<=0?'appena seminata, ':''}${l===1?'matura domani':'matura tra '+l+' notti'} bagnate.${f.w?' Annaffiata oggi.':cropWilt(f)?' È appassita: annaffiala per farla riprendere, o toglila con la zappa e ripianta.':' Va annaffiata.'}${f.f?' Terra concimata.':''}`,cropWilt(f)?'bad':'');return}
 }
 // ================= AZIONI =================
 function doAction(){const [fx,fy]=frontTile();const p=G.player;
@@ -2022,7 +2023,7 @@ function hintText(){const st=G.st,t=st.time,crops=Object.values(st.farm).filter(
  const fv=(st.favors||[]).find(f=>!f.done&&countItem(f.item)>=f.n);if(fv)return `Hai ciò che chiede ${NAMES[fv.id]}: portaglielo (${fmtItems(fv.item,fv.n)}).`;
  if(crops.some(f=>cropStage(f.c)===3))return 'Raccogli ciò che è maturo: mettiti davanti alla pianta e premi A/E.';
  if(st.inv.some(s=>s&&ITEMS[s.id].t==='crop'))return 'Vendi il raccolto nella cassetta accanto a casa, oppure cucinalo al camino: i piatti ridanno energia.';
- if(crops.some(f=>f.c.dead))return 'Una pianta è seccata: ripulisci la zolla con la zappa.';
+ if(crops.some(f=>cropGone(f)))return 'Una pianta è appassita: annaffiala, o toglila con la zappa e ripianta.';
  const dry=crops.filter(f=>!f.w&&!f.c.dead&&cropStage(f.c)<3).length;if(dry&&t<20*60+30)return `Annaffia le piantine (${dry} da bagnare).`;
  if(t>=19*60)return 'Torna a casa e dormi nel letto: le piante crescono di notte.';
  if(!st.choreOk)return 'Leggi la bacheca in piazza: c\'è una faccenda pagata.';
@@ -2865,8 +2866,7 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
    await narr('Sul vetro della finestra, dall\'esterno, c\'è l\'impronta di una mano. Non è piccola. Non è tua.',{dark:1});
    await narr('Oggi è il giorno della Festa. Alle sette, in piazza. Ti aspettano tutti.',{dark:1});addQuiete(-5)}
   {const N=G.farmNews||{};G.farmNews=null;const pl=(n,a,b)=>n===1?a:n+' '+b;
-   if(N.dead)UI.toast(`${pl(N.dead,'Una pianta è seccata','piante sono seccate')}: troppe notti senz'acqua.`,'bad');
-   if(N.wilt){UI.toast(`${pl(N.wilt,'Una pianta sta appassendo','piante stanno appassendo')}. Annaffia oggi, o domani sarà tardi.`,'bad');tip('tutWilt','Le piante bagnate crescono di una tacca ogni notte. Due notti all\'asciutto: appassiscono. Tre: seccano.')}
+   if(N.wilt){UI.toast(`${pl(N.wilt,'Una pianta è appassita','piante sono appassite')}: troppe notti senz'acqua.`,'bad');tip('tutWilt','Le piante bagnate crescono di una tacca ogni notte. Due notti all\'asciutto e appassiscono: annaffiale per salvarle, o toglile con la zappa e ripianta.')}
    if(N.ripe)UI.toast(`Stanotte ${pl(N.ripe,'una pianta è maturata','piante sono maturate')}! Mettiti davanti e premi A/E per raccogliere.`);
    else if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
    else if(N.grow)UI.toast(`Stanotte ${pl(N.grow,'una pianta è cresciuta','piante sono cresciute')}.`)}
@@ -2881,7 +2881,7 @@ async function endDay(passed,faded){const st=G.st;G.cut++;
   G.horse.on=false;G.chase=false;G.cutMusic=null;G.scare=0;
   const news={grow:0,ripe:0,wilt:0,dead:0};
   for(const k in st.farm){const f=st.farm[k],c=f.c;
-   if(c&&!c.dead&&cropStage(c)<3){if(f.w){c.a++;c.dry=0;news.grow++;if(cropStage(c)===3)news.ripe++}else if(c.a>0){c.dry=(c.dry||0)+1;c.bad=1;if(c.dry>=3){c.dead=1;news.dead++}else if(c.dry>=2)news.wilt++}}
+   if(c&&!c.dead&&cropStage(c)<3){if(f.w){c.a++;c.dry=0;news.grow++;if(cropStage(c)===3)news.ripe++}else if(c.a>0){c.dry=(c.dry||0)+1;c.bad=1;if(c.dry===2)news.wilt++}}
    f.w=false;if(!c&&!f.f&&Math.random()<.08)delete st.farm[k]}
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
