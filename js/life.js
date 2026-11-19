@@ -137,7 +137,7 @@ function eatSel(){const it=selItem();if(!it||ITEMS[it.id].t!=='food')return fals
 const FAV_NPC=['ezekiel','agatha','lucius','clara','brom'];
 const PL={rapa:'rape',patata:'patate',zucca:'zucche',fagioli:'manciate di fagioli',cavolo:'cavoli neri',pane:'pani di Clara',zuppa:'zuppe di rape',arrosto:'porzioni di patate arrosto',torta:'torte di zucca'};
 const SG={rapa:'una rapa',patata:'una patata',zucca:'una zucca',fagioli:'una manciata di fagioli',cavolo:'un cavolo nero',pane:'un pane di Clara',zuppa:'una zuppa di rape',arrosto:'una porzione di patate arrosto',torta:'una torta di zucca'};
-const fmtItems=(id,n)=>n===1?SG[id]:n+' '+PL[id];
+const fmtItems=(id,n)=>n===1?(SG[id]||ITEMS[id].n.toLowerCase()):n+' '+(PL[id]||ITEMS[id].n.toLowerCase());
 const FAV_VAL={rapa:45,patata:80,zucca:170,fagioli:32,cavolo:210,pane:35,zuppa:95,arrosto:140,torta:260};
 const FAV_ASK={
  ezekiel:['Per il Conteggio alla Festa mi servono {it}. Portamele, {n}. Ti ricompenserò: {r} scudi.','La mensa del Raccolto ha bisogno di {it}. Puoi provvedere? Ricompensa: {r} scudi.'],
@@ -161,7 +161,7 @@ function genFavors(){const st=G.st,F=st.flags;st.favors=(st.favors||[]).filter(f
   let pool=['rapa'];if(isFree(st)){const s=seasonOf(st);pool=[...Object.keys(CROPS).filter(c=>cropInSeason(c,s)),...(WILD[s]||[]),...COOK.filter(r=>knows(st,r.id)).map(r=>r.id).slice(0,6)];}else if(st.day>=4)pool.push('patata','zucca');if(st.day>=5)pool.push('cavolo','fagioli');if(F.cooked)pool.push('zuppa','arrosto','torta');if(id!=='clara')pool.push('pane');
   const lk=LIKES[id]||{},w=[];pool.forEach(k=>{for(let j=0;j<(lk[k]>=2?3:1);j++)w.push(k)});if(st.day>=6&&!isFree(st))w.push('zucca','zucca','zucca');
   const item=w[Math.floor(Math.random()*w.length)],q=ITEMS[item].t==='crop'?1+(st.day>=5?1:0)+(Math.random()<.4?1:0):1;
-  st.favors.push({id,item,n:q,reward:Math.round(FAV_VAL[item]*q*1.2/5)*5,until:st.day+2,told:0,done:0})}}
+  st.favors.push({id,item,n:q,reward:Math.round((FAV_VAL[item]||ITEMS[item].v||ITEMS[item].e||50)*q*1.2/5)*5,until:st.day+2,told:0,done:0})}}
 const favorOf=id=>((G.st.favors)||[]).find(f=>f.id===id&&!f.done);
 async function favorDeliver(n){const st=G.st,f=favorOf(n.id);if(!f||!st.flags.met[n.id]||countItem(f.item)<f.n)return false;
  const c=await ask(null,`Consegni ${fmtItems(f.item,f.n)} a ${n.name}? (+${SC(f.reward)})`,['Consegna','Dopo']);if(c!==0)return false;
@@ -169,7 +169,7 @@ async function favorDeliver(n){const st=G.st,f=favorOf(n.id);if(!f||!st.flags.me
  addFriend(n.id,2+(((LIKES[n.id]||{})[f.item]||0)>=2?1:0));addQuiete(2);AU.play('coin');UI.hud();floatText('♥',n.x,n.y-30,'#ff7a6a');
  const L=FAV_THX[n.id];await say(n.id,L[Math.floor(Math.random()*L.length)]);UI.toast(`Favore completato: +${SC(f.reward)}`);UI.quest();return true}
 async function favorTell(n){const st=G.st,f=favorOf(n.id);if(!f||f.told||!st.flags.met[n.id])return;f.told=1;
- const L=FAV_ASK[n.id];await say(n.id,L[Math.floor(Math.random()*L.length)].replace('{it}',fmtItems(f.item,f.n)).replace('{r}',f.reward));UI.toast(`Favore: ${NAMES[n.id]} vorrebbe ${fmtItems(f.item,f.n)}.`);UI.quest()}
+ const L=(isFree(st)&&FAV_ASK_FREE[n.id])||FAV_ASK[n.id];await say(n.id,L[Math.floor(Math.random()*L.length)].replace('{it}',fmtItems(f.item,f.n)).replace('{r}',f.reward));UI.toast(`Favore: ${NAMES[n.id]} vorrebbe ${fmtItems(f.item,f.n)}.`);UI.quest()}
 function favorMark(n){const st=G.st;if(!st.favors||G.mode!=='game')return;const f=favorOf(n.id);if(!f)return;const ok=countItem(f.item)>=f.n;if(f.told&&!ok)return;
  const X=Math.round(n.x),Y=Math.round(n.y-34+Math.sin(G.t*4)*1.5),ch=ok?'✓':'!';ctx.font='8px "Silkscreen","Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#2b1a10';ctx.fillText(ch,X+1,Y+1);ctx.fillStyle=ok?'#9be08a':'#f6d98a';ctx.fillText(ch,X,Y)}
 

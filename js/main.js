@@ -91,7 +91,7 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
    else if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
    else if(N.grow)UI.toast(`Stanotte ${pl(N.grow,'una pianta è cresciuta','piante sono cresciute')}.`)}
   if(G.seasonNews){const N=G.seasonNews;G.seasonNews=null;UI.toast(['È arrivato l\'autunno.','È arrivato l\'inverno. Cresce solo il porro.','È arrivata la primavera!','È arrivata l\'estate!'][N.s]);if(N.n)UI.toast(`${N.n===1?'Una coltura non ha retto':N.n+' colture non hanno retto'} al cambio di stagione.`,'bad')}
-  if(isFree(st))shadowNews();
+  if(isFree(st)){shadowNews();bdayMorning(st)}
   if(st.weather==='neve')UI.toast('Nevica. La Valle è bianca e silenziosa.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
   if(isSunday(st))UI.toast('È domenica: alle 9:00 c\'è la messa, in cappella.');

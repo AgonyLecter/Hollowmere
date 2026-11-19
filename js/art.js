@@ -605,7 +605,7 @@ const LOOKS={
  tobia:{skin:'#f2c79b',hair:'#d8b04a',style:'messy',eye:'#6a8aaa',shirt:'#7a9a4a',pants:'#6a5a3a',shoe:'#3a2a1a',hat:'cap',hatCol:'#5a6a3a',kid:1},
  faceless:{skin:'#c9c2b8',hair:'#2a2a2a',style:'bald',shirt:'#2a2a2e',robe:'#2a2a2e',shoe:'#111',faceless:true,hideEars:1},
 };
-function setPlayerLook(g){LOOKS.player=PLAYER_LOOKS[g==='f'?'f':'m'];delete SHEET.player;for(const k in PORT)if(k.startsWith('player|'))delete PORT[k]}
+function setPlayerLook(g){if(typeof LOOK_SEASON!=='undefined')LOOK_SEASON=-1;LOOKS.player=PLAYER_LOOKS[g==='f'?'f':'m'];delete SHEET.player;for(const k in PORT)if(k.startsWith('player|'))delete PORT[k]}
 // ================= PERSONAGGI HI-BIT (volumi, luce, capelli e vestiti animati) =================
 const CW=36,CHH=54,CCOLS=12;            // fotogramma 36×54 px (= 18×27 unità di gioco)
 const LV=(()=>{const v=[-.52,-.6,.6],l=Math.hypot(...v);return v.map(a=>a/l)})();
