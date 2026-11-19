@@ -616,12 +616,13 @@ function spawnCritters(){const L=[];const add=(k,n)=>{const z=CR_ZONE[k];for(let
  for(let i=0;i<(G.st&&G.st.chapter>=2?7:4);i++){const p=perches[i%perches.length];L.push({k:'crow',x:p[0]*16+8,y:p[1]*16+14,oy:p[2],dir:Math.random()<.5?1:-1,st:'perch',t:0,f:0,home:p})}
  G.critters=L}
 function updCritters(dt){const m=G.map;if(!m||m.id!=='main'||!G.critters)return;const p=G.player,night=G.night>.6,rain=G.st.weather==='pioggia';
+ const tb=NPC('tobia'),tbv=tb&&!tb.hidden&&tb.map==='main'?tb:null;if(tb&&tb.chaseT>0)tb.chaseT-=dt;
  for(const c of G.critters){c.t-=dt;const dx=c.x-p.x,dy=c.y-p.y,d=Math.hypot(dx,dy);
   if(c.k==='crow'){if(c.st==='perch'){if(d<44&&G.mode==='game'){c.st='fly';c.vx=(dx<0?-1:1)*(50+Math.random()*20);c.vy=-40;c.dir=Math.sign(c.vx);AU.play('caw')}}
    else{c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=6*dt;c.f+=dt*10;if(c.y<G.cam.y-60||c.x<G.cam.x-80||c.x>G.cam.x+W+80){if(c.t<-12){const h=c.home;c.x=h[0]*16+8;c.y=h[1]*16+14;c.st='perch'}}else c.t=0}continue}
   if(c.k==='duck'){if(c.t<=0){c.t=2+Math.random()*4;c.vx=(Math.random()-.5)*14;if(c.vx)c.dir=Math.sign(c.vx)}c.x=clamp(c.x+c.vx*dt,c.z[0]*16,c.z[2]*16);if(c.x>=42*16&&c.x<=47*16)c.vx=c.x<44.5*16?-8:8;c.f+=dt*2;continue}
-  const flee=(c.k==='rabbit'&&d<60)||(c.k==='chicken'&&d<26);const sp={chicken:22,cat:24,rabbit:70}[c.k]*(flee?1.6:1);
-  if(flee){c.tx=c.x+dx/d*40;c.ty=c.y+dy/d*30;c.st='move'}
+  const td=c.k==='chicken'&&tbv?Math.hypot(c.x-tbv.x,c.y-tbv.y):1e9,flee=(c.k==='rabbit'&&d<60)||(c.k==='chicken'&&(d<26||td<26));const sp={chicken:22,cat:24,rabbit:70}[c.k]*(flee?1.6:1);
+  if(flee){const fT=td<d,ux=fT?c.x-tbv.x:dx,uy=fT?c.y-tbv.y:dy,ud=Math.hypot(ux,uy)||1;c.tx=c.x+ux/ud*40;c.ty=c.y+uy/ud*30;c.st='move';if(fT&&!(tb.chaseT>0)){tb.chaseT=6;bubble(tb,'Cip cip cip!',1.6)}}
   if(c.st==='idle'&&c.t<=0){c.t=1.5+Math.random()*4;const z=c.z;if(c.k==='cat'&&d<120&&Math.random()<.4&&G.mode==='game'){c.tx=p.x+(Math.random()-.5)*30;c.ty=p.y+10}else{c.tx=(z[0]+Math.random()*(z[2]-z[0]))*16+8;c.ty=(z[1]+Math.random()*(z[3]-z[1]))*16+12}c.st=(c.k==='cat'&&Math.random()<.35)?(Math.random()<.5?'sit':'sleep'):'move'}
   if((c.st==='sit'||c.st==='sleep')&&c.t<=0){c.st='idle';c.t=4+Math.random()*6}
   if(c.st==='move'){const ex=c.tx-c.x,ey=c.ty-c.y,e=Math.hypot(ex,ey);if(e<2){c.st='idle';c.t=night||rain?4:1+Math.random()*3}else{const nx=c.x+ex/e*sp*dt,ny=c.y+ey/e*sp*dt;const [ttx,tty]=[Math.floor(nx/16),Math.floor((ny-3)/16)];if(m.solid(ttx,tty)){c.st='idle';c.t=.5}else{c.x=nx;c.y=ny;c.dir=ex<0?-1:1;c.f+=dt*(c.k==='rabbit'?8:7)}}}
@@ -704,6 +705,14 @@ function genPropsHD(){
  IMG.fire=[0,1].map(f=>SP(34,32,P=>{P.rect(2,8,64,56,stone,{mod:(X,Y,v)=>{const row=Math.floor((Y-8)/6),off=row%2?6:0;return ((Y-8)%6===0||(X+off)%12===0)?v-.3:v+(((X*5+Y*3)%7)-3)*.02}});P.rect(0,4,68,6,stone,{n:[0,-.8,.6]});
   P.rect(14,24,40,38,rp('#1a0e08'),{amb:0,edge:false});srand(900+f);P.capsule(20,58,48,56,2.4,rp('#5a3a1e'));for(let i=0;i<9;i++){const x=22+rnd()*24,h=8+rnd()*14;P.ellipse(x,56-h/2,2.4+rnd()*2,h/2,rp(['#ff8a2a','#ffd24a','#e0521a'][i%3]),{amb:.8,edge:false})}}));
  IMG.table=SP(34,22,P=>{P.rect(2,4,64,14,rp('#9a6a3c'),{n:[0,-.7,.7],mod:woodMod});P.rect(2,18,64,4,woodD);for(const x of [6,58])P.rect(x,20,5,22,woodD);P.ellipse(24,10,6,3,cream,{spec:.3});P.ellipse(46,9,2.2,3.4,gold,{spec:.8})});
+ IMG.feast=SP(48,24,P=>{const cloth=rp('#e8c23a'),orange=rp('#d86a18');
+  for(const x of [6,84])P.rect(x,30,5,16,woodD);
+  P.rect(2,14,92,18,rp('#9a6a3c'),{n:[0,-.7,.7],mod:woodMod});
+  P.rect(4,12,88,14,cloth,{n:[0,-.5,.8],mod:(X,Y,v)=>(((X>>2)+(Y>>2))%2)?v-.06:v});
+  P.rect(4,26,88,5,cloth,{n:[0,.3,.9],mod:(X,Y,v)=>((X%6)<3)?v-.12:v});
+  for(const x of [22,72])P.ellipse(x,10,7,6,orange,{spec:.35});P.ellipse(48,11,5,4.4,orange,{spec:.35});
+  for(const x of [34,60]){P.capsule(x,3,x,10,1.5,cream);P.set(x,1,C('#ffd84a'));P.set(x,2,C('#fff4b0'))}
+  for(const x of [12,34,58,80])P.ellipse(x,21,4,1.8,cream,{spec:.4})});
  IMG.portrait=[0,1].map(v=>SP(16,16,P=>{P.rect(2,2,28,28,gold,{spec:.6,mod:(X,Y,vv)=>(X>4&&X<27&&Y>4&&Y<27)?null:vv});P.rect(5,5,22,22,rp('#3a3a46'),{amb:.4});
   if(!v){P.ellipse(16,14,5,6,rp('#f2c79b'));P.ellipse(16,10,5.5,3,rp('#6b3e1f'),{clip:(X,Y)=>Y<11});P.body(21,27,()=>16,()=>8,rp('#4f7fbf'));P.set(14,14,C('#2b1a10'));P.set(18,14,C('#2b1a10'))}else{P.body(21,27,()=>16,()=>8,rp('#4f7fbf'));srand(9);for(let i=0;i<30;i++)P.set(10+rnd()*12,7+rnd()*14,C(['#b8a8a0','#8a7a70','#d8c8c0'][i%3]))}}));
  IMG.window=SP(16,16,P=>{P.rect(3,3,26,26,woodD,{mod:woodMod});P.rect(6,6,20,20,rp('#9ec6e0'),{amb:.6,n:[0,0,1],mod:(X,Y,v)=>((X+Y)%13<2)?v+.3:v});P.rect(15,6,2,20,woodD);P.rect(6,15,20,2,woodD)});
@@ -749,6 +758,10 @@ function genIconsHD(){const I=(id,fn)=>{const P=new PX(32,32);fn(P);P.outline();
  I('vernice',P=>{P.body(10,29,()=>16,()=>10,rp('#8a8a92'),{spec:.8});P.ellipse(16,10,10,3.4,rp('#e8c23a'),{spec:.6});P.capsule(7,10,16,1,1,rp('#5a5a62'));P.capsule(16,1,25,10,1,rp('#5a5a62'));P.rect(9,17,14,7,rp('#e8c23a'),{n:[0,0,1]})});
  const key=(id,col)=>I(id,P=>{const g=rp(col);P.ellipse(9,11,6.5,6.5,g,{spec:.9});P.ellipse(9,11,2.4,2.4,rp('#2a1a10'),{edge:false});P.capsule(14,12,29,12,2,g,{spec:.9});P.rect(22,14,3,6,g);P.rect(27,14,3,4,g)});
  key('key','#e8c23a');key('keyI','#8a8a92');
+ I('pane',P=>{P.ellipse(16,19,13,8,rp('#c98a3e'),{spec:.35,mod:(X,Y,v)=>((X*5+Y*3)%13===0)?v-.2:v});for(const x of [10,16,22])P.line(x-2,13,x+1,19,C('#8a5420'))});
+ I('zuppa',P=>{P.body(15,27,()=>16,Y=>12-(Y-15)*.35,rp('#a8785a'),{nyF:()=>.1,spec:.4});P.ellipse(16,15,12,3.6,rp('#e8742a'),{spec:.6,amb:.6});P.capsule(10,11,12,5,1,rp('#efe6f2'),{amb:.9,edge:false});P.capsule(20,10,18,4,1,rp('#efe6f2'),{amb:.9,edge:false})});
+ I('arrosto',P=>{P.ellipse(16,22,14,6,rp('#d9d2c2'),{spec:.5});for(const [a,b] of [[11,17],[18,15],[22,20],[15,20]])P.ellipse(a,b,5,3.6,rp('#c9893c'),{spec:.3});P.set(11,16,C('#6a4420'));P.set(19,14,C('#6a4420'))});
+ I('torta',P=>{P.ellipse(16,20,14,8,rp('#c98a3e'),{spec:.3});P.ellipse(16,18,11,5.4,rp('#e07a1e'),{spec:.5,amb:.6});for(const k of [-6,-2,2,6])P.line(16+k-4,14,16+k+4,22,C('#c98a3e'))});
  I('page',P=>{P.rect(6,4,20,25,rp('#efe2c2'),{n:[.1,-.2,1]});for(let k=0;k<5;k++)P.line(9,9+k*3.5,22-(k%2)*3,9+k*3.5,C('#6a5a4a'));P.line(9,25,15,25,C('#8a0d0d'))});
  I('ledger',P=>{P.rect(6,4,21,25,rp('#4a1a10'),{spec:.3});P.rect(8,5,2,23,rp('#8a0d0d'));P.ellipse(19,15,3.4,3.4,rp('#e8c23a'),{spec:.8})})}
 // ---------- colture ----------
@@ -1181,7 +1194,7 @@ function buildMain(st){
  m.add(OB('stall',48,21,IMG.stall,{wt:3,act:'stall',solid:[[48,21],[49,21],[50,21]],hits:[[48,21],[49,21],[50,21]]}));
  m.add(OB('anvil',37,14,IMG.anvil,{act:'anvil'}));
  m.add(OB('stump',33,5,F.offered?(st.day>F.offerDay?IMG.stumpH:IMG.stumpB):IMG.stump,{act:'stump'}));
- [[38,15],[51,15],[38,23],[51,23],[45,26],[44,38],[11,18],[29,17]].forEach(([x,y])=>{m.add(OB('lamp',x,y,IMG.lamp,{act:'lamp'}));m.lights.push({x:x*16+8,y:y*16-26,r:40,lamp:1})});
+ LAMPS.forEach(([x,y],i)=>{m.add(OB('lamp',x,y,IMG.lamp,{act:'lamp',li:i}));m.lights.push({x:x*16+8,y:y*16-26,r:40,lamp:1,li:i})});
  // cimitero
  const graves=[[49,5,0],[51,5,1],[55,5,2],[57,5,0],[49,8,2],[51,8,1],[55,8,0],[57,8,1],[50,10,2],[56,10,0]];
  graves.forEach(([x,y,v],i)=>m.add(OB('grave',x,y,IMG.grave[v],{act:'grave',gi:i})));
@@ -1189,6 +1202,8 @@ function buildMain(st){
  m.add(OB('nameless',58,6,IMG.nameless,{act:'nameless'}));
  // decorazioni
  [[47,22],[52,22],[39,22],[22,9],[14,9],[56,18]].forEach(([x,y])=>m.add(OB('pumpkin',x,y,st.chapter>=2&&G.night>.4?IMG.jackL:(st.chapter>=2?IMG.jack:IMG.pumpkin),{act:'pumpkin'})));
+ if(st.day>=4){const nP=Math.min(FEST_PUMP.length,(st.day-3)*3),pimg=st.chapter>=2&&G.night>.4?IMG.jackL:(st.chapter>=2?IMG.jack:IMG.pumpkin);FEST_PUMP.slice(0,nP).forEach(([x,y])=>{if(!m.objAt(x,y)&&m.get(x,y)!==3)m.add(OB('pumpkin',x,y,pimg,{act:'pumpkin'}))})}
+ if(st.day>=6)FEAST.forEach(([x,y])=>m.add(OB('feast',x,y,IMG.feast,{wt:3,solid:[[x,y],[x+1,y],[x+2,y]],hits:[[x,y],[x+1,y],[x+2,y]],act:'feast'})));
  [[60-5,32],[59,32],[54,24]].forEach(([x,y])=>m.add(OB('hay',x,y,IMG.hay,{act:'hay'})));
  [[39,10],[38,11]].forEach(([x,y])=>m.add(OB('barrel',x,y,IMG.barrel,{act:'barrel'})));
  // cespugli di bacche rosse (dal giorno 2)
@@ -1252,7 +1267,7 @@ function buildBarn(st){
 function rebuildMaps(){const st=G.st;G.maps.main=buildMain(st);G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k])}if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
-const SHADOWK={tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
+const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
  bed:[8,3,1],chest:[8,2,1],shelf:[8,2,1],table:[15,3,1],altar:[15,3,1],pew:[30,3,1],costume:[8,3,1],stilts:[7,2,1],ledger:[8,2,1]};
 function buildGround(m){const gw=m.w*16,gh=m.h*16;const [c,x]=mk2(gw,gh);m.ground=c;m.water=false;m.shore=[];
  for(let ty=0;ty<m.h;ty++)for(let tx=0;tx<m.w;tx++){const g=m.g[ty*m.w+tx];if(g===3){m.water=true;continue}const arr=T[GT[g]];if(arr)x.drawImage(arr[hsh(tx,ty)%arr.length],tx*16,ty*16,16,16)}
@@ -1403,14 +1418,14 @@ function render(){
  for(const e of list){
   if(e.crit)drawCritter(e.crit);
   else if(e.pl)drawSprite('player',G.player);
-  else if(e.npc)drawSprite(e.npc.id,e.npc);
+  else if(e.npc){drawSprite(e.npc.id,e.npc);favorMark(e.npc)}
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
   else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
   else{let img=e.img;if(e.anim==='fire')img=IMG.fire[Math.floor(G.t*5)%2];if(e.win&&G.night>.5)img=IMG.windowN;dImg(ctx,img,Math.round(e.dx),Math.round(e.dy));
    if(e.kind==='bld'&&G.night>.25&&e.img.lights&&winLit(e.key)){const k=clamp((G.night-.25)*3,0,1);for(const [wx,wy] of e.img.lights){const X=Math.round(e.dx)+1+wx,Y=Math.round(e.dy)+wy;ctx.fillStyle=`rgba(255,196,110,${(.9*k).toFixed(2)})`;ctx.fillRect(X,Y,10,10);ctx.fillStyle=`rgba(255,236,170,${(.8*k).toFixed(2)})`;ctx.fillRect(X+1,Y+1,3,3);ctx.fillStyle=`rgba(90,50,20,${k.toFixed(2)})`;ctx.fillRect(X+4,Y,2,10);ctx.fillRect(X,Y+4,10,2)}}}
  }
  if(!m.interior&&G.mode!=='boot')drawClouds(cx,cy);
- drawPostMarks(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
+ drawPostMarks(m);drawWorldExtras(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
  // particelle
  drawParts();
  // testi fluttuanti
@@ -1420,7 +1435,7 @@ function render(){
  // luce
  const d=G.mode==='title'?.5:darkLevel();
  if(d>0.01){const L=[];const t=G.st.time;
-  for(const l of m.lights){if(l.win&&!(t>=1020&&t<1320&&winLit(l.k)))continue;if(l.lamp&&t<1040&&t>400)continue;if(l.barn&&G.st.flags.barnDark)continue;const fl=l.fire?1+Math.sin(G.t*9+l.x)*.06:1;L.push({x:l.x-cx,y:l.y-cy,r:l.r*fl,warm:1})}
+  for(const l of m.lights){if(l.win&&!(t>=1020&&t<1320&&winLit(l.k)))continue;if(l.lamp&&!lampOn(l.li,t))continue;if(l.barn&&G.st.flags.barnDark)continue;const fl=l.fire?1+Math.sin(G.t*9+l.x)*.06:1;L.push({x:l.x-cx,y:l.y-cy,r:l.r*fl,warm:1})}
   if(d>.25&&G.mode==='game')L.push({x:G.player.x-cx,y:G.player.y-12-cy,r:(m.id==='barn'&&G.st.flags.barnDark?22:48)+Math.sin(G.t*7)*1.5,warm:1,a:.95});
   if(G.horse.on)L.push({x:G.horse.x-cx+8,y:G.horse.y-34-cy,r:22,red:1});
   if(m.id==='main'&&G.st.chapter>=2){const fm=G.st.farm;for(const k in fm){const f=fm[k];if(f.c&&f.c.t==='zucca'&&cropStage(f.c)===3){const [x,y]=k.split(',').map(Number);L.push({x:x*16+8-cx,y:y*16+6-cy,r:16,red:1})}}}
@@ -1495,11 +1510,15 @@ const ITEMS={
  vernice:{n:'Vernice gialla',t:'key',d:'Per i pali grigi del recinto. Avvicinati a un palo e usalo.'},
  key:{n:'Chiave della cassa',t:'key',d:'La chiave della cassa del nonno, in casa.'},
  keyI:{n:'Chiave del fienile',t:'key',d:'Fredda. Apre il fienile rosso dell\'Anziano.'},
+ pane:{n:'Pane di Clara',t:'food',e:30,p:35,d:'Ancora tiepido. +30 energia.'},
+ zuppa:{n:'Zuppa di rape',t:'food',e:38,d:'Calda e semplice. +38 energia.'},
+ arrosto:{n:'Patate arrosto',t:'food',e:50,d:'Croccanti fuori, morbide dentro. +50 energia.'},
+ torta:{n:'Torta di zucca',t:'food',e:75,d:'La Valle ne va pazza. +75 energia.'},
 };
-const LIKES={ezekiel:{patata:2,rapa:1},agatha:{zucca:2,rapa:1},lucius:{rapa:2},clara:{zucca:2,patata:1},brom:{patata:2,zucca:1},tobia:{nastro:3,zucca:2,rapa:1}};
+const LIKES={ezekiel:{patata:2,rapa:1,arrosto:3,zuppa:1},agatha:{zucca:2,rapa:1,torta:3,zuppa:1},lucius:{rapa:2,zuppa:3,pane:1},clara:{zucca:2,patata:1,torta:3,arrosto:1},brom:{patata:2,zucca:1,arrosto:3,pane:1},tobia:{nastro:3,zucca:2,rapa:1,torta:3,pane:2,zuppa:1}};
 const DAYN=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 function newState(name,g='m'){return{v:1,name,g,weather:'sereno',pid:null,day:0,time:18*60+20,money:250,energy:100,quiete:100,chapter:0,
- flags:{posts:[0,0,0,0,0],bush:[0,0,0],met:{},buried:0,planted:0},inv:[{id:'hoe',n:1},{id:'can',n:1},{id:'s_rapa',n:12},null,null,null,null,null,null,null],sel:0,farm:{},friends:{},talked:{},gifted:{},chore:null,choreOk:false,choreDone:false,leaves:[0,0,0,0],shipped:[],map:'main',px:44,py:46,dir:3,lastChore:null}}
+ flags:{posts:[0,0,0,0,0],bush:[0,0,0],met:{},buried:0,planted:0},inv:[{id:'hoe',n:1},{id:'can',n:1},{id:'s_rapa',n:12},null,null,null,null,null,null,null],sel:0,farm:{},friends:{},talked:{},gifted:{},chore:null,choreOk:false,choreDone:false,leaves:[0,0,0,0],shipped:[],map:'main',px:44,py:46,dir:3,lastChore:null,favors:[],up:{},forge:null,bread:0,demand:null}}
 function selItem(){const s=G.st.inv[G.st.sel];return s||null}
 function countItem(id){return G.st.inv.reduce((a,s)=>a+(s&&s.id===id?s.n:0),0)}
 function addItem(id,n=1){const inv=G.st.inv;let s=inv.find(s=>s&&s.id===id);if(s){s.n+=n}else{const i=inv.findIndex(s=>!s);if(i<0){UI.toast('Lo zaino è pieno!','bad');return false}inv[i]={id,n}}UI.hotbar();return true}
@@ -1519,9 +1538,9 @@ function farmAct(tx,ty){
  if(def&&def.t==='bad'){if(free||f){const n=countItem(id);removeItem(id,n);AU.play('bury');burst('dust',tx*16+8,ty*16+8,10);if(id==='bacche'){st.flags.buried+=n;UI.toast(`Hai seppellito ${n} bacche rosse.`)}else{st.flags.ribbonBuried=1;UI.toast('Hai seppellito il nastro. Ti senti più legger{o|a}. O più sol{o|a}.')}addQuiete(4);return}UI.toast('Non qui.');return}
  if(id==='hoe'){
   if(!inFarm(tx,ty)){if(free)UI.toast('La terra qui è troppo dura. Coltiva nei campi del nonno.');return}
-  if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(2))return;
+  if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(st.up&&st.up.hoe?1:2))return;
   st.farm[k]={w:false,c:null};AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
- if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
+ if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
  if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
  if(f&&f.c){const s2=cropStage(f.c),left=CROPS[f.c.t].days-f.c.a;UI.toast(`${CROPS[f.c.t].n}: ${s2===0?'appena seminata':'sta crescendo'}. Ancora ${left} nott${left===1?'e':'i'}${f.w?'.':' — e va annaffiata!'}`);return}
 }
@@ -1532,6 +1551,7 @@ function doAction(){const [fx,fy]=frontTile();const p=G.player;
   if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}
  for(const n of G.npcs){if(n.hidden||n.map!==G.map.id)continue;const [nx,ny]=ptile(n);const near=Math.hypot(n.x-(p.x+DIRV[p.dir][0]*14),n.y-(p.y+DIRV[p.dir][1]*14))<14;if((nx===fx&&ny===fy)||near){talkTo(n);return}}
  const o=G.map.objAt(fx,fy);if(o&&o.act){runAct(o);return}
+ if(eatSel())return;
  if(G.map.id==='main')farmAct(fx,fy);
 }
 function runAct(o){const f=ACT[o.act];if(f){const r=f(o);if(r&&r.then){G.cut++;r.catch(e=>console.error(e)).finally(()=>{G.cut--})}}}
@@ -1548,7 +1568,8 @@ const ACT={
  pine:()=>UI.toast('Pini neri, fitti come denti.'),
  tree:()=>UI.toast(['Un albero d\'autunno. Le foglie cadono senza vento.','Corteccia ruvida. Qualcuno ci ha inciso delle tacche.','Un albero. Sembra ascoltare.'][hsh(G.st.day,G.st.time)%3]),
  bush:()=>UI.toast('Un cespuglio. Solo un cespuglio.'),
- lamp:()=>UI.toast('Un lampione. L\'olio puzza di sego.'),
+ lamp:(o)=>{const on=lampOn(o.li,G.st.time);UI.toast(on?(o.li>=5?'Un lampione acceso. Nessuno l\'ha acceso: si è acceso da solo.':'Un lampione acceso. Fratello Lucius li accende ogni sera, uno per uno.'):'Un lampione. L\'olio puzza di sego.')},
+ feast:()=>{const st=G.st;UI.toast(st.chapter>=2?'Otto piatti apparecchiati. Uno ha già il tuo nome sotto il bicchiere.':'La tavolata della Festa. Otto posti per lato, zucche e candele gialle.')},
  hay:()=>UI.toast('Balle di fieno. Ce n\'è più di quanto serva a un villaggio senza cavalli.'),
  barrel:()=>UI.toast('Botti di sidro. Chiuse con la cera gialla.'),
  pumpkin:()=>UI.toast(G.st.chapter>=2?'La zucca ti sorride. Qualcuno le ha dato una bocca.':'Una zucca gigante! Hollowmere ne va fiera.'),
@@ -1570,14 +1591,14 @@ const ACT={
   if(t>20*60+30)return narr('Troppo tardi. Il sole è sparito da un pezzo. Senti che non la vogliono più.');
   removeItem('focaccia',1);F.offered=1;F.offerDay=st.day;o.img=IMG.stumpB;AU.play('ok');addQuiete(3);
   await narr('Appoggi la focaccia sul ceppo.');AU.play('whisper');await narr('Dal bosco, un suono. Come qualcuno che deglutisce.')},
- bin:async()=>{const it=selItem(),st=G.st;if(it&&ITEMS[it.id].t==='crop'){const v=ITEMS[it.id].v*it.n;st.shipped.push([it.id,it.n]);UI.toast(`Spedite ${it.n} × ${ITEMS[it.id].n} (+${v}g domattina)`);st.inv[st.sel]=null;UI.hotbar();AU.play('coin');return}
-  const tot=st.shipped.reduce((a,[id,n])=>a+ITEMS[id].v*n,0);narr(`La cassetta delle spedizioni. Tieni in mano un raccolto per metterlo dentro.\nDomattina verrà pagato. Nessuno ha mai visto chi lo ritira.${tot?`\n(Oggi: ${tot}g)`:''}`)},
+ bin:async()=>{const it=selItem(),st=G.st;if(it&&ITEMS[it.id].t==='crop'){const v=sellPrice(it.id)*it.n;st.shipped.push([it.id,it.n]);UI.toast(`Spedite ${it.n} × ${ITEMS[it.id].n} (+${v}g domattina)`);st.inv[st.sel]=null;UI.hotbar();AU.play('coin');return}
+  const tot=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);narr(`La cassetta delle spedizioni. Tieni in mano un raccolto per metterlo dentro.\nDomattina verrà pagato. Nessuno ha mai visto chi lo ritira.${st.demand?`\nOggi si paga di più: ${PL[st.demand]} (+40%).`:''}${tot?`\n(Oggi: ${tot}g)`:''}`)},
  scare:async()=>{const st=G.st;if(st.choreOk&&st.chore==='spaventa'&&!st.choreDone){await narr('Raccogli il cappello di paglia da terra e lo rimetti sulla testa dello spaventapasseri.');await narr('…Il cappello era già sulla sua testa. Eppure ne stai tenendo uno in mano.');AU.play('whisper');choreDone();return}
   if(st.chapter>=2){addQuiete(-2);return narr('Lo spaventapasseri adesso guarda verso casa tua. Lo hai sempre visto guardare la strada.')}narr('Uno spaventapasseri col sorriso cucito. Il nonno lo chiamava "Signor Paglia".')},
  board:()=>UI.board(),
  well:async()=>{const st=G.st;if(st.choreOk&&st.chore==='pozzo'&&!st.choreDone&&!st.flags.bucket){st.flags.bucket=1;AU.play('water');return narr('Riempi il secchio. L\'acqua è fredda e sa di ferro.\n(Portala alla tomba di Elias, nel cimitero.)')}
   narr(G.horror>.4?'Guardi giù nel pozzo. Il tuo riflesso guarda su. Poi si gira.':'Il pozzo del villaggio. Una monetina brilla sul fondo.');if(G.horror>.4)addQuiete(-1)},
- stall:()=>{const a=NPC('agatha');if(!a.hidden&&a.map==='main'&&Math.abs(a.x-49*16-8)<20)talkTo(a);else UI.toast('Il banco di Agatha. Chiuso.')},
+ stall:()=>{const a=NPC('agatha');if(!a.hidden&&a.map==='main'&&Math.abs(a.x-49*16-8)<20)talkTo(a);else if(!a.hidden&&a.map==='main'&&Math.hypot(a.x-(55*16+8),a.y-(17*16+14))<34)UI.toast('Con la pioggia Agatha ha ritirato il banco. Vende dal portico dell\'emporio.');else UI.toast('Il banco di Agatha. Chiuso.')},
  anvil:()=>{const b=NPC('brom');if(!b.hidden&&Math.hypot(b.x-G.player.x,b.y-G.player.y)<48)talkTo(b);else UI.toast('L\'incudine di Brom. È ancora tiepida.')},
  grave:(o)=>{const E=['JOSIAH WREN — Contato.','MERCY HALE — Contata.','THOMAS ASHBY — Contato due volte.','ABIGAIL MOSS — Arrivata d\'autunno.','Il nome è stato raschiato via.','SAMUEL CROWE — Il giallo non bastò.','HANNAH PRICE — Riposa. Non tornare.','Una lapide nuova. Nessun nome. Ancora.','EZRA BLACKWOOD — Un forestiero.','PRUDENCE GALE — Contata.'];UI.toast(E[o.gi%E.length])},
  elias:async()=>{const st=G.st;st.flags.visitedGrave=1;UI.quest();
@@ -1611,13 +1632,15 @@ const ACT={
   F.openedChest=1;removeItem('key',9);o.img=IMG.chestO;AU.play('door');await narr('La chiave gira. Dentro: una pipa, un fazzoletto giallo, e una pagina strappata.');AU.play('page');await UI.paper(PAGES.p1);addQuiete(-8)},
  shelf:()=>narr(G.st.chapter>=2?'Libri del nonno. Su ogni dorso, qualcuno ha scritto a matita un numero. Tutti "8".':'Libri del nonno: almanacchi, un erbario, "Il buon contadino". Polvere.'),
  table:()=>narr('Un tavolo per una persona. Ci sono due sedie.'),
- fire:()=>narr(G.horror>.5?'Nel fuoco, per un attimo, vedi una forma a cavallo.':'Il fuoco scoppietta e ti scalda le mani.'),
+ fire:()=>G.map.id==='house'?cookMenu():narr('Il fuoco scoppietta e ti scalda le mani.'),
  window:()=>narr(G.night>.5?'Fuori è buio pesto. Qualcosa di più buio si muove al limite del campo.':'Dalla finestra vedi i campi e il recinto giallo.'),
  portrait:()=>{if(G.st.chapter>=2){addQuiete(-3);return narr('Il ritratto del nonno. Qualcuno ha grattato via la testa.')}return narr('Il nonno Elias, da giovane. Sorride. Ha i tuoi occhi.')},
  page2:async()=>{const F=G.st.flags;F.page2=1;AU.play('page');await UI.paper(PAGES.p2);addQuiete(-8);rebuildMaps()},
  altar:()=>narr('L\'altare. Un drappo giallo, due candele. Nessuna croce: solo un cerchio intagliato con otto tacche.'),
  candle:()=>narr('Candele di sego. Fumano nero.'),
- pew:()=>narr('Panche di legno consumato. Sullo schienale qualcuno ha inciso: "NON GIRARTI".'),
+ pew:async()=>{const st=G.st;if(massNow()){if(st.flags['mass'+st.day])return narr('Hai già ascoltato la messa, oggi. Lucius ti sorride dall\'altare. Un sorriso un po\' troppo largo.');
+   const c=await ask(null,'Fratello Lucius sta per cominciare la messa. Ti siedi in una panca?',['Siediti','Non ora']);if(c===0)return attendMass();return}
+  narr('Panche di legno consumato. Sullo schienale qualcuno ha inciso: "NON GIRARTI".')},
  rope:async()=>{const st=G.st,t=st.time;if(st.choreOk&&st.chore==='campana'&&!st.choreDone){if(t>=12*60&&t<13*60){AU.play('bell');G.shake=1.5;await narr('DONG. La campana suona sopra di te. In tutta la valle, la gente si ferma e guarda la cappella.');choreDone();return}return narr('La faccenda dice: a mezzogiorno. Tra le 12:00 e le 13:00.')}
   narr('La corda della campana. Solo Fratello Lucius può suonarla. E tu, se te lo chiedono.')},
  costume:async()=>{const F=G.st.flags;if(!F.sawCostume){F.sawCostume=1;addQuiete(-10);await narr('Appeso a un\'impalcatura di vimini: un mantello nero, enorme. Il colletto è imbottito per sembrare un collo mozzato.');await narr('Accanto, una sciabola di latta. Un costume.');await narr('Il Cavaliere senza testa… è un costume. Lo hanno costruito loro.');await barnCheck();return}narr('Il costume del Cavaliere. Vuoto.')},
@@ -1662,7 +1685,7 @@ const SCHED={
  agatha(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
   if((t>=450&&t<750)||(t>=810&&t<1080))return at(49,20,0,'stall');if(t>=1080&&t<1140)return at(37,30,1,'chat');if(t>=1140&&t<1200)return at(47,20,0,'idle',1);return null},
  lucius(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
-  if(t>=360&&t<480)return at(52,9,0,'tend',2);if(t>=480&&t<720)return at(43,14,0,'sweep',2);if(t>=780&&t<1020)return at(54,9,0,'tend',3);if(t>=1020&&t<1260)return at(43,13,0,'watch',1);return null},
+  if(t>=360&&t<480){if(t>=362&&t<LAMPT.mEnd){const r=lampSeg(LAMPT.mor,'m',t);if(r)return r}return at(52,9,0,'tend',2)}if(t>=480&&t<720)return at(43,14,0,'sweep',2);if(t>=780&&t<1010)return at(54,9,0,'tend',3);if(t>=1010&&t<LAMPT.eEnd){const r=lampSeg(LAMPT.eve,'e',t);if(r)return r}if(t>=1010&&t<1260)return at(43,13,0,'watch',1);return null},
  clara(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
   if(t>=420&&t<480)return at(48,19,0,'deliver');if(t>=480&&t<660)return at(46,19,2,'idle',1);if(t>=720&&t<900)return at(26,21,0,'flowers',3);if(t>=900&&t<1020)return at(46,17,3,'idle');if(t>=1020&&t<1170)return at(36,30,2,'idle',1);return null},
  brom(st){const t=st.time;if(st.day<1||st.flags.finaleChase)return null;
@@ -1683,30 +1706,37 @@ function npcExitTo(n){const [bx,by]=bdoor(IMAP[n.map]||'chapel');n.map='main';se
 function updateNPC(n,dt){
  n.barkT=(n.barkT||0)-dt;
  if(!n.script){
-  const s=SCHED[n.id]?SCHED[n.id](G.st):null,idle=!(n.path&&n.path.length);
-  if(!n.hidden&&n.map!=='main'){const im=G.maps[n.map],d=im&&im.doors[0];
+  const s=schedOf(n.id),idle=!(n.path&&n.path.length);n.act=s?s.act:'';
+  if(s&&s.in){n.lastIn=s.in;   // dentro un edificio (messa): il giocatore li vede solo se entra
+   if(G.map.id===s.in){if(n.map!==s.in||n.hidden){const [sx,sy,sd]=s.seat||[7,6,0];placeNPC(n,s.in,sx,sy,sd);n.goal='in'}n.path=[];n.moving=false;return}
+   if(n.map!=='main'){n.map='main';n.hidden=true;n.goal=null;n.path=[]}
+   if(!n.hidden){const [dx,dy]=bdoor(s.in);if(n.goal!=='enter'){n.goal='enter';n.speed=36;n.fdir=null;npcGo(n,dx,dy)}else if(idle){n.hidden=true;n.goal=null;n.path=[];if(G.map.id==='main'&&Math.hypot(n.x-G.player.x,n.y-G.player.y)<160)AU.play('door')}}}
+  else if(!n.hidden&&n.map!=='main'){const im=G.maps[n.map],d=im&&im.doors[0];
    if(!d||G.map.id!==n.map)npcExitTo(n);else if(n.goal!=='exit'){n.goal='exit';npcGo(n,d.tx,d.ty)}else if(idle)npcExitTo(n)}
   else if(!s){
    if(!n.hidden){if(n.goal!=='home'){n.goal='home';const [hx,hy]=homeDoor(n.id);npcGo(n,hx,hy);n.fdir=null;n.speed=34}
     else if(idle){n.hidden=true;n.goal=null;if(G.map.id==='main'&&Math.hypot(n.x-G.player.x,n.y-G.player.y)<160)AU.play('door')}}
   }else{
    const [gx,gy]=freeNear(G.maps.main,s.x,s.y);
-   if(n.hidden){if(s.snap)placeNPC(n,'main',gx,gy,s.d);else{const [hx,hy]=homeDoor(n.id);placeNPC(n,'main',hx,hy,0);if(G.map.id==='main'&&Math.hypot(n.x-G.player.x,n.y-G.player.y)<160)AU.play('door')}n.path=[];n.goal=null}
-   const key=gx+','+gy;n.speed=s.run?52:s.act==='walk'?30:36;
+   if(n.hidden){if(s.snap)placeNPC(n,'main',gx,gy,s.d);else{const [hx,hy]=n.lastIn?bdoor(n.lastIn):homeDoor(n.id);n.lastIn=null;placeNPC(n,'main',hx,hy,0);if(G.map.id==='main'&&Math.hypot(n.x-G.player.x,n.y-G.player.y)<160)AU.play('door')}n.path=[];n.goal=null}
+   const key=gx+','+gy;n.speed=s.sp||(s.run?52:s.act==='walk'?30:36);
    if(n.goal!==key){n.goal=key;n.home=[gx,gy];n.fdir=s.d;n.idleT=1+Math.random()*2;if(s.snap&&Math.hypot(n.x-gx*16-8,n.y-gy*16-14)>200){setPos(n,gx,gy);n.path=[]}else npcGo(n,gx,gy)}
    else if(!(n.path&&n.path.length))npcIdle(n,s,dt);
   }
  }
  if(n.path&&n.path.length){const [px,py]=n.path[0],gx=px*16+8,gy=py*16+14,dx=gx-n.x,dy=gy-n.y,d=Math.hypot(dx,dy),sp=n.speed*dt;
   if(d<=sp){n.x=gx;n.y=gy;n.path.shift();if(!n.path.length){if(n.fdir!=null)n.dir=n.fdir;if(n.res){const r=n.res;n.res=null;r()}}}
-  else{n.x+=dx/d*sp;n.y+=dy/d*sp;n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);n.stepAcc=(n.stepAcc||0)+sp;if(n.stepAcc>8&&n.map===G.map.id){n.stepAcc=0;addPrint(n)}}n.anim+=dt*(n.speed>45?10:7);n.moving=true}
+  else{n.x+=dx/d*sp;n.y+=dy/d*sp;n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);n.stepAcc=(n.stepAcc||0)+sp;if(n.stepAcc>8&&n.map===G.map.id){n.stepAcc=0;addPrint(n)}}n.anim+=dt*(n.speed>45?10:7);n.moving=true;if(n.id==='tobia'&&G.st.weather==='pioggia'&&n.map===G.map.id&&Math.random()<dt*6)burst('water',n.x,n.y-1,3)}
  else n.moving=false;
 }
 function npcIdle(n,s,dt){n.idleT=(n.idleT||0)-dt;
  const dist=G.map.id==='main'?Math.hypot(n.x-G.player.x,n.y-G.player.y):1e9;
  if(s.act==='forge'){n.workT=(n.workT||0)-dt;n.dir=2;if(n.workT<=0){n.workT=.8;burst('spark',37*16+7,14*16-1,6,'#ffcf6a');if(dist<240&&AU.c){const v=clamp(1-dist/240,0,1)*.06,t=AU.c.currentTime;AU.osc('square',1400+Math.random()*300,t,.05,v);AU.osc('triangle',2100,t,.16,v*.7)}}return}
+ if(s.act==='light'){n.dir=3;if(n.litKey!==s.lk&&G.st.time>=s.lt){n.litKey=s.lk;burst('spark',s.lx*16+8,s.ly*16-18,7,'#ffcf6a');if(dist<140)AU.play('ok')}return}
+ if(s.act==='build'){n.workT=(n.workT||0)-dt;n.dir=2;if(n.workT<=0){n.workT=.9;burst('dust',44*16,17*16+8,3);if(dist<240&&AU.c){const v=clamp(1-dist/240,0,1)*.07,t=AU.c.currentTime;AU.noise(t,.05,.5*v,'lowpass',420);AU.osc('triangle',180,t,.07,v)}}return}
+ if(s.act==='hang'){n.dir=3;n.workT=(n.workT||0)-dt;if(n.workT<=0){n.workT=1.6;burst('spark',n.x,n.y-26,3,'#e8c23a');if(Math.random()<.3)bubble(n,'Più a destra… no, a sinistra.',2)}return}
  if(s.act==='sweep'&&Math.random()<dt*2.5)G.parts.push({k:'puff',x:n.x+(n.dir===1?-7:n.dir===2?7:0),y:n.y-1,vx:(Math.random()-.5)*14,vy:-5,t:0,life:.8});
- if(s.act==='stall'){n.dir=0;if(n.idleT<=0){n.idleT=4+Math.random()*4;if(dist<110&&Math.random()<.35)bubble(n,['Semi freschi!','Zucche, rape, patate!','Prezzi onesti!'][Math.random()*3|0])}return}
+ if(s.act==='stall'){n.dir=0;if(n.idleT<=0){n.idleT=4+Math.random()*4;if(dist<110&&Math.random()<.35){const SL=['Semi freschi!','Zucche, rape, patate!','Prezzi onesti!'];if(G.st.time>=480&&G.st.bread>0)SL.push('Pane di Clara, ancora caldo!');if(G.st.demand)SL.push('Oggi pago bene le '+PL[G.st.demand]+'!');bubble(n,SL[Math.random()*SL.length|0])}}return}
  if(n.idleT>0)return;n.idleT=2+Math.random()*4;
  const [hx,hy]=n.home||ptile(n);
  if(s.wr>0&&Math.random()<.65){const m=G.maps.main;for(let k=0;k<6;k++){const tx=hx+Math.round((Math.random()*2-1)*s.wr),ty=hy+Math.round((Math.random()*2-1)*s.wr);if(!m.solid(tx,ty)){npcGo(n,tx,ty);n.fdir=null;return}}}
@@ -1718,8 +1748,9 @@ function npcBarks(dt){if(G.cut||UI.busy()||G.map.id!=='main')return;const p=G.pl
  for(const n of G.npcs){if(n.hidden||n.script||n.map!=='main'||n.barkT>0)continue;const d=Math.hypot(n.x-p.x,n.y-p.y);if(d>52)continue;
   n.barkT=35+Math.random()*30;const L=(G.st.chapter>=2&&Math.random()<.6?BARKS2:BARKS)[n.id];if(L)bubble(n,L[Math.random()*L.length|0])}
  for(const b of G.bubbles)b.life-=dt;G.bubbles=G.bubbles.filter(b=>b.life>0)}
-function snapNPCs(){for(const n of G.npcs){if(n.script)continue;n.goal=null;const s=SCHED[n.id]?SCHED[n.id](G.st):null;
- if(s){const [gx,gy]=freeNear(G.maps.main,s.x,s.y);placeNPC(n,'main',gx,gy,s.d);n.goal=gx+','+gy;n.home=[gx,gy];n.path=[]}else{n.hidden=true;n.path=[]}}G.bubbles=[]}
+function snapNPCs(){for(const n of G.npcs){if(n.script)continue;n.goal=null;n.lastIn=null;const s=schedOf(n.id);
+ if(s&&s.in){n.lastIn=s.in;n.hidden=true;n.map='main';n.path=[]}
+ else if(s){const [gx,gy]=freeNear(G.maps.main,s.x,s.y);placeNPC(n,'main',gx,gy,s.d);n.goal=gx+','+gy;n.home=[gx,gy];n.path=[]}else{n.hidden=true;n.path=[]}}G.bubbles=[]}
 // ================= DIALOGHI =================
 // ================= DIALOGHI CONTESTUALI =================
 const LINES={
@@ -1743,6 +1774,7 @@ const LINES={
   ch2:['Rosso, rosso, rosso! Hihi!','Il nonno ha bussato anche da me. Io non ho aperto. Brav{o|a} me.','Lui conta. Tu no. Non ancora. Hihi.']},
 };
 function pickLine(id,base){const st=G.st,L=LINES[id]||{},t=st.time,pool=[...(base||[])];
+ const nn=NPC(id);if(nn&&nn.act&&ACTL[id]&&ACTL[id][nn.act])pool.push(...ACTL[id][nn.act],...ACTL[id][nn.act]);if(id==='agatha'&&st.demand)pool.push('Oggi pago bene le '+PL[st.demand]+', tesoro. Per la Festa servono tante zucche, ma anche le altre fanno comodo.');
  const tod=t<11*60?'mat':t<17*60?'pom':'sera';pool.push(...(L[tod]||[]));
  if(st.weather==='pioggia'||st.weather==='nebbia')pool.push(...(L[st.weather]||[]),...(L[st.weather]||[]));
  if(st.flags.harvested||st.shipped.length)pool.push(...(L.farm||[]));
@@ -1771,14 +1803,16 @@ function updChats(dt){if(G.map.id!=='main')return;const p=G.player;
  const vis=G.npcs.filter(n=>!n.hidden&&!n.script&&n.map==='main'&&!n.moving&&(n.chatT||0)<=0&&Math.hypot(n.x-p.x,n.y-p.y)<220);
  for(const n of G.npcs)n.chatT=(n.chatT||0)-dt;
  for(let i=0;i<vis.length;i++)for(let j=i+1;j<vis.length;j++){const a=vis[i],b=vis[j];if(Math.hypot(a.x-b.x,a.y-b.y)>44)continue;
-  const L=(G.st.chapter>=2?CHATS2.concat(CHATS):CHATS).filter(c=>(c[0]===a.id&&c[1]===b.id)||(c[0]===b.id&&c[1]===a.id));if(!L.length){a.chatT=b.chatT=30;continue}
+  const L=chatPool().filter(c=>(c[0]===a.id&&c[1]===b.id)||(c[0]===b.id&&c[1]===a.id));if(!L.length){a.chatT=b.chatT=30;continue}
   const c=L[Math.floor(Math.random()*L.length)];G.chat={a,b,lines:c[2],i:0,t:.3};a.dir=a.x<b.x?2:1;b.dir=b.x<a.x?2:1;if(Math.abs(a.x-b.x)<Math.abs(a.y-b.y)){a.dir=a.y<b.y?0:3;b.dir=b.y<a.y?0:3}a.idleT=12;b.idleT=12;return}}
 
-const GIFTABLE=id=>{const t=ITEMS[id]&&ITEMS[id].t;return t==='crop'||t==='bad'};
+const GIFTABLE=id=>{const t=ITEMS[id]&&ITEMS[id].t;return t==='crop'||t==='bad'||t==='food'};
 async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
- try{const it=selItem();
+ try{if(massNow()&&n.map==='chapel'&&n.id!=='lucius')return say(n.id,['Sssh. Dopo.','Shh… sta per cominciare.','Non qui, {n}. Dopo.'][Math.random()*3|0]);
+  if(await favorDeliver(n))return;
+  const it=selItem();
   if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){await gift(n,it.id);return}}
-  await TALK[n.id](n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
+  await TALK[n.id](n);await favorTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
  }catch(e){console.error(e)}finally{G.cut--}}
 async function gift(n,id){const st=G.st;removeItem(id,1);st.gifted[n.id]=1;
  if(id==='bacche'){addFriend(n.id,-3);addQuiete(-6);AU.play('sting');return say(n.id,n.id==='tobia'?'Hihi! Rosse! …Nascondile. Nascondile prima che le veda il Vecchio.':'Toglimele di davanti. Subito. E lavati le mani, {n}. Con la cenere.','dark')}
@@ -1820,6 +1854,7 @@ const TALK={
  async brom(n){const st=G.st,F=st.flags;
   if(!F.met.brom){F.met.brom=1;await say('brom','Brom. Fabbro.');await say('brom','Ti serve qualcosa di ferro? No? Allora non mi serve parlare.');return}
   if(F.ch1end&&!F.bromShoes){F.bromShoes=1;await say('brom','Ferri di cavallo. Quattro, ogni anno, per la Festa.');const c=await ask('brom','',['Per quale cavallo?','Bel lavoro']);if(c===0){await say('brom','…');await say('brom','Non ci sono cavalli a Hollowmere, {ragazzo|ragazza}. Non ci sono mai stati.','dark');addQuiete(-10);AU.play('hooves')}else await say('brom','Mh. Nessuno me lo dice mai.');return}
+  {const fo=st.forge&&st.day>=st.forge.ready,c=await ask('brom',fo?'Mh. È pronto.':'Mh. Dimmi.',['Chiacchiera',fo?'Ritira l\'ordine':'Attrezzi','Niente']);if(c===1)return forgeMenu();if(c===2)return}
   return say('brom',pickLine('brom',['Clang. Clang. È un buon suono. Copre gli altri.','Tuo nonno mi ha insegnato a battere il ferro. Era bravo con le mani. Troppo bravo.','Torna a casa presto stasera.']))},
  async tobia(n){const st=G.st,F=st.flags;
   if(st.day===1&&st.time>=1200){AU.play('laugh');await say('tobia','Hihi. Lui conta. Conta le teste.');await say('tobia','Tu ne hai una!','dark');addQuiete(-6);return}
@@ -1868,14 +1903,15 @@ const QUESTS=[
  {s:st=>st.choreOk&&!st.choreDone,t:st=>'Faccenda: '+CHORES[st.chore].t,d:st=>st.choreDone},
 ];
 function hintText(){const st=G.st,t=st.time,crops=Object.values(st.farm).filter(f=>f.c);
+ const fv=(st.favors||[]).find(f=>!f.done&&countItem(f.item)>=f.n);if(fv)return `Hai ciò che chiede ${NAMES[fv.id]}: portaglielo (${fmtItems(fv.item,fv.n)}).`;
  if(crops.some(f=>cropStage(f.c)===3))return 'Raccogli ciò che è maturo: mettiti davanti alla pianta e premi A/E.';
- if(st.inv.some(s=>s&&ITEMS[s.id].t==='crop'))return 'Vendi il raccolto: tienilo in mano e usalo sulla cassetta accanto a casa.';
+ if(st.inv.some(s=>s&&ITEMS[s.id].t==='crop'))return 'Vendi il raccolto nella cassetta accanto a casa, oppure cucinalo al camino: i piatti ridanno energia.';
  const dry=crops.filter(f=>!f.w).length;if(dry&&t<20*60+30)return `Annaffia le piantine (${dry} da bagnare).`;
  if(t>=19*60)return 'Torna a casa e dormi nel letto: le piante crescono di notte.';
  if(!st.choreOk)return 'Leggi la bacheca in piazza: c\'è una faccenda pagata.';
  if(countItem('s_rapa')+countItem('s_patata')+countItem('s_zucca')>0&&Object.keys(st.farm).length<30)return 'Hai ancora semi: zappa altra terra e semina.';
  return 'Parla con gli abitanti, esplora la valle, o riposa su una panchina fino a sera.'}
-function activeQuests(){const st=G.st;return QUESTS.filter(q=>q.s(st))}
+function activeQuests(){const st=G.st,q=QUESTS.filter(q=>q.s(st));for(const f of st.favors||[]){if(!f.told||f.done)continue;q.push({s:()=>1,t:()=>`Favore per ${NAMES[f.id]}: ${fmtItems(f.item,f.n)} (${f.reward} g, entro ${DAYN[(f.until+3)%7]})`,d:()=>false})}return q}
 // ================= UI =================
 const NAMES=Object.fromEntries(NPC_DEF);NAMES.voce='Voce dietro la porta';NAMES.cocchiere='Cocchiere';
 function fmt(t){const f=G.st&&G.st.g==='f';return String(t).replace(/\{n\}/g,G.st&&G.st.name||(f?'forestiera':'forestiero')).replace(/\{([^{}|]*)\|([^{}|]*)\}/g,(_,a,b)=>f?b:a)}
@@ -1925,15 +1961,18 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   b.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{AU.play('ui');this.close()});},
  close(){$('#modal').classList.add('hide');this.modalOpen=false;this.onEnter=null;const f=this._mclose;this._mclose=null;if(f)f()},
  paper(html,btn='Chiudi'){return new Promise(res=>{this.open(fmt(html)+`<p style="text-align:right"><button class="btn" data-close>${btn}</button></p>`,res)})},
- shop(){return new Promise(res=>{const draw=()=>{const st=G.st;const it=['s_rapa','s_patata','s_zucca'];
-  this.open(`<button class="btn mclose" data-close>✕</button><h2>Emporio Crane</h2><p class="small">«Semi buoni, terra buona, gente buona.» — Hai <b>${st.money} g</b></p>`+it.map(id=>`<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span>${ITEMS[id].n}<br><span class="small">${ITEMS[id].d}</span></span><b>${ITEMS[id].p}g</b><button class="btn" data-b="${id}" data-q="1" ${st.money<ITEMS[id].p?'disabled':''}>×1</button><button class="btn" data-b="${id}" data-q="5" ${st.money<ITEMS[id].p*5?'disabled':''}>×5</button></div>`).join('')+`<p class="small">Per vendere i raccolti usa la cassetta accanto a casa tua.</p>`,res);
+ shop(){return new Promise(res=>{const draw=()=>{const st=G.st;const it=['s_rapa','s_patata','s_zucca','pane'],disc=hearts('agatha')>=4?.9:1,price=id=>Math.round(ITEMS[id].p*disc),bread=st.time>=480?(st.bread||0):0;
+  const note=id=>id==='pane'?(st.time<480?'Lo porta Clara, dopo le 8:00.':bread?`Sfornato da Clara stamattina. Ne restano ${bread}.`:'Finito per oggi.'):ITEMS[id].d;
+  const can=(id,q)=>st.money>=price(id)*q&&(id!=='pane'||bread>=q);
+  this.open(`<button class="btn mclose" data-close>✕</button><h2>Emporio Crane</h2><p class="small">«Semi buoni, terra buona, gente buona.» — Hai <b>${st.money} g</b>${disc<1?' · sconto amicizia −10%':''}</p>`+it.map(id=>`<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span>${ITEMS[id].n}<br><span class="small">${note(id)}</span></span><b>${price(id)}g</b><button class="btn" data-b="${id}" data-q="1" ${can(id,1)?'':'disabled'}>×1</button><button class="btn" data-b="${id}" data-q="5" ${can(id,5)?'':'disabled'}>×5</button></div>`).join('')+`<p class="small">Per vendere i raccolti usa la cassetta accanto a casa tua.${st.demand?` Oggi si pagano di più: ${PL[st.demand]}.`:''}</p>`,res);
   $('#mbox').querySelectorAll('canvas[data-i]').forEach(c=>c.getContext('2d').drawImage(ICON[c.dataset.i],0,0));
-  $('#mbox').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b,q=+b.dataset.q,cost=ITEMS[id].p*q;if(G.st.money<cost)return;if(addItem(id,q)){G.st.money-=cost;G.st.flags.boughtSeeds=1;AU.play('coin');this.hud();this._mclose=null;draw();this._mclose=res}})};draw()})},
- board(){const st=G.st;const c=st.chore&&CHORES[st.chore];const fest=Math.max(0,8-st.day);
+  $('#mbox').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b,q=+b.dataset.q;if(!can(id,q))return;if(addItem(id,q)){G.st.money-=price(id)*q;if(id==='pane')G.st.bread-=q;else G.st.flags.boughtSeeds=1;AU.play('coin');this.hud();this._mclose=null;draw();this._mclose=res}})};draw()})},
+ board(){const st=G.st;const c=st.chore&&CHORES[st.chore];const fest=Math.max(0,8-st.day);const fv=(st.favors||[]).filter(f=>!f.done);fv.forEach(f=>f.told=1);
+  const PREPT={4:'In piazza si ammucchiano le zucche della Festa.',5:'Brom monta le tavolate. Clara appende i festoni.',6:'Le tavolate sono pronte. Otto posti per lato.',7:'Domani: il Conteggio. Non mancate.'};
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Bacheca delle Faccende</h2>
    <div class="paper"><p><b>Faccenda del giorno:</b><br>${c?esc(c.t):'Nessuna.'}<br><span class="small">Ricompensa: ${c?c.pay:0} g</span></p>
    <p>${st.choreDone?'✓ Completata. Grazie, vicino.':st.choreOk?'Accettata. Il villaggio conta su di te.':`<button class="btn" id="acc">Accetta la faccenda</button>`}</p></div>
-   <h3>Avvisi</h3><p class="small">• Chi trova oggetti ROSSI li seppellisca. Subito.<br>• Festa del Raccolto: ${fest?`tra ${fest} giorni`:'<b>presto</b>'}. Portate zucche.<br>• Al suono della campana: a casa.<br>${st.chapter>=2?'• <span style="color:#8a0f0f">'+fmt('Benvenut{o|a}')+', '+esc(st.name)+'. '+fmt('Ti abbiamo contat{o|a}.')+'</span>':'• Si cerca un aiuto per la fucina. Chiedere a Brom.'}</p>`);
+   ${fv.length?`<h3>Richieste del villaggio</h3><p class="small">${fv.map(f=>`• ${NAMES[f.id]} cerca ${fmtItems(f.item,f.n)} — ${f.reward} g, entro ${DAYN[(f.until+3)%7]}`).join('<br>')}</p>`:''}<h3>Avvisi</h3><p class="small">• Chi trova oggetti ROSSI li seppellisca. Subito.<br>• Festa del Raccolto: ${fest?`tra ${fest} giorni`:'<b>presto</b>'}. Portate zucche.<br>• Al suono della campana: a casa.<br>${st.demand?`• Quotazione del giorno: ${PL[st.demand]} +40% nella cassetta.<br>`:''}${PREPT[st.day]?`• ${PREPT[st.day]}<br>`:''}${st.chapter>=2?'• <span style="color:#8a0f0f">'+fmt('Benvenut{o|a}')+', '+esc(st.name)+'. '+fmt('Ti abbiamo contat{o|a}.')+'</span>':'• Si cerca un aiuto per la fucina. Chiedere a Brom.'}</p>`);
   const a=$('#acc');if(a)a.onclick=()=>{st.choreOk=true;AU.play('ok');if(st.chore==='foglie')rebuildMaps();this.close();this.quest();this.toast('Faccenda accettata!')}},
  nameless(){const draw=()=>{const L=(NET.msgs||[]).slice(-8);
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Lapide senza nome</h2><p class="small">Una pietra nera, liscia. Chi è passato di qui ci ha inciso qualcosa. ${NET.ok?'(Le incisioni sono lasciate da altri giocatori.)':'(Offline: solo le tue incisioni.)'}</p>
@@ -1952,7 +1991,8 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   let body='';
   if(tab==='diario'){const qs=activeQuests();const keys=[st.flags.gotPaint&&'Vernice gialla',st.flags.gotChestKey&&'Chiave della cassa',st.flags.barnKey&&'Chiave del fienile',st.flags.openedChest&&'Pagina di Elias (1)',st.flags.page2&&'Pagina di Elias (2)'].filter(Boolean);
    body=`<h3>Obiettivi</h3>${qs.map(q=>`<p>${q.d(st)?'✓ <s>':'• '}${esc(fmt(q.t(st)))}${q.d(st)?'</s>':''}</p>`).join('')||'<p>Nessuno.</p>'}<h3>Oggetti chiave</h3><p>${keys.join(' · ')||'—'}</p><h3>Le Regole</h3><p class="small">I. Il rosso è il colore cattivo. II. Non oltrepassare il recinto giallo. III. Alla campana della sera, a casa. Non aprire a nessuno.</p><h3>Comandi</h3><p class="small">WASD/frecce: muoviti · E/Spazio/clic: usa e parla · 1–0/rotella: oggetto · Esc: menu · F: schermo intero</p>`}
-  if(tab==='amici')body=['ezekiel','agatha','lucius','clara','brom','tobia'].map(id=>`<div class="mrow"><canvas data-p="${id}" width="64" height="64" style="width:calc(26*var(--u));height:calc(26*var(--u))"></canvas><span><b>${NAMES[id]}</b><br><span class="small">${st.flags.met[id]||id==='tobia'?'':'Non ancora conosciuto'}</span></span><span class="hearts">${'♥'.repeat(hearts(id))}${'♡'.repeat(Math.max(0,5-hearts(id)))}</span></div>`).join('');
+  if(tab==='amici')body=['ezekiel','agatha','lucius','clara','brom','tobia'].map(id=>{const met=st.flags.met[id]||id==='tobia',n=NPC(id),f=favorOf(id),where=!met?'Non ancora conosciuto':(n.hidden?'In casa':'Ora: '+placeNameAt(n)+(ACTD[n.act]?' · '+ACTD[n.act]:''));
+   return `<div class="mrow"><canvas data-p="${id}" width="64" height="64" style="width:calc(26*var(--u));height:calc(26*var(--u))"></canvas><span><b>${NAMES[id]}</b><br><span class="small">${where}${f&&f.told?`<br>Cerca: ${fmtItems(f.item,f.n)}`:''}</span></span><span class="hearts">${'♥'.repeat(hearts(id))}${'♡'.repeat(Math.max(0,5-hearts(id)))}</span></div>`}).join('');
   if(tab==='opz')body=`<p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p><button class="btn" id="fs">Schermo intero</button></p>`;
   if(tab==='save')body=`<p>Il gioco si salva da solo ogni mattina. ${NET.ok?'I salvataggi sono custoditi nella Valle (online).':'Sei offline: il salvataggio resta su questo dispositivo.'}</p><p>Il tuo codice: <b style="font-size:1.3em;letter-spacing:.1em">${esc(st.pid||'—')}</b><br><span class="small">Usalo da un altro dispositivo con "Carica da codice".</span></p><p><button class="btn" id="sq">Salva ed esci al menu</button></p>`;
   this.open(`<button class="btn mclose" data-close>✕</button><h2>${esc(st.name)} · Giorno ${st.day}</h2>${tabs}${body}`);
@@ -2010,6 +2050,204 @@ const NET={ok:false,api:null,db:null,regNames:[],msgs:[],count:0,ROOT:'hollowmer
   try{await this.api.push(this.r('lapidi'),m)}catch(e){UI.toast('La pietra non si lascia incidere.','bad')}},
 };
 function newPid(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='HM-';for(let i=0;i<6;i++)s+=A[Math.random()*A.length|0];return s}
+// ================= VITA DELLA VALLE =================
+// Calendario, meteo, messa, lampioni, preparativi della Festa, cucina, favori, fucina.
+const WD=st=>(st.day+3)%7;                          // 0 Lun … 5 Sab, 6 Dom
+const isSunday=st=>st.day>=1&&WD(st)===6;
+const massNow=()=>{const st=G.st;return !!st&&isSunday(st)&&st.time>=9*60&&st.time<10*60+30};
+const MASS_SEATS={lucius:[7,3,0],ezekiel:[2,4,3],agatha:[3,4,3],brom:[10,4,3],clara:[11,4,3]};
+const rainy=st=>st.weather==='pioggia';
+const sellPrice=id=>Math.round(ITEMS[id].v*(G.st&&G.st.demand===id?1.4:1));
+
+// ---------- lampioni: Lucius li accende (e li spegne) uno per uno; gli ultimi tre si accendono "da soli" ----------
+const LAMPS=[[38,15],[51,15],[51,23],[38,23],[45,26],[44,38],[29,17],[11,18]];
+const LAMPT=(()=>{const T={on:[],off:[],eve:[],mor:[]},SPD=38*.42;
+ const leg=(a,b)=>Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])*16/SPD*1.5)+2;
+ const run=(start,from,order,key,arr)=>{let t=start,p=from;for(const i of order){const q=[LAMPS[i][0],LAMPS[i][1]+1],t0=t;t+=leg(p,q);T[key][i]=t;arr.push({i,from:t0,to:t+1});p=q}return t+1};
+ T.eEnd=run(1010,[54,9],[1,2,4,3,0],'on',T.eve);
+ T.mEnd=run(362,[53,9],[1,2,4,3,0],'off',T.mor);
+ T.on[5]=1055;T.on[6]=1068;T.on[7]=1080;T.off[5]=395;T.off[6]=405;T.off[7]=415;
+ return T})();
+const lampOn=(i,t)=>t>=LAMPT.on[i]||t<LAMPT.off[i];
+function lampSeg(S,tag,t){for(const g of S)if(t>=g.from&&t<g.to){const [lx,ly]=LAMPS[g.i];return at(lx,ly+1,3,'light',0,{sp:38,lk:tag+g.i,lt:tag==='e'?LAMPT.on[g.i]:LAMPT.off[g.i],lx,ly})}return null}
+
+// ---------- routine: il meteo, la domenica e la Festa cambiano la giornata di tutti ----------
+function schedOf(id){return worldAdjust(id,SCHED[id]?SCHED[id](G.st):null,G.st)}
+function worldAdjust(id,s,st){
+ const t=st.time,F=st.flags;if(st.day<1||F.finaleChase||id==='faceless'||(F.ezWait&&id==='ezekiel'))return s;
+ // domenica: messa alle 9, tutti in cappella (Tobia no)
+ if(isSunday(st)&&id!=='tobia'){
+  if(id==='lucius'&&t>=8*60+15&&t<9*60)return Object.assign(at(7,3,0,'mass'),{in:'chapel',seat:MASS_SEATS.lucius});
+  if(t>=8*60+30&&t<9*60)return at(43,13,0,'gather',1);
+  if(t>=9*60&&t<10*60+30)return Object.assign(at(7,3,0,'mass'),{in:'chapel',seat:MASS_SEATS[id]});
+  if(t>=10*60+30&&t<11*60+30)return at(43,14,0,'gather',2);
+ }
+ // pioggia: ognuno si ripara sotto il suo portico
+ if(rainy(st)&&s){
+  if(id==='agatha'&&s.act==='stall')return at(55,17,0,'stall',0,{shelter:1});
+  if(id==='clara'&&(s.act==='flowers'||s.act==='idle'))return at(35,29,0,'idle',0);
+  if(id==='lucius'&&(s.act==='sweep'||s.act==='tend'))return at(43,12,0,'watch',0);
+  if(id==='ezekiel'&&(s.act==='walk'||s.act==='watch'||s.act==='pray'))return at(52,31,0,'watch',0);
+ }
+ if(st.weather==='nebbia'){
+  if(id==='clara'&&s&&s.act==='flowers')return at(35,29,0,'idle',0);
+  if(id==='tobia'&&t>=540&&t<1020&&!(F.ch1end&&!F.tobiaTalk))return at(31,6,3,'play',2);   // nella nebbia, Tobia sta al Varco
+ }
+ // preparativi della Festa del Raccolto
+ if(st.day>=5&&!isSunday(st)){
+  if(id==='brom'&&((t>=540&&t<720)||(t>=780&&t<900)))return at(43,18,0,'build',1);
+  if(id==='clara'&&t>=780&&t<900&&!rainy(st))return at(45,16,0,'hang',1);
+ }
+ return s}
+
+const ACTD={forge:'batte il ferro',stall:'serve al banco',sweep:'spazza il sagrato',tend:'cura le tombe',watch:'osserva il villaggio',walk:'fa il suo giro',pray:'prega',flowers:'raccoglie fiori',deliver:'consegna il pane',play:'gioca',light:'accende i lampioni',build:'monta le tavolate',hang:'appende i festoni',mass:'alla messa',gather:'chiacchiera sul sagrato',chat:'chiacchiera',idle:'passeggia'};
+function placeNameAt(n){const x=Math.floor(n.x/16),y=Math.floor((n.y-3)/16);
+ if(x>=38&&x<=51&&y>=15&&y<=23)return 'in piazza';
+ if(x>=39&&x<=47&&y>=12&&y<=14)return 'sul sagrato';
+ for(const [k,t] of [['chapel','alla cappella'],['store','all\'emporio'],['elder','dall\'Anziano'],['forge','alla fucina'],['cottage','da Clara'],['barn','al fienile'],['house','a casa tua']]){const b=BLD[k];if(x>=b.x-1&&x<=b.x+b.w&&y>=b.y-1&&y<=b.y+b.h+1)return t}
+ if(x>=FARM.x0&&x<=FARM.x1&&y>=FARM.y0&&y<=FARM.y1)return 'nei campi';
+ if(y<=8&&x>=26&&x<=35)return 'al Varco';
+ if(x>=47&&y<=11)return 'al cimitero';
+ return 'per i sentieri'}
+
+// frasi che dipendono da ciò che l'abitante sta facendo in quel momento
+const ACTL={
+ ezekiel:{walk:['Faccio il mio giro, {n}. Qualcuno deve pur farlo.','Cammino e conto i recinti. Sono tutti al loro posto. Quasi.'],pray:['Un momento di raccoglimento, {n}.'],watch:['Osservo. È il mio compito.','Da qui si vede quasi tutta la Valle. Quasi.'],gather:['Dopo la messa la gente ha sempre fame di parole.']},
+ agatha:{stall:['Compri o guardi, tesoro?','Guarda pure. Toccare costa un pochino.','Tutto fresco di stamattina. Il pane lo porta Clara.'],gather:['Che bella predica! Non ricordo di cosa parlasse, ma bella.']},
+ lucius:{sweep:['Spazzo. Le foglie cadono solo qui: non ho mai capito perché.'],tend:['Cura delle tombe. I morti ricambiano, a modo loro.'],light:['Un lampione alla volta. Così nessuno resta al buio.','Il sego costa poco. Il buio, tanto.'],watch:['Guardo il sagrato. Qualcuno deve contare chi passa.'],mass:['Silenzio, {figliolo|figliola}. Stiamo per cominciare.'],gather:['Il sagrato, dopo la messa, è il posto più vivo della Valle.']},
+ clara:{flowers:['Scelgo i fiori più gialli per la cappella.','Il giallo ci sta bene addosso, vero?'],hang:['I festoni devono pendere tutti uguali. Altrimenti Ezekiel se ne accorge.','Ne servono otto per lato. Otto. Non so perché.'],deliver:['Il pane! Scotta! Metà ad Agatha, metà a chi lo merita.'],gather:['Che bella messa… Lucius ha contato tutti. Come sempre.']},
+ brom:{forge:['Non ora, il ferro è caldo. Parla pure, ma non mi fermare.','Clang. Clang. Se parli forte copri il rumore.'],build:['Tavolate. Per la Festa. Più lunghe di quanto serva a una Valle così piccola.','Chiodi storti. Legno nuovo. Mh.'],gather:['Messa. Mh.']},
+ tobia:{play:['Rincorro le galline! Sono più veloci di te!','Non mi prendi! Hihi!']},
+};
+// chiacchiere fra abitanti che dipendono da ciò che è successo
+const CHATC=[
+ ['ezekiel','lucius',[['lucius','Il forestiero ha dipinto tutti i pali.'],['ezekiel','Lo ha fatto bene?'],['lucius','Meglio di Elias.'],['ezekiel','Non dirlo ad alta voce.']],st=>st.flags.posts.every(Boolean)],
+ ['agatha','clara',[['clara','{n} ha dimenticato la focaccia, ieri sera.'],['agatha','Allora stanotte ha sentito.'],['clara','Ha sentito, sì.']],st=>!!st.flags.missedOffer],
+ ['agatha','clara',[['agatha','Ti vedo spesso con {n}, tesoro.'],['clara','Ci parlo e basta!'],['agatha','Certo. E io vendo semi per hobby.']],st=>hearts('clara')>=3],
+ ['brom','ezekiel',[['ezekiel','Le tavolate?'],['brom','Una è quasi pronta.'],['ezekiel','Servono entrambe.'],['brom','Per quanti posti?'],['ezekiel','Otto.']],st=>st.day>=5],
+ ['agatha','lucius',[['agatha','Bella predica.'],['lucius','Era quella dell\'anno scorso.'],['agatha','Per questo mi è piaciuta.']],st=>isSunday(st)],
+ ['clara','tobia',[['tobia','Le pozzanghere ridono!'],['clara','Tobia, ti bagni tutto!'],['tobia','Hihi. Rosse non ce ne sono.']],st=>rainy(st)],
+ ['lucius','ezekiel',[['lucius','Il forestiero ha guardato il fiume.'],['ezekiel','Lo so.'],['lucius','Il ponte…'],['ezekiel','Non c\'è mai stato.']],st=>!!st.flags.sawNoBridge],
+ ['agatha','brom',[['agatha','Il forestiero porta roba buona, in piazza.'],['brom','Mh.'],['agatha','Per una volta la roba è buona sul serio.']],st=>(st.favors||[]).some(f=>f.done)],
+ ['clara','agatha',[['agatha','{n} cucina, adesso. Ha fatto una torta.'],['clara','Com\'era?'],['agatha','Troppo buona per essere di un forestiero.']],st=>(st.flags.cooked||0)>=2],
+ ['ezekiel','agatha',[['ezekiel','Il rosso, nei campi di Marlowe?'],['agatha','Ancora lì, dicono.'],['ezekiel','Ricordaglielo.']],st=>st.day>=3&&st.flags.gotPaint&&st.flags.buried<3],
+ ['tobia','brom',[['tobia','Brom! Per chi sono i ferri?'],['brom','…'],['tobia','Per il Cavaliere! Hihi!'],['brom','Vai via, Tobia.']],st=>st.day>=3],
+ ['lucius','clara',[['clara','Non mi piace la nebbia.'],['lucius','Sembrano persone in fila.'],['clara','Lucius!']],st=>st.weather==='nebbia'],
+ ['ezekiel','brom',[['ezekiel','Il forestiero vuole attrezzi nuovi?'],['brom','Li ha ordinati.'],['ezekiel','Ne avrà bisogno.']],st=>!!st.forge],
+];
+function chatPool(){const st=G.st;return CHATS.concat(st.chapter>=2?CHATS2:[],CHATC.filter(c=>{try{return c[3](st)}catch(e){return false}}))}
+
+// ---------- tempo che passa (cucina, messa) ----------
+async function passTime(min,msg){const st=G.st;G.cut++;
+ try{await UI.fade(1,400);for(let i=0;i<min;i++){st.time++;onMinute()}snapNPCs();G.parts=[];UI.hud();UI.quest();await sleep(200);await UI.fade(0,500);if(msg)UI.toast(msg)}finally{G.cut--}}
+
+// ---------- la messa della domenica ----------
+const SERMONS=[
+ ['«Il giallo ci tiene insieme. Chi è dentro il recinto è al sicuro. Chi esce… non lo diciamo.»','«Alla campana, a casa. Non è una regola: è un\'abitudine di famiglia.»'],
+ ['«La terra dà quello che prende. Non chiedete cosa prende.»','«Siamo pochi, ma bastiamo. Sette posti, più uno. È sempre stato così.»'],
+ ['«Il rosso è un colore stanco. Lo seppelliamo perché si riposi.»','«Chi arriva da fuori porta un odore. Il nostro compito è renderlo familiare.»'],
+ ['«Ricordate i nomi dei vostri morti. Ricordateli finché potete.»','«Ogni autunno, qualcuno resta in cappella più a lungo degli altri.»'],
+];
+async function attendMass(){const st=G.st;st.flags['mass'+st.day]=1;G.cut++;
+ try{const S=SERMONS[st.day%SERMONS.length];
+  await narr('Ti siedi in una panca. Fratello Lucius sale all\'altare. Tutti abbassano la testa nello stesso momento, come un solo corpo.');
+  for(const l of S)await say('lucius',l,st.chapter>=2?'dark':'');
+  if(st.chapter>=2){AU.play('count');await narr('Mentre parla, le sue labbra contano sottovoce. Il numero che esce dalla sua bocca non coincide con i volti nella cappella.',{dark:1});addQuiete(-4)}else addQuiete(5);
+  await passTime(Math.max(5,10*60+30-st.time),'La messa è finita.');
+  for(const id of ['ezekiel','agatha','lucius','clara','brom'])addFriend(id,1);
+  UI.toast('Hai partecipato alla messa. Il villaggio lo nota.');
+ }finally{G.cut--}}
+
+// ---------- cucina e cibo ----------
+const RECIPES=[{id:'zuppa',need:{rapa:2},min:30},{id:'arrosto',need:{patata:2},min:40},{id:'torta',need:{zucca:1,rapa:1},min:60}];
+const needTxt=r=>Object.entries(r.need).map(([k,v])=>`${v} ${ITEMS[k].n.toLowerCase()}`).join(' + ');
+const canCook=r=>Object.entries(r.need).every(([k,v])=>countItem(k)>=v);
+async function cookMenu(){const st=G.st;
+ if(st.time>=22*60)return narr('È troppo tardi per accendere la pentola. Il fuoco ti basta per scaldare le mani.');
+ const c=await ask(null,G.horror>.5?'Il fuoco crepita. La pentola borbotta da sola. Cosa prepari?':'Il camino del nonno, con la sua pentola annerita. Cosa prepari?',[...RECIPES.map(r=>`${ITEMS[r.id].n} (${needTxt(r)})${canCook(r)?'':' ✗'}`),'Niente']);
+ const r=RECIPES[c];if(!r)return;
+ if(!canCook(r))return narr('Non hai gli ingredienti: serve '+needTxt(r)+'.');
+ for(const [k,v] of Object.entries(r.need))removeItem(k,v);
+ AU.play('hoe');await passTime(r.min);AU.play('ok');
+ st.flags.cooked=(st.flags.cooked||0)+1;giveItem(r.id);addQuiete(2);
+ if(!st.flags.cookTip){st.flags.cookTip=1;await narr('Il piatto riempie la stanza di odore buono. Usalo dalla barra per mangiarlo e riprendere energia: o regalalo, agli abitanti piacerà molto di più di un raccolto crudo.')}}
+function eatSel(){const it=selItem();if(!it||ITEMS[it.id].t!=='food')return false;const st=G.st,d=ITEMS[it.id],p=G.player;
+ if(st.energy>=96){UI.toast('Non hai fame.');return true}
+ removeItem(it.id,1);st.energy=Math.min(100,st.energy+d.e);AU.play('ok');floatText('+'+d.e+' energia',p.x,p.y-32,'#9be08a',1.8);UI.toast('Mangi: '+d.n+'.');UI.hud();return true}
+
+// ---------- favori degli abitanti ----------
+const FAV_NPC=['ezekiel','agatha','lucius','clara','brom'];
+const PL={rapa:'rape',patata:'patate',zucca:'zucche',pane:'pani di Clara',zuppa:'zuppe di rape',arrosto:'porzioni di patate arrosto',torta:'torte di zucca'};
+const SG={rapa:'una rapa',patata:'una patata',zucca:'una zucca',pane:'un pane di Clara',zuppa:'una zuppa di rape',arrosto:'una porzione di patate arrosto',torta:'una torta di zucca'};
+const fmtItems=(id,n)=>n===1?SG[id]:n+' '+PL[id];
+const FAV_VAL={rapa:45,patata:80,zucca:170,pane:35,zuppa:95,arrosto:140,torta:260};
+const FAV_ASK={
+ ezekiel:['Per il Conteggio alla Festa mi servono {it}. Portamele, {n}. Ti ricompenserò: {r} g.','La mensa del Raccolto ha bisogno di {it}. Puoi provvedere? Ricompensa: {r} g.'],
+ agatha:['Tesoro, per le tavolate mi mancano {it}. Ci pensi tu? Ti do {r} g.','Mi servono {it}, ma di quelle buone! Pago {r} g.'],
+ lucius:['Per le offerte all\'altare servono {it}. Sono per i… per i presenti. Ricompensa: {r} g.','Potresti portarmi {it}? Il digiuno è stato lungo. Ti darò {r} g.'],
+ clara:['Mi aiuti? Mi servono {it} per il pane della Festa! Ti do {r} g.','Se hai {it}, ti ripago: {r} g. Promesso!'],
+ brom:['Mh. {it}. Il fuoco è acceso da ieri, non ho tempo. {r} g.','Portami {it}. Non chiedere. {r} g.'],
+};
+const FAV_THX={
+ ezekiel:['Il villaggio ricorda chi contribuisce, {n}.','Bene. Molto bene. Sei dei nostri. Quasi.'],
+ agatha:['Che tesoro! Ecco il compenso, e un bacio sulla fronte.','Perfetto, perfetto! Per la Festa ci voleva proprio.'],
+ lucius:['Grazie. L\'altare ringrazia. Anch\'io, un poco.','Pregherò per te. Ho già iniziato.'],
+ clara:['Grazie mille! Sei {il mio preferito|la mia preferita}. Non dirlo a Tobia!','Ce l\'hai fatta! Sapevo di poter contare su di te.'],
+ brom:['Mh. Buono.','…Grazie. Davvero.'],
+};
+function genFavors(){const st=G.st,F=st.flags;st.favors=(st.favors||[]).filter(f=>!f.done&&f.until>=st.day);if(st.day<3)return;
+ const maxN=st.day>=5?3:2;
+ for(let tries=0;tries<5&&st.favors.length<maxN;tries++){
+  const cand=FAV_NPC.filter(id=>F.met[id]&&!st.favors.some(f=>f.id===id));if(!cand.length)break;
+  const id=cand[Math.floor(Math.random()*cand.length)];
+  const pool=['rapa'];if(st.day>=4)pool.push('patata','zucca');if(F.cooked)pool.push('zuppa','arrosto','torta');if(id!=='clara')pool.push('pane');
+  const lk=LIKES[id]||{},w=[];pool.forEach(k=>{for(let j=0;j<(lk[k]>=2?3:1);j++)w.push(k)});if(st.day>=6)w.push('zucca','zucca','zucca');
+  const item=w[Math.floor(Math.random()*w.length)],q=ITEMS[item].t==='crop'?1+(st.day>=5?1:0)+(Math.random()<.4?1:0):1;
+  st.favors.push({id,item,n:q,reward:Math.round(FAV_VAL[item]*q*1.2/5)*5,until:st.day+2,told:0,done:0})}}
+const favorOf=id=>((G.st.favors)||[]).find(f=>f.id===id&&!f.done);
+async function favorDeliver(n){const st=G.st,f=favorOf(n.id);if(!f||!st.flags.met[n.id]||countItem(f.item)<f.n)return false;
+ const c=await ask(null,`Consegni ${fmtItems(f.item,f.n)} a ${n.name}? (+${f.reward} g)`,['Consegna','Dopo']);if(c!==0)return false;
+ removeItem(f.item,f.n);f.done=1;f.told=1;st.money+=f.reward;st.flags.favorsDone=(st.flags.favorsDone||0)+1;
+ addFriend(n.id,2+(((LIKES[n.id]||{})[f.item]||0)>=2?1:0));addQuiete(2);AU.play('coin');UI.hud();floatText('♥',n.x,n.y-30,'#ff7a6a');
+ const L=FAV_THX[n.id];await say(n.id,L[Math.floor(Math.random()*L.length)]);UI.toast(`Favore completato: +${f.reward} g`);UI.quest();return true}
+async function favorTell(n){const st=G.st,f=favorOf(n.id);if(!f||f.told||!st.flags.met[n.id])return;f.told=1;
+ const L=FAV_ASK[n.id];await say(n.id,L[Math.floor(Math.random()*L.length)].replace('{it}',fmtItems(f.item,f.n)).replace('{r}',f.reward));UI.toast(`Favore: ${NAMES[n.id]} vorrebbe ${fmtItems(f.item,f.n)}.`);UI.quest()}
+function favorMark(n){const st=G.st;if(!st.favors||G.mode!=='game')return;const f=favorOf(n.id);if(!f)return;const ok=countItem(f.item)>=f.n;if(f.told&&!ok)return;
+ const X=Math.round(n.x),Y=Math.round(n.y-34+Math.sin(G.t*4)*1.5),ch=ok?'✓':'!';ctx.font='8px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#2b1a10';ctx.fillText(ch,X+1,Y+1);ctx.fillStyle=ok?'#9be08a':'#f6d98a';ctx.fillText(ch,X,Y)}
+
+// ---------- fucina: attrezzi migliorati ----------
+const UPG={hoe:{n:'Zappa d\'acciaio',cost:180,d:'dissodare costa 1 energia invece di 2'},can:{n:'Annaffiatoio largo',cost:220,d:'bagna tre zolle per volta'}};
+function applyUpgrades(){const u=(G.st&&G.st.up)||{};
+ ITEMS.hoe.n=u.hoe?UPG.hoe.n:'Zappa';ITEMS.hoe.d=u.hoe?'Acciaio di Brom. Dissoda con meno fatica.':'Dissoda la terra. Seppellisce ciò che va seppellito.';
+ ITEMS.can.n=u.can?UPG.can.n:'Annaffiatoio';ITEMS.can.d=u.can?'Rosa larga di Brom: bagna tre zolle per volta.':'Acqua per le piantine. Non finisce mai. Strano.'}
+async function forgeMenu(){const st=G.st,o=st.forge;
+ if(o&&st.day>=o.ready){st.forge=null;st.up[o.k]=1;applyUpgrades();AU.play('ok');addFriend('brom',2);UI.toast('Brom ha finito: '+UPG[o.k].n+'.');return say('brom',`Pronto. ${UPG[o.k].n}. …Non è stato niente.`)}
+ if(o)return say('brom',`${UPG[o.k].n}: pronto ${o.ready-st.day===1?'domani':'dopodomani'}. Non chiedere prima.`);
+ const av=Object.keys(UPG).filter(k=>!st.up[k]);if(!av.length)return say('brom','Non ho altro da migliorare. Il resto è già buono.');
+ const c=await ask('brom','Mh. Cosa?',[...av.map(k=>`${UPG[k].n} — ${UPG[k].cost}g (${UPG[k].d})`),'Niente']);const k=av[c];if(!k)return;
+ if(st.money<UPG[k].cost)return say('brom','Non basta. Torna con i soldi.');
+ st.money-=UPG[k].cost;st.forge={k,ready:st.day+2};AU.play('coin');UI.hud();return say('brom','Due giorni. Tieni pure lo strumento, ci penso io.')}
+function waterWide(tx,ty){const st=G.st;if(!(st.up&&st.up.can))return;const [dx]=DIRV[G.player.dir],side=dx!==0?[[0,-1],[0,1]]:[[-1,0],[1,0]];
+ for(const [a,b] of side){const g=st.farm[(tx+a)+','+(ty+b)];if(g&&!g.w){g.w=true;burst('water',(tx+a)*16+8,(ty+b)*16+4,6);if(g.c)st.flags.watered=(st.flags.watered||0)+1}}}
+
+// ---------- la Valle si prepara alla Festa ----------
+const FEST_PUMP=[[39,17],[50,17],[41,24],[47,24],[36,18],[36,22],[53,22],[53,24],[42,13]];
+const FEAST=[[44,17],[40,21]];
+const FEST_MORNING={4:'In piazza qualcuno ha ammucchiato zucche per la Festa.',5:'Brom e Clara lavorano ai preparativi. Tra i lampioni, spuntano i festoni gialli.',6:'Nella notte hanno montato le tavolate della Festa, in piazza.',7:'La Valle è pronta per la Festa. Troppo pronta.'};
+function drawShoe(X,Y){ctx.fillStyle='#1e1d22';ctx.fillRect(X-1,Y,1,5);ctx.fillRect(X+5,Y,1,5);ctx.fillRect(X,Y+5,5,1);ctx.fillRect(X-1,Y-1,2,1);ctx.fillRect(X+4,Y-1,2,1);ctx.fillStyle='#b9b9c4';ctx.fillRect(X,Y,1,4);ctx.fillRect(X+4,Y,1,4);ctx.fillRect(X+1,Y+4,3,1)}
+function drawWorldExtras(m){if(m.id!=='main')return;const st=G.st,cx=G.cam.x,cy=G.cam.y;
+ // Brom forgia quattro ferri di cavallo ogni anno: uno al giorno, appesi sul muro della fucina
+ {const b=BLD.forge,n=clamp(st.day-1,0,4);for(let i=0;i<n;i++)drawShoe(b.x*16+14+i*14,(b.y+b.h)*16-28)}
+ // festoni fra i lampioni della piazza
+ if(st.day>=5){const cols=st.chapter>=2?['#c9a84a','#9a7e34','#d9ccaa']:['#e8c23a','#d98a1e','#f0e2b0'];
+  for(const [a,b] of [[0,1],[1,2],[2,3],[3,0]]){const x0=LAMPS[a][0]*16+8,y0=LAMPS[a][1]*16-14,x1=LAMPS[b][0]*16+8,y1=LAMPS[b][1]*16-14;
+   if(Math.max(x0,x1)<cx-10||Math.min(x0,x1)>cx+W+10||Math.max(y0,y1)<cy-20||Math.min(y0,y1)>cy+H+20)continue;
+   const len=Math.hypot(x1-x0,y1-y0),vert=Math.abs(x1-x0)<Math.abs(y1-y0),sag=len>150?9:6,sg=x0<45*16?1:-1,N=Math.floor(len/2);
+   const pt=s=>{const k=Math.sin(Math.PI*s)*sag;return vert?[x0+(x1-x0)*s+k*sg,y0+(y1-y0)*s]:[x0+(x1-x0)*s,y0+(y1-y0)*s+k]};
+   ctx.fillStyle='rgba(50,34,16,.85)';for(let i=0;i<=N;i++){const [X,Y]=pt(i/N);ctx.fillRect(Math.round(X),Math.round(Y),1,1)}
+   const FN=Math.floor(len/9);for(let i=1;i<FN;i++){const [X0,Y0]=pt(i/FN),X=Math.round(X0),Y=Math.round(Y0+Math.sin(G.t*2.2+i*.9)*.5);
+    ctx.fillStyle=cols[i%3];ctx.fillRect(X-2,Y+1,5,2);ctx.fillRect(X-1,Y+3,3,1);ctx.fillRect(X,Y+4,1,1)}}}}
+
 // ================= FLUSSO DI GIOCO =================
 const SEC_PER_MIN=.42;
 const TITLE={
@@ -2022,7 +2260,7 @@ const TITLE={
 function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];
  const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
-async function startFrom(st){UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
+async function startFrom(st){UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
  snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
 function toTitle(){G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
@@ -2055,6 +2293,9 @@ function morningSetup(){const st=G.st,F=st.flags;
  const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
  if(st.weather==='pioggia')for(const k in st.farm)st.farm[k].w=true;
  if(st.chapter>=2&&F.ch2day&&st.day>=F.ch2day+1)F.page2avail=1;
+ st.bread=4+(hearts('clara')>=3?2:0)+(hearts('clara')>=6?2:0);
+ st.demand=['rapa','patata','zucca'][Math.floor(Math.random()*3)];if(st.day>=5&&Math.random()<.5)st.demand='zucca';
+ genFavors();applyUpgrades();
  st.map='house';st.px=2;st.py=3;st.dir=0}
 async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
@@ -2062,13 +2303,16 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
   if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.')}
   if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
+  if(isSunday(st))UI.toast('È domenica: alle 9:00 c\'è la messa, in cappella.');
+  if(FEST_MORNING[st.day])setTimeout(()=>UI.toast(FEST_MORNING[st.day]),1400);
+  if((st.favors||[]).length&&!F.favTip){F.favTip=1;setTimeout(()=>UI.toast('Alcuni abitanti cercano qualcosa: guarda il "!" sopra le loro teste, o la bacheca in piazza.'),2400)}
   if(F.page2avail&&!F.page2&&!F.page2seen){F.page2seen=1;await narr('Sul pavimento, vicino alla porta, c\'è un foglio. Qualcuno l\'ha fatto scivolare sotto l\'uscio, stanotte.')}
  }finally{G.cut--}UI.quest()}
 async function endDay(passed,faded){const st=G.st;G.cut++;
  try{if(!faded){AU.play('sleep');await UI.fade(1,900)}
   G.horse.on=false;G.chase=false;G.cutMusic=null;G.scare=0;
   for(const k in st.farm){const f=st.farm[k];if(f.c&&f.w)f.c.a++;f.w=false;if(!f.c&&Math.random()<.08)delete st.farm[k]}
-  const pay=st.shipped.reduce((a,[id,n])=>a+ITEMS[id].v*n,0);st.money+=pay;st.shipped=[];
+  const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
   st.day++;st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
@@ -2152,6 +2396,8 @@ function onMinute(){const st=G.st,t=st.time,F=st.flags;if(st.day<1)return;
  if(t===18*60&&F.gotBread&&!F.offered)UI.toast('Il sole cala. È l\'ora del ceppo.');
  if(t===20*60+31&&F.gotBread&&!F.offered&&!F.missedOffer){F.missedOffer=1;UI.quest()}
  const out=G.map.id==='main';
+ if(isSunday(st)&&t===8*60+45){AU.play('bell');AU.play('bell',1.7);if(out)UI.toast('🔔 La campana chiama alla messa.')}
+ for(let i=5;i<LAMPS.length;i++)if(t===LAMPT.on[i]&&out&&Math.hypot(G.player.x-LAMPS[i][0]*16,G.player.y-LAMPS[i][1]*16)<220){burst('spark',LAMPS[i][0]*16+8,LAMPS[i][1]*16-18,7,'#ffcf6a');tip('tipLamp','Il lampione si è acceso da solo. Nessuno l\'ha toccato.')}
  if(out&&t>21*60+30&&t%10===0&&!F.finaleChase)addQuiete(-1);
  if(out&&t===22*60&&!G.horse.on&&!F.finaleChase){AU.play('hooves');UI.toast('Zoccoli. Lontani. Poi meno lontani.','bad')}
  if(out&&t>=22*60+30&&!G.horse.on&&!G.cut&&!F.finaleChase){const p=G.player;const far=Math.hypot(p.x-31*16,p.y-5*16)>120;spawnHorse(far?31:52,far?5:36,54);UI.toast('CORRI A CASA.','bad')}
