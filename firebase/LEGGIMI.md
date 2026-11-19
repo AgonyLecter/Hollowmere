@@ -14,8 +14,8 @@ Con queste regole:
 
 1. **Authentication → Metodo di accesso**: attiva **Anonimo** e **Google**.
 2. **Authentication → Impostazioni → Domini autorizzati**: aggiungi il dominio dove è pubblicato il gioco (su Vercel: il dominio di produzione, es. `nome-progetto.vercel.app`, più l'eventuale dominio personalizzato; le anteprime di Vercel non funzionano col login Google).
-3. Apri `fusco.html`, premi **Accedi con Google** e copia l'UID che compare nel riquadro rosso.
-4. **Realtime Database → Dati**: crea `hollowmere/admin/<il tuo UID>` con valore `true` (booleano).
+3. Nelle regole, al posto di `EMAIL_DEL_REGISTA` metti l'email Google di chi gestisce `fusco.html`.
+4. Apri `fusco.html` e premi **Accedi con Google**: al primo accesso con quell'email diventi admin da solo.
 5. **Realtime Database → Regole**: il progetto `wandertutto` potrebbe servire anche ad altre app, quindi **non sostituire** le regole esistenti. Copia il blocco `"hollowmere": { … }` di `regole.json` dentro `"rules"`, accanto a quello che c'è già, e premi **Pubblica**.
 6. Prova con il simulatore della console: una scrittura su `hollowmere/missioni` senza login deve essere rifiutata.
 

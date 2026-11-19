@@ -123,6 +123,8 @@ try{
  $('#logout').onclick=()=>AU.signOut(auth);
  AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
   let adm=false;try{adm=(await D.get(R('admin/'+u.uid))).val()===true}catch(e){}
+  // primo accesso: le regole permettono di segnarsi admin solo all'email scelta come regista
+  if(!adm){try{await D.set(R('admin/'+u.uid),true);adm=true}catch(e){}}
   $('#who').firstChild.textContent=adm?`Regia aperta: ${u.email||u.uid}. `:`Accesso fatto (${u.email||''}), ma questo account non è admin. UID da aggiungere in hollowmere/admin nella console: ${u.uid} `});
  const fail=e=>alert('Non autorizzato: serve l\'accesso con un account admin.\n'+(e&&e.message||e));
  D.onValue(D.ref(db,'.info/connected'),s=>{$('#net').textContent=s.val()?'● Collegato alla Valle':'○ Non collegato'});

@@ -7,7 +7,8 @@
       "admin": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
-          ".write": false
+          ".write": "auth != null && auth.uid === $uid && auth.token.email === 'EMAIL_DEL_REGISTA' && auth.token.email_verified === true",
+          ".validate": "newData.val() === true"
         }
       },
 
