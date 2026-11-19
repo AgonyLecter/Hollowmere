@@ -218,7 +218,7 @@ const FREE_INTRO={
 };
 async function freeStart(ending){const st=G.st,F=st.flags;G.cut++;
  try{await UI.fade(1,600);
-  Object.assign(F,{ch1end:1,ch2end:1,ch3end:1,festaDone:1,ch2card:1,ch3card:1,ch4card:1,finaleChase:0,bridgeGone:0});st.chapter=5;
+  Object.assign(F,{woodDone:1,ch1end:1,ch2end:1,ch3end:1,festaDone:1,ch2card:1,ch3card:1,ch4card:1,finaleChase:0,bridgeGone:0});st.chapter=5;
   st.day+=1;st.free={start:st.day,ending,gone:{},debris:{},built:{}};st.time=6*60;st.energy=100;st.favors=[];st.choreOk=false;G.festaDark=false;G.redTint=0;G.erede=false;G.prey=null;G.festaChase=false;G.horse.on=false;G.npcs=G.npcs.filter(n=>!n.clone);
   st.quiete=100;while(st.inv.length<20)st.inv.push(null);st.inv=st.inv.map(s=>s&&(ITEMS[s.id].t==='key'||(ITEMS[s.id].t==='bad'&&s.id!=='nastro'))?null:s);
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();G.map=G.maps.house;setPos(G.player,2,3,0);G.mode='game';UI.showHud(true);
@@ -249,7 +249,7 @@ const FREE_L={
 const FREE_SEASON={1:'Che freddo. D\'inverno nella Valle cresce solo il porro, e la pazienza.',2:'Primavera! Fragole, {n}. Le fragole di Hollowmere sono le migliori del mondo. Credo.',3:'Che caldo. Il mais arriva più alto di Brom, quest\'estate.'};
 function freeTalkLine(id){const st=G.st,L=[...(FREE_L[id]||['…'])];const s=seasonOf();if(FREE_SEASON[s])L.push(FREE_SEASON[s]);if(id==='agatha'&&st.demand)L.push('Oggi pago bene: '+PL[st.demand]+', tesoro.');st.talkN=st.talkN||{};const k=st.talkN[id]=(st.talkN[id]||0)+1;return L[(st.day*7+k*5)%L.length]}
 // la notte: cambio di stagione (le colture fuori stagione muoiono)
-function freeNight(st,prev){if(!isFree(st))return;const s=seasonOf(st);if(s===prev)return;let n=0;for(const k in st.farm){const c=st.farm[k].c;if(c&&!c.dead&&!cropInSeason(c.t,s)){c.dead=1;n++}}G.seasonNews={s,n}}
+function freeNight(st,prev){if(!isFree(st))return;shadowNightRaid(st);const s=seasonOf(st);if(s===prev)return;let n=0;for(const k in st.farm){const c=st.farm[k].c;if(c&&!c.dead&&!cropInSeason(c.t,s)){c.dead=1;n++}}G.seasonNews={s,n}}
 function shopItems(){const s=seasonOf();return [...Object.keys(ITEMS).filter(k=>ITEMS[k].t==='seed'&&cropInSeason(ITEMS[k].crop,s)),'concime','pane']}
 function freeAimOk(it,tx,ty){const st=G.st,m=G.map,o=m.objAt(tx,ty),id=it.id;if(!isFree(st))return null;
  if(id==='accetta')return !!o&&(o.kind==='tree'||o.kind==='ceppo'||o.kind==='log'||(o.kind==='debris'&&o.dt==='ramo')||(o.kind==='built'&&PLACE_TOOL[o.bid]==='accetta'));

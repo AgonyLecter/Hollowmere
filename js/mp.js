@@ -61,7 +61,7 @@ async function startVisit(pid){const home=G.visit?G.home:G.st;if(G.visit)await e
  const s=await MP.load(pid);if(!s){UI.toast('Quel villaggio non risponde.','bad');return}if(!s.free){UI.toast(`${s.name} non ha ancora finito la storia: il suo villaggio è ancora chiuso nel recinto.`);return}
  G.cut++;try{await UI.fade(1,500);
   const v=JSON.parse(JSON.stringify(s));v.inv=home.inv;v.sel=home.sel;v.money=home.money;v.energy=home.energy;v.time=home.time;v.name=home.name;v.g=home.g;v.talked={};v.flags=Object.assign({},v.flags,{met:home.flags.met});
-  G.home=home;G.visit={pid,name:s.name,watered:0,gifts:0};G.st=v;rebuildMaps();G.map=G.maps.main;snapNPCs();G.amb=null;setPos(G.player,44,41,3);updateCam(0);
+  home.flags.mpVisited=1;G.home=home;G.visit={pid,name:s.name,watered:0,gifts:0};G.st=v;rebuildMaps();G.map=G.maps.main;snapNPCs();G.amb=null;setPos(G.player,44,41,3);updateCam(0);
   await UI.card('In visita',`Il villaggio di ${s.name}`,`${dateLabel(v)}. Puoi annaffiare i suoi campi e lasciargli un regalo nella cassetta delle spedizioni.`,false,true,1200);await UI.fade(0,600);
   presenceJoin(pid);UI.hud();UI.quest()}finally{G.cut--}}
 async function endVisit(quiet){if(!G.visit)return;const v=G.st,h=G.home,vis=G.visit;h.inv=v.inv;h.sel=v.sel;h.money=v.money;h.energy=v.energy;h.time=v.time;
@@ -80,7 +80,7 @@ function giftMenu(){const st=G.st,L=st.inv.map((s,i)=>[s,i]).filter(([s])=>s&&IT
  $('#mbox').querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const s=st.inv[+b.dataset.g];if(!s)return;const id=s.id;removeItem(id,1);MP.act(G.visit.pid,{t:'gift',item:id,n:1,from:G.home.name});G.visit.gifts++;AU.play('ok');UI.toast(`Hai lasciato ${ITEMS[id].n} per ${G.visit.name}.`);UI._mclose=null;giftMenu()})}
 // ---------- posta in arrivo: chi è passato da te ----------
 function inboxStart(){const st=G.st;if(INBOX_OFF||!isFree(st)||!st.pid)return;INBOX_OFF=MP.inbox(st.pid,a=>inboxApply(a))||null}
-function inboxApply(a){const st=G.visit?G.home:G.st;if(!st||!isFree(st))return;st.mailbox=st.mailbox||[];G.inboxN=G.inboxN||{};
+function inboxApply(a){const st=G.visit?G.home:G.st;if(!st||!isFree(st))return;st.flags.mpVisited=1;st.mailbox=st.mailbox||[];G.inboxN=G.inboxN||{};
  if(a.t==='water'){const f=st.farm[a.k];if(f&&a.day===st.day&&f.c){f.w=true;const k=a.from||'Qualcuno';G.inboxN[k]=(G.inboxN[k]||0)+1;clearTimeout(G.inboxT);G.inboxT=setTimeout(()=>{for(const n in G.inboxN)UI.toast(`Visita di ${n}: ha annaffiato ${G.inboxN[n]} ${G.inboxN[n]===1?'pianta':'piante'} nei tuoi campi.`);G.inboxN={}},800)}}
  else if(a.t==='gift'&&ITEMS[a.item]){st.mailbox.push({item:a.item,n:a.n||1,from:a.from||'Qualcuno'});UI.toast(`${a.from||'Qualcuno'} ti ha lasciato un regalo nella cassetta delle spedizioni.`)}}
 function mailboxTake(){const st=G.st;if(G.visit||!st.mailbox||!st.mailbox.length)return false;const left=[];for(const m of st.mailbox){if(!addItem(m.item,m.n)){left.push(m);continue}UI.toast(`Dalla cassetta: ${ITEMS[m.item].n} — da ${m.from}.`)}st.mailbox=left;AU.play('ok');return true}

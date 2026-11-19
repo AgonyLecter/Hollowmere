@@ -127,7 +127,7 @@ function buildBarn(st){
  m.add({kind:'mat',tx:4,ty:7,img:IMG.mat,dx:4*16,dy:7*16+4,sy:-1,solid:[],hits:[],deco:1});
  m.doors.push({tx:4,ty:7,to:'main',x:58,y:31,dir:0});
  return m}
-function rebuildMaps(){const st=G.st;if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
+function rebuildMaps(){const st=G.st;if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
 const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
@@ -308,6 +308,7 @@ function render(){
  if(G.horse.on&&m.id==='main')list.push({horse:1,sy:G.horse.y});
  if(G.prey&&m.id==='main')list.push({prey:1,sy:G.prey.y});
  if(G.coach&&m.id==='main')list.push({coach:1,sy:G.coach.y});
+ if(m.id==='main')for(const s of G.shadows)list.push({sh:s,sy:s.y});
  for(const pid in G.others){const o=G.others[pid];if(o.map===m.id)list.push({other:o,sy:o.y})}
  if(m.id==='main'&&G.fanimals)for(const a of G.fanimals)list.push({fa:a,sy:a.y});
  if(m.id==='main'&&G.amb){if(G.amb.deer&&G.amb.deer.on)list.push({deer:G.amb.deer,sy:G.amb.deer.y});if(G.night>.45)list.push({hog:G.amb.hog,sy:G.amb.hog.y})}
@@ -322,6 +323,7 @@ function render(){
   else if(e.hog)drawHog(e.hog);
   else if(e.fa)drawFarmAnimal(e.fa);
   else if(e.other)drawOther(e.other);
+  else if(e.sh)drawShadow(e.sh);
   else if(e.npc){drawSprite(e.npc.id,e.npc);favorMark(e.npc)}
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
   else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}

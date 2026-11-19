@@ -96,7 +96,8 @@ const ACT={
  hay:()=>UI.toast('Balle di fieno. Ce n\'è più di quanto serva a un villaggio senza cavalli.'),
  barrel:()=>UI.toast('Botti di sidro. Chiuse con la cera gialla.'),
  pumpkin:()=>UI.toast(G.st.chapter>=2?'La zucca ti sorride. Qualcuno le ha dato una bocca.':'Una zucca gigante! Hollowmere ne va fiera.'),
- varco:async()=>{if(await varcoCh3())return;await narr('Il Varco. Un sentiero che entra nel bosco e non ne esce.');await narr(G.st.chapter>=2?'Senti qualcosa respirare tra gli alberi. Le gambe non ti obbediscono.':'Le tue gambe si rifiutano di andare avanti. Regola numero due.')},
+ varco:async()=>{if(await varcoCh3())return;
+  if(isFree(G.st)){const m=missionsFor(G.st).find(m=>m.tipo==='recupero'&&m.luogo==='bosco'&&mstate(G.st,m.id).acc&&!mstate(G.st,m.id).found);if(m){const c=await ask(null,`Il Varco è aperto. «${m.oggetto}» è da qualche parte nel bosco.`,['Entra nel bosco','Non ancora']);if(c===0)await goMap('wood',15,41,3);return}return narr('Il Varco. Il bosco è più quieto, adesso. Senza una ragione, non ci entri.')}await narr('Il Varco. Un sentiero che entra nel bosco e non ne esce.');await narr(G.st.chapter>=2?'Senti qualcosa respirare tra gli alberi. Le gambe non ti obbediscono.':'Le tue gambe si rifiutano di andare avanti. Regola numero due.')},
  bridge:async()=>{const F=G.st.flags;if(isFree(G.st)){travelMenu();return}if(!F.bridgeGone)return narr('Il cocchiere è sparito. Non hai motivo di tornare indietro. Non ancora.');if(!F.sawNoBridge){F.sawNoBridge=1;addQuiete(-10);await narr('Il ponte… non c\'è più.');await narr('Solo acqua nera e due pali spezzati. Come se non ci fosse mai stato.')}else narr('Acqua nera. Nessun ponte.')},
  post:async(o)=>{const F=G.st.flags;if(F.posts[o.pi]){UI.toast('Un palo giallo. Protetto.');return}
   if(!F.gotPaint){UI.toast('Un palo grigio, scrostato. Stona col resto del recinto.');return}

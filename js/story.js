@@ -179,6 +179,10 @@ function guideTarget(){const st=G.st,m=G.map;if(st.day<1)return null;const q=act
  if(m.interior){const d=m.doors[0];if(m.id==='house'&&/cassa/i.test(txt)&&st.flags.gotChestKey)return P(9,3,'Cassa');if(m.id==='barn'&&/fienile|registro|costume/i.test(txt))return P(5,3,'');return d?P(d.tx,d.ty,'Uscita'):null}
  const npc=id=>{const n=NPC(id);if(n&&!n.hidden&&n.map===m.id)return {x:n.x,y:n.y-12,l:NAMES[id]};const d=n&&n.lastIn?bdoor(n.lastIn):homeDoor(id);return P(d[0],d[1],NAMES[id]+' (dentro)')};
  const door=k=>{const d=bdoor(k);return P(d[0],d[1]+1,{barn:'Fienile',chapel:'Cappella',house:'Casa',forge:'Fucina',store:'Emporio'}[k]||'')};
+ if(isFree(st)){const near=k=>{let b=null,bd=1e9;for(const o of m.objs){if(o.kind!==k)continue;const dd=Math.hypot(o.tx*16-G.player.x,o.ty*16-G.player.y);if(dd<bd){bd=dd;b=P(o.tx,o.ty+1,'')}}return b};
+  if(/albero/i.test(txt))return near('tree');if(/roccia/i.test(txt))return near('rock');if(/banco/i.test(txt))return P(14,12,'Banco');if(/Piazza nella fattoria/.test(txt))return P(13,20,'Campi');
+  const mi=missionsFor(st).find(x=>mstate(st,x.id).acc&&!mstate(st,x.id).done);if(mi&&/^Cerca «/.test(txt)){if(mi.luogo==='bosco')return P(30,5,'Varco');const [x,y]=missionSpot(mi);return P(x,y,'')}
+  for(const id of Object.keys(NAMES))if(NPC(id)&&txt.includes(NAMES[id]))return npc(id);return null}
  if(/Presentati/.test(txt)){let best=null,bd=1e9;for(const id of FAV_NPC){if(st.flags.met[id])continue;const n=NPC(id);if(!n||n.hidden)continue;const dd=Math.hypot(n.x-G.player.x,n.y-G.player.y);if(dd<bd){bd=dd;best={x:n.x,y:n.y-12,l:NAMES[id]}}}return best}
  if(/Tobia/.test(txt)){const n=NPC('tobia');if(n&&n.hidden&&n.lastIn==='barn'||(st.chapter>=3&&!st.flags.tobiaScene))return door('barn');return npc('tobia')}
  for(const [re,id] of [[/Clara/,'clara'],[/Brom/,'brom'],[/Agatha/,'agatha'],[/Ezekiel|Anziano/,'ezekiel'],[/Lucius/,'lucius']])if(re.test(txt))return npc(id);

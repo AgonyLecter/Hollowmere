@@ -2,7 +2,7 @@
 // ================= NPC: ORARI E ROUTINE =================
 // Ogni abitante esce dalla porta di casa, cammina fino al suo posto, lì lavora o gironzola, e la sera torna a casa.
 const HOMES={ezekiel:'elder',agatha:'store',lucius:'chapel',clara:'cottage',brom:'forge',tobia:'varco'};
-function homeDoor(id){const k=HOMES[id];return k==='varco'?[30,3]:bdoor(k)}
+function homeDoor(id){const k=HOMES[id];return k==='varco'?[30,3]:k==='ponte'?[44,46]:bdoor(k)}
 const at=(x,y,d=0,act='',wr=0,o={})=>Object.assign({m:'main',x,y,d,act,wr},o);
 const cyc=(t,t0,len,P)=>P[((Math.floor((t-t0)/len)%P.length)+P.length)%P.length];
 const SCHED={
@@ -144,7 +144,7 @@ async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
   if(!isFree(st))await redReact(n);
   const it=selItem();
   if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){await gift(n,it.id);return}}
-  if(isFree(st))await say(n.id,freeTalkLine(n.id));else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
+  if(isFree(st)){if(!(await missionTalk(n))){if(OUT_L[n.id])await outsiderTalk(n);else await say(n.id,freeTalkLine(n.id))}}else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
  }catch(e){console.error(e)}finally{G.cut--}}
 async function gift(n,id){const st=G.st;removeItem(id,1);st.gifted[n.id]=1;
  if(id==='bacche'){addFriend(n.id,-3);addQuiete(-6);AU.play('sting');return say(n.id,n.id==='tobia'?'Hihi! Rosse! …Nascondile. Nascondile prima che le veda il Vecchio.':'Toglimele di davanti. Subito. E lavati le mani, {n}. Con la cenere.','dark')}

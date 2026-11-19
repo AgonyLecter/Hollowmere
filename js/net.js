@@ -18,7 +18,7 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
   D.onValue(D.query(this.r('registro'),D.limitToLast(40)),s=>{const v=s.val()||{};this.regNames=Object.values(v).map(o=>String(o&&o.name||'').slice(0,20));this.status()},()=>{});
   D.onValue(D.query(this.r('lapidi'),D.limitToLast(20)),s=>{const v=s.val()||{};this.msgs=Object.values(v).filter(Boolean).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(o=>({t:String(o.t||'').slice(0,80),n:String(o.n||'').slice(0,20)}));UI.refreshNameless&&UI.refreshNameless()},()=>{});
   D.onValue(D.query(this.r('eredi'),D.limitToLast(5)),s=>{const v=s.val()||{};this.heirs=Object.values(v).map(o=>String(o&&o.name||'').slice(0,20)).filter(Boolean)},()=>{});
-  D.onValue(this.r('stats/arrivi'),s=>{this.count=s.val()||0;this.status()},()=>{})},
+  D.onValue(this.r('stats/arrivi'),s=>{this.count=s.val()||0;this.status()},()=>{});missionListen()},
  status(){$('#tnet').textContent=this.ok?'● La Valle è in ascolto (online)':'○ Modalità offline · salvataggi su questo dispositivo';$('#tcount').textContent=this.ok?`Nuovi arrivati a Hollowmere: ${this.count}`:''},
  async save(st){if(G.visit)return;st.ts=Date.now();MP.publish(st);LS.set('hm_save',JSON.stringify(st));if(st.pid)LS.set('hm_pid',st.pid);if(!this.ok||!st.pid)return;
   try{await this.api.set(this.r('players/'+st.pid),{name:st.name,day:st.day,ch:st.chapter,ts:st.ts,save:JSON.stringify(st)})}catch(e){console.warn(e)}},
