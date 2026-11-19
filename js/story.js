@@ -431,13 +431,11 @@ function showScene(kind,cap){return new Promise(res=>{UI.open(`<canvas id="scn" 
   const c=document.getElementById('scn'),x=c.getContext('2d');x.imageSmoothingEnabled=false;let t=0;SCENES[kind](x,0);const iv=setInterval(()=>{if(!document.getElementById('scn')){clearInterval(iv);return}t+=.05;SCENES[kind](x,t)},50)})}
 // ---------- fine ----------
 async function finishGame(n,name,epi){
- try{const E=new Set(JSON.parse(LS.get('hm_endings')||'[]'));E.add(n);LS.set('hm_endings',JSON.stringify([...E]));const cp=LS.get('hm_prefesta');if(cp)LS.set('hm_save',cp)}catch(e){}
+ try{const E=new Set(JSON.parse(LS.get('hm_endings')||'[]'));E.add(n);LS.set('hm_endings',JSON.stringify([...E]));const base=JSON.parse(JSON.stringify(G.st));base.endingN=n;LS.set('hm_freebase',JSON.stringify(base));const cp=LS.get('hm_prefesta');if(cp)LS.set('hm_save',cp)}catch(e){}
  const E=JSON.parse(LS.get('hm_endings')||'[]');
  await UI.fade(1,700);G.redTint=0;G.festaDark=false;
- await UI.card(`Finale ${n}/3`,name,`${epi}<br><br><span class="small">Finali scoperti: ${E.length}/3.</span>`,n===2,true,2200);
- G.cut=0;const c=await ask(null,'La storia è finita. Ma la Valle continua. Vuoi restare a vivere a Hollowmere?',['Resta nella Valle (gioco libero)','Torna al menu (potrai rigiocare la Festa)']);
- if(c===0){await freeStart(n);return}
- toTitle()}
+ await UI.card(`Finale ${n}/3`,name,`${epi}<br><br><span class="small">Finali scoperti: ${E.length}/3.<br>Nel menu si è aperta <b>la Valle</b>: il gioco libero, con le stagioni, gli altri giocatori e le missioni. Da «Altri finali» puoi ripartire dal primo bivio.</span>`,n===2,true,2200);
+ G.cut=0;toTitle()}
 
 ACTD.festa='alla Festa';
 function drawEredeHorse(){const p=G.player,img=IMG.horse[Math.floor(p.anim/2)%2],dir=p.dir===1?1:p.dir===2?0:(G._ed||0);G._ed=dir;ctx.drawImage(SHADOW,p.x-12,p.y-3,24,6);

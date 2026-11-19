@@ -229,7 +229,7 @@ async function freeStart(ending){const st=G.st,F=st.flags;G.cut++;
   const k=fkey(14,11);if(!st.free.built[k]&&!G.maps.main.objAt(14,11)){st.free.built[k]={id:'banco'};rebuildMaps()}else giveItem('banco');
   await narr('Accanto a casa c\'è un banco da lavoro nuovo. Con legna, pietra e fibra potrai costruire quello che ti serve.');
   UI.toast('Gioco libero: le stagioni durano 28 giorni. Ogni stagione ha le sue colture.');
-  NET.save(st);UI.hud();UI.quest();UI.hotbar()}finally{G.cut--}}
+  NET.save(st);UI.hud();UI.quest();UI.hotbar();presenceJoin(st.pid);inboxStart()}finally{G.cut--}}
 // obiettivi del gioco libero (guidano i primi giorni)
 QUESTS.push(
  {free:1,s:st=>isFree(st),t:st=>`Abbatti un albero con l'accetta (${Math.min(st.flags.felled||0,1)}/1)`,d:st=>(st.flags.felled||0)>=1},

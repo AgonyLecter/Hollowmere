@@ -7,6 +7,20 @@ const TITLE={
  async code(){const c=await UI.askCode();if(!c)return;if(!NET.ok){UI.toast('Serve la connessione alla Valle (online).','bad');return}UI.toast('Cerco nella Valle…');const st=await NET.load(c);if(!st){UI.toast('Nessuna anima con questo codice.','bad');return}startFrom(st)},
  opts(){UI.open(`<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`);const vm=$('#vm'),vs=$('#vs');vm.oninput=()=>{AU.vol.m=+vm.value;AU.applyVol();LS.set('hm_vol',JSON.stringify(AU.vol))};vs.oninput=()=>{AU.vol.s=+vs.value;AU.applyVol();AU.play('blip');LS.set('hm_vol',JSON.stringify(AU.vol))}},
  full(){goFull()},
+ // la Valle: il gioco libero, con il suo salvataggio separato (e il suo codice di villaggio)
+ async valle(){let st=null;try{st=JSON.parse(LS.get('hm_free'))}catch(e){}
+  if(NET.ok&&st&&st.pid){const r=await NET.load(st.pid);if(r&&r.free&&(r.ts||0)>(st.ts||0))st=r}
+  if(st&&st.free){startFrom(st);return}
+  let base=null;try{base=JSON.parse(LS.get('hm_freebase')||LS.get('hm_save'))}catch(e){}
+  if(!base){UI.toast('Finisci la storia per aprire la Valle.');return}
+  const E=JSON.parse(LS.get('hm_endings')||'[]'),ending=base.endingN||E[E.length-1]||3;
+  UI.hideTitle();await UI.fade(1,400);G.coach=null;G.amb=null;G.st=migrate(base);delete G.st.endingN;G.st.pid=newPid();setPlayerLook(G.st.g);G.mode='game';G.map=null;await freeStart(ending)},
+ // altri finali: si riparte dal primo bivio (Capitolo II) o dalla Festa
+ finali(){const E=JSON.parse(LS.get('hm_endings')||'[]'),C=[['hm_cp2','Dal primo bivio — Capitolo II','Il nastro rosso, le pagine del nonno, il fienile: da qui le scelte cambiano il finale.'],['hm_cp3','Dal Capitolo III','Clara, Tobia, il bosco. Le amicizie decidono chi ti aiuta alla Festa.'],['hm_prefesta','Dalla Festa del Raccolto','Il giorno della Festa: il sidro, il Conteggio, la fuga o il patto.']].filter(c=>LS.get(c[0]));
+  const H={1:'La Fuga: arriva alla Festa con Clara alleata e scappa al Varco.',2:'L\'Erede: lasciati contare, o fatti prendere.',3:'Spezzare il patto: tieni il nastro rosso, leggi tutto, fatti amici Clara e Tobia.'};
+  UI.open(`<button class="btn mclose" data-close>✕</button><h2>Altri finali</h2><p class="small">Finali scoperti: ${E.length}/3.</p>`+[1,2,3].map(n=>`<p class="small">${E.includes(n)?'✔':'✦'} ${E.includes(n)?H[n].split(':')[0]:'Ancora da scoprire — '+H[n].split(': ')[1]}</p>`).join('')+
+   (C.length?C.map(([k,t,d])=>`<div class="mrow"><span><b>${t}</b><br><span class="small">${d}</span></span><button class="btn" data-cp="${k}">Riparti</button></div>`).join(''):'<p>Nessun punto di ripartenza salvato su questo dispositivo.</p>')+'<p class="small">La partita della Valle non viene toccata: ha un salvataggio a parte.</p>');
+  $('#mbox').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{let st=null;try{st=JSON.parse(LS.get(b.dataset.cp))}catch(e){}if(!st)return;UI._mclose=null;UI.close();LS.set('hm_save',JSON.stringify(st));startFrom(st)})},
 };
 function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];
  const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
@@ -16,7 +30,7 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
 async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
  snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);if(isFree(G.st)){presenceJoin(G.st.pid);inboxStart()}UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
-function toTitle(){G.coach=null;presenceLeave();G.visit=null;G.home=null;G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
+function toTitle(){G.coach=null;presenceLeave();G.visit=null;G.home=null;G.erede=false;G.prey=null;G.festaChase=false;G.festaDark=false;G.redTint=0;G.scare=0;G.shadows=[];G.player.speed=66;G.npcs=G.npcs.filter(n=>!n.clone);G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // ---------- prologo ----------
 async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,43,46,3);
  G.coach={x:45*16+4,y:47*16+30,moving:false};await arrivalCinematic();
@@ -58,11 +72,11 @@ function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
 async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
   if(F.missedOffer&&!F.missedShown){F.missedShown=1;F.missedDay=st.day;AU.play('scratch');await sleep(600);await narr('Stanotte qualcosa ha grattato la porta per ore.');await narr('Sul legno, all\'esterno, lettere incise a unghiate:\nAVEVI DIMENTICATO.',{dark:1});addQuiete(-15)}
-  if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.')}
+  if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.');LS.set('hm_cp2',JSON.stringify(st))}
   if(st.chapter>=3&&!F.ch3card){F.ch3card=1;await UI.fade(1,300);await UI.card('Capitolo III','L\'Albero dei Morti',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);
    await narr('Nessuno parla della notte. Dalla finestra, il villaggio è sereno. Più sereno del solito.');
    await narr('Sulla soglia, piegato con cura, c\'è un mantello giallo. Nessun biglietto. Non serve: sai già chi l\'ha lasciato. Tutti.');
-   giveItem('mantello');await narr('Le lanterne gialle, ha scritto il nonno, non proteggono: segnano.',{dark:1});addQuiete(-5)}
+   giveItem('mantello');await narr('Le lanterne gialle, ha scritto il nonno, non proteggono: segnano.',{dark:1});addQuiete(-5);LS.set('hm_cp3',JSON.stringify(st))}
   if(st.chapter>=4&&!F.ch4card){F.ch4card=1;F.ch4day=st.day;await UI.fade(1,300);await UI.card('Capitolo IV','La Festa del Raccolto',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);
    await narr('Le campane suonano da sole, all\'alba. In piazza qualcuno canta. Nessuno, nella Valle, ha dormito.');
    await narr('Sul vetro della finestra, dall\'esterno, c\'è l\'impronta di una mano. Non è piccola. Non è tua.',{dark:1});
