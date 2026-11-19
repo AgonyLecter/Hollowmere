@@ -1,0 +1,88 @@
+{
+  "rules": {
+    "hollowmere": {
+      ".read": false,
+      ".write": false,
+
+      "registro": {
+        ".read": true,
+        ".indexOn": ["ts"],
+        "$id": {
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['name','ts']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('ts').isNumber()"
+        }
+      },
+      "lapidi": {
+        ".read": true,
+        "$id": {
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['t','ts']) && newData.child('t').isString() && newData.child('t').val().length <= 80 && (!newData.child('n').exists() || newData.child('n').val().length <= 20)"
+        }
+      },
+      "eredi": {
+        ".read": true,
+        "$id": {
+          ".write": "!data.exists()",
+          ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      },
+      "stats": {
+        ".read": true,
+        "arrivi": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+        }
+      },
+      "players": {
+        "$pid": {
+          ".read": true,
+          ".write": "$pid.matches(/^HM-[A-Z2-9]{6}$/)",
+          ".validate": "newData.hasChildren(['name','ts','save']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('save').isString() && newData.child('save').val().length < 300000"
+        }
+      },
+      "villaggi": {
+        ".read": true,
+        ".indexOn": ["ts"],
+        "$pid": {
+          ".write": "$pid.matches(/^HM-[A-Z2-9]{6}$/)",
+          ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      },
+      "presenza": {
+        "$village": {
+          ".read": true,
+          "$pid": {
+            ".write": "$pid.matches(/^HM-[A-Z2-9]{6}$/)",
+            ".validate": "!newData.exists() || (newData.child('x').isNumber() && newData.child('y').isNumber() && newData.child('name').val().length <= 20)"
+          }
+        }
+      },
+      "chat": {
+        "$village": {
+          ".read": true,
+          "$id": {
+            ".write": "!data.exists()",
+            ".validate": "newData.child('t').isString() && newData.child('t').val().length <= 60 && newData.child('n').val().length <= 20"
+          }
+        }
+      },
+      "visite": {
+        "$pid": {
+          ".read": true,
+          "$id": {
+            ".write": "!data.exists() || !newData.exists()",
+            ".validate": "!newData.exists() || newData.child('t').val() === 'water' || newData.child('t').val() === 'gift'"
+          }
+        }
+      },
+      "missioni": {
+        ".read": true,
+        ".write": "auth != null && auth.uid === 'UID_DEL_TUO_ACCOUNT_ADMIN'"
+      },
+      "eventi": {
+        ".read": true,
+        ".write": "auth != null && auth.uid === 'UID_DEL_TUO_ACCOUNT_ADMIN'"
+      }
+    }
+  }
+}

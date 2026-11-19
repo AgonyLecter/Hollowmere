@@ -23,6 +23,8 @@ function lampSeg(S,tag,t){for(const g of S)if(t>=g.from&&t<g.to){const [lx,ly]=L
 // ---------- routine: il meteo, la domenica e la Festa cambiano la giornata di tutti ----------
 function schedOf(id){return worldAdjust(id,SCHED[id]?SCHED[id](G.st):null,G.st)}
 function worldAdjust(id,s,st){
+ // dopo la Fuga Clara vive fuori: torna nella Valle solo la domenica
+ if(isFree(st)&&st.free.ending===1&&id==='clara'&&!isSunday(st))return null;
  const t=st.time,F=st.flags;if(st.day<1||F.finaleChase||id==='faceless'||(F.ezWait&&id==='ezekiel'))return s;
  if(st.chapter>=4&&F.ch4day===st.day&&!F.festaDone&&!F.conteggio&&FESTA_POS[id]&&t>=18*60+30&&t<23*60+45){const [fx,fy]=FESTA_POS[id];return at(fx,fy,0,'festa',1,{snap:1})}
  // Capitolo III: finché non lo trovi nel fienile, Tobia di giorno sta lì dentro

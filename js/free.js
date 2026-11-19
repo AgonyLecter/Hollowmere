@@ -212,13 +212,13 @@ function chestMenu(bk){const b=G.st.free.built[bk];if(!b.inv)b.inv=Array(20).fil
 
 // ---------- inizio del gioco libero ----------
 const FREE_INTRO={
- 1:['Sei tornat{o|a}. Clara è rimasta fuori, tra le luci che non si spengono mai. Tu no: la casa del nonno ti aspettava, e la Valle non ha fatto domande.'],
+ 1:['Sei tornat{o|a}. Clara è rimasta fuori, tra le luci che non si spengono mai: torna a trovarti la domenica. Tu no: la casa del nonno ti aspettava, e la Valle non ha fatto domande.'],
  2:['Il mantello giallo è appeso dietro la porta. Di giorno nessuno ne parla. Di notte, certe volte, senti gli zoccoli. Sono i tuoi.'],
  3:['Il recinto è grigio. Il ponte è stato ricostruito con il legno dell\'Albero bruciato. La Valle è libera, e da fuori qualcuno comincia ad arrivare.'],
 };
 async function freeStart(ending){const st=G.st,F=st.flags;G.cut++;
  try{await UI.fade(1,600);
-  Object.assign(F,{woodDone:1,ch1end:1,ch2end:1,ch3end:1,festaDone:1,ch2card:1,ch3card:1,ch4card:1,finaleChase:0,bridgeGone:0});st.chapter=5;
+  Object.assign(F,{woodDone:1,tobiaScene:1,ezTruth:1,claraAlly:1,ch1end:1,ch2end:1,ch3end:1,festaDone:1,ch2card:1,ch3card:1,ch4card:1,finaleChase:0,bridgeGone:0});st.chapter=5;
   st.day+=1;st.free={start:st.day,ending,gone:{},debris:{},built:{}};st.time=6*60;st.energy=100;st.favors=[];st.choreOk=false;G.festaDark=false;G.redTint=0;G.erede=false;G.prey=null;G.festaChase=false;G.horse.on=false;G.npcs=G.npcs.filter(n=>!n.clone);
   st.quiete=100;while(st.inv.length<20)st.inv.push(null);st.inv=st.inv.map(s=>s&&(ITEMS[s.id].t==='key'||(ITEMS[s.id].t==='bad'&&s.id!=='nastro'))?null:s);
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();G.map=G.maps.house;setPos(G.player,2,3,0);G.mode='game';UI.showHud(true);
