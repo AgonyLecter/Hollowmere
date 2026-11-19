@@ -260,7 +260,7 @@ const CR_ZONE={chicken:[51,32,59,38],cat:[30,12,56,34],rabbit:[5,36,40,41],duck:
 function spawnCritters(){const L=[];const add=(k,n)=>{const z=CR_ZONE[k];for(let i=0;i<n;i++)L.push({k,x:(z[0]+Math.random()*(z[2]-z[0]))*16+8,y:(z[1]+Math.random()*(z[3]-z[1]))*16+12,dir:Math.random()<.5?1:-1,st:'idle',t:Math.random()*3,f:0,tx:null,ty:null,z})};
  add('chicken',4);add('cat',1);add('rabbit',3);add('duck',3);
  const perches=[[13,22,-10],[7,3,-12],[18,3,-12],[25,3,-12],[36,3,-12],[57,3,-12],[60,14,-8],[3,32,-8]];
- for(let i=0;i<(G.st&&G.st.chapter>=2?7:4);i++){const p=perches[i%perches.length];L.push({k:'crow',x:p[0]*16+8,y:p[1]*16+14,oy:p[2],dir:Math.random()<.5?1:-1,st:'perch',t:0,f:0,home:p})}
+ for(let i=0;i<(H2()?7:4);i++){const p=perches[i%perches.length];L.push({k:'crow',x:p[0]*16+8,y:p[1]*16+14,oy:p[2],dir:Math.random()<.5?1:-1,st:'perch',t:0,f:0,home:p})}
  G.critters=L}
 function updCritters(dt){const m=G.map;if(!m||m.id!=='main'||!G.critters)return;const p=G.player,night=G.night>.6,rain=G.st.weather==='pioggia';
  const tb=NPC('tobia'),tbv=tb&&!tb.hidden&&tb.map==='main'?tb:null;if(tb&&tb.chaseT>0)tb.chaseT-=dt;
@@ -492,7 +492,7 @@ function aimInfo(){const st=G.st,m=G.map;if(G.mode!=='game'||G.cut||UI.busy()||m
  const tool=it.id==='hoe'||it.id==='can'||def.t==='seed'||def.t==='bad'||def.t==='fert';if(!tool)return null;
  const [tx,ty]=frontTile(),k=tx+','+ty,f=st.farm[k],g=m.get(tx,ty),free=!m.objAt(tx,ty)&&(g===1||g===12);let ok=false;
  if(f&&f.c&&cropStage(f.c)===3)ok=true;
- else if(it.id==='hoe')ok=(inFarm(tx,ty)&&free&&!f)||cropGone(f);
+ else if(it.id==='hoe')ok=((isFree()?!!ownedAt(tx,ty):inFarm(tx,ty))&&free&&!f)||cropGone(f);
  else if(def.t==='fert')ok=!!(f&&!f.f);
  else if(it.id==='can')ok=!!(f&&!f.w);
  else if(def.t==='seed')ok=!!(f&&!f.c);

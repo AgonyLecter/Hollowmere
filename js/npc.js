@@ -75,7 +75,7 @@ function npcIdle(n,s,dt){n.idleT=(n.idleT||0)-dt;
 }
 function npcBarks(dt){if(G.cut||UI.busy()||G.map.id!=='main')return;const p=G.player;
  for(const n of G.npcs){if(n.hidden||n.script||n.map!=='main'||n.barkT>0)continue;const d=Math.hypot(n.x-p.x,n.y-p.y);if(d>52)continue;
-  n.barkT=35+Math.random()*30;const L=(isFree()?FREE_BARKS:G.st.chapter>=2&&Math.random()<.6?BARKS2:BARKS)[n.id];if(L)bubble(n,L[Math.random()*L.length|0])}
+  n.barkT=35+Math.random()*30;const L=(isFree()&&n.act==='visit'?{[n.id]:[farmComment(n.id)]}:isFree()?FREE_BARKS:H2()&&Math.random()<.6?BARKS2:BARKS)[n.id];if(L)bubble(n,L[Math.random()*L.length|0])}
  for(const b of G.bubbles)b.life-=dt;G.bubbles=G.bubbles.filter(b=>b.life>0)}
 function snapNPCs(){for(const n of G.npcs){if(n.script)continue;n.goal=null;n.lastIn=null;const s=schedOf(n.id);
  if(s&&s.in){n.lastIn=s.in;n.hidden=true;n.map='main';n.path=[]}
@@ -108,7 +108,7 @@ function pickLine(id,base){const st=G.st,L=LINES[id]||{},t=st.time,pool=[...(bas
  if(st.weather==='pioggia'||st.weather==='nebbia')pool.push(...(L[st.weather]||[]),...(L[st.weather]||[]));
  if(st.flags.harvested||st.shipped.length)pool.push(...(L.farm||[]));
  if(hearts(id)>=2)pool.push(...(L.amico||[]));
- if(st.chapter>=2&&!(id==='ezekiel'&&st.flags.ezTruth))pool.push(...(L.ch2||[]),...(L.ch2||[]));if(st.chapter>=3)pool.push(...(CH3L[id]||[]),...(CH3L[id]||[]));if(st.flags.ezTruth)pool.push(...(CH3T[id]||[]),...(CH3T[id]||[]));if(st.flags.woodDone)pool.push(...(CH3W[id]||[]),...(CH3W[id]||[]),...(CH3W[id]||[]));
+ if(H2(st)&&!(id==='ezekiel'&&st.flags.ezTruth))pool.push(...(L.ch2||[]),...(L.ch2||[]));if(st.chapter>=3)pool.push(...(CH3L[id]||[]),...(CH3L[id]||[]));if(st.flags.ezTruth)pool.push(...(CH3T[id]||[]),...(CH3T[id]||[]));if(st.flags.woodDone)pool.push(...(CH3W[id]||[]),...(CH3W[id]||[]),...(CH3W[id]||[]));
  if(st.flags.caughtDay===st.day-1&&CAUGHTL[id])pool.push(CAUGHTL[id],CAUGHTL[id],CAUGHTL[id]);if(st.flags.missedDay===st.day&&MISSL[id])pool.push(MISSL[id],MISSL[id],MISSL[id]);
  st.talkN=st.talkN||{};const k=st.talkN[id]=(st.talkN[id]||0)+1;return pool[(st.day*7+k*5+(t>>6))%pool.length]}
 // ---------- chiacchierate tra abitanti (fumetti) ----------
@@ -144,7 +144,7 @@ async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
   if(!isFree(st))await redReact(n);
   const it=selItem();
   if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){await gift(n,it.id);return}}
-  if(isFree(st)){if(!(await missionTalk(n))){if(OUT_L[n.id])await outsiderTalk(n);else await say(n.id,freeTalkLine(n.id))}}else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
+  if(isFree(st)){if(!(await missionTalk(n))&&!(await teachRecipe(n))){if(OUT_L[n.id])await outsiderTalk(n);else if(n.act==='visit')await say(n.id,farmComment(n.id));else if(FREE_ASK[n.id])await FREE_ASK[n.id](n);else await say(n.id,freeTalkLine(n.id))}}else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
  }catch(e){console.error(e)}finally{G.cut--}}
 async function gift(n,id){const st=G.st;removeItem(id,1);st.gifted[n.id]=1;
  if(id==='bacche'){addFriend(n.id,-3);addQuiete(-6);AU.play('sting');return say(n.id,n.id==='tobia'?'Hihi! Rosse! …Nascondile. Nascondile prima che le veda il Vecchio.':'Toglimele di davanti. Subito. E lavati le mani, {n}. Con la cenere.','dark')}
@@ -162,7 +162,7 @@ const TALK={
   if(countItem('nastro')||countItem('bacche')){addQuiete(-5);return say('ezekiel','Senti anche tu questo odore, {n}? Io sì. Odore di rosso.','stern')}
   if(st.chapter>=3)return ezekielCh3(n);
   if(F.finaleChase||F.ch2end)return say('ezekiel','La Festa si avvicina. Riposa, {ragazzo|ragazza}. Ti vogliamo… in forze.','stern');
-  if(st.chapter>=2){if(!F.ezFest){F.ezFest=1;return say('ezekiel','La Festa del Raccolto è tra pochi giorni. Quest\'anno sarà speciale. Coltiva zucche, {n}. Tante zucche.')}return say('ezekiel',pickLine('ezekiel',['Hai visto Tobia? Quel ragazzo parla troppo. Le parole, a Hollowmere, sono come semi.','Dormi bene, la notte? Bene. Molto bene.','Tuo nonno firmava sempre con la mano sinistra. Anche tu sei mancin{o|a}, vero?']),'stern')}
+  if(H2(st)){if(!F.ezFest){F.ezFest=1;return say('ezekiel','La Festa del Raccolto è tra pochi giorni. Quest\'anno sarà speciale. Coltiva zucche, {n}. Tante zucche.')}return say('ezekiel',pickLine('ezekiel',['Hai visto Tobia? Quel ragazzo parla troppo. Le parole, a Hollowmere, sono come semi.','Dormi bene, la notte? Bene. Molto bene.','Tuo nonno firmava sempre con la mano sinistra. Anche tu sei mancin{o|a}, vero?']),'stern')}
   if(st.day>=3&&!F.vespro)return say('ezekiel','Stasera c\'è il Vespro, alle sei. Ci saremo tutti. È importante che ci siano tutti.');
   if(F.gotPaint&&F.posts.filter(Boolean).length<5)return say('ezekiel','I pali, {n}. Il giallo protegge. Il grigio… lascia passare.');
   return say('ezekiel',pickLine('ezekiel',['Il raccolto cresce bene, quest\'anno. La Valle è contenta.','Non c\'è niente oltre il bosco, {n}. Niente che valga la pena.','Ricorda: alla campana, a casa.']))},
@@ -172,8 +172,8 @@ const TALK={
   if(st.day>=3&&!F.gotChestKey){const ok=F.posts.filter(Boolean).length>=5&&F.buried>=3;
    if(ok){F.gotChestKey=1;giveItem('key');await say('agatha','Hai dipinto i pali e seppellito il rosso. Brav{o|a}, brav{o|a}. Elias mi lasciò questa, per te.');await say('agatha','La chiave della sua cassa. Disse: «Solo se rispetta le regole.» E tu le rispetti.\n(Hai ottenuto: Chiave della cassa)')}
    else await say('agatha','Ho una cosa di Elias per te. Ma prima finisci le faccende: i pali gialli, le bacche rosse. Elias è stato chiaro.')}
-  const c=await ask('agatha',st.chapter>=2?'Cosa ti serve, tesoro? Semi? Abbiamo tanti semi. Ne pianti tanti, vero?':'Cosa ti serve, tesoro?',['Compra semi','Chiacchiera','Niente']);
-  if(c===0)return UI.shop();if(c===1)return say('agatha',pickLine('agatha',st.chapter>=2?['Brom forgia ferri di cavallo tutto l\'anno. Per abitudine, dice.','Clara è una brava ragazza. Troppo curiosa. La curiosità è un colore, sai?','Tuo nonno comprava sempre semi di zucca. Sempre. Anche quando non piantava.']:['Il rosso è il colore cattivo, tesoro. Non chiedermi perché: è così e basta.','Lucius conta. Ezekiel decide. Io vendo. Ognuno ha il suo posto.','Il pane di Clara è il migliore della Valle. Non dirle che l\'ho detto.']))},
+  const c=await ask('agatha',H2(st)?'Cosa ti serve, tesoro? Semi? Abbiamo tanti semi. Ne pianti tanti, vero?':'Cosa ti serve, tesoro?',['Compra semi','Chiacchiera','Niente']);
+  if(c===0)return UI.shop();if(c===1)return say('agatha',pickLine('agatha',H2(st)?['Brom forgia ferri di cavallo tutto l\'anno. Per abitudine, dice.','Clara è una brava ragazza. Troppo curiosa. La curiosità è un colore, sai?','Tuo nonno comprava sempre semi di zucca. Sempre. Anche quando non piantava.']:['Il rosso è il colore cattivo, tesoro. Non chiedermi perché: è così e basta.','Lucius conta. Ezekiel decide. Io vendo. Ognuno ha il suo posto.','Il pane di Clara è il migliore della Valle. Non dirle che l\'ho detto.']))},
  async lucius(n){const st=G.st,F=st.flags;
   if(isSunday(st)&&n.act==='call'&&!F['mass'+st.day]){F.met.lucius=1;
    const c=await ask('lucius','La messa sta per cominciare, {figliolo|figliola}. Ti aspettiamo dentro. Vieni?',['Vengo','Più tardi']);
@@ -183,7 +183,7 @@ const TALK={
   if(!F.met.lucius){F.met.lucius=1;await say('lucius','Sono Fratello Lucius. Suono la campana alle nove di sera.');await say('lucius','Quando la senti, chiuditi in casa. Non è una minaccia, {figliolo|figliola}. È una ninna nanna.');return}
   if(st.day>=3&&!F.vespro)return say('lucius','Stasera, Vespro. Dalle sei alle sette e mezza, in cappella. Non mancare: ci contiamo, la sera di raccolto.');
   if(st.chapter>=3)return say('lucius',pickLine('lucius',['Le tombe vanno curate. I morti di Hollowmere sono molto presenti.','Alla Festa conterò per l\'ultima volta. Non so se ne sarò felice.']),F.woodDone?'dark':'');
-  if(st.chapter>=2)return say('lucius',pickLine('lucius',['Conto le teste ogni sera. A volte i numeri non tornano. Il Signore perdona chi sbaglia i conti.','Otto. Sette. Otto. …Scusa. Pensavo ad alta voce.','Tuo nonno sedeva sempre in fondo. Diceva che da lì si vedono tutti.']),st.quiete<50?'dark':'');
+  if(H2(st))return say('lucius',pickLine('lucius',['Conto le teste ogni sera. A volte i numeri non tornano. Il Signore perdona chi sbaglia i conti.','Otto. Sette. Otto. …Scusa. Pensavo ad alta voce.','Tuo nonno sedeva sempre in fondo. Diceva che da lì si vedono tutti.']),st.quiete<50?'dark':'');
   return say('lucius',pickLine('lucius',['Le tombe vanno curate. I morti di Hollowmere sono molto… presenti.','Il sego delle candele lo facciamo noi. Non chiedere con cosa.','Dormi con la finestra chiusa.']))},
  async clara(n){const st=G.st,F=st.flags;
   if(st.chapter>=3&&F.met.clara&&!F.claraAlly)return claraAlly(n);
@@ -208,7 +208,7 @@ const TALK={
    await say('tobia','Vuoi entrare nel fienile? La chiave dorme. Dorme sotto il ferro di cavallo. Sulla porta dell\'Anziano.');
    await say('tobia','Shhh. Vai dopo la campana. Il cavallo dorme, prima. Hihi.','dark');F.tobiaTalk=1;AU.play('laugh');return}
   if(!F.met.tobia){F.met.tobia=1;return say('tobia','Hihi! Ciao! Io sono Tobia. Conto le foglie. Una, due, tante.')}
-  return say('tobia',pickLine('tobia',['Hihi. Le zucche ascoltano. Lo sapevi?','Il Vecchio Elias mi dava le caramelle. Adesso non può. Non ha le mani. Hihi.','Uno, due, tre… otto! Hihi!']),st.chapter>=2&&st.day%3===1?'dark':'')},
+  return say('tobia',pickLine('tobia',['Hihi. Le zucche ascoltano. Lo sapevi?','Il Vecchio Elias mi dava le caramelle. Adesso non può. Non ha le mani. Hihi.','Uno, due, tre… otto! Hihi!']),H2(st)&&st.day%3===1?'dark':'')},
  async faceless(){},
 };
 async function ezekielPaint(n){const st=G.st,F=st.flags;F.ezWait=0;F.gotPaint=1;F.met.ezekiel=1;
@@ -234,8 +234,8 @@ const QUESTS=[
  {s:st=>st.flags.gotChestKey,t:()=>'Apri la cassa del nonno',d:st=>st.flags.openedChest},
  {s:st=>st.day>=3&&st.chapter<=1,t:()=>'Vai al Vespro in cappella (18:00–19:30)',d:st=>st.flags.vespro},
  {s:st=>st.flags.vespro&&!st.flags.ch1end,t:()=>'Torna a casa. Non aprire a nessuno.',d:st=>st.flags.ch1end},
- {s:st=>st.chapter>=2,t:()=>'Chiedi a Brom per chi forgia i ferri di cavallo',d:st=>st.flags.bromShoes},
- {s:st=>st.chapter>=2,t:()=>'Parla con Clara: sembra spaventata',d:st=>st.flags.claraBarn},
+ {s:st=>H2(st),t:()=>'Chiedi a Brom per chi forgia i ferri di cavallo',d:st=>st.flags.bromShoes},
+ {s:st=>H2(st),t:()=>'Parla con Clara: sembra spaventata',d:st=>st.flags.claraBarn},
  {s:st=>st.flags.claraBarn,t:()=>'Trova Tobia vicino al Varco (di giorno)',d:st=>st.flags.tobiaTalk},
  {s:st=>st.flags.tobiaTalk,t:()=>'Cerca la chiave sulla porta dell\'Anziano',d:st=>st.flags.barnKey},
  {s:st=>st.flags.barnKey,t:()=>'Entra nel fienile rosso dopo le 21:00',d:st=>st.flags.sawCostume||st.flags.readLedger},

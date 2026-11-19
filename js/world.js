@@ -51,7 +51,7 @@ function buildMain(st){
  addB('house',IMG.house);addB('chapel',IMG.chapel);addB('store',IMG.store);addB('elder',IMG.elder);addB('barn',IMG.barn);addB('cottage',IMG.cottage);addB('forge',IMG.forge);
  // oggetti
  m.add(OB('bin',13,9,IMG.bin,{act:'bin'}));
- m.add(OB('scare',13,22,IMG.scare[st.chapter>=2?1:0],{act:'scare'}));
+ m.add(OB('scare',13,22,IMG.scare[H2(st)?1:0],{act:'scare'}));
  m.add(OB('board',40,16,IMG.board,{act:'board'}));
  m.add(OB('well',47,19,IMG.well,{act:'well'}));
  m.add(OB('stall',48,21,IMG.stall,{wt:3,act:'stall',solid:[[48,21],[49,21],[50,21]],hits:[[48,21],[49,21],[50,21]]}));
@@ -64,9 +64,9 @@ function buildMain(st){
  m.add(OB('elias',53,7,IMG.cross,{act:'elias'}));
  m.add(OB('nameless',58,6,IMG.nameless,{act:'nameless'}));
  // decorazioni
- [[47,22],[52,22],[39,22],[22,9],[14,9],[56,18]].forEach(([x,y])=>m.add(OB('pumpkin',x,y,st.chapter>=2&&G.night>.4?IMG.jackL:(st.chapter>=2?IMG.jack:IMG.pumpkin),{act:'pumpkin'})));
- if(st.day>=4||st.chapter>=4){const nP=st.chapter>=4?FEST_PUMP.length:Math.min(FEST_PUMP.length,(st.day-3)*3),pimg=st.chapter>=2&&G.night>.4?IMG.jackL:(st.chapter>=2?IMG.jack:IMG.pumpkin);FEST_PUMP.slice(0,nP).forEach(([x,y])=>{if(!m.objAt(x,y)&&m.get(x,y)!==3)m.add(OB('pumpkin',x,y,pimg,{act:'pumpkin'}))})}
- if(st.day>=6||st.chapter>=4)FEAST.forEach(([x,y])=>{m.add(OB('feast',x,y,IMG.feast,{wt:3,solid:[[x,y],[x+1,y],[x+2,y]],hits:[[x,y],[x+1,y],[x+2,y]],act:'feast'}));m.lights.push({x:x*16+24,y:y*16+2,r:46,fire:1,festa:1})});
+ [[47,22],[52,22],[39,22],[22,9],[14,9],[56,18]].forEach(([x,y])=>m.add(OB('pumpkin',x,y,H2(st)&&G.night>.4?IMG.jackL:(H2(st)?IMG.jack:IMG.pumpkin),{act:'pumpkin'})));
+ if((st.day>=4||st.chapter>=4)&&!st.free){const nP=st.chapter>=4?FEST_PUMP.length:Math.min(FEST_PUMP.length,(st.day-3)*3),pimg=H2(st)&&G.night>.4?IMG.jackL:(H2(st)?IMG.jack:IMG.pumpkin);FEST_PUMP.slice(0,nP).forEach(([x,y])=>{if(!m.objAt(x,y)&&m.get(x,y)!==3)m.add(OB('pumpkin',x,y,pimg,{act:'pumpkin'}))})}
+ if((st.day>=6||st.chapter>=4)&&!st.free)FEAST.forEach(([x,y])=>{m.add(OB('feast',x,y,IMG.feast,{wt:3,solid:[[x,y],[x+1,y],[x+2,y]],hits:[[x,y],[x+1,y],[x+2,y]],act:'feast'}));m.lights.push({x:x*16+24,y:y*16+2,r:46,fire:1,festa:1})});
  [[60-5,32],[59,32],[54,24]].forEach(([x,y])=>m.add(OB('hay',x,y,IMG.hay,{act:'hay'})));
  [[39,10],[38,11]].forEach(([x,y])=>m.add(OB('barrel',x,y,IMG.barrel,{act:'barrel'})));
  // cespugli di bacche rosse (dal giorno 2)
@@ -92,19 +92,21 @@ function buildMain(st){
  return m;
 }
 function buildHouse(st){
- const m=new GMap('house',12,9,{interior:1,name:'Casa'});m.fill(0,0,11,0,8);m.fill(0,1,11,1,9);m.fill(0,2,11,8,6);
+ const HS=houseSize(st),HW=HS.w,HH=HS.h;const m=new GMap('house',HW,HH,{interior:1,name:'Casa'});m.fill(0,0,HW-1,0,8);m.fill(0,1,HW-1,1,9);m.fill(0,2,HW-1,HH-1,6);
  m.add(OB('fire',5,1,IMG.fire[0],{wt:2,solid:[[5,1],[6,1]],hits:[[5,1],[6,1]],act:'fire',anim:'fire',lift:4}));
  m.lights.push({x:6*16,y:24,r:70,fire:1});
  m.add(OB('window',8,1,IMG.window,{act:'window',win:1,lift:-6}));m.add(OB('window',2,1,IMG.window,{act:'window',win:1,lift:-6}));
- m.add(OB('portrait',3,1,IMG.portrait[st.chapter>=2?1:0],{act:'portrait',lift:-6}));
+ m.add(OB('portrait',3,1,IMG.portrait[H2(st)?1:0],{act:'portrait',lift:-6}));
  m.add(OB('bed',1,3,IMG.bed,{solid:[[1,2],[1,3]],hits:[[1,2],[1,3]],act:'bed'}));
  m.add(OB('chest',9,2,F_(st).openedChest?IMG.chestO:IMG.chest,{act:'chest'}));
  m.add(OB('shelf',10,2,IMG.shelf,{act:'shelf'}));
  m.add(OB('table',7,5,IMG.table,{wt:2,solid:[[7,5],[8,5]],hits:[[7,5],[8,5]],act:'table'}));
  m.add({kind:'rug',tx:4,ty:4,img:IMG.rug,dx:4*16,dy:4*16+8,sy:-1,solid:[],hits:[],deco:1});
  if(F_(st).page2avail&&!F_(st).page2)m.add(OB('page2',6,7,IMG.paper,{act:'page2',solid:[],hits:[[6,7]]}));
- m.add({kind:'mat',tx:6,ty:8,img:IMG.mat,dx:6*16,dy:8*16+4,sy:-1,solid:[],hits:[],deco:1});
- m.doors.push({tx:6,ty:8,to:'main',x:10,y:10,dir:0});
+ if(HW>12){m.add(OB('window',14,1,IMG.window,{act:'window',win:1,lift:-6}))}if(HH>9){m.add(OB('window',16,1,IMG.window,{act:'window',win:1,lift:-6}))}
+ addFurniture(m,st);
+ m.add({kind:'mat',tx:6,ty:HH-1,img:IMG.mat,dx:6*16,dy:(HH-1)*16+4,sy:-1,solid:[],hits:[],deco:1});
+ m.doors.push({tx:6,ty:HH-1,to:'main',x:10,y:10,dir:0});
  return m}
 function F_(st){return st.flags}
 function buildChapel(st){
@@ -244,7 +246,7 @@ function atmosphere(m){const st=G.st,t=st.time,wx=st.weather||'sereno',out=!m.in
 function drawBubbles(m){if(!G.bubbles.length)return;ctx.font='8px "Silkscreen","Pixelify Sans",monospace';ctx.textAlign='center';
  for(const b of G.bubbles){const n=b.n;if(n.hidden||n.map!==m.id)continue;const tw=Math.ceil(ctx.measureText(b.t).width)+8,X=Math.round(n.x),bx=Math.round(X-tw/2),by=Math.round(n.y-46+(b.life>2.4?(b.life-2.4)*15:0));
   ctx.fillStyle='#3b1f0e';ctx.fillRect(bx-1,by-1,tw+2,13);ctx.fillRect(X-2,by+12,5,1);ctx.fillRect(X-1,by+13,3,1);ctx.fillStyle='#fff4dc';ctx.fillRect(bx,by,tw,11);ctx.fillRect(X-1,by+11,3,1);ctx.fillStyle='#3b1f0e';ctx.fillText(b.t,X,by+9)}}
-function cropImg(f){const c=f.c;if(c.dead)return CROPIMG.dead;const s=cropStage(c);if(c.t==='zucca'&&s===3&&G.st.chapter>=2)return CROPIMG.zuccaFace;return (cropWilt(f)?CROPW:CROPIMG)[c.t][s]}
+function cropImg(f){const c=f.c;if(c.dead)return CROPIMG.dead;const s=cropStage(c);if(c.t==='zucca'&&s===3&&H2())return CROPIMG.zuccaFace;return (cropWilt(f)?CROPW:CROPIMG)[c.t][s]}
 const cropWilt=f=>!!(f.c&&!f.c.dead&&!f.w&&(f.c.dry||0)>=2&&cropStage(f.c)<3);
 const cropGone=f=>!!(f&&f.c&&(f.c.dead||cropWilt(f)));
 const cropLeft=c=>Math.max(0,CROPS[c.t].days-c.a);
@@ -331,7 +333,7 @@ function render(){
    if(e.kind==='bld'&&G.night>.25&&e.img.lights&&winLit(e.key)){const k=clamp((G.night-.25)*3,0,1);for(const [wx,wy] of e.img.lights){const X=Math.round(e.dx)+1+wx,Y=Math.round(e.dy)+wy;ctx.fillStyle=`rgba(255,196,110,${(.9*k).toFixed(2)})`;ctx.fillRect(X,Y,10,10);ctx.fillStyle=`rgba(255,236,170,${(.8*k).toFixed(2)})`;ctx.fillRect(X+1,Y+1,3,3);ctx.fillStyle=`rgba(90,50,20,${k.toFixed(2)})`;ctx.fillRect(X+4,Y,2,10);ctx.fillRect(X,Y+4,10,2)}}}
  }
  if(!m.interior&&G.mode!=='boot')drawClouds(cx,cy);
- drawPostMarks(m);drawWorldExtras(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
+ drawPostMarks(m);drawWorldExtras(m);drawLand(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
  // particelle
  drawParts();
  // testi fluttuanti
@@ -344,7 +346,7 @@ function render(){
   for(const l of m.lights){if(l.win&&!(t>=1020&&t<1320&&winLit(l.k)))continue;if(l.lamp&&!lampOn(l.li,t))continue;if(l.festa&&G.festaDark)continue;if(l.barn&&G.st.flags.barnDark)continue;const fl=l.fire?1+Math.sin(G.t*9+l.x)*.06:1;L.push({x:l.x-cx,y:l.y-cy,r:l.r*fl,warm:1,red:l.red})}
   if(d>.25&&G.mode==='game')L.push({x:G.player.x-cx,y:G.player.y-12-cy,r:(m.id==='wood'?42:m.id==='barn'&&G.st.flags.barnDark?22:48)+Math.sin(G.t*7)*1.5,warm:1,a:.95});
   if(G.horse.on)L.push({x:G.horse.x-cx+8,y:G.horse.y-34-cy,r:22,red:1});
-  if(m.id==='main'&&G.st.chapter>=2){const fm=G.st.farm;for(const k in fm){const f=fm[k];if(f.c&&f.c.t==='zucca'&&cropStage(f.c)===3){const [x,y]=k.split(',').map(Number);L.push({x:x*16+8-cx,y:y*16+6-cy,r:16,red:1})}}}
+  if(m.id==='main'&&H2()){const fm=G.st.farm;for(const k in fm){const f=fm[k];if(f.c&&f.c.t==='zucca'&&cropStage(f.c)===3){const [x,y]=k.split(',').map(Number);L.push({x:x*16+8-cx,y:y*16+6-cy,r:16,red:1})}}}
   LX.globalCompositeOperation='source-over';LX.clearRect(0,0,W,H);LX.fillStyle=`rgba(10,8,30,${d})`;LX.fillRect(0,0,W,H);LX.globalCompositeOperation='destination-out';
   for(const l of L){const g=LX.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r);g.addColorStop(0,`rgba(0,0,0,${l.a||1})`);g.addColorStop(.55,`rgba(0,0,0,${(l.a||1)*.7})`);g.addColorStop(1,'rgba(0,0,0,0)');LX.fillStyle=g;LX.fillRect(l.x-l.r,l.y-l.r,l.r*2,l.r*2)}
   ctx.drawImage(LC,0,0);ctx.globalCompositeOperation='lighter';
@@ -364,7 +366,7 @@ function winLit(k){const t=G.st.time;if(k==='house')return G.map.id!=='house'&&f
 function postFX(){
  const Hh=G.horror;
  if(Hh>.05){ctx.globalCompositeOperation='saturation';ctx.fillStyle=`rgba(128,128,128,${clamp(Hh*.85,0,.85)})`;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
- if(G.st&&G.st.chapter>=2&&G.mode==='game'){ctx.globalCompositeOperation='multiply';ctx.fillStyle='rgba(255,235,225,1)';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
+ if(H2()&&G.mode==='game'){ctx.globalCompositeOperation='multiply';ctx.fillStyle='rgba(255,235,225,1)';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over'}
  ctx.globalAlpha=clamp(.25+Hh*.6+(G.chase?.3:0),0,1);ctx.drawImage(IMG.vignette,(W-MAXW)/2,0);ctx.globalAlpha=1;
  if(Hh>.15||G.chase){ctx.globalAlpha=clamp(Hh*.45,.1,.4);ctx.drawImage(IMG.grain[Math.floor(G.t*24)%4],0,0,W,H);ctx.globalAlpha=1}
  if((Hh>.45&&Math.random()<Hh*.03)||G.glitch>0){const n=1+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const y=Math.random()*H|0,h=2+Math.random()*14|0,dx=(Math.random()-.5)*24|0;ctx.drawImage(cv,0,y*RS,W*RS,h*RS,dx,y,W,h)}if(G.glitch>0)G.glitch--}

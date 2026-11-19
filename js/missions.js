@@ -33,7 +33,7 @@ async function outsiderTalk(n){const st=G.st,F=st.flags;F.met[n.id]=1;
  if(n.id==='irene'&&!F.ireneFoto){F.ireneFoto=1;await say('irene','Tu sei il nipote di Marlowe? Allora guarda questa. L\'ho scattata ieri, davanti al cimitero.');
   await UI.paper(`<h2>Una fotografia</h2><div class="paper"><p>Il cimitero, in bianco e nero. Le tombe, il pioppo, la tomba di Elias Marlowe.</p><p>Davanti alla tomba, di spalle, una figura con un mantello giallo. Nessuno, quel giorno, portava un mantello giallo.</p><p class="ink">Sul retro, a matita, non con la calligrafia di Irene: «otto».</p></div>`);
   await say('irene','Non l\'ho scritto io. Te la lascio. Io non la voglio più.');return true}
- if(n.id==='ottavio'){const c=await ask('ottavio',pickFrom(OUT_L.ottavio),['Vendi qualcosa a Ottavio','Niente']);if(c===0)ottavioSell();return true}
+ if(n.id==='ottavio'){const R=OTT_RECIPES(),c=await ask('ottavio',pickFrom(OUT_L.ottavio),['Vendi qualcosa a Ottavio',...(R.length?[`Ricetta di città (${SC(300)})`]:[]),'Niente']);if(c===0)ottavioSell();else if(c===1&&R.length){if(st.money<300)return say('ottavio','Trecento scudi, amico. Le ricette di città costano.');st.money-=300;UI.hud();AU.play('coin');learnRecipe(R[0].id,'Ottavio')}return true}
  if(n.id==='mercante'){const c=await ask('mercante',pickFrom(OUT_L.mercante),['Guarda la merce','Niente']);if(c===0)merchantShop();return true}
  await say(n.id,pickFrom(OUT_L[n.id]));return true}
 const pickFrom=L=>L[(G.st.day+G.st.time)%L.length];

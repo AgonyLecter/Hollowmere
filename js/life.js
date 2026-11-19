@@ -23,6 +23,8 @@ function lampSeg(S,tag,t){for(const g of S)if(t>=g.from&&t<g.to){const [lx,ly]=L
 // ---------- routine: il meteo, la domenica e la Festa cambiano la giornata di tutti ----------
 function schedOf(id){return worldAdjust(id,SCHED[id]?SCHED[id](G.st):null,G.st)}
 function worldAdjust(id,s,st){
+ // gioco libero: ogni abitante passa, un giorno a settimana, dalla tua fattoria
+ {const v=freeVisitSched(id,st);if(v)return v}
  // dopo la Fuga Clara vive fuori: torna nella Valle solo la domenica
  if(isFree(st)&&st.free.ending===1&&id==='clara'&&!isSunday(st))return null;
  const t=st.time,F=st.flags;if(st.day<1||F.finaleChase||id==='faceless'||(F.ezWait&&id==='ezekiel'))return s;
@@ -48,7 +50,7 @@ function worldAdjust(id,s,st){
   if(id==='tobia'&&t>=540&&t<1020&&!(F.ch1end&&!F.tobiaTalk))return at(31,6,3,'play',2);   // nella nebbia, Tobia sta al Varco
  }
  // preparativi della Festa del Raccolto
- if(st.day>=5&&!isSunday(st)){
+ if(st.day>=5&&!isSunday(st)&&!st.free){
   if(id==='brom'&&((t>=540&&t<720)||(t>=780&&t<900)))return at(43,18,0,'build',1);
   if(id==='clara'&&t>=780&&t<900&&!rainy(st))return at(45,16,0,'hang',1);
  }
@@ -89,7 +91,7 @@ const CHATC=[
  ['lucius','clara',[['clara','Non mi piace la nebbia.'],['lucius','Sembrano persone in fila.'],['clara','Lucius!']],st=>st.weather==='nebbia'],
  ['ezekiel','brom',[['ezekiel','Il forestiero vuole attrezzi nuovi?'],['brom','Li ha ordinati.'],['ezekiel','Ne avrà bisogno.']],st=>!!st.forge],
 ];
-function chatPool(){const st=G.st;return CHATS.concat(st.chapter>=2?CHATS2:[],CHATC.filter(c=>{try{return c[3](st)}catch(e){return false}}))}
+function chatPool(){const st=G.st;return CHATS.concat(H2(st)?CHATS2:[],CHATC.filter(c=>{try{return c[3](st)}catch(e){return false}}))}
 
 // ---------- tempo che passa (cucina, messa) ----------
 async function passTime(min,msg){const st=G.st;G.cut++;
@@ -105,8 +107,8 @@ const SERMONS=[
 async function attendMass(){const st=G.st;st.flags['mass'+st.day]=1;G.cut++;
  try{if(st.time<9*60)await passTime(9*60-st.time);const S=SERMONS[st.day%SERMONS.length];
   await narr('Ti siedi in una panca. Fratello Lucius sale all\'altare. Tutti abbassano la testa nello stesso momento, come un solo corpo.');
-  for(const l of S)await say('lucius',l,st.chapter>=2?'dark':'');
-  if(st.chapter>=2){AU.play('count');await narr('Mentre parla, le sue labbra contano sottovoce. Il numero che esce dalla sua bocca non coincide con i volti nella cappella.',{dark:1});addQuiete(-4)}else addQuiete(5);
+  for(const l of S)await say('lucius',l,H2(st)?'dark':'');
+  if(H2(st)){AU.play('count');await narr('Mentre parla, le sue labbra contano sottovoce. Il numero che esce dalla sua bocca non coincide con i volti nella cappella.',{dark:1});addQuiete(-4)}else addQuiete(5);
   await passTime(Math.max(5,10*60+30-st.time),'La messa è finita.');
   for(const id of ['ezekiel','agatha','lucius','clara','brom'])addFriend(id,1);
   UI.toast('Hai partecipato alla messa. Il villaggio lo nota.');
@@ -156,8 +158,8 @@ function genFavors(){const st=G.st,F=st.flags;st.favors=(st.favors||[]).filter(f
  for(let tries=0;tries<5&&st.favors.length<maxN;tries++){
   const cand=FAV_NPC.filter(id=>F.met[id]&&!st.favors.some(f=>f.id===id));if(!cand.length)break;
   const id=cand[Math.floor(Math.random()*cand.length)];
-  const pool=['rapa'];if(st.day>=4)pool.push('patata','zucca');if(st.day>=5)pool.push('cavolo','fagioli');if(F.cooked)pool.push('zuppa','arrosto','torta');if(id!=='clara')pool.push('pane');
-  const lk=LIKES[id]||{},w=[];pool.forEach(k=>{for(let j=0;j<(lk[k]>=2?3:1);j++)w.push(k)});if(st.day>=6)w.push('zucca','zucca','zucca');
+  let pool=['rapa'];if(isFree(st)){const s=seasonOf(st);pool=[...Object.keys(CROPS).filter(c=>cropInSeason(c,s)),...(WILD[s]||[]),...COOK.filter(r=>knows(st,r.id)).map(r=>r.id).slice(0,6)];}else if(st.day>=4)pool.push('patata','zucca');if(st.day>=5)pool.push('cavolo','fagioli');if(F.cooked)pool.push('zuppa','arrosto','torta');if(id!=='clara')pool.push('pane');
+  const lk=LIKES[id]||{},w=[];pool.forEach(k=>{for(let j=0;j<(lk[k]>=2?3:1);j++)w.push(k)});if(st.day>=6&&!isFree(st))w.push('zucca','zucca','zucca');
   const item=w[Math.floor(Math.random()*w.length)],q=ITEMS[item].t==='crop'?1+(st.day>=5?1:0)+(Math.random()<.4?1:0):1;
   st.favors.push({id,item,n:q,reward:Math.round(FAV_VAL[item]*q*1.2/5)*5,until:st.day+2,told:0,done:0})}}
 const favorOf=id=>((G.st.favors)||[]).find(f=>f.id===id&&!f.done);
@@ -193,9 +195,9 @@ const FEST_MORNING={4:'In piazza qualcuno ha ammucchiato zucche per la Festa.',5
 function drawShoe(X,Y){ctx.fillStyle='#1e1d22';ctx.fillRect(X-1,Y,1,5);ctx.fillRect(X+5,Y,1,5);ctx.fillRect(X,Y+5,5,1);ctx.fillRect(X-1,Y-1,2,1);ctx.fillRect(X+4,Y-1,2,1);ctx.fillStyle='#b9b9c4';ctx.fillRect(X,Y,1,4);ctx.fillRect(X+4,Y,1,4);ctx.fillRect(X+1,Y+4,3,1)}
 function drawWorldExtras(m){if(m.id==='wood')return drawWoodExtras(m);if(m.id!=='main')return;const st=G.st,cx=G.cam.x,cy=G.cam.y;
  // Brom forgia quattro ferri di cavallo ogni anno: uno al giorno, appesi sul muro della fucina
- {const b=BLD.forge,n=clamp(st.day-1,0,4);for(let i=0;i<n;i++)drawShoe(b.x*16+14+i*14,(b.y+b.h)*16-28)}
+ {const b=BLD.forge,n=st.free?0:clamp(st.day-1,0,4);for(let i=0;i<n;i++)drawShoe(b.x*16+14+i*14,(b.y+b.h)*16-28)}
  // festoni fra i lampioni della piazza
- if(st.day>=5||st.chapter>=4){const cols=st.chapter>=2?['#c9a84a','#9a7e34','#d9ccaa']:['#e8c23a','#d98a1e','#f0e2b0'];
+ if((st.day>=5||st.chapter>=4)&&!st.free){const cols=H2(st)?['#c9a84a','#9a7e34','#d9ccaa']:['#e8c23a','#d98a1e','#f0e2b0'];
   for(const [a,b] of [[0,1],[1,2],[2,3],[3,0]]){const x0=LAMPS[a][0]*16+8,y0=LAMPS[a][1]*16-14,x1=LAMPS[b][0]*16+8,y1=LAMPS[b][1]*16-14;
    if(Math.max(x0,x1)<cx-10||Math.min(x0,x1)>cx+W+10||Math.max(y0,y1)<cy-20||Math.min(y0,y1)>cy+H+20)continue;
    const len=Math.hypot(x1-x0,y1-y0),vert=Math.abs(x1-x0)<Math.abs(y1-y0),sag=len>150?9:6,sg=x0<45*16?1:-1,N=Math.floor(len/2);

@@ -29,6 +29,7 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
  const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
  if(st.flags.ch3end&&!st.flags.ch4card){st.flags.ch4card=1;st.flags.ch4day=st.day;st.chapter=4}   // salvataggi dopo il Capitolo III: la Festa è oggi
  if(st.flags.ch2end)st.flags.finaleChase=0;   // salvataggi dopo il Capitolo II: gli abitanti tornano a uscire di casa
+ if(st.free){st.free.land=st.free.land||['casa'];st.free.tiles=st.free.tiles||{};st.free.inside=st.free.inside||{};st.free.recipes=st.free.recipes||{};while(st.inv.length<20)st.inv.push(null);if(!has('pala'))put('pala')}
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
@@ -64,10 +65,10 @@ async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuil
 function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
  if(F.ch2end){F.finaleChase=0;if(st.chapter<3)st.chapter=3}if(F.ch3end&&st.chapter<4)st.chapter=4;if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
  const ks=Object.keys(CHORES).filter(k=>k!==st.lastChore);st.chore=ks[Math.random()*ks.length|0];st.lastChore=st.chore;st.choreOk=false;st.choreDone=false;st.leaves=[0,0,0,0];F.bucket=0;F.barnDark=0;
- const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
+ const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(H2(st)?.85:.8)?'nebbia':'pioggia';
  if(isFree(st)){const s=seasonOf(st);if(s===1&&st.weather==='pioggia')st.weather='neve';if(s===2&&st.weather==='nebbia')st.weather='pioggia';F.bridgeGone=0}
  if(st.weather==='pioggia')for(const k in st.farm)st.farm[k].w=true;
- if(st.chapter>=2&&F.ch2day&&st.day>=F.ch2day+1)F.page2avail=1;
+ if(H2(st)&&F.ch2day&&st.day>=F.ch2day+1)F.page2avail=1;
  st.bread=4+(hearts('clara')>=3?2:0)+(hearts('clara')>=6?2:0);
  st.demand=['rapa','patata','zucca'][Math.floor(Math.random()*3)];if(st.day>=5&&Math.random()<.5)st.demand='zucca';
  genFavors();applyUpgrades();freeMorning(st);
@@ -75,7 +76,7 @@ function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
 async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
   if(F.missedOffer&&!F.missedShown){F.missedShown=1;F.missedDay=st.day;AU.play('scratch');await sleep(600);await narr('Stanotte qualcosa ha grattato la porta per ore.');await narr('Sul legno, all\'esterno, lettere incise a unghiate:\nAVEVI DIMENTICATO.',{dark:1});addQuiete(-15)}
-  if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.');LS.set('hm_cp2',JSON.stringify(st))}
+  if(H2(st)&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.');LS.set('hm_cp2',JSON.stringify(st))}
   if(st.chapter>=3&&!F.ch3card){F.ch3card=1;await UI.fade(1,300);await UI.card('Capitolo III','L\'Albero dei Morti',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);
    await narr('Nessuno parla della notte. Dalla finestra, il villaggio è sereno. Più sereno del solito.');
    await narr('Sulla soglia, piegato con cura, c\'è un mantello giallo. Nessun biglietto. Non serve: sai già chi l\'ha lasciato. Tutti.');
@@ -107,7 +108,7 @@ async function endDay(passed,faded){if(G.visit)await endVisit(true);const st=G.s
    f.w=false;if(!c&&!f.f&&Math.random()<.08)delete st.farm[k]}
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
-  const prevS=seasonOf(st);st.day++;freeNight(st,prevS);st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
+  const prevS=seasonOf(st);st.day++;freeNight(st,prevS);st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(H2(st)?6:10);st.talked={};st.gifted={};
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
   await UI.card('',isFree(st)?`${seasonName()} · giorno ${seasonDay()}`:`Giorno ${st.day}`,`${isFree(st)?DAYN[(st.day+3)%7]+(yearOf()>1?' · anno '+yearOf():''):DAYN[(st.day+3)%7]+' · Autunno'}${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
@@ -198,7 +199,7 @@ function onMinute(){const st=G.st,t=st.time,F=st.flags;if(st.day<1)return;
  if(t>=26*60)passOut();
 }
 function chooseMusic(){if(G.mode==='title')return 'title';if(G.cutMusic)return G.cutMusic;if(G.chase)return 'tense';const m=G.map;if(!m)return 'none';if(m.id==='barn'||m.id==='wood')return 'silent';if(m.interior)return 'indoor';const t=G.st.time;if(t>=20*60||t<6*60||G.horror>.7)return 'night';return 'day'}
-function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75;if(st.chapter>=2)h+=.12;if(G.map&&G.map.id==='main')h+=G.night*.1;if(G.chase)h+=.2;if(G.map&&G.map.id==='wood')h+=.25;if(G.mode==='title')h=.05;G.horror=lerp(G.horror,clamp(h,0,1),Math.min(1,dt*.8))}
+function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75;if(H2(st))h+=.12;if(G.map&&G.map.id==='main')h+=G.night*.1;if(G.chase)h+=.2;if(G.map&&G.map.id==='wood')h+=.25;if(G.mode==='title')h=.05;G.horror=lerp(G.horror,clamp(h,0,1),Math.min(1,dt*.8))}
 // ---------- loop ----------
 let _last=performance.now(),_hudT=0;
 function update(dt){
@@ -216,7 +217,7 @@ function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  requestAnimationFrame(loop)}
 async function boot(){
  try{await Promise.race([document.fonts.ready,sleep(2500)])}catch(e){}
- genAll();genFreeArt();genAnimalArt();genMissionArt();initEntities();UI.init();NET.init();
+ genAll();genFreeArt();genAnimalArt();genMissionArt();genBuildArt();genGardenArt();genDishArt();initEntities();UI.init();NET.init();
  toTitle();$('#loading').classList.add('hide');requestAnimationFrame(loop);
 }
 boot();

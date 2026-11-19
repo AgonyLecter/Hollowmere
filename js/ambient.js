@@ -45,7 +45,7 @@ function drawAmbTop(m){if(m.id!=='main'||!G.amb)return;const A=G.amb,T=G.t,night
  if(night>.45&&!rain)for(const f of A.bugs){const a=T*f.sp+f.ph,x=f.x+Math.sin(a)*20,y=f.y+Math.sin(a*1.7)*10-8,on=(Math.sin(T*2.3+f.ph*3)+1)/2;if(on<.25)continue;
   const g=ctx.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,`rgba(220,255,120,${(.55*on).toFixed(2)})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-7,y-7,14,14);ctx.fillStyle='#f4ffb0';ctx.fillRect(Math.round(x),Math.round(y),1,1)}
  // gufo: si vedono solo gli occhi (dal Capitolo II sono rossi)
- const o=A.owl;if(night>.5&&!o.gone){const bl=Math.floor(T*.7+1)%7===0,red=G.st.chapter>=2;ctx.fillStyle='rgba(20,14,18,.85)';ctx.fillRect(o.x-4,o.y-2,8,9);ctx.fillRect(o.x-4,o.y-4,2,2);ctx.fillRect(o.x+2,o.y-4,2,2);
+ const o=A.owl;if(night>.5&&!o.gone){const bl=Math.floor(T*.7+1)%7===0,red=H2();ctx.fillStyle='rgba(20,14,18,.85)';ctx.fillRect(o.x-4,o.y-2,8,9);ctx.fillRect(o.x-4,o.y-4,2,2);ctx.fillRect(o.x+2,o.y-4,2,2);
   if(!bl){ctx.fillStyle=red?'#ff4a3a':'#ffd86a';ctx.fillRect(o.x-3,o.y,2,2);ctx.fillRect(o.x+1,o.y,2,2)}}
  // (il riccio si disegna con gli altri animali, sotto il buio)
  // curiosità visibili: la bottiglia tra l'erba luccica ogni tanto

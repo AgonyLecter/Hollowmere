@@ -1,4 +1,6 @@
 'use strict';
+// orrore della storia attivo (dal Capitolo II, mai nel gioco libero)
+function H2(st){st=st||G.st;return !!st&&st.chapter>=2&&!st.free}
 // ================= CORE =================
 let W=480;const H=270,TS=16,MAXW=640;
 const RS=2;const cv=document.getElementById('game');const ctx=cv.getContext('2d');cv.width=W*RS;cv.height=H*RS;ctx.imageSmoothingEnabled=false;
