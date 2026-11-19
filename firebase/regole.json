@@ -113,6 +113,10 @@
       "eventi": {
         ".read": true,
         ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
+      },
+      "novita": {
+        ".read": true,
+        ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
       }
     }
   }
