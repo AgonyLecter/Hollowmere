@@ -129,7 +129,7 @@ function buildBarn(st){
  m.add({kind:'mat',tx:4,ty:7,img:IMG.mat,dx:4*16,dy:7*16+4,sy:-1,solid:[],hits:[],deco:1});
  m.doors.push({tx:4,ty:7,to:'main',x:58,y:31,dir:0});
  return m}
-function rebuildMaps(){const st=G.st;applySeasonLooks();if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);seasonDecor(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
+function rebuildMaps(){const st=G.st;applySeasonLooks();if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);seasonDecor(G.maps.main,st);festDecor(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
 const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
@@ -333,7 +333,7 @@ function render(){
    if(e.kind==='bld'&&G.night>.25&&e.img.lights&&winLit(e.key)){const k=clamp((G.night-.25)*3,0,1);for(const [wx,wy] of e.img.lights){const X=Math.round(e.dx)+1+wx,Y=Math.round(e.dy)+wy;ctx.fillStyle=`rgba(255,196,110,${(.9*k).toFixed(2)})`;ctx.fillRect(X,Y,10,10);ctx.fillStyle=`rgba(255,236,170,${(.8*k).toFixed(2)})`;ctx.fillRect(X+1,Y+1,3,3);ctx.fillStyle=`rgba(90,50,20,${k.toFixed(2)})`;ctx.fillRect(X+4,Y,2,10);ctx.fillRect(X,Y+4,10,2)}}}
  }
  if(!m.interior&&G.mode!=='boot')drawClouds(cx,cy);
- drawPostMarks(m);drawWorldExtras(m);drawLand(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
+ drawPostMarks(m);drawWorldExtras(m);drawLand(m);drawMachines(m);drawFest(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
  // particelle
  drawParts();
  // testi fluttuanti

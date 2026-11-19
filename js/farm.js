@@ -37,8 +37,8 @@ function hearts(id){return Math.max(0,Math.floor((G.st.friends[id]||0)/2))}
 function addQuiete(n){const st=G.st;st.quiete=clamp(st.quiete+n,0,100);if(n<=-8){G.glitch=6;AU.play('heart')}}
 function useEnergy(n){const st=G.st;if(st.energy<=0){UI.toast('Sei esaust{o|a}. Vai a dormire.','bad');return false}st.energy=Math.max(0,st.energy-n);return true}
 function cropStage(c){if(c.dead)return -1;const d=CROPS[c.t].days;if(c.a>=d)return 3;if(c.a<=0)return 0;return c.a>=d/2?2:1}
-function harvest(tx,ty,f){const st=G.st,c=f.c,t=c.t,cr=CROPS[t];let n=cr.y[0]+Math.floor(Math.random()*(cr.y[1]-cr.y[0]+1));
- const rich=Math.random()<.08+(f.f?.42:0)+(c.bad?0:.15);if(rich)n++;if(!addItem(t,n))return;
+function harvest(tx,ty,f){const st=G.st,c=f.c,t=c.t,cr=CROPS[t];addXP('agri',4+cr.days*2);let n=cr.y[0]+Math.floor(Math.random()*(cr.y[1]-cr.y[0]+1));
+ const rich=Math.random()<.08+(f.f?.42:0)+(c.bad?0:.15)+(isFree(st)&&skLv('agri')>=4?.15:0);if(rich)n++;if(!addItem(t,n))return;
  if(cr.re){c.a=cr.days-cr.re;c.dry=0}else{f.c=null;f.f=0}
  AU.play('pick');burst('spark',tx*16+8,ty*16+6,rich?16:8,'#ffe27a');(G.pops||(G.pops=[])).push({img:ICON[t],x:tx*16+8,y:ty*16+2,t0:G.t});
  floatText('+'+(n===1?'1 '+CROPS[t].n:n+' '+PL[t]),tx*16+8,ty*16-6);if(rich)setTimeout(()=>floatText('Raccolto abbondante!',tx*16+8,ty*16-14,'#b8f08a'),250);
@@ -57,7 +57,7 @@ function farmAct(tx,ty){
   if(isFree(st)?!ownedAt(tx,ty):!inFarm(tx,ty)){if(free)UI.toast(isFree(st)?'Questa terra non è tua. Le terre le vende l\'Anziano Ezekiel.':'La terra qui è troppo dura. Coltiva nei campi del nonno.');return}
   if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(st.up&&st.up.hoe?1:2))return;
   st.farm[k]={w:false,c:null};eggDig(tx,ty);AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
- if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
+ if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;addXP('agri',1);tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
  if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(!cropInSeason(def.crop,seasonOf())){UI.toast(`Non è stagione: ${CROPS[def.crop].n.toLowerCase()} cresce in ${CROPS[def.crop].s.map(i=>SEASONS[i].toLowerCase()).join(' e ')}.`);return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0,dry:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
  if(f&&f.c){const c=f.c,n=CROPS[c.t].n;if(c.dead){UI.toast(`${n}: è seccata. Ripulisci la zolla con la zappa.`,'bad');return}const l=cropLeft(c);
   UI.toast(`${n}: ${c.a<=0?'appena seminata, ':''}${l===1?'matura domani':'matura tra '+l+' notti'} bagnate.${f.w?' Annaffiata oggi.':cropWilt(f)?' È appassita: annaffiala per farla riprendere, o toglila con la zappa e ripianta.':' Va annaffiata.'}${f.f?' Terra concimata.':''}`,cropWilt(f)?'bad':'');return}

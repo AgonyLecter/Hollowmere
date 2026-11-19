@@ -28,7 +28,7 @@ const OUT_L={
  irene:['Faccio foto per un libro sulle valli abbandonate. Questa non è abbandonata. È peggio: è abitata.','Nelle mie foto della cappella c\'è sempre una figura in più. Sempre. Non so chi sia.','Mi hanno detto che qui contavate le persone. Io conto le fotografie. Ne manca sempre una.'],
  mercante:['«Ve l\'avevo detto, di non venire. E invece guardatevi: radici.»','«Il sabato passo. Semi che qui non trovate, roba di fuori. Contanti.»','«Il ponte l\'hanno rifatto. Non ci credevo finché non ci ho messo le ruote sopra.»'],
 };
-const MERC_STOCK=['s_rapa','s_patata','s_zucca','s_fagioli','s_cavolo','s_fragola','s_pomodoro','s_mais','s_porro','fieno','concime'];
+const MERC_STOCK=['alb_melo','alb_pero','alb_ciliegio','alb_pesco','lastre','s_rapa','s_patata','s_zucca','s_fagioli','s_cavolo','s_fragola','s_pomodoro','s_mais','s_porro','fieno','concime'];
 async function outsiderTalk(n){const st=G.st,F=st.flags;F.met[n.id]=1;
  if(n.id==='irene'&&!F.ireneFoto){F.ireneFoto=1;await say('irene','Tu sei il nipote di Marlowe? Allora guarda questa. L\'ho scattata ieri, davanti al cimitero.');
   await UI.paper(`<h2>Una fotografia</h2><div class="paper"><p>Il cimitero, in bianco e nero. Le tombe, il pioppo, la tomba di Elias Marlowe.</p><p>Davanti alla tomba, di spalle, una figura con un mantello giallo. Nessuno, quel giorno, portava un mantello giallo.</p><p class="ink">Sul retro, a matita, non con la calligrafia di Irene: «otto».</p></div>`);

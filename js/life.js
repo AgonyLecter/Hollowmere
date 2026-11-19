@@ -6,7 +6,7 @@ const isSunday=st=>st.day>=1&&WD(st)===6;
 const massNow=()=>{const st=G.st;return !!st&&isSunday(st)&&st.time>=9*60&&st.time<10*60+30};
 const MASS_SEATS={lucius:[7,3,0],ezekiel:[2,4,3],agatha:[3,4,3],brom:[10,4,3],clara:[11,4,3]};
 const rainy=st=>st.weather==='pioggia';
-const sellPrice=id=>Math.round(ITEMS[id].v*(G.st&&G.st.demand===id?1.4:1));
+const sellPrice=id=>Math.round(ITEMS[id].v*(G.st&&G.st.demand===id?1.4:1)*(isFree()?(skLv('agri')>=8?1.25:skLv('agri')>=2?1.1:1):1));
 
 // ---------- lampioni: Lucius li accende (e li spegne) uno per uno; gli ultimi tre si accendono "da soli" ----------
 const LAMPS=[[38,15],[51,15],[51,23],[38,23],[45,26],[44,38],[29,17],[11,18]];
@@ -24,7 +24,7 @@ function lampSeg(S,tag,t){for(const g of S)if(t>=g.from&&t<g.to){const [lx,ly]=L
 function schedOf(id){return worldAdjust(id,SCHED[id]?SCHED[id](G.st):null,G.st)}
 function worldAdjust(id,s,st){
  // gioco libero: ogni abitante passa, un giorno a settimana, dalla tua fattoria
- {const v=freeVisitSched(id,st);if(v)return v}
+ {const fv=festSched(id,st);if(fv)return fv;const v=freeVisitSched(id,st);if(v)return v}
  // dopo la Fuga Clara vive fuori: torna nella Valle solo la domenica
  if(isFree(st)&&st.free.ending===1&&id==='clara'&&!isSunday(st))return null;
  const t=st.time,F=st.flags;if(st.day<1||F.finaleChase||id==='faceless'||(F.ezWait&&id==='ezekiel'))return s;
@@ -185,7 +185,7 @@ async function forgeMenu(){const st=G.st,o=st.forge;
  const c=await ask('brom','Mh. Cosa?',[...av.map(k=>`${UPG[k].n} — ${SC(UPG[k].cost)} (${UPG[k].d})`),'Niente']);const k=av[c];if(!k)return;
  if(st.money<UPG[k].cost)return say('brom','Non basta. Torna con i soldi.');
  st.money-=UPG[k].cost;st.forge={k,ready:st.day+2};AU.play('coin');UI.hud();return say('brom','Due giorni. Tieni pure lo strumento, ci penso io.')}
-function waterWide(tx,ty){const st=G.st;if(!(st.up&&st.up.can))return;const [dx]=DIRV[G.player.dir],side=dx!==0?[[0,-1],[0,1]]:[[-1,0],[1,0]];
+function waterWide(tx,ty){const st=G.st;if(!((st.up&&st.up.can)||(isFree(st)&&skLv('agri')>=6)))return;const [dx]=DIRV[G.player.dir],side=dx!==0?[[0,-1],[0,1]]:[[-1,0],[1,0]];
  for(const [a,b] of side){const g=st.farm[(tx+a)+','+(ty+b)];if(g&&!g.w){g.w=true;burst('water',(tx+a)*16+8,(ty+b)*16+4,6);if(g.c)st.flags.watered=(st.flags.watered||0)+1}}}
 
 // ---------- la Valle si prepara alla Festa ----------
