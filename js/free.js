@@ -154,7 +154,7 @@ function freeMorning(st){if(!isFree(st))return;const W2=st.free,m=G.maps&&G.maps
 // ---------- azioni con gli attrezzi ----------
 G.hits={};
 function hitFx(x,y,col){burst('dust',x*16+8,y*16+8,6,col);G.shake=Math.max(G.shake,.6)}
-function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main')return false;const m=G.map,it=selItem(),id=it&&it.id,o=m.objAt(fx,fy),k=fkey(fx,fy),W2=st.free,p=G.player;
+function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main'||G.visit)return false;const m=G.map,it=selItem(),id=it&&it.id,o=m.objAt(fx,fy),k=fkey(fx,fy),W2=st.free,p=G.player;
  if(animalAct(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return true;
  // raccogliere i detriti
  if(o&&o.kind==='debris'){const t=o.dt,need={ramo:'accetta',sasso:'piccone'}[t];if(need&&id!==need){UI.toast(t==='ramo'?'Un ramo secco. Ti serve l\'accetta.':'Un sasso. Ti serve il piccone.');return true}

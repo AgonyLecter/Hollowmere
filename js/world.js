@@ -308,6 +308,7 @@ function render(){
  if(G.horse.on&&m.id==='main')list.push({horse:1,sy:G.horse.y});
  if(G.prey&&m.id==='main')list.push({prey:1,sy:G.prey.y});
  if(G.coach&&m.id==='main')list.push({coach:1,sy:G.coach.y});
+ for(const pid in G.others){const o=G.others[pid];if(o.map===m.id)list.push({other:o,sy:o.y})}
  if(m.id==='main'&&G.fanimals)for(const a of G.fanimals)list.push({fa:a,sy:a.y});
  if(m.id==='main'&&G.amb){if(G.amb.deer&&G.amb.deer.on)list.push({deer:G.amb.deer,sy:G.amb.deer.y});if(G.night>.45)list.push({hog:G.amb.hog,sy:G.amb.hog.y})}
  if(m.id==='main'&&G.critters)for(const c of G.critters)if(c.x>cx-30&&c.x<cx+W+30&&c.y>cy-20&&c.y<cy+H+40)list.push({crit:c,sy:c.k==='crow'&&c.st!=='perch'?9e9:c.k==='duck'?43*16+2:c.y});
@@ -320,6 +321,7 @@ function render(){
   else if(e.deer)drawDeer(e.deer);
   else if(e.hog)drawHog(e.hog);
   else if(e.fa)drawFarmAnimal(e.fa);
+  else if(e.other)drawOther(e.other);
   else if(e.npc){drawSprite(e.npc.id,e.npc);favorMark(e.npc)}
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
   else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
@@ -348,7 +350,7 @@ function render(){
   ctx.globalCompositeOperation='source-over';}
  ctx.save();ctx.translate(-cx,-cy);drawAmbTop(m);ctx.restore();
  atmosphere(m);
- ctx.save();ctx.translate(-cx,-cy);drawBubbles(m);drawPrompt();ctx.restore();
+ ctx.save();ctx.translate(-cx,-cy);drawBubbles(m);drawChatBubbles();drawPrompt();ctx.restore();
  // nebbia
  const fogA=m.interior?0:Math.max(G.night>.4||G.horror>.4?clamp(G.night*.6+G.horror*.4,0,.8):0,G.st.weather==='nebbia'?.6:0,G.st.time<8*60&&G.st.time>=6*60?.3:0,G.st.weather==='pioggia'?.25:0);
  if(fogA>0){ctx.globalAlpha=fogA;for(let i=0;i<9;i++){const fx=((i*137+G.t*(6+i))%(W+120))-100,fy=((i*61)%H)+Math.sin(G.t*.3+i)*8;ctx.drawImage(FOG,fx,fy,180,70)}ctx.globalAlpha=1}

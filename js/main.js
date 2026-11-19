@@ -15,8 +15,8 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
- snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
-function toTitle(){G.coach=null;G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
+ snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);if(isFree(G.st)){presenceJoin(G.st.pid);inboxStart()}UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
+function toTitle(){G.coach=null;presenceLeave();G.visit=null;G.home=null;G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // ---------- prologo ----------
 async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,43,46,3);
  G.coach={x:45*16+4,y:47*16+30,moving:false};await arrivalCinematic();
@@ -80,7 +80,7 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
   if((st.favors||[]).length&&!F.favTip){F.favTip=1;setTimeout(()=>UI.toast('Alcuni abitanti cercano qualcosa: guarda il "!" sopra le loro teste, o la bacheca in piazza.'),2400)}
   if(F.page2avail&&!F.page2&&!F.page2seen){F.page2seen=1;await narr('Sul pavimento, vicino alla porta, c\'è un foglio. Qualcuno l\'ha fatto scivolare sotto l\'uscio, stanotte.')}
  }finally{G.cut--}UI.quest()}
-async function endDay(passed,faded){const st=G.st;G.cut++;
+async function endDay(passed,faded){if(G.visit)await endVisit(true);const st=G.st;G.cut++;
  try{if(!faded){AU.play('sleep');await UI.fade(1,900)}
   G.horse.on=false;G.chase=false;G.cutMusic=null;G.scare=0;
   const news={grow:0,ripe:0,wilt:0,dead:0};
@@ -185,7 +185,7 @@ function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75
 let _last=performance.now(),_hudT=0;
 function update(dt){
  const frozen=UI.modalOpen;
- if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);ambTick(dt);animalsTick(dt);woodTick(dt);festaTick(dt);
+ if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);ambTick(dt);animalsTick(dt);mpTick(dt);woodTick(dt);festaTick(dt);
   if(G.st.weather==='pioggia'&&!G.map.interior&&!G.cut&&Math.random()<dt*.01){G.flash={a:.5,c:'#dfe8ff'};AU.play('thunder',.5)}if(!G.cut&&!UI.dlgOpen)updateHorse(dt);clock(dt)}
  updParts(dt);updPrints(dt);if(G.map)updateCam(dt);updHorror(dt);
  G.flash.a=Math.max(0,G.flash.a-dt*1.5);G.scare=Math.max(0,G.scare-dt*.7);
