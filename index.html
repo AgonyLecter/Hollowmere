@@ -2646,7 +2646,7 @@ async function eredeChase(){const st=G.st,F=st.flags;F.bridgeGone=0;st.weather='
  await narr('Tu sei alle sue spalle, sul ponte. Sei alto. Il tuo cavallo non esiste. Non ti serve.',{dark:1});
  LOOKS.prey=PLAYER_LOOKS[st.g==='f'?'m':'f'];delete SHEET.prey;G.prey={x:44*16+8,y:40*16+14,dir:3,anim:0,moving:true,wp:1,speed:58};
  G.erede=true;G.player.speed=76;G.player.dir=3;UI.toast('Insegui il forestiero. Il debito va pagato.','bad');UI.quest();
- G.cut--;const res=await new Promise(r=>{G.eredeRes=r});G.cut++;
+ const hold=G.cut;G.cut=0;const res=await new Promise(r=>{G.eredeRes=r});G.cut=hold;   // libera i controlli: il giocatore è il Cavaliere
  G.erede=false;G.prey=null;G.player.speed=66;AU.play('scream');G.scare=1.6;G.shake=8;await sleep(1500);
  await narr(res?'Lo raggiungi in mezzo alla strada, dove la nebbia è più fitta. Non urla. Nessuno urla, a quel punto.':'Si chiude in cappella e tira il chiavistello. Aspetti. Hai tutta la notte. Hai tutte le notti.',{dark:1})}
 function eredeTick(dt){const pr=G.prey,p=G.player;if(!pr||G.cut||UI.busy())return;
