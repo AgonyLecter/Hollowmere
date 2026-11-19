@@ -6,7 +6,7 @@ Con queste regole:
 - **ogni giocatore ha un'identità anonima** creata in automatico da Firebase (nessuna schermata di login);
 - **un salvataggio appartiene a chi l'ha creato**: solo quell'identità può riscriverlo, così come la sua scheda di villaggio e la sua presenza online;
 - per continuare su **un altro dispositivo** servono il codice (HM-XXXXXX) e la **chiave di recupero** (XXXX-XXXX), che il giocatore trova nel menu → Salvataggio;
-- **missioni ed eventi** li scrive solo chi è segnato come admin (login Google su `fusco.html`);
+- **missioni, eventi e novità della bacheca comune** li scrive solo chi è segnato come admin (login Google su `fusco.html`);
 - Registro, lapidi, eredi e chat si possono solo **aggiungere**, mai modificare o cancellare; testi con lunghezza massima;
 - le visite ricevute le legge e le cancella solo il proprietario del villaggio.
 

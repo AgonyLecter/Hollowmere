@@ -51,6 +51,18 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
   <p><button id="evSave">Salva evento</button></p>
  </section>
  <section>
+  <h2 id="nTitle">Novità in bacheca</h2>
+  <p class="small">Compaiono nella <b>bacheca comune</b> in piazza a chi gioca nella Valle (gioco libero). Chi non le ha ancora lette viene guidato fino alla bacheca, una volta sola.</p>
+  <div class="row">
+   <div><label for="nTag">Tipo</label><select id="nTag"><option value="novita">Novità</option><option value="aggiornamento">Aggiornamento (nuove funzioni)</option><option value="evento">Evento</option><option value="avviso">Avviso</option></select></div>
+  </div>
+  <label for="nTit">Titolo</label><input id="nTit" maxlength="80" placeholder="Es. Arriva il mercato del ponte">
+  <label for="nTxt">Testo</label><textarea id="nTxt" maxlength="600" placeholder="Cosa c'è di nuovo e come si usa."></textarea>
+  <p class="row" style="margin-top:12px"><button id="nSave">Pubblica novità</button><button id="nReset" class="ghost">Svuota</button></p>
+  <h3>Pubblicate</h3>
+  <div id="nList" class="list"><p class="small">Caricamento…</p></div>
+ </section>
+ <section>
   <h2 id="fTitle">Nuova missione</h2>
   <p class="small">Le missioni compaiono nella bacheca della piazza ai giocatori che hanno finito la storia (gioco libero). Si completano parlando con il personaggio scelto.</p>
   <div class="row">
@@ -135,6 +147,19 @@ try{
  // evento
  D.onValue(R('eventi'),s=>{const v=s.val()||{};$('#evO').value=String(v.ombre||0);if(document.activeElement!==$('#evA'))$('#evA').value=v.annuncio||''});
  $('#evSave').onclick=async()=>{try{await D.set(R('eventi'),{ombre:+$('#evO').value,annuncio:$('#evA').value.trim().slice(0,140),ts:Date.now()});$('#evSave').textContent='Salvato ✓';setTimeout(()=>$('#evSave').textContent='Salva evento',1500)}catch(e){fail(e)}};
+ // novità per la bacheca comune
+ let NEWS={},NED=null;
+ const nFill=n=>{$('#nTag').value=n.tag||'novita';$('#nTit').value=n.t||'';$('#nTxt').value=n.b||''};
+ $('#nReset').onclick=()=>{NED=null;nFill({});$('#nTitle').textContent='Novità in bacheca';$('#nSave').textContent='Pubblica novità'};
+ $('#nSave').onclick=async()=>{const n={tag:$('#nTag').value,t:$('#nTit').value.trim().slice(0,80),b:$('#nTxt').value.trim().slice(0,600),ts:NED&&NEWS[NED]?NEWS[NED].ts:Date.now()};
+  if(!n.t){alert('Serve un titolo.');return}
+  try{if(NED)await D.set(R('novita/'+NED),n);else await D.push(R('novita'),n)}catch(e){fail(e);return}
+  $('#nReset').onclick();$('#nSave').textContent='Pubblicata ✓';setTimeout(()=>$('#nSave').textContent='Pubblica novità',1500)};
+ D.onValue(R('novita'),s=>{NEWS=s.val()||{};const L=Object.entries(NEWS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  $('#nList').innerHTML=L.length?L.map(([id,n])=>`<div class="item"><div class="grow"><span class="tag">${esc(n.tag||'novita')}</span><b>${esc(n.t)}</b> <span class="small">— ${n.ts?new Date(n.ts).toLocaleDateString('it-IT'):''}</span><br><span class="small">${esc(n.b||'')}</span></div><button class="ghost" data-ne="${id}">Modifica</button><button class="danger" data-nd="${id}">Elimina</button></div>`).join(''):'<p class="small">Nessuna novità pubblicata.</p>';
+  $('#nList').querySelectorAll('[data-nd]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare «'+NEWS[b.dataset.nd].t+'»?'))D.remove(R('novita/'+b.dataset.nd)).catch(fail)});
+  $('#nList').querySelectorAll('[data-ne]').forEach(b=>b.onclick=()=>{NED=b.dataset.ne;nFill(NEWS[NED]);$('#nTitle').textContent='Modifica novità';$('#nSave').textContent='Salva modifiche'})},
+  e=>{$('#nList').innerHTML=`<p class="small">Non riesco a leggere le novità (${esc(e.code||e.message||e)}): serve il blocco "novita" nelle regole.</p>`});
  // missioni
  $('#mSave').onclick=async()=>{const t=$('#mTipo').value,m={tipo:t,npc:$('#mNpc').value,titolo:$('#mTit').value.trim().slice(0,60),testo:$('#mTxt').value.trim().slice(0,300),premio:Math.max(0,+$('#mPre').value||0),dest:$('#mDest').value.trim()||'finiti',grazie:$('#mGr').value.trim().slice(0,160),attiva:true,ts:Date.now()};
   if(!m.titolo){alert('Serve un titolo.');return}
