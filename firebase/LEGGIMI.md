@@ -1,58 +1,28 @@
-# Regole Firebase per Hollowmere — proposta
+# Regole Firebase per Hollowmere (livello 2)
 
 Il gioco usa il Realtime Database del progetto `wandertutto`, sotto il nodo `hollowmere/`.
-**Oggi il nodo non ha regole proprie**: chiunque può leggere e scrivere tutto, anche cancellare.
+Con queste regole:
 
-## Cosa scrive il gioco
+- **ogni giocatore ha un'identità anonima** creata in automatico da Firebase (nessuna schermata di login);
+- **un salvataggio appartiene a chi l'ha creato**: solo quell'identità può riscriverlo, così come la sua scheda di villaggio e la sua presenza online;
+- per continuare su **un altro dispositivo** servono il codice (HM-XXXXXX) e la **chiave di recupero** (XXXX-XXXX), che il giocatore trova nel menu → Salvataggio;
+- **missioni ed eventi** li scrive solo chi è segnato come admin (login Google su `fusco.html`);
+- Registro, lapidi, eredi e chat si possono solo **aggiungere**, mai modificare o cancellare; testi con lunghezza massima;
+- le visite ricevute le legge e le cancella solo il proprietario del villaggio.
 
-| Nodo | Chi scrive | Cosa |
-|---|---|---|
-| `registro/` | ogni nuovo giocatore | nome e data d'arrivo (il Registro dei Nuovi Arrivati) |
-| `lapidi/` | giocatori | frasi incise sulle lapidi del bosco (max 80 caratteri) |
-| `eredi/` | chi ottiene il finale 2 | il proprio nome |
-| `stats/arrivi` | ogni nuovo giocatore | contatore +1 |
-| `players/{codice}` | il proprietario | salvataggio completo (serve per "Carica da codice" e per le visite) |
-| `villaggi/{codice}` | chi è nel gioco libero | scheda pubblica del villaggio (stagione, bestie, costruzioni) |
-| `presenza/{villaggio}/{codice}` | chi è in un villaggio | posizione in tempo reale (si cancella da sola all'uscita) |
-| `chat/{villaggio}` | chi è in un villaggio | messaggi brevi (max 60 caratteri) |
-| `visite/{codice}` | gli ospiti | annaffiature e regali per il proprietario, che li cancella dopo averli letti |
-| `missioni/`, `eventi` | solo l'admin, da `fusco.html` | missioni ed evento globale |
+## Cosa fare nella console Firebase (una volta sola)
 
-## Il problema vero: senza login nessuno "è" nessuno
+1. **Authentication → Metodo di accesso**: attiva **Anonimo** e **Google**.
+2. **Authentication → Impostazioni → Domini autorizzati**: aggiungi il dominio dove è pubblicato il gioco (per GitHub Pages, `agonylecter.github.io`).
+3. Apri `fusco.html`, premi **Accedi con Google** e copia l'UID che compare nel riquadro rosso.
+4. **Realtime Database → Dati**: crea `hollowmere/admin/<il tuo UID>` con valore `true` (booleano).
+5. **Realtime Database → Regole**: il progetto `wandertutto` potrebbe servire anche ad altre app, quindi **non sostituire** le regole esistenti. Copia il blocco `"hollowmere": { … }` di `regole.json` dentro `"rules"`, accanto a quello che c'è già, e premi **Pubblica**.
+6. Prova con il simulatore della console: una scrittura su `hollowmere/missioni` senza login deve essere rifiutata.
 
-Le regole possono controllare **la forma** dei dati (lunghezze, campi, niente cancellazioni dove non servono),
-ma senza Firebase Authentication **non possono sapere chi sta scrivendo**. Quindi, anche con le regole del livello 1:
+## Ordine consigliato
 
-- chi conosce il codice di un altro giocatore (e i codici sono visibili nella lista dei villaggi) **può sovrascrivergli il salvataggio**;
-- `fusco.html`, senza login, resta usabile da chiunque ne trovi l'indirizzo.
+1. Pubblicare la nuova versione del gioco: con le regole di oggi, ancora aperte, funziona già, e ogni giocatore "prende possesso" del proprio codice al primo salvataggio.
+2. Lasciare passare qualche giorno, così i giocatori attivi registrano i loro salvataggi.
+3. Attivare le regole.
 
-## Tre livelli
-
-**Livello 1 — solo regole, nessuna modifica al gioco** (`regole-livello1.json`)
-- Blocca cancellazioni e scritture fuori forma: niente testi lunghissimi, niente cancellazione del Registro, delle lapidi o della chat.
-- Il contatore può solo salire di 1.
-- Missioni ed eventi scrivibili **solo dall'account admin**: richiede il login Google in `fusco.html`, che aggiungo io.
-- Resta il rischio dei salvataggi sovrascrivibili da chi conosce un codice.
-
-**Livello 2 — consigliato: login anonimo per i giocatori + Google per l'admin**
-- Ogni giocatore riceve in automatico un'identità anonima di Firebase: non vede nessuna schermata di login.
-- Il salvataggio `players/{codice}` registra chi l'ha creato; solo quell'identità può riscriverlo.
-- "Carica da codice" su un altro dispositivo richiede un **codice segreto di recupero**, mostrato nel menu Salvataggio.
-- Admin con login Google: solo il tuo account scrive missioni ed eventi.
-- Tocca il gioco in pochi punti (`js/net.js`, menu Salvataggio, `fusco.html`). Lo implemento io quando decidi.
-
-**Livello 3 — server (Cloud Functions)**
-- Calcoli e premi verificati lato server, anti-cheat. Non serve per un gioco di questa dimensione.
-
-## Attenzione: il database è condiviso
-
-Il progetto `wandertutto` potrebbe ospitare anche altre app. Le regole valgono per **tutto** il database:
-non incollare questo file al posto delle regole esistenti. Bisogna **aggiungere** il blocco `"hollowmere"`
-dentro le regole già presenti (console Firebase → Realtime Database → Regole).
-
-## Passi nella console Firebase (quando si decide)
-
-1. Authentication → Sign-in method: attivare **Google**; per il livello 2 anche **Anonimo**.
-2. Accedere una volta a `fusco.html` con il proprio account Google e copiare l'UID mostrato.
-3. Realtime Database → Regole: unire il blocco `hollowmere` alle regole esistenti, sostituire `UID_DEL_TUO_ACCOUNT_ADMIN`, pubblicare.
-4. Usare il simulatore di regole della console per provare una scrittura permessa e una vietata.
+Un salvataggio mai più aperto dopo l'aggiornamento resta senza proprietario. Con le regole attive, il primo che lo carica da codice ne diventa proprietario.

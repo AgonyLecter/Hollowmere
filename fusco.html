@@ -38,7 +38,7 @@ button.ghost{background:none;color:var(--wood);box-shadow:inset 0 0 0 1px #7a4a2
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:4px 6px;border-bottom:1px dashed rgba(122,74,32,.4);overflow-wrap:anywhere}
 </style></head><body>
 <header><h1>Fusco</h1><p>La regia di Hollowmere: missioni, eventi, giocatori.</p><span id="net">Connessione…</span></header>
-<div class="warn">Questa pagina non ha protezione: chiunque ne conosca l'indirizzo può creare o cancellare missioni. Prima di pubblicare il gioco vanno messe le regole di Firebase e il login.</div>
+<div class="warn" id="who">Per modificare missioni ed eventi accedi con il tuo account Google. <button id="login">Accedi con Google</button> <button id="logout" class="ghost hide">Esci</button></div>
 <main>
  <section>
   <h2>La Valle oggi</h2>
@@ -107,24 +107,31 @@ $('#mReset').onclick=()=>{EDIT=null;$('#fTitle').textContent='Nuova missione';fi
 try{
  const [A,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js')]);
  const app=A.initializeApp(CFG,'fusco'),db=D.getDatabase(app),R=p=>D.ref(db,'hollowmere/'+p);
+ const AU=await import(B+'firebase-auth.js'),auth=AU.getAuth(app);
+ $('#login').onclick=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()).catch(e=>alert('Accesso non riuscito: '+e.message));
+ $('#logout').onclick=()=>AU.signOut(auth);
+ AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
+  let adm=false;try{adm=(await D.get(R('admin/'+u.uid))).val()===true}catch(e){}
+  $('#who').firstChild.textContent=adm?`Regia aperta: ${u.email||u.uid}. `:`Accesso fatto (${u.email||''}), ma questo account non è admin. UID da aggiungere in hollowmere/admin nella console: ${u.uid} `});
+ const fail=e=>alert('Non autorizzato: serve l\'accesso con un account admin.\n'+(e&&e.message||e));
  D.onValue(D.ref(db,'.info/connected'),s=>{$('#net').textContent=s.val()?'● Collegato alla Valle':'○ Non collegato'});
  // evento
  D.onValue(R('eventi'),s=>{const v=s.val()||{};$('#evO').value=String(v.ombre||0);if(document.activeElement!==$('#evA'))$('#evA').value=v.annuncio||''});
- $('#evSave').onclick=async()=>{await D.set(R('eventi'),{ombre:+$('#evO').value,annuncio:$('#evA').value.trim().slice(0,140),ts:Date.now()});$('#evSave').textContent='Salvato ✓';setTimeout(()=>$('#evSave').textContent='Salva evento',1500)};
+ $('#evSave').onclick=async()=>{try{await D.set(R('eventi'),{ombre:+$('#evO').value,annuncio:$('#evA').value.trim().slice(0,140),ts:Date.now()});$('#evSave').textContent='Salvato ✓';setTimeout(()=>$('#evSave').textContent='Salva evento',1500)}catch(e){fail(e)}};
  // missioni
  $('#mSave').onclick=async()=>{const t=$('#mTipo').value,m={tipo:t,npc:$('#mNpc').value,titolo:$('#mTit').value.trim().slice(0,60),testo:$('#mTxt').value.trim().slice(0,300),premio:Math.max(0,+$('#mPre').value||0),dest:$('#mDest').value.trim()||'finiti',grazie:$('#mGr').value.trim().slice(0,160),attiva:true,ts:Date.now()};
   if(!m.titolo){alert('Serve un titolo.');return}
   if(t==='recupero'){m.oggetto=$('#mOgg').value.trim().slice(0,40)||'Un oggetto smarrito';m.luogo=$('#mLuo').value}
   if(t==='consegna'){m.item=$('#mItem').value;m.n=Math.max(1,+$('#mN').value||1)}
   if(t==='ombre')m.n=Math.max(1,+$('#mNo').value||3);
-  if(EDIT)await D.set(R('missioni/'+EDIT),m);else await D.push(R('missioni'),m);
+  try{if(EDIT)await D.set(R('missioni/'+EDIT),m);else await D.push(R('missioni'),m)}catch(e){fail(e);return}
   EDIT=null;$('#fTitle').textContent='Nuova missione';fill({});$('#mSave').textContent='Pubblicata ✓';setTimeout(()=>$('#mSave').textContent='Pubblica missione',1500)};
  let MISS={};
  D.onValue(R('missioni'),s=>{MISS=s.val()||{};const L=Object.entries(MISS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
   $('#mList').innerHTML=L.length?L.map(([id,m])=>`<div class="item"><div class="grow"><span class="tag ${m.attiva?'on':'off'}">${m.attiva?'attiva':'spenta'}</span><span class="tag">${esc(m.tipo)}</span><b>${esc(m.titolo)}</b> <span class="small">— ${esc(NPCS[m.npc]||m.npc)} · ${m.premio||0} scudi · a: ${esc(m.dest||'finiti')}</span><br><span class="small">${esc(m.testo)}</span></div>
    <button class="ghost" data-e="${id}">Modifica</button><button data-a="${id}">${m.attiva?'Spegni':'Accendi'}</button><button class="danger" data-d="${id}">Elimina</button></div>`).join(''):'<p class="small">Nessuna missione. Creane una qui sopra.</p>';
-  $('#mList').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>D.update(R('missioni/'+b.dataset.a),{attiva:!MISS[b.dataset.a].attiva}));
-  $('#mList').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare la missione «'+MISS[b.dataset.d].titolo+'»?'))D.remove(R('missioni/'+b.dataset.d))});
+  $('#mList').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>D.update(R('missioni/'+b.dataset.a),{attiva:!MISS[b.dataset.a].attiva}).catch(fail));
+  $('#mList').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare la missione «'+MISS[b.dataset.d].titolo+'»?'))D.remove(R('missioni/'+b.dataset.d)).catch(fail)});
   $('#mList').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{EDIT=b.dataset.e;$('#fTitle').textContent='Modifica missione';fill(MISS[EDIT]);scrollTo({top:0,behavior:'smooth'})})});
  // giocatori (solo i campi leggeri: il salvataggio completo non serve qui)
  const P=await D.get(D.query(R('players'),D.limitToLast(300)));const pv=P.val()||{};const rows=Object.entries(pv).map(([pid,o])=>({pid,name:o.name,day:o.day,ch:o.ch,ts:o.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0));
