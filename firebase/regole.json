@@ -27,8 +27,8 @@
       },
 
       "players": {
+        ".read": true,
         "$pid": {
-          ".read": true,
           ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           ".validate": "newData.hasChildren(['name','ts','save']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('save').isString() && newData.child('save').val().length < 300000"
         }
