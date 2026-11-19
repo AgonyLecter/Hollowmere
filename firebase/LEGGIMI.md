@@ -13,7 +13,7 @@ Con queste regole:
 ## Cosa fare nella console Firebase (una volta sola)
 
 1. **Authentication → Metodo di accesso**: attiva **Anonimo** e **Google**.
-2. **Authentication → Impostazioni → Domini autorizzati**: aggiungi il dominio dove è pubblicato il gioco (per GitHub Pages, `agonylecter.github.io`).
+2. **Authentication → Impostazioni → Domini autorizzati**: aggiungi il dominio dove è pubblicato il gioco (su Vercel: il dominio di produzione, es. `nome-progetto.vercel.app`, più l'eventuale dominio personalizzato; le anteprime di Vercel non funzionano col login Google).
 3. Apri `fusco.html`, premi **Accedi con Google** e copia l'UID che compare nel riquadro rosso.
 4. **Realtime Database → Dati**: crea `hollowmere/admin/<il tuo UID>` con valore `true` (booleano).
 5. **Realtime Database → Regole**: il progetto `wandertutto` potrebbe servire anche ad altre app, quindi **non sostituire** le regole esistenti. Copia il blocco `"hollowmere": { … }` di `regole.json` dentro `"rules"`, accanto a quello che c'è già, e premi **Pubblica**.
