@@ -143,8 +143,8 @@ async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
   if(await favorDeliver(n))return;
   if(!isFree(st))await redReact(n);
   const it=selItem();
-  if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){await gift(n,it.id);return}}
-  if(isFree(st)){if(!(await missionTalk(n))&&!(await teachRecipe(n))){if(OUT_L[n.id])await outsiderTalk(n);else if(n.act==='visit')await say(n.id,farmComment(n.id));else if(FREE_ASK[n.id])await FREE_ASK[n.id](n);else await say(n.id,freeTalkLine(n.id))}}else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
+  if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){if(isFree(st))await freeGift(n,it.id);else await gift(n,it.id);return}}
+  if(isFree(st)){if(!(await missionTalk(n))&&!(await freeSecret(n))&&!(await teachRecipe(n))){if(OUT_L[n.id])await outsiderTalk(n);else if(n.act==='visit')await say(n.id,farmComment(n.id));else if(FREE_ASK[n.id])await FREE_ASK[n.id](n);else await say(n.id,freeTalkLine(n.id))}}else await TALK[n.id](n);await favorTell(n);if(!isFree(st))await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
  }catch(e){console.error(e)}finally{G.cut--}}
 async function gift(n,id){const st=G.st;removeItem(id,1);st.gifted[n.id]=1;
  if(id==='bacche'){addFriend(n.id,-3);addQuiete(-6);AU.play('sting');return say(n.id,n.id==='tobia'?'Hihi! Rosse! …Nascondile. Nascondile prima che le veda il Vecchio.':'Toglimele di davanti. Subito. E lavati le mani, {n}. Con la cenere.','dark')}

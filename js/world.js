@@ -129,7 +129,7 @@ function buildBarn(st){
  m.add({kind:'mat',tx:4,ty:7,img:IMG.mat,dx:4*16,dy:7*16+4,sy:-1,solid:[],hits:[],deco:1});
  m.doors.push({tx:4,ty:7,to:'main',x:58,y:31,dir:0});
  return m}
-function rebuildMaps(){const st=G.st;if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
+function rebuildMaps(){const st=G.st;applySeasonLooks();if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);seasonDecor(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);missionObjects(G.maps.main);missionObjects(G.maps.wood);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}spawnFarmAnimals();if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
 const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],
@@ -300,7 +300,7 @@ function render(){
  if(m.water)drawFoam(m,tx0,tx1);
  // campi
  if(m.id==='main'){const fm=G.st.farm;for(const k in fm){const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const f=fm[k];const arr=f.w?T.tilledW:T.tilled;ctx.drawImage(arr[hsh(x,y)%3],x*16,y*16,16,16);if(f.f)for(let i=0;i<7;i++){const h=hsh(x*7+i,y*13+i);ctx.fillStyle=i%3?'rgba(24,14,6,.6)':'rgba(214,176,90,.75)';ctx.fillRect(x*16+1+h%14,y*16+1+(h>>5)%14,1,1)}for(let d=0;d<4;d++){const [dx,dy]=DIRV[d];if(fm[(x+dx)+','+(y+dy)])continue;ctx.fillStyle='rgba(30,16,8,.55)';if(dy===1)ctx.fillRect(x*16,y*16+15,16,1);else if(dy===-1){ctx.fillRect(x*16,y*16,16,1);ctx.fillStyle='rgba(30,16,8,.25)';ctx.fillRect(x*16,y*16+1,16,1)}else if(dx===1)ctx.fillRect(x*16+15,y*16,1,16);else ctx.fillRect(x*16,y*16,1,16)}}}
- drawPrints(m);drawAim();
+ drawPrints(m);drawFlowers(m,cx,cy);drawAim();
  // oggetti + personaggi ordinati
  const list=[];
  for(const o of m.objs){if(!o.img)continue;if(o.dx>cx+W+8||o.dx+iw(o.img)<cx-8||o.dy>cy+H+8||o.dy+ih(o.img)<cy-8)continue;list.push(o)}
@@ -377,7 +377,7 @@ function postFX(){
 function updParts(dt){
  const m=G.map;if(!m)return;
  if(!m.interior&&G.mode!=='boot'){
-  if(G.night<.5&&G.horror<.6&&Math.random()<dt*5)G.parts.push({k:'leaf',x:G.cam.x+Math.random()*W*1.2,y:G.cam.y-6,vx:-8-Math.random()*10,vy:12+Math.random()*10,t:0,life:12,c:['#d9822b','#e2b23b','#c96a2a','#a07e2e'][Math.random()*4|0],ph:Math.random()*6});
+  if(G.night<.5&&G.horror<.6&&leafSeason()&&Math.random()<dt*5)G.parts.push({k:'leaf',x:G.cam.x+Math.random()*W*1.2,y:G.cam.y-6,vx:-8-Math.random()*10,vy:12+Math.random()*10,t:0,life:12,c:leafCol(),ph:Math.random()*6});
   if(G.night>.3&&G.horror<.5&&Math.random()<dt*3)G.parts.push({k:'fly',x:G.cam.x+Math.random()*W,y:G.cam.y+Math.random()*H,vx:0,vy:0,t:0,life:4,ph:Math.random()*6});
   if(G.horror>.5&&Math.random()<dt*4)G.parts.push({k:'ash',x:G.cam.x+Math.random()*W,y:G.cam.y-4,vx:(Math.random()-.5)*6,vy:10+Math.random()*8,t:0,life:14});
   const wx=G.st&&G.st.weather;
