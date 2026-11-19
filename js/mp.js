@@ -21,7 +21,7 @@ G.others={};
 
 // ---------- presenza ----------
 let PRES=null,PRES_V=null,PRES_T=0,CHAT_OFF=null,INBOX_OFF=null;
-async function presenceJoin(village){const st=G.st,me=(G.visit?G.home:st).pid;presenceLeave();if(!MP.ok()||!me)return;if(NET.own&&!(await NET.own(me)))return;PRES_V=village;G.others={};
+async function presenceJoin(village){const st=G.st,me=(G.visit?G.home:st).pid;presenceLeave();if(!MP.ok()||!me)return;if(NET.own)await NET.own(me);PRES_V=village;G.others={};
  PRES=MP.presence(village,me,all=>{const now=performance.now();for(const pid in all){if(pid===me)continue;const v=all[pid],o=G.others[pid]||(G.others[pid]={x:v.x,y:v.y,anim:0});Object.assign(o,{name:v.name,g:v.g,tx:v.x,ty:v.y,dir:v.dir|0,moving:!!v.mv,map:v.map,seen:now})}
   for(const pid in G.others)if(!all[pid])delete G.others[pid]});
  CHAT_OFF=MP.chat(village,m=>{const o=Object.values(G.others).find(o=>o.name===m.n);AU.play('blip');UI.toast(`${m.n}: ${m.t}`);G.chatB=G.chatB||[];G.chatB.push({who:m.n,t:m.t,life:5,o})})}
