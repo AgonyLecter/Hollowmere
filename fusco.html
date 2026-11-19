@@ -108,7 +108,18 @@ try{
  const [A,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js')]);
  const app=A.initializeApp(CFG,'fusco'),db=D.getDatabase(app),R=p=>D.ref(db,'hollowmere/'+p);
  const AU=await import(B+'firebase-auth.js'),auth=AU.getAuth(app);
- $('#login').onclick=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()).catch(e=>alert('Accesso non riuscito: '+e.message));
+ const why=e=>{const c=(e&&e.code)||'',h=location.hostname;return ({
+  'auth/unauthorized-domain':`Il dominio «${h}» non è tra i domini autorizzati. Firebase → Authentication → Impostazioni → Domini autorizzati: aggiungi esattamente «${h}».`,
+  'auth/operation-not-allowed':'L\'accesso con Google non è attivo. Firebase → Authentication → Metodo di accesso → Google → Abilita.',
+  'auth/configuration-not-found':'Authentication non è ancora configurato nel progetto. Firebase → Authentication → Inizia, poi abilita Google.',
+  'auth/popup-blocked':'Il browser ha bloccato la finestra. Provo con il reindirizzamento…',
+  'auth/popup-closed-by-user':'La finestra si è chiusa prima di finire (spesso per i cookie di terze parti bloccati). Provo con il reindirizzamento…',
+  'auth/cancelled-popup-request':'La finestra si è chiusa prima di finire. Provo con il reindirizzamento…',
+  'auth/network-request-failed':'Errore di rete: controlla la connessione o un blocco pubblicità.',
+ })[c]||`Accesso non riuscito (${c||'errore sconosciuto'}): ${e&&e.message||e}`};
+ const showErr=e=>{const w=$('#who');w.firstChild.textContent=why(e)+' ';console.warn(e)};
+ AU.getRedirectResult(auth).catch(showErr);
+ $('#login').onclick=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()).catch(e=>{showErr(e);if(['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e&&e.code))setTimeout(()=>AU.signInWithRedirect(auth,new AU.GoogleAuthProvider()).catch(showErr),1500)});
  $('#logout').onclick=()=>AU.signOut(auth);
  AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
   let adm=false;try{adm=(await D.get(R('admin/'+u.uid))).val()===true}catch(e){}
