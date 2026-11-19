@@ -83,6 +83,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
   <div id="mList" class="list"><p class="small">Caricamento…</p></div>
  </section>
  <section class="wide">
+  <h2>Online adesso</h2>
+  <div id="oList" class="list"><p class="small">Caricamento…</p></div>
+ </section>
+ <section class="wide">
   <h2>Giocatori</h2>
   <div class="list"><table><thead><tr><th>Nome</th><th>Codice</th><th>Giorno</th><th>Stato</th><th>Ultimo accesso</th></tr></thead><tbody id="pList"><tr><td colspan="5" class="small">Caricamento…</td></tr></tbody></table></div>
  </section>
@@ -147,9 +151,15 @@ try{
   $('#mList').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare la missione «'+MISS[b.dataset.d].titolo+'»?'))D.remove(R('missioni/'+b.dataset.d)).catch(fail)});
   $('#mList').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{EDIT=b.dataset.e;$('#fTitle').textContent='Modifica missione';fill(MISS[EDIT]);scrollTo({top:0,behavior:'smooth'})})});
  // giocatori (solo i campi leggeri: il salvataggio completo non serve qui)
- let pv={};try{const P=await D.get(D.query(R('players'),D.limitToLast(300)));pv=P.val()||{}}catch(e){$('#pList').innerHTML=`<tr><td colspan="5">Non riesco a leggere i giocatori: ${esc(e.code||e.message||e)}. Probabilmente le regole del database non permettono la lettura di hollowmere/players.</td></tr>`;$('#sTot').textContent='?';$('#sFree').textContent='?';throw e}const rows=Object.entries(pv).map(([pid,o])=>({pid,name:o.name,day:o.day,ch:o.ch,ts:o.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0));
- $('#sTot').textContent=rows.length;$('#sFree').textContent=rows.filter(r=>r.ch>=5).length;
- $('#pList').innerHTML=rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.pid)}</td><td>${r.day??'–'}</td><td>${r.ch>=5?'<span class="tag on">gioco libero</span>':'capitolo '+(r.ch||0)}</td><td class="small">${r.ts?new Date(r.ts).toLocaleString('it-IT'):'–'}</td></tr>`).join('')||'<tr><td colspan="5" class="small">Nessun giocatore.</td></tr>';
+ const drawP=pv=>{const rows=Object.entries(pv).map(([pid,o])=>({pid,name:o.name,day:o.day,ch:o.ch,ts:o.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  $('#sTot').textContent=rows.length;$('#sFree').textContent=rows.filter(r=>r.ch>=5).length;
+  $('#pList').innerHTML=rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.pid)}</td><td>${r.day??'–'}</td><td>${r.ch>=5?'<span class="tag on">gioco libero</span>':'capitolo '+(r.ch||0)}</td><td class="small">${r.ts?new Date(r.ts).toLocaleString('it-IT'):'–'}</td></tr>`).join('')||'<tr><td colspan="5" class="small">Nessun salvataggio online, per ora.</td></tr>'};
+ D.onValue(D.query(R('players'),D.limitToLast(300)),s=>drawP(s.val()||{}),e=>{$('#pList').innerHTML=`<tr><td colspan="5">Non riesco a leggere i giocatori: ${esc(e.code||e.message||e)}.</td></tr>`;$('#sTot').textContent='?';$('#sFree').textContent='?'});
+ // chi è collegato adesso: la presenza nei villaggi (si cancella da sola quando chiudono il gioco)
+ const VN={};D.onValue(R('villaggi'),s=>{const v=s.val()||{};for(const k in v)VN[k]=v[k].name});
+ D.onValue(R('presenza'),s=>{const v=s.val()||{},L=[];for(const vil in v)for(const pid in v[vil]){const o=v[vil][pid]||{};L.push({vil,pid,name:o.name,map:o.map,ts:o.ts})}
+  $('#oList').innerHTML=L.length?L.map(o=>`<div class="item"><div class="grow"><b>${esc(o.name)}</b> <span class="small">(${esc(o.pid)}) nel villaggio di ${esc(VN[o.vil]||o.vil)}${o.vil===o.pid?' — a casa':' — in visita'}</span></div></div>`).join(''):'<p class="small">Nessuno nella Valle in questo momento. Qui compaiono solo i giocatori nel gioco libero.</p>'},
+  e=>{$('#oList').innerHTML=`<p class="small">Non riesco a leggere chi è online (${esc(e.code||e.message||e)}): nelle regole serve ".read": true sul nodo presenza.</p>`});
  D.onValue(R('villaggi'),s=>{$('#sVil').textContent=Object.keys(s.val()||{}).length},e=>{$('#sVil').textContent='?'});
 }catch(e){console.warn(e);setTimeout(()=>{$('#net').textContent='○ Errore: '+(e&&(e.code||e.message)||e)},300)}
 </script>
