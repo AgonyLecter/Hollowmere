@@ -2404,6 +2404,7 @@ const TITLE={
 };
 function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];
  const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
+ if(st.flags.ch2end)st.flags.finaleChase=0;   // salvataggi dopo il Capitolo II: gli abitanti tornano a uscire di casa
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
@@ -2433,7 +2434,7 @@ async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuil
  await sleep(300);G.cut++;await narr('La casa del nonno. Odora di legno, lavanda e di qualcosa di chiuso da tanto tempo.');await narr('Fuori ti aspettano i campi. E il villaggio. Esci dalla porta in basso.\n(Muoviti con WASD o il pollice sinistro. E / Spazio / A per agire.)');G.cut--}
 // ---------- giornata ----------
 function morningSetup(){const st=G.st,F=st.flags;
- if(F.ch2end&&st.chapter<3)st.chapter=3;if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
+ if(F.ch2end){F.finaleChase=0;if(st.chapter<3)st.chapter=3}if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
  const ks=Object.keys(CHORES).filter(k=>k!==st.lastChore);st.chore=ks[Math.random()*ks.length|0];st.lastChore=st.chore;st.choreOk=false;st.choreDone=false;st.leaves=[0,0,0,0];F.bucket=0;F.barnDark=0;
  const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
  if(st.weather==='pioggia')for(const k in st.farm)st.farm[k].w=true;
@@ -2526,7 +2527,7 @@ async function ch1End(){const st=G.st,F=st.flags;G.cut++;G.cutMusic='silent';
  await UI.fade(1,800);await UI.card('Fine del Capitolo I','Il Recinto Giallo','Hai rispettato le regole.<br>Le regole non rispetteranno te.',false,true,1800);
  F.ch1end=1;st.chapter=2;G.cutMusic=null;G.cut--;await endDay(false,true)}
 // ---------- finale Capitolo II ----------
-async function finale(){const st=G.st,F=st.flags;G.cut++;G.chase=false;G.horse.on=false;G.cutMusic='silent';F.ch2end=1;
+async function finale(){const st=G.st,F=st.flags;G.cut++;G.chase=false;G.horse.on=false;G.cutMusic='silent';F.ch2end=1;F.finaleChase=0;
  AU.play('slam');G.shake=5;await narr('Sbatti la porta e ci appoggi la schiena. Il cuore ti batte in gola.');
  await sleep(800);AU.play('hooves');await sleep(1800);await narr('Gli zoccoli si fermano. Proprio davanti alla porta.');
  await sleep(1200);AU.play('knock');await sleep(1000);
