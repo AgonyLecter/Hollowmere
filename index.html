@@ -752,8 +752,17 @@ function genIconsHD(){const I=(id,fn)=>{const P=new PX(32,32);fn(P);P.outline();
  I('page',P=>{P.rect(6,4,20,25,rp('#efe2c2'),{n:[.1,-.2,1]});for(let k=0;k<5;k++)P.line(9,9+k*3.5,22-(k%2)*3,9+k*3.5,C('#6a5a4a'));P.line(9,25,15,25,C('#8a0d0d'))});
  I('ledger',P=>{P.rect(6,4,21,25,rp('#4a1a10'),{spec:.3});P.rect(8,5,2,23,rp('#8a0d0d'));P.ellipse(19,15,3.4,3.4,rp('#e8c23a'),{spec:.8})})}
 // ---------- colture ----------
+function genSoilHD(){const mkS=(wet,seed)=>{srand(seed);const [c,x]=mk(32,32);c.s=2;const P=(col,X,Y,w=1,h=1)=>{x.fillStyle=col;x.fillRect(X,Y,w,h)};
+  const base=wet?['#2e1c12','#3a2416','#4a2e1c','#5a3a24','#6a4830']:['#4e3018','#5e3a1e','#6e4626','#82562e','#9a6a3a'];
+  P(base[2],0,0,32,32);for(let i=0;i<160;i++)P(base[ri(1,3)],ri(0,31),ri(0,31));
+  for(let y=2;y<32;y+=8){P(base[0],0,y+5,32,1);P(base[1],0,y+4,32,1);P(base[3],0,y,32,2);P(base[4],0,y,32,1);
+   for(let X=0;X<32;X+=ri(3,6)){P(base[4],X,y-1,2,1);P(base[1],X,y+2,1,1)}}
+  for(let i=0;i<7;i++){const a=ri(1,28),b=ri(1,28);P(base[0],a,b+2,3,1);P(base[3],a,b,3,2);P(base[4],a,b,1,1)}
+  if(wet){for(let i=0;i<10;i++){const a=ri(1,29),b=ri(1,29);P('rgba(150,190,220,.35)',a,b,ri(2,4),1)}P('rgba(20,30,50,.12)',0,0,32,32)}
+  c.s=2;return c};
+ T.tilled=[0,1,2].map(i=>mkS(false,121+i));T.tilledW=[0,1,2].map(i=>mkS(true,131+i))}
 function genCropsHD(){const S=(fn)=>{const P=new PX(32,36);fn(P);P.outline();return pxCanvas(P)};const lf=rp('#5a9a2a'),lf2=rp('#4a7a24');
- const seedI=S(P=>{for(const [a,b] of [[12,22],[19,26],[15,28]])P.ellipse(a,b,1.4,1,rp('#3a2414'),{edge:false})});
+ const seedI=S(P=>{P.ellipse(16,27,8,4.5,rp('#7a5030'),{spec:.2,mod:(X,Y,v)=>((X*3+Y)%5===0)?v-.15:v});P.ellipse(16,26,3,1.6,rp('#3a2414'),{amb:0,edge:false});for(const [a,b] of [[13,25],[18,25],[16,27]])P.ellipse(a,b,1.2,.9,rp('#e8d8a0'),{edge:false,spec:.6})});
  const sprout=S(P=>{P.capsule(16,30,16,19,1,lf);P.ellipse(12,18,4,2,lf,{spec:.3});P.ellipse(20,16,4,2,lf,{spec:.3})});
  CROPIMG.rapa=[seedI,sprout,S(P=>{for(const [a,b] of [[10,10],[16,6],[22,10],[13,14],[20,14]])P.capsule(16,30,a,b,1.8,lf,{r2:2.8})}),S(P=>{P.ellipse(16,27,8,6,rp('#efe6f2'),{spec:.4,mod:(X,Y,v)=>Y<25?v-.35:v});for(const [a,b] of [[10,6],[16,2],[22,6]])P.capsule(16,22,a,b,1.8,lf,{r2:2.8})})];
  CROPIMG.patata=[seedI,sprout,S(P=>{for(let i=0;i<6;i++)P.ellipse(8+i*3.4,16+(i%2)*4,4,3.4,i%2?lf:lf2,{spec:.2});P.capsule(16,30,16,20,1.2,lf2)}),S(P=>{for(let i=0;i<6;i++)P.ellipse(8+i*3.4,12+(i%2)*4,4,3.4,i%2?lf:lf2);for(const [a,b] of [[10,10],[20,13]])P.ellipse(a,b,1.6,1.6,rp('#f2f2d2'),{edge:false});P.ellipse(16,29,6,4,rp('#b08a5a'),{spec:.2})})];
@@ -1050,7 +1059,7 @@ function genCrops(){
  CROPIMG.zucca=[seedI,sprout,S(x=>{R_(x,'#5a8a2a',2,10,12,2);disc(x,5,9,3,'#6a9a2a');disc(x,11,9,3,'#6a9a2a');disc(x,8,13,2,'#c9b03a')}),S(x=>{R_(x,'#4a6a2a',1,12,14,2);disc(x,8,11,6,'#e07a1a');R_(x,'#b85a10',5,6,1,11);R_(x,'#b85a10',10,6,1,11);R_(x,'#f29a3a',4,8,2,2);R_(x,'#4a6a2a',7,3,2,4)})];
  const [c,x]=mk2(16,18);x.drawImage(CROPIMG.zucca[3],0,0,16,18);R_(x,'#2b1205',5,9,2,2);R_(x,'#2b1205',10,9,2,2);R_(x,'#2b1205',5,13,7,1);CROPIMG.zuccaFace=c;
 }
-function genAll(){genTilesHD();genObjects();genDeco();genPropsHD();genIconsHD();genCropsHD();makeParch()}
+function genAll(){genTilesHD();genSoilHD();genObjects();genDeco();genPropsHD();genIconsHD();genCropsHD();makeParch()}
 function makeParch(){const [c,x]=mk(64,64);srand(31);x.fillStyle='#ead8ae';x.fillRect(0,0,64,64);
  for(let i=0;i<900;i++){x.fillStyle=['#e2cea0','#efdfb8','#dcc694','#f2e4c0'][ri(0,3)];x.fillRect(ri(0,63),ri(0,63),1,1)}
  for(let i=0;i<14;i++){x.fillStyle='rgba(150,110,60,.18)';const a=ri(0,60),b=ri(0,63);x.fillRect(a,b,ri(3,9),1)}
@@ -1304,6 +1313,10 @@ function atmosphere(m){const st=G.st,t=st.time,wx=st.weather||'sereno',out=!m.in
 function drawBubbles(m){if(!G.bubbles.length)return;ctx.font='8px "Pixelify Sans",monospace';ctx.textAlign='center';
  for(const b of G.bubbles){const n=b.n;if(n.hidden||n.map!==m.id)continue;const tw=Math.ceil(ctx.measureText(b.t).width)+8,X=Math.round(n.x),bx=Math.round(X-tw/2),by=Math.round(n.y-46+(b.life>2.4?(b.life-2.4)*15:0));
   ctx.fillStyle='#3b1f0e';ctx.fillRect(bx-1,by-1,tw+2,13);ctx.fillRect(X-2,by+12,5,1);ctx.fillRect(X-1,by+13,3,1);ctx.fillStyle='#fff4dc';ctx.fillRect(bx,by,tw,11);ctx.fillRect(X-1,by+11,3,1);ctx.fillStyle='#3b1f0e';ctx.fillText(b.t,X,by+9)}}
+function drawCropMarks(m,tx0,ty0,tx1,ty1){if(m.id!=='main'||G.mode!=='game')return;const fm=G.st.farm,bob=Math.round(Math.sin(G.t*4)*1.5);
+ for(const k in fm){const f=fm[k];if(!f.c)continue;const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const X=x*16+8,Y=y*16-8+bob;
+  if(cropStage(f.c)===3){if(Math.random()<.05)G.parts.push({k:'spark',x:x*16+3+Math.random()*10,y:y*16+Math.random()*8,vx:0,vy:-10,t:0,life:.6,c:'#fff3a0'});ctx.fillStyle='#2a1406';ctx.fillRect(X-1.5,Y-7,3,6.5);ctx.fillRect(X-1.5,Y+.5,3,3);ctx.fillStyle='#f6d98a';ctx.fillRect(X-.5,Y-6,1.5,4.5);ctx.fillRect(X-.5,Y+1.5,1.5,1.5);ctx.fillStyle='#fffbe0';ctx.fillRect(X-.5,Y-6,.5,2)}
+  else if(!f.w){ctx.fillStyle='#14304a';ctx.fillRect(X-2,Y-2,4,5);ctx.fillRect(X-1,Y-4,2,2);ctx.fillStyle='#7ab8f0';ctx.fillRect(X-1,Y-1,2,3);ctx.fillRect(X-.5,Y-3,1,2);ctx.fillStyle='#d8f0ff';ctx.fillRect(X-1,Y-1,.5,1)}}}
 function drawPostMarks(m){const F=G.st.flags;if(m.id!=='main'||!F.gotPaint||G.mode!=='game')return;
  for(const o of m.objs){if(o.kind!=='post'||F.posts[o.pi])continue;const X=o.tx*16+8,Y=o.ty*16-16+Math.round(Math.sin(G.t*4)*2);
   ctx.fillStyle='#3b1f0e';ctx.fillRect(X-4,Y-1,9,4);ctx.fillRect(X-3,Y+3,7,1);ctx.fillRect(X-2,Y+4,5,1);ctx.fillRect(X-1,Y+5,3,1);ctx.fillStyle=PAL.yel;ctx.fillRect(X-3,Y,7,2);ctx.fillRect(X-2,Y+2,5,1);ctx.fillRect(X-1,Y+3,3,1);ctx.fillRect(X,Y+4,1,1)}}
@@ -1323,11 +1336,11 @@ function render(){
  {const gw=m.ground.width,gh=m.ground.height,sx0=Math.max(0,cx),sy0=Math.max(0,cy),sx1=Math.min(gw,cx+W),sy1=Math.min(gh,cy+H);if(sx1>sx0&&sy1>sy0)ctx.drawImage(m.ground,sx0*2,sy0*2,(sx1-sx0)*2,(sy1-sy0)*2,sx0,sy0,sx1-sx0,sy1-sy0)}
  if(m.water)drawFoam(m,tx0,tx1);
  // campi
- if(m.id==='main'){const fm=G.st.farm;for(const k in fm){const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const f=fm[k];ctx.drawImage(f.w?T.tilledW[0]:T.tilled[0],x*16,y*16)}}
+ if(m.id==='main'){const fm=G.st.farm;for(const k in fm){const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const f=fm[k];const arr=f.w?T.tilledW:T.tilled;ctx.drawImage(arr[hsh(x,y)%3],x*16,y*16,16,16);for(let d=0;d<4;d++){const [dx,dy]=DIRV[d];if(fm[(x+dx)+','+(y+dy)])continue;ctx.fillStyle='rgba(30,16,8,.55)';if(dy===1)ctx.fillRect(x*16,y*16+15,16,1);else if(dy===-1){ctx.fillRect(x*16,y*16,16,1);ctx.fillStyle='rgba(30,16,8,.25)';ctx.fillRect(x*16,y*16+1,16,1)}else if(dx===1)ctx.fillRect(x*16+15,y*16,1,16);else ctx.fillRect(x*16,y*16,1,16)}}}
  // oggetti + personaggi ordinati
  const list=[];
  for(const o of m.objs){if(!o.img)continue;if(o.dx>cx+W+8||o.dx+iw(o.img)<cx-8||o.dy>cy+H+8||o.dy+ih(o.img)<cy-8)continue;list.push(o)}
- if(m.id==='main'){const fm=G.st.farm;for(const k in fm){const f=fm[k];if(!f.c)continue;const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const s=cropStage(f.c);let img=CROPIMG[f.c.t][s];if(f.c.t==='zucca'&&s===3&&G.st.chapter>=2)img=CROPIMG.zuccaFace;list.push({img,dx:x*16,dy:y*16-3,sy:y*16+6})}}
+ if(m.id==='main'){const fm=G.st.farm;for(const k in fm){const f=fm[k];if(!f.c)continue;const [x,y]=k.split(',').map(Number);if(x<tx0-1||x>tx1+1||y<ty0-1||y>ty1+1)continue;const s=cropStage(f.c);let img=CROPIMG[f.c.t][s];if(f.c.t==='zucca'&&s===3&&G.st.chapter>=2)img=CROPIMG.zuccaFace;list.push({img,dx:x*16,dy:y*16-3,sy:y*16+6,crop:f})}}
  for(const n of G.npcs)if(!n.hidden&&n.map===m.id)list.push({npc:n,sy:n.y});
  if(G.mode==='game')list.push({pl:1,sy:G.player.y});
  if(G.horse.on&&m.id==='main')list.push({horse:1,sy:G.horse.y});
@@ -1343,7 +1356,7 @@ function render(){
    if(e.kind==='bld'&&G.night>.25&&e.img.lights&&winLit(e.key)){const k=clamp((G.night-.25)*3,0,1);for(const [wx,wy] of e.img.lights){const X=Math.round(e.dx)+1+wx,Y=Math.round(e.dy)+wy;ctx.fillStyle=`rgba(255,196,110,${(.9*k).toFixed(2)})`;ctx.fillRect(X,Y,10,10);ctx.fillStyle=`rgba(255,236,170,${(.8*k).toFixed(2)})`;ctx.fillRect(X+1,Y+1,3,3);ctx.fillStyle=`rgba(90,50,20,${k.toFixed(2)})`;ctx.fillRect(X+4,Y,2,10);ctx.fillRect(X,Y+4,10,2)}}}
  }
  if(!m.interior&&G.mode!=='boot')drawClouds(cx,cy);
- drawPostMarks(m);
+ drawPostMarks(m);drawCropMarks(m,tx0,ty0,tx1,ty1);
  // particelle
  drawParts();
  // testi fluttuanti
@@ -1444,17 +1457,19 @@ function addQuiete(n){const st=G.st;st.quiete=clamp(st.quiete+n,0,100);if(n<=-8)
 function useEnergy(n){const st=G.st;if(st.energy<=0){UI.toast('Sei esaust{o|a}. Vai a dormire.','bad');return false}st.energy=Math.max(0,st.energy-n);return true}
 function cropStage(c){const d=CROPS[c.t].days;if(c.a>=d)return 3;if(c.a<=0)return 0;return c.a>=d/2?2:1}
 function inFarm(x,y){return x>=FARM.x0&&x<=FARM.x1&&y>=FARM.y0&&y<=FARM.y1}
+function tip(flag,txt){const F=G.st.flags;if(F[flag])return;F[flag]=1;setTimeout(()=>UI.toast(txt),700)}
 function farmAct(tx,ty){
  const st=G.st,m=G.map,k=tx+','+ty,f=st.farm[k],it=selItem(),id=it&&it.id,def=id&&ITEMS[id];
- if(f&&f.c&&cropStage(f.c)===3){const t=f.c.t;if(addItem(t,1)){delete f.c;AU.play('pick');burst('spark',tx*16+8,ty*16+6,8,'#ffe27a');floatText('+1 '+CROPS[t].n,tx*16+8,ty*16-4);st.flags.harvested=(st.flags.harvested||0)+1;if(t==='zucca'&&st.chapter>=2&&!st.flags.faceSeen){st.flags.faceSeen=1;addQuiete(-6);UI.toast('La zucca ha una faccia. Non l\'hai intagliata tu.','bad')}}return}
+ if(f&&f.c&&cropStage(f.c)===3){const t=f.c.t;if(addItem(t,1)){delete f.c;AU.play('pick');burst('spark',tx*16+8,ty*16+6,8,'#ffe27a');floatText('+1 '+CROPS[t].n,tx*16+8,ty*16-4);st.flags.harvested=(st.flags.harvested||0)+1;tip('tutSell','Raccolto! Tienilo in mano e usalo sulla cassetta accanto a casa per venderlo.');if(t==='zucca'&&st.chapter>=2&&!st.flags.faceSeen){st.flags.faceSeen=1;addQuiete(-6);UI.toast('La zucca ha una faccia. Non l\'hai intagliata tu.','bad')}}return}
  const g=m.get(tx,ty),free=!m.objAt(tx,ty)&&(g===1||g===12);
  if(def&&def.t==='bad'){if(free||f){const n=countItem(id);removeItem(id,n);AU.play('bury');burst('dust',tx*16+8,ty*16+8,10);if(id==='bacche'){st.flags.buried+=n;UI.toast(`Hai seppellito ${n} bacche rosse.`)}else{st.flags.ribbonBuried=1;UI.toast('Hai seppellito il nastro. Ti senti più legger{o|a}. O più sol{o|a}.')}addQuiete(4);return}UI.toast('Non qui.');return}
  if(id==='hoe'){
   if(!inFarm(tx,ty)){if(free)UI.toast('La terra qui è troppo dura. Coltiva nei campi del nonno.');return}
   if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(2))return;
-  st.farm[k]={w:false,c:null};AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;return}
- if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;AU.play('water');burst('water',tx*16+8,ty*16+4,10);return}
- if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0};removeItem(id,1);AU.play('plant');st.flags.planted++;return}
+  st.farm[k]={w:false,c:null};AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
+ if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
+ if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
+ if(f&&f.c){const s2=cropStage(f.c),left=CROPS[f.c.t].days-f.c.a;UI.toast(`${CROPS[f.c.t].n}: ${s2===0?'appena seminata':'sta crescendo'}. Ancora ${left} nott${left===1?'e':'i'}${f.w?'.':' — e va annaffiata!'}`);return}
 }
 // ================= AZIONI =================
 function doAction(){const [fx,fy]=frontTile();const p=G.player;
@@ -1511,7 +1526,7 @@ const ACT={
  stall:()=>{const a=NPC('agatha');if(!a.hidden&&a.map==='main'&&Math.abs(a.x-49*16-8)<20)talkTo(a);else UI.toast('Il banco di Agatha. Chiuso.')},
  anvil:()=>{const b=NPC('brom');if(!b.hidden&&Math.hypot(b.x-G.player.x,b.y-G.player.y)<48)talkTo(b);else UI.toast('L\'incudine di Brom. È ancora tiepida.')},
  grave:(o)=>{const E=['JOSIAH WREN — Contato.','MERCY HALE — Contata.','THOMAS ASHBY — Contato due volte.','ABIGAIL MOSS — Arrivata d\'autunno.','Il nome è stato raschiato via.','SAMUEL CROWE — Il giallo non bastò.','HANNAH PRICE — Riposa. Non tornare.','Una lapide nuova. Nessun nome. Ancora.','EZRA BLACKWOOD — Un forestiero.','PRUDENCE GALE — Contata.'];UI.toast(E[o.gi%E.length])},
- elias:async()=>{const st=G.st;
+ elias:async()=>{const st=G.st;st.flags.visitedGrave=1;UI.quest();
   if(st.choreOk&&st.chore==='pozzo'&&!st.choreDone&&st.flags.bucket){st.flags.bucket=0;AU.play('water');await narr('Versi l\'acqua sulla terra della tomba. La terra la beve tutta, avida.');choreDone();return}
   if(st.chapter>=2){addQuiete(-3);return narr('ELIAS MARLOWE — Tornerà per il raccolto.\n\nLa terra della tomba è smossa. Dall\'interno.')}
   narr('ELIAS MARLOWE — Tornerà per il raccolto.\n\nLa tomba del nonno. Fiori gialli, freschi.')},
@@ -1774,7 +1789,11 @@ async function ezekielPaint(n){const st=G.st,F=st.flags;F.ezWait=0;F.gotPaint=1;
 // ================= OBIETTIVI =================
 const QUESTS=[
  {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Presentati agli abitanti (${metCount()}/5)`,d:st=>metCount()>=5},
- {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Dissoda, semina e annaffia (${Math.min(st.flags.planted,3)}/3 semi)`,d:st=>st.flags.planted>=3},
+ {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Zappa la terra nei campi e semina (${Math.min(st.flags.planted,3)}/3 semi)`,d:st=>st.flags.planted>=3},
+ {s:st=>st.day>=1&&st.chapter<=1&&st.flags.planted>0,t:st=>`Annaffia i semi con l'annaffiatoio (${Math.min(st.flags.watered||0,3)}/3)`,d:st=>(st.flags.watered||0)>=3},
+ {s:st=>st.day===1,t:()=>'Visita la tomba del nonno, nel cimitero a nord-est',d:st=>st.flags.visitedGrave},
+ {s:st=>st.day===1&&st.flags.planted>=3,t:()=>'Leggi la bacheca in piazza e accetta la faccenda del giorno',d:st=>st.choreOk},
+ {s:st=>st.day===1&&st.flags.planted>=3,t:()=>'Compra altri semi al banco di Agatha, in piazza',d:st=>st.flags.boughtSeeds},
  {s:st=>st.day>=2&&st.flags.gotPaint,t:st=>`Dipingi di giallo i pali grigi del recinto (${st.flags.posts.filter(Boolean).length}/5)`,d:st=>st.flags.posts.filter(Boolean).length>=5},
  {s:st=>st.day>=2&&st.flags.gotPaint,t:st=>`Seppellisci le bacche rosse nei tuoi campi (${Math.min(st.flags.buried,3)}/3)`,d:st=>st.flags.buried>=3},
  {s:st=>st.day>=2&&st.chapter<=1&&!st.flags.gotBread&&!st.flags.offered,t:()=>'Parla con Clara',d:st=>st.flags.gotBread},
@@ -1793,6 +1812,14 @@ const QUESTS=[
  {s:st=>st.flags.ch2end,t:()=>'Capitolo III in arrivo. Intanto, a Hollowmere la vita continua…',d:()=>false},
  {s:st=>st.choreOk&&!st.choreDone,t:st=>'Faccenda: '+CHORES[st.chore].t,d:st=>st.choreDone},
 ];
+function hintText(){const st=G.st,t=st.time,crops=Object.values(st.farm).filter(f=>f.c);
+ if(crops.some(f=>cropStage(f.c)===3))return 'Raccogli ciò che è maturo: mettiti davanti alla pianta e premi A/E.';
+ if(st.inv.some(s=>s&&ITEMS[s.id].t==='crop'))return 'Vendi il raccolto: tienilo in mano e usalo sulla cassetta accanto a casa.';
+ const dry=crops.filter(f=>!f.w).length;if(dry&&t<20*60+30)return `Annaffia le piantine (${dry} da bagnare).`;
+ if(t>=19*60)return 'Torna a casa e dormi nel letto: le piante crescono di notte.';
+ if(!st.choreOk)return 'Leggi la bacheca in piazza: c\'è una faccenda pagata.';
+ if(countItem('s_rapa')+countItem('s_patata')+countItem('s_zucca')>0&&Object.keys(st.farm).length<30)return 'Hai ancora semi: zappa altra terra e semina.';
+ return 'Parla con gli abitanti, esplora la valle, o riposa su una panchina fino a sera.'}
 function activeQuests(){const st=G.st;return QUESTS.filter(q=>q.s(st))}
 // ================= UI =================
 const NAMES=Object.fromEntries(NPC_DEF);NAMES.voce='Voce dietro la porta';NAMES.cocchiere='Cocchiere';
@@ -1835,7 +1862,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   $('#cdayt').textContent=`${DAYN[(st.day+3)%7]} ${st.day} · Autunno`;if(this._wx!==st.weather){this._wx=st.weather;drawWxIcon($('#cwx'),st.weather)}$('#cmark').style.left=clamp((t-360)/1200,0,1)*100+'%';$('#ctime').textContent=`${h}:${String(mm-mm%10).padStart(2,'0')}`;$('#cmoney').textContent=st.money+' g';
   $('#efill').style.height=(st.energy)+'%';$('#efill').style.background=st.energy<25?'linear-gradient(#ffb07a,#c0221e)':'';
   document.body.classList.toggle('corrupt',G.horror>.35);document.body.classList.toggle('corrupt2',G.horror>.7)},
- quest(){if(!G.st)return;const q=activeQuests().filter(q=>!q.d(G.st));const el=$('#qtext');if(!q.length){el.textContent='Vivi la tua vita a Hollowmere.';$('#quest').classList.remove('alarm');return}
+ quest(){if(!G.st)return;const q=activeQuests().filter(q=>!q.d(G.st));const el=$('#qtext');if(!q.length){el.textContent=fmt(hintText());$('#quest').classList.remove('alarm');return}
   el.textContent=fmt(q[0].t(G.st))+(q.length>1?`  (+${q.length-1})`:'');$('#quest').classList.toggle('alarm',!!q[0].alarm)},
  showHud(v){$('#hud').classList.toggle('hide',!v)},
  // ---------- modali ----------
@@ -1846,7 +1873,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
  shop(){return new Promise(res=>{const draw=()=>{const st=G.st;const it=['s_rapa','s_patata','s_zucca'];
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Emporio Crane</h2><p class="small">«Semi buoni, terra buona, gente buona.» — Hai <b>${st.money} g</b></p>`+it.map(id=>`<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span>${ITEMS[id].n}<br><span class="small">${ITEMS[id].d}</span></span><b>${ITEMS[id].p}g</b><button class="btn" data-b="${id}" data-q="1" ${st.money<ITEMS[id].p?'disabled':''}>×1</button><button class="btn" data-b="${id}" data-q="5" ${st.money<ITEMS[id].p*5?'disabled':''}>×5</button></div>`).join('')+`<p class="small">Per vendere i raccolti usa la cassetta accanto a casa tua.</p>`,res);
   $('#mbox').querySelectorAll('canvas[data-i]').forEach(c=>c.getContext('2d').drawImage(ICON[c.dataset.i],0,0));
-  $('#mbox').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b,q=+b.dataset.q,cost=ITEMS[id].p*q;if(G.st.money<cost)return;if(addItem(id,q)){G.st.money-=cost;AU.play('coin');this.hud();this._mclose=null;draw();this._mclose=res}})};draw()})},
+  $('#mbox').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b,q=+b.dataset.q,cost=ITEMS[id].p*q;if(G.st.money<cost)return;if(addItem(id,q)){G.st.money-=cost;G.st.flags.boughtSeeds=1;AU.play('coin');this.hud();this._mclose=null;draw();this._mclose=res}})};draw()})},
  board(){const st=G.st;const c=st.chore&&CHORES[st.chore];const fest=Math.max(0,8-st.day);
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Bacheca delle Faccende</h2>
    <div class="paper"><p><b>Faccenda del giorno:</b><br>${c?esc(c.t):'Nessuna.'}<br><span class="small">Ricompensa: ${c?c.pay:0} g</span></p>
@@ -1978,6 +2005,7 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
   if(F.missedOffer&&!F.missedShown){F.missedShown=1;AU.play('scratch');await sleep(600);await narr('Stanotte qualcosa ha grattato la porta per ore.');await narr('Sul legno, all\'esterno, lettere incise a unghiate:\nAVEVI DIMENTICATO.',{dark:1});addQuiete(-15)}
   if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.')}
+  if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
   if(F.page2avail&&!F.page2&&!F.page2seen){F.page2seen=1;await narr('Sul pavimento, vicino alla porta, c\'è un foglio. Qualcuno l\'ha fatto scivolare sotto l\'uscio, stanotte.')}
  }finally{G.cut--}UI.quest()}
