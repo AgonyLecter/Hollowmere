@@ -338,10 +338,16 @@ function genPropsHD(){
  // incudine
  IMG.anvil=SP(18,14,P=>{const a=rp('#4a4a54');P.rect(12,16,12,8,a,{spec:.5});P.rect(8,24,20,4,a);P.body(7,16,()=>18,Y=>Y<9?14:11,a,{nyF:Y=>Y<9?-.8:.1,spec:.9,sp:22});P.ellipse(4,10,4,2.6,a,{spec:.8})});
  // banco del mercato
- IMG.stall=SP(50,32,P=>{const st=rp('#e8c23a'),wh=rp('#f4ecd8');P.capsule(6,8,6,62,1.8,woodD);P.capsule(94,8,94,62,1.8,woodD);P.rect(4,30,92,30,wood,{mod:(X,Y,v)=>((Y-30)%8===0)?v-.3:woodMod(X,Y,v)});P.rect(2,27,96,4,woodD,{n:[0,-.8,.6]});
+ // il banco di Agatha: la merce cambia con la stagione (0 autunno, 1 inverno, 2 primavera, 3 estate)
+ const stallS=season=>SP(50,32,P=>{const st=rp('#e8c23a'),wh=rp('#f4ecd8');P.capsule(6,8,6,62,1.8,woodD);P.capsule(94,8,94,62,1.8,woodD);P.rect(4,30,92,30,wood,{mod:(X,Y,v)=>((Y-30)%8===0)?v-.3:woodMod(X,Y,v)});P.rect(2,27,96,4,woodD,{n:[0,-.8,.6]});
   P.shape(2,2,98,24,(X,Y)=>{const k=Math.floor((X-2)/8),sc=Y>18+((X-2)%8<4?((X-2)%8):(8-(X-2)%8))*.6;if(sc)return null;return [0,-.3+(Y-2)/40,1]},st,{mod:(X,Y,v)=>Math.floor((X-2)/8)%2?v+.5:v});
-  pump(P,2,12,.85);pump(P,22,14,.7);P.ellipse(56,26,5,4,rp('#e9e1f0'),{spec:.3});P.ellipse(64,27,5,4,rp('#e9e1f0'),{spec:.3});P.ellipse(60,24,5,3,rp('#8a5aa8'),{edge:false,clip:(X,Y)=>Y<24});
-  P.ellipse(80,26,6,5,rp('#a07a4a'),{spec:.2});P.ellipse(88,27,5,4,rp('#b08a5a'),{spec:.2});P.body(32,46,()=>45,()=>5,rp('#c9b080'),{nyF:()=>.1})});
+  const E=(x,y,rx,ry,c,o)=>P.ellipse(x,y,rx,ry,rp(c),Object.assign({spec:.35},o||{}));
+  if(season===0){pump(P,2,12,.85);pump(P,22,14,.7);E(56,26,5,4,'#e9e1f0');E(64,27,5,4,'#e9e1f0');P.ellipse(60,24,5,3,rp('#8a5aa8'),{edge:false,clip:(X,Y)=>Y<24});E(80,26,6,5,'#a07a4a',{spec:.2});E(88,27,5,4,'#b08a5a',{spec:.2})}
+  else if(season===1){for(const [x,r] of [[12,8],[28,7]]){E(x,24,r,6,'#2f5a4a',{mod:(X,Y,v)=>((X*3+Y*5)%7===0)?v-.22:v});E(x,22,r*.6,3,'#3e7060',{edge:false})}for(let i=0;i<4;i++){P.capsule(52+i*4,28,52+i*4,16,1.6,rp('#f2f0e0'));P.capsule(52+i*4,17,50+i*4,10,1,rp('#5a8a4a'))}for(const x of [78,88]){P.rect(x-4,18,8,10,rp('#c8202a'),{spec:.6});P.rect(x-4,16,8,3,rp('#e8dcc0'))}}
+  else if(season===2){for(let i=0;i<9;i++)E(6+(i%5)*7,22+Math.floor(i/5)*5,3,3.4,'#d8302a',{spec:.7});for(const x of [56,66])E(x,24,6,5,'#8ac83a');for(let i=0;i<4;i++){P.capsule(78+i*4,28,80+i*4,18,1.6,rp('#e8781a'),{r2:.8});P.capsule(80+i*4,18,80+i*4,13,.8,rp('#5a9a2a'))}}
+  else{for(let i=0;i<6;i++)E(8+(i%3)*9,24-Math.floor(i/3)*5,4,4,'#e0402a',{spec:.7});E(60,24,11,7,'#3a7a2a',{mod:(X,Y,v)=>((X+2)%6<2)?v-.25:v});for(let i=0;i<3;i++)P.capsule(78+i*6,28,80+i*6,14,2.4,rp('#f0c83a'),{r2:1.6,spec:.4})}
+  P.body(32,46,()=>45,()=>5,rp('#c9b080'),{nyF:()=>.1})});
+ IMG.stallS=[0,1,2,3].map(stallS);IMG.stall=IMG.stallS[0];
  // botte
  IMG.barrel=SP(14,16,P=>{P.body(5,30,()=>14,Y=>9+Math.sin((Y-5)/25*Math.PI)*1.5,wood,{nyF:()=>.05,spec:.2,mod:(X,Y,v)=>((X+1)%4===0)?v-.2:v});P.ellipse(14,5,9,2.6,rp('#6a4428'));
   for(const y of [10,24]){for(let X=4;X<25;X++)if(P.has(X,y)){P.set(X,y,C(X<10?'#7a7a84':'#3a3a40'));P.set(X,y+1,C('#2a2a30'))}}P.ellipse(14,5,4,1.2,gold,{edge:false})});
