@@ -49,7 +49,7 @@ function genAnimalArt(){const wood=rp('#8a5a30'),dk=rp('#5a3a1e'),roof=rp('#7a2a
 
 // ---------- edifici grandi: posizionamento e impronta ----------
 function bldFoot(id,ax,ay){const [w,h]=ITEMS[id].size,x0=ax-Math.floor(w/2),T=[];for(let y=ay-h+1;y<=ay;y++)for(let x=x0;x<x0+w;x++)T.push([x,y]);return {x0,T,w,h}}
-function bigFree(id,ax,ay){const st=G.st,m=G.map,{T}=bldFoot(id,ax,ay);return T.every(([x,y])=>{const g=m.get(x,y);return x>=4&&x<=59&&y>=5&&y<=41&&!m.objAt(x,y)&&!m.solid(x,y)&&(g===1||g===12)&&!st.farm[fkey(x,y)]})}
+function bigFree(id,ax,ay){const st=G.st,m=G.map,{T}=bldFoot(id,ax,ay);return T.every(([x,y])=>{const g=m.get(x,y);return x>=4&&x<=59&&y>=5&&y<=41&&!!ownedAt(x,y)&&!m.objAt(x,y)&&!m.solid(x,y)&&(g===1||g===12)&&!st.farm[fkey(x,y)]})}
 function addBigBuilt(m,k,b){const [ax,ay]=k.split(',').map(Number),{x0,T,w}=bldFoot(b.id,ax,ay);return m.add(OB('built',x0,ay,AIMG[b.id],{wt:w,act:'built',bk:k,bid:b.id,solid:T,hits:T}))}
 function animalsOf(k){return (G.st.free.animals||[]).filter(a=>a.home===k)}
 
