@@ -28,10 +28,11 @@ function shovelAct(fx,fy){const st=G.st,m=G.map,k=fkey(fx,fy),f=st.farm[k],W2=st
  if(f){if(f.c&&!f.c.dead&&!cropGone(f)){UI.toast('C\'è una pianta che cresce. Prima raccoglila, o toglila se è appassita.');return true}if(!useEnergy(1))return true;delete st.farm[k];AU.play('hoe');burst('dust',fx*16+8,fy*16+10,8,'#5a8a2a');UI.toast('La terra torna prato.');return true}
  if(m.objAt(fx,fy)){UI.toast('C\'è qualcosa in mezzo.');return true}
  const g=m.get(fx,fy);W2.tiles=W2.tiles||{};
+ if(W2.tiles[k]===11){if(!useEnergy(1))return true;delete W2.tiles[k];setGround(m,fx,fy,1);addItem('lastre',1);AU.play('mine');return true}
  if(W2.tiles[k]===2){if(!useEnergy(1))return true;delete W2.tiles[k];setGround(m,fx,fy,1);AU.play('hoe');burst('dust',fx*16+8,fy*16+10,8,'#5a8a2a');return true}
  if(g===1||g===12){if(!useEnergy(1))return true;W2.tiles[k]=2;setGround(m,fx,fy,2);AU.play('hoe');burst('dust',fx*16+8,fy*16+10,8,'#8a6a3a');st.flags.paths=(st.flags.paths||0)+1;tip('tutPath','Vialetto! Con la pala sullo stesso punto lo togli.');return true}
  UI.toast('Qui la pala non serve.');return true}
-function shovelAimOk(tx,ty){const st=G.st,m=G.map,f=st.farm[fkey(tx,ty)];if(!ownedAt(tx,ty))return false;if(f)return !f.c||f.c.dead||cropGone(f);if(m.objAt(tx,ty))return false;const g=m.get(tx,ty);return g===1||g===12||(st.free.tiles||{})[fkey(tx,ty)]===2}
+function shovelAimOk(tx,ty){const st=G.st,m=G.map,f=st.farm[fkey(tx,ty)];if(!ownedAt(tx,ty))return false;if(f)return !f.c||f.c.dead||cropGone(f);if(m.objAt(tx,ty))return false;const g=m.get(tx,ty),tl=(st.free.tiles||{})[fkey(tx,ty)];return g===1||g===12||tl===2||tl===11}
 function applyTiles(m,st){if(m.id!=='main'||!isFree(st))return;for(const k in (st.free.tiles||{})){const [x,y]=k.split(',').map(Number);m.set(x,y,st.free.tiles[k])}}
 
 // ---------- la casa: ampliamenti e arredo ----------
@@ -77,7 +78,7 @@ function houseAct(fx,fy){const st=G.st,m=G.map;if(!isFree(st)||m.id!=='house'||G
  return false}
 function addFurniture(m,st){if(!isFree(st))return;for(const k in (st.free.inside||{})){const [x,y]=k.split(',').map(Number),f=st.free.inside[k],flat=ITEMS[f.id]&&ITEMS[f.id].flat;
  if(flat){m.add({kind:'furn',tx:x,ty:y,img:FREEIMG[f.id],dx:x*16-4,dy:y*16+2,sy:-1,solid:[],hits:[[x,y]],fid:f.id,fk:k,deco:0});continue}
- m.add(OB('furn',x,y,FREEIMG[f.id],{fid:f.id,fk:k,act:'furn',lift:ITEMS[f.id].wall?-6:0,solid:ITEMS[f.id].wall?[]:[[x,y]],hits:[[x,y]]}));if(f.id==='lampada')m.lights.push({x:x*16+8,y:y*16-10,r:60,fire:1})}}
+ m.add(OB('furn',x,y,FREEIMG[f.id],{fid:f.id,fk:k,act:'furn',lift:ITEMS[f.id].wall?-6:0,solid:ITEMS[f.id].wall?[]:[[x,y]],hits:[[x,y]]}));if(f.id==='lampada'||f.id==='lanternacarta')m.lights.push({x:x*16+8,y:y*16-10,r:60,fire:1})}}
 ACT.furn=()=>{};PROMPT.furn='Usa';
 // Brom amplia la casa
 async function houseUpMenu(){const st=G.st,lv=houseLv(),nx=HOUSE_UP[lv+1],o=st.free.houseJob;

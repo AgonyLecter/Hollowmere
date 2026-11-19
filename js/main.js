@@ -91,7 +91,7 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
    else if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
    else if(N.grow)UI.toast(`Stanotte ${pl(N.grow,'una pianta è cresciuta','piante sono cresciute')}.`)}
   if(G.seasonNews){const N=G.seasonNews;G.seasonNews=null;UI.toast(['È arrivato l\'autunno.','È arrivato l\'inverno. Cresce solo il porro.','È arrivata la primavera!','È arrivata l\'estate!'][N.s]);if(N.n)UI.toast(`${N.n===1?'Una coltura non ha retto':N.n+' colture non hanno retto'} al cambio di stagione.`,'bad')}
-  if(isFree(st)){shadowNews();bdayMorning(st)}
+  if(isFree(st)){shadowNews();bdayMorning(st);festMorning(st)}
   if(st.weather==='neve')UI.toast('Nevica. La Valle è bianca e silenziosa.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
   if(isSunday(st))UI.toast('È domenica: alle 9:00 c\'è la messa, in cappella.');
@@ -104,7 +104,7 @@ async function endDay(passed,faded){if(G.visit)await endVisit(true);const st=G.s
   G.horse.on=false;G.chase=false;G.cutMusic=null;G.scare=0;
   const news={grow:0,ripe:0,wilt:0,dead:0};
   for(const k in st.farm){const f=st.farm[k],c=f.c;
-   if(c&&!c.dead&&cropStage(c)<3){if(f.w){c.a++;c.dry=0;news.grow++;if(cropStage(c)===3)news.ripe++}else if(c.a>0){c.dry=(c.dry||0)+1;c.bad=1;if(c.dry===2)news.wilt++}}
+   if(c&&!c.dead&&cropStage(c)<3){if(f.w){c.a++;if(isFree(st)&&skLv('agri',st)>=10&&Math.random()<.2&&c.a<CROPS[c.t].days)c.a++;c.dry=0;news.grow++;if(cropStage(c)===3)news.ripe++}else if(c.a>0){c.dry=(c.dry||0)+1;c.bad=1;if(c.dry===2)news.wilt++}}
    f.w=false;if(!c&&!f.f&&Math.random()<.08)delete st.farm[k]}
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
@@ -217,7 +217,7 @@ function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  requestAnimationFrame(loop)}
 async function boot(){
  try{await Promise.race([document.fonts.ready,sleep(2500)])}catch(e){}
- genAll();genFreeArt();genAnimalArt();genMissionArt();genBuildArt();genGardenArt();genDishArt();initEntities();UI.init();NET.init();
+ genAll();genFreeArt();genAnimalArt();genMissionArt();genBuildArt();genGardenArt();genDishArt();genFestArt();genFarm2Art();initEntities();UI.init();NET.init();
  toTitle();$('#loading').classList.add('hide');requestAnimationFrame(loop);
 }
 boot();
