@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Fusco — regia di Hollowmere</title>
+<link href="https://fonts.googleapis.com/css2?family=Jacquard+12&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120b10;--panel:#ead8ae;--ink:#2a1a10;--wood:#3c2414;--gold:#d9a646;--gold2:#f6d98a;--red:#a8301a;--muted:#7a5a3a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(#1e1218,#0a0608 80%) fixed;color:var(--ink);font-family:'Pixelify Sans',monospace;font-size:16px;line-height:1.4}
+header{padding:18px 16px 8px;color:var(--gold2);text-align:center}
+h1{font-family:'Jacquard 12',serif;font-weight:400;font-size:48px;margin:0;line-height:1}
+header p{margin:4px 0 0;color:#c9b38a;font-size:14px}
+#net{display:inline-block;margin-top:6px;padding:2px 10px;border:1px solid #6a4a2a;color:#d9c7a0;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+section{background:var(--panel);padding:14px 16px;box-shadow:0 0 0 2px #140a06,0 0 0 4px #a8743e,0 0 0 6px #140a06;min-width:0}
+section.wide{grid-column:1/-1}
+h2{font-family:'Jacquard 12',serif;font-weight:400;font-size:30px;margin:0 0 8px;color:#4a1e08;line-height:1}
+h3{margin:12px 0 4px;font-size:14px;color:#7a3a10;text-transform:uppercase;letter-spacing:.06em}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 2px}
+input,select,textarea{width:100%;font:inherit;font-size:15px;padding:6px 8px;border:0;background:#fbf2dc;color:var(--ink);box-shadow:inset 0 0 0 1px #7a4a20}
+textarea{min-height:64px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+button{font:inherit;font-size:14px;cursor:pointer;background:linear-gradient(#5e3c24,#3c2414);color:var(--gold2);border:0;padding:6px 12px;box-shadow:0 0 0 1px #140a06}
+button:hover{background:linear-gradient(#7a5030,#4e3018)}
+button.danger{background:linear-gradient(#8a2a1a,#5a1a10)}
+button.ghost{background:none;color:var(--wood);box-shadow:inset 0 0 0 1px #7a4a20}
+.list{max-height:420px;overflow:auto}
+.item{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed rgba(122,74,32,.45)}
+.item .grow{flex:1;min-width:0}
+.tag{display:inline-block;font-size:12px;padding:0 6px;margin-right:4px;background:#d8c49a;color:#5a3a1a}
+.tag.on{background:#5a8a3a;color:#f2ffe0}.tag.off{background:#a89a7a;color:#efe6d0}
+.small{font-size:13px;color:var(--muted)}
+.stat{display:flex;gap:16px;flex-wrap:wrap}.stat div{flex:1;min-width:90px;background:#f3e6c6;padding:8px;box-shadow:inset 0 0 0 1px rgba(122,74,32,.4)}
+.stat b{display:block;font-size:26px;color:#4a1e08}
+.warn{background:#5a1a10;color:#ffd8c8;padding:8px 12px;margin:10px auto 0;max-width:1100px;font-size:14px}
+.hide{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:4px 6px;border-bottom:1px dashed rgba(122,74,32,.4);overflow-wrap:anywhere}
+</style></head><body>
+<header><h1>Fusco</h1><p>La regia di Hollowmere: missioni, eventi, giocatori.</p><span id="net">Connessione…</span></header>
+<div class="warn" id="who">Per modificare missioni ed eventi accedi con il tuo account Google. <button id="login">Accedi con Google</button> <button id="logout" class="ghost hide">Esci</button></div>
+<main>
+ <section>
+  <h2>La Valle oggi</h2>
+  <div class="stat"><div><b id="sTot">–</b>giocatori</div><div><b id="sFree">–</b>hanno finito</div><div><b id="sVil">–</b>villaggi aperti</div></div>
+  <h3>Evento globale</h3>
+  <label for="evO">Le Ombre (minaccia notturna)</label>
+  <select id="evO"><option value="0">Normale</option><option value="1">Inquiete (più Ombre)</option><option value="2">Notte rossa (molte Ombre)</option><option value="3">Assedio</option></select>
+  <label for="evA">Avviso in bacheca (lo leggono tutti al mattino)</label>
+  <input id="evA" maxlength="140" placeholder="Es. Stanotte non lasciate i campi al buio.">
+  <p><button id="evSave">Salva evento</button></p>
+ </section>
+ <section>
+  <h2 id="fTitle">Nuova missione</h2>
+  <p class="small">Le missioni compaiono nella bacheca della piazza ai giocatori che hanno finito la storia (gioco libero). Si completano parlando con il personaggio scelto.</p>
+  <div class="row">
+   <div><label for="mTipo">Tipo</label><select id="mTipo"><option value="recupero">Recupero: qualcosa è sparito</option><option value="consegna">Consegna: porta degli oggetti</option><option value="ombre">Ombre: scacciale di notte</option></select></div>
+   <div><label for="mNpc">Chi la chiede</label><select id="mNpc"></select></div>
+  </div>
+  <label for="mTit">Titolo</label><input id="mTit" maxlength="60" placeholder="Il calice della cappella">
+  <label for="mTxt">Cosa dice il personaggio</label><textarea id="mTxt" maxlength="300" placeholder="Stamattina il calice non c'era più…"></textarea>
+  <div id="fRec" class="row">
+   <div><label for="mOgg">Oggetto sparito</label><input id="mOgg" maxlength="40" placeholder="Il calice d'argento"></div>
+   <div><label for="mLuo">Dove si trova</label><select id="mLuo"><option value="campi">Nei prati a sud</option><option value="cimitero">Al cimitero</option><option value="fiume">Lungo il fiume</option><option value="piazza">In piazza</option><option value="bosco">Nel bosco, oltre il Varco</option></select></div>
+  </div>
+  <div id="fCon" class="row hide">
+   <div><label for="mItem">Cosa portare</label><select id="mItem"></select></div>
+   <div><label for="mN">Quanti</label><input id="mN" type="number" min="1" max="99" value="5"></div>
+  </div>
+  <div id="fOmb" class="row hide"><div><label for="mNo">Quante Ombre scacciare</label><input id="mNo" type="number" min="1" max="30" value="3"></div></div>
+  <div class="row">
+   <div><label for="mPre">Ricompensa (scudi)</label><input id="mPre" type="number" min="0" max="99999" value="300"></div>
+   <div><label for="mDest">A chi</label><input id="mDest" placeholder="finiti" value="finiti"></div>
+  </div>
+  <p class="small">«A chi»: <b>finiti</b> = tutti quelli nel gioco libero, oppure uno o più codici separati da virgola (HM-ABC123, HM-…).</p>
+  <label for="mGr">Cosa dice alla fine (facoltativo)</label><input id="mGr" maxlength="160" placeholder="Grazie. La Valle si ricorda di chi aiuta.">
+  <p class="row" style="margin-top:12px"><button id="mSave">Pubblica missione</button><button id="mReset" class="ghost">Svuota</button></p>
+  <h3>Idee pronte</h3>
+  <p class="row"><button class="ghost" data-t="calice">Il calice sparito</button><button class="ghost" data-t="galline">Le galline di Agatha</button><button class="ghost" data-t="ombre">Notte delle Ombre</button><button class="ghost" data-t="festa">Zucche per la festa</button></p>
+ </section>
+ <section class="wide">
+  <h2>Missioni</h2>
+  <div id="mList" class="list"><p class="small">Caricamento…</p></div>
+ </section>
+ <section class="wide">
+  <h2>Giocatori</h2>
+  <div class="list"><table><thead><tr><th>Nome</th><th>Codice</th><th>Giorno</th><th>Stato</th><th>Ultimo accesso</th></tr></thead><tbody id="pList"><tr><td colspan="5" class="small">Caricamento…</td></tr></tbody></table></div>
+ </section>
+</main>
+<script type="module">
+const CFG={apiKey:"AIzaSyBiKEfo1c7c12kAYxlRuZNjh-Spz4W1Tbw",authDomain:"wandertutto.firebaseapp.com",databaseURL:"https://wandertutto-default-rtdb.europe-west1.firebasedatabase.app",projectId:"wandertutto",storageBucket:"wandertutto.firebasestorage.app",messagingSenderId:"933606082300",appId:"1:933606082300:web:3ef3d5e1a233f86f7f3979"};
+const B='https://www.gstatic.com/firebasejs/10.12.5/';
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NPCS={agatha:'Agatha Crane',ezekiel:'Anziano Ezekiel',lucius:'Fratello Lucius',clara:'Clara',brom:'Brom',tobia:'Tobia',ottavio:'Ottavio il postino',irene:'Irene Vasi'};
+const ITEMS={rapa:'Rapa',patata:'Patata',zucca:'Zucca',fagioli:'Fagioli',cavolo:'Cavolo nero',fragola:'Fragole',pomodoro:'Pomodori',mais:'Mais',porro:'Porro',uovo:'Uovo',latte:'Latte',legna:'Legna',pietra:'Pietra',fibra:'Fibra',fieno:'Fieno',pane:'Pane di Clara',zuppa:'Zuppa di rape',arrosto:'Patate arrosto',torta:'Torta di zucca',frittata:'Frittata',polenta:'Polenta',marmellata:'Marmellata di fragole',crostata:'Crostata'};
+$('#mNpc').innerHTML=Object.entries(NPCS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+$('#mItem').innerHTML=Object.entries(ITEMS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+const showType=()=>{const t=$('#mTipo').value;$('#fRec').classList.toggle('hide',t!=='recupero');$('#fCon').classList.toggle('hide',t!=='consegna');$('#fOmb').classList.toggle('hide',t!=='ombre')};$('#mTipo').onchange=showType;
+const TPL={calice:{tipo:'recupero',npc:'lucius',titolo:'Il calice della cappella',testo:'Stamattina il calice non era sull\'altare. Nessuno l\'ha preso, dicono. Ma qualcuno l\'ha portato via, e io ho sentito dei passi verso il cimitero.',oggetto:'Il calice d\'argento',luogo:'cimitero',premio:350},
+ galline:{tipo:'consegna',npc:'agatha',titolo:'Uova per Agatha',testo:'Tesoro, le mie galline non fanno più uova da quando la notte è tornata strana. Me ne porteresti un po\'?',item:'uovo',n:6,premio:280},
+ ombre:{tipo:'ombre',npc:'ezekiel',titolo:'La notte delle Ombre',testo:'Escono di nuovo dal bosco, {n}. Più di prima. Io sono vecchio. Scacciale tu, almeno per stanotte.',n:5,premio:500},
+ festa:{tipo:'consegna',npc:'tobia',titolo:'Zucche per la festa nuova',testo:'Hihi! Facciamo una festa senza contare nessuno! Servono zucche. Tante zucche!',item:'zucca',n:5,premio:400}};
+let EDIT=null;
+const fill=m=>{$('#mTipo').value=m.tipo||'recupero';$('#mNpc').value=m.npc||'agatha';$('#mTit').value=m.titolo||'';$('#mTxt').value=m.testo||'';$('#mOgg').value=m.oggetto||'';$('#mLuo').value=m.luogo||'campi';$('#mItem').value=m.item||'rapa';$('#mN').value=m.tipo==='consegna'?(m.n||5):5;$('#mNo').value=m.tipo==='ombre'?(m.n||3):3;$('#mPre').value=m.premio??300;$('#mDest').value=m.dest||'finiti';$('#mGr').value=m.grazie||'';showType()};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{EDIT=null;$('#fTitle').textContent='Nuova missione';fill(TPL[b.dataset.t])});
+$('#mReset').onclick=()=>{EDIT=null;$('#fTitle').textContent='Nuova missione';fill({})};
+try{
+ const [A,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js')]);
+ const app=A.initializeApp(CFG,'fusco'),db=D.getDatabase(app),R=p=>D.ref(db,'hollowmere/'+p);
+ const AU=await import(B+'firebase-auth.js'),auth=AU.getAuth(app);
+ $('#login').onclick=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()).catch(e=>alert('Accesso non riuscito: '+e.message));
+ $('#logout').onclick=()=>AU.signOut(auth);
+ AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
+  let adm=false;try{adm=(await D.get(R('admin/'+u.uid))).val()===true}catch(e){}
+  $('#who').firstChild.textContent=adm?`Regia aperta: ${u.email||u.uid}. `:`Accesso fatto (${u.email||''}), ma questo account non è admin. UID da aggiungere in hollowmere/admin nella console: ${u.uid} `});
+ const fail=e=>alert('Non autorizzato: serve l\'accesso con un account admin.\n'+(e&&e.message||e));
+ D.onValue(D.ref(db,'.info/connected'),s=>{$('#net').textContent=s.val()?'● Collegato alla Valle':'○ Non collegato'});
+ // evento
+ D.onValue(R('eventi'),s=>{const v=s.val()||{};$('#evO').value=String(v.ombre||0);if(document.activeElement!==$('#evA'))$('#evA').value=v.annuncio||''});
+ $('#evSave').onclick=async()=>{try{await D.set(R('eventi'),{ombre:+$('#evO').value,annuncio:$('#evA').value.trim().slice(0,140),ts:Date.now()});$('#evSave').textContent='Salvato ✓';setTimeout(()=>$('#evSave').textContent='Salva evento',1500)}catch(e){fail(e)}};
+ // missioni
+ $('#mSave').onclick=async()=>{const t=$('#mTipo').value,m={tipo:t,npc:$('#mNpc').value,titolo:$('#mTit').value.trim().slice(0,60),testo:$('#mTxt').value.trim().slice(0,300),premio:Math.max(0,+$('#mPre').value||0),dest:$('#mDest').value.trim()||'finiti',grazie:$('#mGr').value.trim().slice(0,160),attiva:true,ts:Date.now()};
+  if(!m.titolo){alert('Serve un titolo.');return}
+  if(t==='recupero'){m.oggetto=$('#mOgg').value.trim().slice(0,40)||'Un oggetto smarrito';m.luogo=$('#mLuo').value}
+  if(t==='consegna'){m.item=$('#mItem').value;m.n=Math.max(1,+$('#mN').value||1)}
+  if(t==='ombre')m.n=Math.max(1,+$('#mNo').value||3);
+  try{if(EDIT)await D.set(R('missioni/'+EDIT),m);else await D.push(R('missioni'),m)}catch(e){fail(e);return}
+  EDIT=null;$('#fTitle').textContent='Nuova missione';fill({});$('#mSave').textContent='Pubblicata ✓';setTimeout(()=>$('#mSave').textContent='Pubblica missione',1500)};
+ let MISS={};
+ D.onValue(R('missioni'),s=>{MISS=s.val()||{};const L=Object.entries(MISS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  $('#mList').innerHTML=L.length?L.map(([id,m])=>`<div class="item"><div class="grow"><span class="tag ${m.attiva?'on':'off'}">${m.attiva?'attiva':'spenta'}</span><span class="tag">${esc(m.tipo)}</span><b>${esc(m.titolo)}</b> <span class="small">— ${esc(NPCS[m.npc]||m.npc)} · ${m.premio||0} scudi · a: ${esc(m.dest||'finiti')}</span><br><span class="small">${esc(m.testo)}</span></div>
+   <button class="ghost" data-e="${id}">Modifica</button><button data-a="${id}">${m.attiva?'Spegni':'Accendi'}</button><button class="danger" data-d="${id}">Elimina</button></div>`).join(''):'<p class="small">Nessuna missione. Creane una qui sopra.</p>';
+  $('#mList').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>D.update(R('missioni/'+b.dataset.a),{attiva:!MISS[b.dataset.a].attiva}).catch(fail));
+  $('#mList').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare la missione «'+MISS[b.dataset.d].titolo+'»?'))D.remove(R('missioni/'+b.dataset.d)).catch(fail)});
+  $('#mList').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{EDIT=b.dataset.e;$('#fTitle').textContent='Modifica missione';fill(MISS[EDIT]);scrollTo({top:0,behavior:'smooth'})})});
+ // giocatori (solo i campi leggeri: il salvataggio completo non serve qui)
+ const P=await D.get(D.query(R('players'),D.limitToLast(300)));const pv=P.val()||{};const rows=Object.entries(pv).map(([pid,o])=>({pid,name:o.name,day:o.day,ch:o.ch,ts:o.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+ $('#sTot').textContent=rows.length;$('#sFree').textContent=rows.filter(r=>r.ch>=5).length;
+ $('#pList').innerHTML=rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.pid)}</td><td>${r.day??'–'}</td><td>${r.ch>=5?'<span class="tag on">gioco libero</span>':'capitolo '+(r.ch||0)}</td><td class="small">${r.ts?new Date(r.ts).toLocaleString('it-IT'):'–'}</td></tr>`).join('')||'<tr><td colspan="5" class="small">Nessun giocatore.</td></tr>';
+ D.onValue(R('villaggi'),s=>{$('#sVil').textContent=Object.keys(s.val()||{}).length});
+}catch(e){$('#net').textContent='○ Impossibile collegarsi: '+(e&&e.message||e)}
+</script>
+</body></html>

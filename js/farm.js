@@ -58,7 +58,7 @@ function farmAct(tx,ty){
   if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(st.up&&st.up.hoe?1:2))return;
   st.farm[k]={w:false,c:null};eggDig(tx,ty);AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
  if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
- if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0,dry:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
+ if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(!cropInSeason(def.crop,seasonOf())){UI.toast(`Non è stagione: ${CROPS[def.crop].n.toLowerCase()} cresce in ${CROPS[def.crop].s.map(i=>SEASONS[i].toLowerCase()).join(' e ')}.`);return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0,dry:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
  if(f&&f.c){const c=f.c,n=CROPS[c.t].n;if(c.dead){UI.toast(`${n}: è seccata. Ripulisci la zolla con la zappa.`,'bad');return}const l=cropLeft(c);
   UI.toast(`${n}: ${c.a<=0?'appena seminata, ':''}${l===1?'matura domani':'matura tra '+l+' notti'} bagnate.${f.w?' Annaffiata oggi.':cropWilt(f)?' È appassita: annaffiala per farla riprendere, o toglila con la zappa e ripianta.':' Va annaffiata.'}${f.f?' Terra concimata.':''}`,cropWilt(f)?'bad':'');return}
 }
@@ -68,8 +68,10 @@ function doAction(){const [fx,fy]=frontTile();const p=G.player;
   if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');eggCat();floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
   if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}
  for(const n of G.npcs){if(n.hidden||n.map!==G.map.id)continue;const [nx,ny]=ptile(n);const near=Math.hypot(n.x-(p.x+DIRV[p.dir][0]*14),n.y-(p.y+DIRV[p.dir][1]*14))<14;if((nx===fx&&ny===fy)||near){talkTo(n);return}}
+ if(freeAct(fx,fy))return;
  if(eggAt(fx,fy))return;
  if(G.map.id==='main'&&hogAt(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return;
+ if(G.visit){visitAct(fx,fy);return}
  const o=G.map.objAt(fx,fy);if(o&&o.act){runAct(o);return}
  if(useKey())return;
  if(eatSel())return;
@@ -94,8 +96,9 @@ const ACT={
  hay:()=>UI.toast('Balle di fieno. Ce n\'è più di quanto serva a un villaggio senza cavalli.'),
  barrel:()=>UI.toast('Botti di sidro. Chiuse con la cera gialla.'),
  pumpkin:()=>UI.toast(G.st.chapter>=2?'La zucca ti sorride. Qualcuno le ha dato una bocca.':'Una zucca gigante! Hollowmere ne va fiera.'),
- varco:async()=>{if(await varcoCh3())return;await narr('Il Varco. Un sentiero che entra nel bosco e non ne esce.');await narr(G.st.chapter>=2?'Senti qualcosa respirare tra gli alberi. Le gambe non ti obbediscono.':'Le tue gambe si rifiutano di andare avanti. Regola numero due.')},
- bridge:async()=>{const F=G.st.flags;if(!F.bridgeGone)return narr('Il cocchiere è sparito. Non hai motivo di tornare indietro. Non ancora.');if(!F.sawNoBridge){F.sawNoBridge=1;addQuiete(-10);await narr('Il ponte… non c\'è più.');await narr('Solo acqua nera e due pali spezzati. Come se non ci fosse mai stato.')}else narr('Acqua nera. Nessun ponte.')},
+ varco:async()=>{if(await varcoCh3())return;
+  if(isFree(G.st)){const m=missionsFor(G.st).find(m=>m.tipo==='recupero'&&m.luogo==='bosco'&&mstate(G.st,m.id).acc&&!mstate(G.st,m.id).found);if(m){const c=await ask(null,`Il Varco è aperto. «${m.oggetto}» è da qualche parte nel bosco.`,['Entra nel bosco','Non ancora']);if(c===0)await goMap('wood',15,41,3);return}return narr('Il Varco. Il bosco è più quieto, adesso. Senza una ragione, non ci entri.')}await narr('Il Varco. Un sentiero che entra nel bosco e non ne esce.');await narr(G.st.chapter>=2?'Senti qualcosa respirare tra gli alberi. Le gambe non ti obbediscono.':'Le tue gambe si rifiutano di andare avanti. Regola numero due.')},
+ bridge:async()=>{const F=G.st.flags;if(isFree(G.st)){travelMenu();return}if(!F.bridgeGone)return narr('Il cocchiere è sparito. Non hai motivo di tornare indietro. Non ancora.');if(!F.sawNoBridge){F.sawNoBridge=1;addQuiete(-10);await narr('Il ponte… non c\'è più.');await narr('Solo acqua nera e due pali spezzati. Come se non ci fosse mai stato.')}else narr('Acqua nera. Nessun ponte.')},
  post:async(o)=>{const F=G.st.flags;if(F.posts[o.pi]){UI.toast('Un palo giallo. Protetto.');return}
   if(!F.gotPaint){UI.toast('Un palo grigio, scrostato. Stona col resto del recinto.');return}
   AU.play('paint');F.posts[o.pi]=1;burst('spark',o.tx*16+8,o.tx*0+o.ty*16+6,12,PAL.yel);o.img=o.img===IMG.fenceHg?IMG.fenceH:IMG.fenceV;
@@ -112,7 +115,7 @@ const ACT={
   if(t>20*60+30)return narr('Troppo tardi. Il sole è sparito da un pezzo. Senti che non la vogliono più.');
   removeItem('focaccia',1);F.offered=1;F.offerDay=st.day;o.img=IMG.stumpB;AU.play('ok');addQuiete(3);
   await narr('Appoggi la focaccia sul ceppo.');AU.play('whisper');await narr('Dal bosco, un suono. Come qualcuno che deglutisce.')},
- bin:async()=>{const it=selItem(),st=G.st;if(it&&ITEMS[it.id].t==='crop'){const v=sellPrice(it.id)*it.n;st.shipped.push([it.id,it.n]);UI.toast(`Spedite ${it.n} × ${ITEMS[it.id].n} (+${SC(v)} domattina)`);st.inv[st.sel]=null;UI.hotbar();AU.play('coin');return}
+ bin:async()=>{const it=selItem(),st=G.st;if(isFree(st)&&mailboxTake())return;if(it&&ITEMS[it.id].t==='crop'){const v=sellPrice(it.id)*it.n;st.shipped.push([it.id,it.n]);UI.toast(`Spedite ${it.n} × ${ITEMS[it.id].n} (+${SC(v)} domattina)`);st.inv[st.sel]=null;UI.hotbar();AU.play('coin');return}
   const tot=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);narr(`La cassetta delle spedizioni. Tieni in mano un raccolto per metterlo dentro.\nDomattina verrà pagato. Nessuno ha mai visto chi lo ritira.${st.demand?`\nOggi si paga di più: ${PL[st.demand]} (+40%).`:''}${tot?`\n(Oggi: ${SC(tot)})`:''}`)},
  scare:async()=>{const st=G.st;if(st.choreOk&&st.chore==='spaventa'&&!st.choreDone){await narr('Raccogli il cappello di paglia da terra e lo rimetti sulla testa dello spaventapasseri.');await narr('…Il cappello era già sulla sua testa. Eppure ne stai tenendo uno in mano.');AU.play('whisper');choreDone();return}
   if(st.chapter>=2){addQuiete(-2);return narr('Lo spaventapasseri adesso guarda verso casa tua. Lo hai sempre visto guardare la strada.')}narr('Uno spaventapasseri col sorriso cucito. Il nonno lo chiamava "Signor Paglia".')},

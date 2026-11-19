@@ -1,0 +1,111 @@
+{
+  "rules": {
+    "hollowmere": {
+      ".read": false,
+      ".write": false,
+
+      "admin": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+
+      "segreti": {
+        "$pid": {
+          ".read": false,
+          ".write": "auth != null && !data.exists() && $pid.matches(/^HM-[A-Z2-9]{6}$/)",
+          ".validate": "newData.isString() && newData.val().length === 9"
+        }
+      },
+      "proprietari": {
+        "$pid": {
+          ".read": false,
+          ".write": "auth != null && newData.child('uid').val() === auth.uid && (!data.exists() || data.child('uid').val() === auth.uid || newData.child('k').val() === root.child('hollowmere/segreti/' + $pid).val())",
+          ".validate": "newData.hasChildren(['uid','k'])"
+        }
+      },
+
+      "players": {
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['name','ts','save']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('save').isString() && newData.child('save').val().length < 300000"
+        }
+      },
+      "villaggi": {
+        ".read": true,
+        ".indexOn": ["ts"],
+        "$pid": {
+          ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+          ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      },
+      "presenza": {
+        "$village": {
+          ".read": true,
+          "$pid": {
+            ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+            ".validate": "!newData.exists() || (newData.child('x').isNumber() && newData.child('y').isNumber() && newData.child('name').val().length <= 20)"
+          }
+        }
+      },
+      "chat": {
+        "$village": {
+          ".read": true,
+          "$id": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.child('t').isString() && newData.child('t').val().length <= 60 && newData.child('n').val().length <= 20"
+          }
+        }
+      },
+      "visite": {
+        "$pid": {
+          ".read": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+          "$id": {
+            ".write": "auth != null && ((!data.exists() && newData.exists()) || (!newData.exists() && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid))",
+            ".validate": "!newData.exists() || newData.child('t').val() === 'water' || newData.child('t').val() === 'gift'"
+          }
+        }
+      },
+
+      "registro": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.hasChildren(['name','ts']) && newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      },
+      "lapidi": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.child('t').isString() && newData.child('t').val().length <= 80"
+        }
+      },
+      "eredi": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 20"
+        }
+      },
+      "stats": {
+        ".read": true,
+        "arrivi": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+        }
+      },
+
+      "missioni": {
+        ".read": true,
+        ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
+      },
+      "eventi": {
+        ".read": true,
+        ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
+      }
+    }
+  }
+}

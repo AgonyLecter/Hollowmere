@@ -179,6 +179,10 @@ function guideTarget(){const st=G.st,m=G.map;if(st.day<1)return null;const q=act
  if(m.interior){const d=m.doors[0];if(m.id==='house'&&/cassa/i.test(txt)&&st.flags.gotChestKey)return P(9,3,'Cassa');if(m.id==='barn'&&/fienile|registro|costume/i.test(txt))return P(5,3,'');return d?P(d.tx,d.ty,'Uscita'):null}
  const npc=id=>{const n=NPC(id);if(n&&!n.hidden&&n.map===m.id)return {x:n.x,y:n.y-12,l:NAMES[id]};const d=n&&n.lastIn?bdoor(n.lastIn):homeDoor(id);return P(d[0],d[1],NAMES[id]+' (dentro)')};
  const door=k=>{const d=bdoor(k);return P(d[0],d[1]+1,{barn:'Fienile',chapel:'Cappella',house:'Casa',forge:'Fucina',store:'Emporio'}[k]||'')};
+ if(isFree(st)){const near=k=>{let b=null,bd=1e9;for(const o of m.objs){if(o.kind!==k)continue;const dd=Math.hypot(o.tx*16-G.player.x,o.ty*16-G.player.y);if(dd<bd){bd=dd;b=P(o.tx,o.ty+1,'')}}return b};
+  if(/albero/i.test(txt))return near('tree');if(/roccia/i.test(txt))return near('rock');if(/banco/i.test(txt))return P(14,12,'Banco');if(/Piazza nella fattoria/.test(txt))return P(13,20,'Campi');
+  const mi=missionsFor(st).find(x=>mstate(st,x.id).acc&&!mstate(st,x.id).done);if(mi&&/^Cerca «/.test(txt)){if(mi.luogo==='bosco')return P(30,5,'Varco');const [x,y]=missionSpot(mi);return P(x,y,'')}
+  for(const id of Object.keys(NAMES))if(NPC(id)&&txt.includes(NAMES[id]))return npc(id);return null}
  if(/Presentati/.test(txt)){let best=null,bd=1e9;for(const id of FAV_NPC){if(st.flags.met[id])continue;const n=NPC(id);if(!n||n.hidden)continue;const dd=Math.hypot(n.x-G.player.x,n.y-G.player.y);if(dd<bd){bd=dd;best={x:n.x,y:n.y-12,l:NAMES[id]}}}return best}
  if(/Tobia/.test(txt)){const n=NPC('tobia');if(n&&n.hidden&&n.lastIn==='barn'||(st.chapter>=3&&!st.flags.tobiaScene))return door('barn');return npc('tobia')}
  for(const [re,id] of [[/Clara/,'clara'],[/Brom/,'brom'],[/Agatha/,'agatha'],[/Ezekiel|Anziano/,'ezekiel'],[/Lucius/,'lucius']])if(re.test(txt))return npc(id);
@@ -427,11 +431,11 @@ function showScene(kind,cap){return new Promise(res=>{UI.open(`<canvas id="scn" 
   const c=document.getElementById('scn'),x=c.getContext('2d');x.imageSmoothingEnabled=false;let t=0;SCENES[kind](x,0);const iv=setInterval(()=>{if(!document.getElementById('scn')){clearInterval(iv);return}t+=.05;SCENES[kind](x,t)},50)})}
 // ---------- fine ----------
 async function finishGame(n,name,epi){
- try{const E=new Set(JSON.parse(LS.get('hm_endings')||'[]'));E.add(n);LS.set('hm_endings',JSON.stringify([...E]));const cp=LS.get('hm_prefesta');if(cp)LS.set('hm_save',cp)}catch(e){}
+ try{const E=new Set(JSON.parse(LS.get('hm_endings')||'[]'));E.add(n);LS.set('hm_endings',JSON.stringify([...E]));const base=JSON.parse(JSON.stringify(G.st));base.endingN=n;LS.set('hm_freebase',JSON.stringify(base));const cp=LS.get('hm_prefesta');if(cp)LS.set('hm_save',cp)}catch(e){}
  const E=JSON.parse(LS.get('hm_endings')||'[]');
  await UI.fade(1,700);G.redTint=0;G.festaDark=false;
- await UI.card(`Finale ${n}/3`,name,`${epi}<br><br><span class="small">Finali scoperti: ${E.length}/3.<br>"Continua" ti riporta al giorno della Festa: potrai scegliere un'altra strada.</span>`,n===2,true,2200);
- toTitle()}
+ await UI.card(`Finale ${n}/3`,name,`${epi}<br><br><span class="small">Finali scoperti: ${E.length}/3.<br>Nel menu si è aperta <b>la Valle</b>: il gioco libero, con le stagioni, gli altri giocatori e le missioni. Da «Altri finali» puoi ripartire dal primo bivio.</span>`,n===2,true,2200);
+ G.cut=0;toTitle()}
 
 ACTD.festa='alla Festa';
 function drawEredeHorse(){const p=G.player,img=IMG.horse[Math.floor(p.anim/2)%2],dir=p.dir===1?1:p.dir===2?0:(G._ed||0);G._ed=dir;ctx.drawImage(SHADOW,p.x-12,p.y-3,24,6);

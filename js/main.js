@@ -4,9 +4,26 @@ const SEC_PER_MIN=.42;
 const TITLE={
  async new(){const r=await UI.askName();if(!r)return;const name=r.name;UI.hideTitle();const st=newState(name,r.g);setPlayerLook(r.g);st.pid=newPid();G.st=st;NET.register(name);LS.del('hm_save');await UI.fade(1,500);G.mode='game';G.map=null;await UI.letter(name);await prologue()},
  async cont(){let st=null;try{st=JSON.parse(LS.get('hm_save'))}catch(e){}if(NET.ok&&st&&st.pid){const r=await NET.load(st.pid);if(r&&(r.ts||0)>(st.ts||0))st=r}if(!st){UI.toast('Nessun salvataggio trovato.');return}startFrom(st)},
- async code(){const c=await UI.askCode();if(!c)return;if(!NET.ok){UI.toast('Serve la connessione alla Valle (online).','bad');return}UI.toast('Cerco nella Valle…');const st=await NET.load(c);if(!st){UI.toast('Nessuna anima con questo codice.','bad');return}startFrom(st)},
+ async code(){const r=await UI.askCode();if(!r)return;const c=r.c;if(!NET.ok){UI.toast('Serve la connessione alla Valle (online).','bad');return}UI.toast('Cerco nella Valle…');const st=await NET.load(c);if(!st){UI.toast('Nessuna anima con questo codice.','bad');return}
+  if(r.k)LS.set('hm_key_'+c,r.k);NET._own[c]=false;
+  if(!(await NET.own(c))){LS.del('hm_key_'+c);st.pid=newPid();UI.toast(r.k?'Chiave sbagliata: continui con un codice nuovo. Il salvataggio originale resta com\'era.':'Senza chiave di recupero continui con un codice nuovo. Il salvataggio originale resta com\'era.')}
+  LS.set(st.free?'hm_free':'hm_save',JSON.stringify(st));startFrom(st)},
  opts(){UI.open(`<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`);const vm=$('#vm'),vs=$('#vs');vm.oninput=()=>{AU.vol.m=+vm.value;AU.applyVol();LS.set('hm_vol',JSON.stringify(AU.vol))};vs.oninput=()=>{AU.vol.s=+vs.value;AU.applyVol();AU.play('blip');LS.set('hm_vol',JSON.stringify(AU.vol))}},
  full(){goFull()},
+ // la Valle: il gioco libero, con il suo salvataggio separato (e il suo codice di villaggio)
+ async valle(){let st=null;try{st=JSON.parse(LS.get('hm_free'))}catch(e){}
+  if(NET.ok&&st&&st.pid){const r=await NET.load(st.pid);if(r&&r.free&&(r.ts||0)>(st.ts||0))st=r}
+  if(st&&st.free){startFrom(st);return}
+  let base=null;try{base=JSON.parse(LS.get('hm_freebase')||LS.get('hm_save'))}catch(e){}
+  if(!base){UI.toast('Finisci la storia per aprire la Valle.');return}
+  const E=JSON.parse(LS.get('hm_endings')||'[]'),ending=base.endingN||E[E.length-1]||3;
+  UI.hideTitle();await UI.fade(1,400);G.coach=null;G.amb=null;G.st=migrate(base);delete G.st.endingN;G.st.pid=newPid();setPlayerLook(G.st.g);G.mode='game';G.map=null;await freeStart(ending)},
+ // altri finali: si riparte dal primo bivio (Capitolo II) o dalla Festa
+ finali(){const E=JSON.parse(LS.get('hm_endings')||'[]'),C=[['hm_cp2','Dal primo bivio — Capitolo II','Il nastro rosso, le pagine del nonno, il fienile: da qui le scelte cambiano il finale.'],['hm_cp3','Dal Capitolo III','Clara, Tobia, il bosco. Le amicizie decidono chi ti aiuta alla Festa.'],['hm_prefesta','Dalla Festa del Raccolto','Il giorno della Festa: il sidro, il Conteggio, la fuga o il patto.']].filter(c=>LS.get(c[0]));
+  const H={1:'La Fuga: arriva alla Festa con Clara alleata e scappa al Varco.',2:'L\'Erede: lasciati contare, o fatti prendere.',3:'Spezzare il patto: tieni il nastro rosso, leggi tutto, fatti amici Clara e Tobia.'};
+  UI.open(`<button class="btn mclose" data-close>✕</button><h2>Altri finali</h2><p class="small">Finali scoperti: ${E.length}/3.</p>`+[1,2,3].map(n=>`<p class="small">${E.includes(n)?'✔':'✦'} ${E.includes(n)?H[n].split(':')[0]:'Ancora da scoprire — '+H[n].split(': ')[1]}</p>`).join('')+
+   (C.length?C.map(([k,t,d])=>`<div class="mrow"><span><b>${t}</b><br><span class="small">${d}</span></span><button class="btn" data-cp="${k}">Riparti</button></div>`).join(''):'<p>Nessun punto di ripartenza salvato su questo dispositivo.</p>')+'<p class="small">La partita della Valle non viene toccata: ha un salvataggio a parte.</p>');
+  $('#mbox').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{let st=null;try{st=JSON.parse(LS.get(b.dataset.cp))}catch(e){}if(!st)return;UI._mclose=null;UI.close();LS.set('hm_save',JSON.stringify(st));startFrom(st)})},
 };
 function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)if(st[k]===undefined)st[k]=d[k];for(const k in d.flags)if(st.flags[k]===undefined)st.flags[k]=d.flags[k];
  const has=id=>st.inv.some(s=>s&&s.id===id),put=id=>{const i=st.inv.findIndex(s=>!s);if(i>=0)st.inv[i]={id,n:1}};
@@ -15,8 +32,8 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
- snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
-function toTitle(){G.coach=null;G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
+ snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);if(isFree(G.st)){presenceJoin(G.st.pid);inboxStart()}UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
+function toTitle(){G.coach=null;presenceLeave();G.visit=null;G.home=null;G.erede=false;G.prey=null;G.festaChase=false;G.festaDark=false;G.redTint=0;G.scare=0;G.shadows=[];G.player.speed=66;G.npcs=G.npcs.filter(n=>!n.clone);G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // ---------- prologo ----------
 async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,43,46,3);
  G.coach={x:45*16+4,y:47*16+30,moving:false};await arrivalCinematic();
@@ -48,20 +65,21 @@ function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
  if(F.ch2end){F.finaleChase=0;if(st.chapter<3)st.chapter=3}if(F.ch3end&&st.chapter<4)st.chapter=4;if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
  const ks=Object.keys(CHORES).filter(k=>k!==st.lastChore);st.chore=ks[Math.random()*ks.length|0];st.lastChore=st.chore;st.choreOk=false;st.choreDone=false;st.leaves=[0,0,0,0];F.bucket=0;F.barnDark=0;
  const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
+ if(isFree(st)){const s=seasonOf(st);if(s===1&&st.weather==='pioggia')st.weather='neve';if(s===2&&st.weather==='nebbia')st.weather='pioggia';F.bridgeGone=0}
  if(st.weather==='pioggia')for(const k in st.farm)st.farm[k].w=true;
  if(st.chapter>=2&&F.ch2day&&st.day>=F.ch2day+1)F.page2avail=1;
  st.bread=4+(hearts('clara')>=3?2:0)+(hearts('clara')>=6?2:0);
  st.demand=['rapa','patata','zucca'][Math.floor(Math.random()*3)];if(st.day>=5&&Math.random()<.5)st.demand='zucca';
- genFavors();applyUpgrades();
+ genFavors();applyUpgrades();freeMorning(st);
  st.map='house';st.px=2;st.py=3;st.dir=0}
 async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
   if(F.missedOffer&&!F.missedShown){F.missedShown=1;F.missedDay=st.day;AU.play('scratch');await sleep(600);await narr('Stanotte qualcosa ha grattato la porta per ore.');await narr('Sul legno, all\'esterno, lettere incise a unghiate:\nAVEVI DIMENTICATO.',{dark:1});addQuiete(-15)}
-  if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.')}
+  if(st.chapter>=2&&!F.ch2card){F.ch2card=1;F.ch2day=st.day;await UI.fade(1,300);await UI.card('Capitolo II','Quelli di cui non si parla',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);await narr('Ti svegli. La casa è silenziosa. Qualcosa è cambiato, ma non sai dire cosa.');LS.set('hm_cp2',JSON.stringify(st))}
   if(st.chapter>=3&&!F.ch3card){F.ch3card=1;await UI.fade(1,300);await UI.card('Capitolo III','L\'Albero dei Morti',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);
    await narr('Nessuno parla della notte. Dalla finestra, il villaggio è sereno. Più sereno del solito.');
    await narr('Sulla soglia, piegato con cura, c\'è un mantello giallo. Nessun biglietto. Non serve: sai già chi l\'ha lasciato. Tutti.');
-   giveItem('mantello');await narr('Le lanterne gialle, ha scritto il nonno, non proteggono: segnano.',{dark:1});addQuiete(-5)}
+   giveItem('mantello');await narr('Le lanterne gialle, ha scritto il nonno, non proteggono: segnano.',{dark:1});addQuiete(-5);LS.set('hm_cp3',JSON.stringify(st))}
   if(st.chapter>=4&&!F.ch4card){F.ch4card=1;F.ch4day=st.day;await UI.fade(1,300);await UI.card('Capitolo IV','La Festa del Raccolto',`Giorno ${st.day}`,false,true,1400);await UI.fade(0,600);
    await narr('Le campane suonano da sole, all\'alba. In piazza qualcuno canta. Nessuno, nella Valle, ha dormito.');
    await narr('Sul vetro della finestra, dall\'esterno, c\'è l\'impronta di una mano. Non è piccola. Non è tua.',{dark:1});
@@ -71,13 +89,16 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
    if(N.ripe)UI.toast(`Stanotte ${pl(N.ripe,'una pianta è maturata','piante sono maturate')}! Mettiti davanti e premi A/E per raccogliere.`);
    else if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
    else if(N.grow)UI.toast(`Stanotte ${pl(N.grow,'una pianta è cresciuta','piante sono cresciute')}.`)}
+  if(G.seasonNews){const N=G.seasonNews;G.seasonNews=null;UI.toast(['È arrivato l\'autunno.','È arrivato l\'inverno. Cresce solo il porro.','È arrivata la primavera!','È arrivata l\'estate!'][N.s]);if(N.n)UI.toast(`${N.n===1?'Una coltura non ha retto':N.n+' colture non hanno retto'} al cambio di stagione.`,'bad')}
+  if(isFree(st))shadowNews();
+  if(st.weather==='neve')UI.toast('Nevica. La Valle è bianca e silenziosa.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
   if(isSunday(st))UI.toast('È domenica: alle 9:00 c\'è la messa, in cappella.');
   if(FEST_MORNING[st.day])setTimeout(()=>UI.toast(FEST_MORNING[st.day]),1400);
   if((st.favors||[]).length&&!F.favTip){F.favTip=1;setTimeout(()=>UI.toast('Alcuni abitanti cercano qualcosa: guarda il "!" sopra le loro teste, o la bacheca in piazza.'),2400)}
   if(F.page2avail&&!F.page2&&!F.page2seen){F.page2seen=1;await narr('Sul pavimento, vicino alla porta, c\'è un foglio. Qualcuno l\'ha fatto scivolare sotto l\'uscio, stanotte.')}
  }finally{G.cut--}UI.quest()}
-async function endDay(passed,faded){const st=G.st;G.cut++;
+async function endDay(passed,faded){if(G.visit)await endVisit(true);const st=G.st;G.cut++;
  try{if(!faded){AU.play('sleep');await UI.fade(1,900)}
   G.horse.on=false;G.chase=false;G.cutMusic=null;G.scare=0;
   const news={grow:0,ripe:0,wilt:0,dead:0};
@@ -86,10 +107,10 @@ async function endDay(passed,faded){const st=G.st;G.cut++;
    f.w=false;if(!c&&!f.f&&Math.random()<.08)delete st.farm[k]}
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
-  st.day++;st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
+  const prevS=seasonOf(st);st.day++;freeNight(st,prevS);st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
-  await UI.card('',`Giorno ${st.day}`,`${DAYN[(st.day+3)%7]} · Autunno${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
+  await UI.card('',isFree(st)?`${seasonName()} · giorno ${seasonDay()}`:`Giorno ${st.day}`,`${isFree(st)?DAYN[(st.day+3)%7]+(yearOf()>1?' · anno '+yearOf():''):DAYN[(st.day+3)%7]+' · Autunno'}${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
   updateCam(0);await UI.fade(0,800);
  }finally{G.cut--}
  await morningEvents()}
@@ -165,15 +186,15 @@ function clock(dt){if(G.cut||UI.busy())return;G.clockAcc+=dt/(festaLive()?2.2:1)
 function onMinute(){const st=G.st,t=st.time,F=st.flags;if(st.day<1)return;
  if(t%10===0)UI.hud();
  if(t===12*60&&!(st.chore==='campana'&&st.choreOk)){AU.play('bell');if(G.map.id==='main')UI.toast('🔔 Mezzogiorno. Fratello Lucius suona la campana.')}
- if(t===21*60){AU.play('bell');AU.play('bell',1.7);AU.play('bell',3.4);if(!festaPending())UI.toast('🔔 La campana della sera. Rientra a casa.','bad')}
+ if(t===21*60){AU.play('bell');AU.play('bell',1.7);AU.play('bell',3.4);if(isFree(st))UI.toast('🔔 La campana delle nove. Ormai suona per abitudine.');else if(!festaPending())UI.toast('🔔 La campana della sera. Rientra a casa.','bad')}
  if(t===18*60&&F.gotBread&&!F.offered)UI.toast('Il sole cala. È l\'ora del ceppo.');
  if(t===20*60+31&&F.gotBread&&!F.offered&&!F.missedOffer){F.missedOffer=1;UI.quest()}
  const out=G.map.id==='main';
  if(isSunday(st)&&t===8*60+45){AU.play('bell');AU.play('bell',1.7);if(out)UI.toast('🔔 La campana chiama alla messa.')}
  for(let i=5;i<LAMPS.length;i++)if(t===LAMPT.on[i]&&out&&Math.hypot(G.player.x-LAMPS[i][0]*16,G.player.y-LAMPS[i][1]*16)<220){burst('spark',LAMPS[i][0]*16+8,LAMPS[i][1]*16-18,7,'#ffcf6a');tip('tipLamp','Il lampione si è acceso da solo. Nessuno l\'ha toccato.')}
- if(out&&t>21*60+30&&t%10===0&&!F.finaleChase)addQuiete(-1);
- if(out&&t===22*60&&!G.horse.on&&!F.finaleChase&&!festaPending()){AU.play('hooves');UI.toast('Zoccoli. Lontani. Poi meno lontani.','bad')}
- if(out&&t>=22*60+30&&!G.horse.on&&!G.cut&&!F.finaleChase&&!festaPending()){const p=G.player;const far=Math.hypot(p.x-31*16,p.y-5*16)>120;spawnHorse(far?31:52,far?5:36,54);UI.toast('CORRI A CASA.','bad')}
+ if(out&&t>21*60+30&&t%10===0&&!F.finaleChase&&!isFree(st))addQuiete(-1);
+ if(out&&t===22*60&&!G.horse.on&&!F.finaleChase&&!festaPending()&&!isFree(st)){AU.play('hooves');UI.toast('Zoccoli. Lontani. Poi meno lontani.','bad')}
+ if(out&&t>=22*60+30&&!G.horse.on&&!G.cut&&!F.finaleChase&&!festaPending()&&!isFree(st)){const p=G.player;const far=Math.hypot(p.x-31*16,p.y-5*16)>120;spawnHorse(far?31:52,far?5:36,54);UI.toast('CORRI A CASA.','bad')}
  if(t>=26*60)passOut();
 }
 function chooseMusic(){if(G.mode==='title')return 'title';if(G.cutMusic)return G.cutMusic;if(G.chase)return 'tense';const m=G.map;if(!m)return 'none';if(m.id==='barn'||m.id==='wood')return 'silent';if(m.interior)return 'indoor';const t=G.st.time;if(t>=20*60||t<6*60||G.horror>.7)return 'night';return 'day'}
@@ -182,7 +203,7 @@ function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75
 let _last=performance.now(),_hudT=0;
 function update(dt){
  const frozen=UI.modalOpen;
- if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);ambTick(dt);woodTick(dt);festaTick(dt);
+ if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);ambTick(dt);animalsTick(dt);mpTick(dt);shadowTick(dt);merchantCoach();woodTick(dt);festaTick(dt);
   if(G.st.weather==='pioggia'&&!G.map.interior&&!G.cut&&Math.random()<dt*.01){G.flash={a:.5,c:'#dfe8ff'};AU.play('thunder',.5)}if(!G.cut&&!UI.dlgOpen)updateHorse(dt);clock(dt)}
  updParts(dt);updPrints(dt);if(G.map)updateCam(dt);updHorror(dt);
  G.flash.a=Math.max(0,G.flash.a-dt*1.5);G.scare=Math.max(0,G.scare-dt*.7);
@@ -195,7 +216,7 @@ function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  requestAnimationFrame(loop)}
 async function boot(){
  try{await Promise.race([document.fonts.ready,sleep(2500)])}catch(e){}
- genAll();initEntities();UI.init();NET.init();
+ genAll();genFreeArt();genAnimalArt();genMissionArt();initEntities();UI.init();NET.init();
  toTitle();$('#loading').classList.add('hide');requestAnimationFrame(loop);
 }
 boot();
