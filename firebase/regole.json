@@ -43,8 +43,8 @@
         }
       },
       "presenza": {
+        ".read": true,
         "$village": {
-          ".read": true,
           "$pid": {
             ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
             ".validate": "!newData.exists() || (newData.child('x').isNumber() && newData.child('y').isNumber() && newData.child('name').val().length <= 20)"
