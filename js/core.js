@@ -41,6 +41,7 @@ addEventListener('keydown',e=>{
  if(e.repeat)return;
  if(e.code==='Space'||e.code==='KeyE'||e.code==='Enter')onActKey();
  if(e.code==='Escape'||e.code==='KeyP'||e.code==='Tab'){e.preventDefault();UI.pauseKey()}
+ if(e.code==='KeyR'&&G.mode==='game')UI.swapRow();
  if(/^Digit[0-9]$/.test(e.code)){let n=+e.code[5];n=n===0?9:n-1;UI.selectSlot(n)}
  if(e.code==='KeyF')goFull();
 });

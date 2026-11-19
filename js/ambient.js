@@ -38,6 +38,7 @@ function drawHog(h){const X=Math.round(h.x),Y=Math.round(h.y);ctx.fillStyle='rgb
  const s=h.dir;ctx.fillStyle='#4a3a2a';ctx.fillRect(X-4,Y-4,8,4);ctx.fillStyle='#6a5a44';for(let i=0;i<4;i++)ctx.fillRect(X-4+i*2,Y-5,1,1);ctx.fillStyle='#c8a888';ctx.fillRect(s>0?X+4:X-6,Y-3,2,2);ctx.fillStyle='#000';ctx.fillRect(s>0?X+5:X-6,Y-3,1,1);ctx.fillStyle='#a01810';ctx.fillRect(X-1,Y-6,2,1)}
 function hogAt(ax,ay){const h=G.amb&&G.amb.hog;if(!h||G.night<=.45||Math.hypot(h.x-ax,h.y-ay)>14)return false;h.ball=6;AU.play('rustle');UI.toast(h.seen?'Il riccio si chiude a palla. Di nuovo.':'Un riccio! Si chiude a palla. Sugli aculei ha infilzata una foglia rossa.');h.seen=1;return true}
 function drawAmbTop(m){if(m.id!=='main'||!G.amb)return;const A=G.amb,T=G.t,night=G.night,rain=G.st.weather==='pioggia';
+ if(G.st.weather==='neve'){ctx.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<90;i++){const sx=G.cam.x+((i*97+T*(8+i%5)*3+Math.sin(T+i)*10)%(W+20))-10,sy=G.cam.y+((i*53+T*(18+i%7)*2)%(H+10))-5;ctx.fillRect(Math.round(sx),Math.round(sy),i%3?1:2,i%3?1:2)}}
  // farfalle di giorno
  if(night<.3&&!rain)for(const b of A.fly){const a=T*b.sp+b.ph,x=b.hx+Math.sin(a)*28+Math.sin(a*2.7)*8,y=b.hy+Math.cos(a*1.3)*16-10,w=Math.floor(T*14+b.ph)%2;ctx.fillStyle=b.c;ctx.fillRect(Math.round(x)-(w?2:1),Math.round(y),w?2:1,2);ctx.fillRect(Math.round(x)+1,Math.round(y),w?2:1,2);ctx.fillStyle='#2a1a10';ctx.fillRect(Math.round(x),Math.round(y),1,2)}
  // lucciole di notte

@@ -127,7 +127,7 @@ function buildBarn(st){
  m.add({kind:'mat',tx:4,ty:7,img:IMG.mat,dx:4*16,dy:7*16+4,sy:-1,solid:[],hits:[],deco:1});
  m.doors.push({tx:4,ty:7,to:'main',x:58,y:31,dir:0});
  return m}
-function rebuildMaps(){const st=G.st;G.maps.main=buildMain(st);G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k])}if(G.map)G.map=G.maps[G.map.id]}
+function rebuildMaps(){const st=G.st;if(typeof FREEIMG!=='undefined'&&FREEIMG.trees)IMG.tree=FREEIMG.trees[seasonOf(st)]||FREEIMG.trees[0];G.maps.main=buildMain(st);applyFree(G.maps.main,st);G.hits={};G.maps.house=buildHouse(st);G.maps.chapel=buildChapel(st);G.maps.barn=buildBarn(st);G.maps.wood=buildWood(st);for(const k in G.maps){if(G.maps[k].interior)addExits(G.maps[k]);buildGround(G.maps[k]);seasonGround(G.maps[k])}if(G.map)G.map=G.maps[G.map.id]}
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
 const SHADOWK={feast:[24,3,1],tree:[14,5,4],pine:[10,4,3],bush:[8,3,2],bushR:[8,3,2],well:[9,3,2],stall:[22,4,3],lamp:[4,2,2],hay:[8,3,2],barrel:[6,2,2],board:[8,3,2],grave:[6,2,2],elias:[5,2,2],nameless:[6,2,2],scare:[7,2,2],stump:[7,2,2],anvil:[7,2,2],pumpkin:[6,2,2],bin:[8,3,2],

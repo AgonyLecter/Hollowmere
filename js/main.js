@@ -48,11 +48,12 @@ function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
  if(F.ch2end){F.finaleChase=0;if(st.chapter<3)st.chapter=3}if(F.ch3end&&st.chapter<4)st.chapter=4;if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
  const ks=Object.keys(CHORES).filter(k=>k!==st.lastChore);st.chore=ks[Math.random()*ks.length|0];st.lastChore=st.chore;st.choreOk=false;st.choreDone=false;st.leaves=[0,0,0,0];F.bucket=0;F.barnDark=0;
  const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
+ if(isFree(st)){const s=seasonOf(st);if(s===1&&st.weather==='pioggia')st.weather='neve';if(s===2&&st.weather==='nebbia')st.weather='pioggia';F.bridgeGone=0}
  if(st.weather==='pioggia')for(const k in st.farm)st.farm[k].w=true;
  if(st.chapter>=2&&F.ch2day&&st.day>=F.ch2day+1)F.page2avail=1;
  st.bread=4+(hearts('clara')>=3?2:0)+(hearts('clara')>=6?2:0);
  st.demand=['rapa','patata','zucca'][Math.floor(Math.random()*3)];if(st.day>=5&&Math.random()<.5)st.demand='zucca';
- genFavors();applyUpgrades();
+ genFavors();applyUpgrades();freeMorning(st);
  st.map='house';st.px=2;st.py=3;st.dir=0}
 async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
  try{
@@ -71,6 +72,8 @@ async function morningEvents(){const st=G.st,F=st.flags;G.cut++;
    if(N.ripe)UI.toast(`Stanotte ${pl(N.ripe,'una pianta è maturata','piante sono maturate')}! Mettiti davanti e premi A/E per raccogliere.`);
    else if(Object.values(st.farm).some(f=>f.c&&cropStage(f.c)===3))UI.toast('Qualcosa è maturo nei campi! Mettiti davanti alla pianta e premi A/E per raccoglierla.');
    else if(N.grow)UI.toast(`Stanotte ${pl(N.grow,'una pianta è cresciuta','piante sono cresciute')}.`)}
+  if(G.seasonNews){const N=G.seasonNews;G.seasonNews=null;UI.toast(['È arrivato l\'autunno.','È arrivato l\'inverno. Cresce solo il porro.','È arrivata la primavera!','È arrivata l\'estate!'][N.s]);if(N.n)UI.toast(`${N.n===1?'Una coltura non ha retto':N.n+' colture non hanno retto'} al cambio di stagione.`,'bad')}
+  if(st.weather==='neve')UI.toast('Nevica. La Valle è bianca e silenziosa.');
   if(st.weather==='pioggia')UI.toast('Piove. I campi si annaffiano da soli.');else if(st.weather==='nebbia')UI.toast('Nebbia fitta sulla Valle.');
   if(isSunday(st))UI.toast('È domenica: alle 9:00 c\'è la messa, in cappella.');
   if(FEST_MORNING[st.day])setTimeout(()=>UI.toast(FEST_MORNING[st.day]),1400);
@@ -86,10 +89,10 @@ async function endDay(passed,faded){const st=G.st;G.cut++;
    f.w=false;if(!c&&!f.f&&Math.random()<.08)delete st.farm[k]}
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
-  st.day++;st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
+  const prevS=seasonOf(st);st.day++;freeNight(st,prevS);st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(st.chapter>=2?6:10);st.talked={};st.gifted={};
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
-  await UI.card('',`Giorno ${st.day}`,`${DAYN[(st.day+3)%7]} · Autunno${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
+  await UI.card('',isFree(st)?`${seasonName()} · giorno ${seasonDay()}`:`Giorno ${st.day}`,`${isFree(st)?DAYN[(st.day+3)%7]+(yearOf()>1?' · anno '+yearOf():''):DAYN[(st.day+3)%7]+' · Autunno'}${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
   updateCam(0);await UI.fade(0,800);
  }finally{G.cut--}
  await morningEvents()}
@@ -165,15 +168,15 @@ function clock(dt){if(G.cut||UI.busy())return;G.clockAcc+=dt/(festaLive()?2.2:1)
 function onMinute(){const st=G.st,t=st.time,F=st.flags;if(st.day<1)return;
  if(t%10===0)UI.hud();
  if(t===12*60&&!(st.chore==='campana'&&st.choreOk)){AU.play('bell');if(G.map.id==='main')UI.toast('🔔 Mezzogiorno. Fratello Lucius suona la campana.')}
- if(t===21*60){AU.play('bell');AU.play('bell',1.7);AU.play('bell',3.4);if(!festaPending())UI.toast('🔔 La campana della sera. Rientra a casa.','bad')}
+ if(t===21*60){AU.play('bell');AU.play('bell',1.7);AU.play('bell',3.4);if(isFree(st))UI.toast('🔔 La campana delle nove. Ormai suona per abitudine.');else if(!festaPending())UI.toast('🔔 La campana della sera. Rientra a casa.','bad')}
  if(t===18*60&&F.gotBread&&!F.offered)UI.toast('Il sole cala. È l\'ora del ceppo.');
  if(t===20*60+31&&F.gotBread&&!F.offered&&!F.missedOffer){F.missedOffer=1;UI.quest()}
  const out=G.map.id==='main';
  if(isSunday(st)&&t===8*60+45){AU.play('bell');AU.play('bell',1.7);if(out)UI.toast('🔔 La campana chiama alla messa.')}
  for(let i=5;i<LAMPS.length;i++)if(t===LAMPT.on[i]&&out&&Math.hypot(G.player.x-LAMPS[i][0]*16,G.player.y-LAMPS[i][1]*16)<220){burst('spark',LAMPS[i][0]*16+8,LAMPS[i][1]*16-18,7,'#ffcf6a');tip('tipLamp','Il lampione si è acceso da solo. Nessuno l\'ha toccato.')}
- if(out&&t>21*60+30&&t%10===0&&!F.finaleChase)addQuiete(-1);
- if(out&&t===22*60&&!G.horse.on&&!F.finaleChase&&!festaPending()){AU.play('hooves');UI.toast('Zoccoli. Lontani. Poi meno lontani.','bad')}
- if(out&&t>=22*60+30&&!G.horse.on&&!G.cut&&!F.finaleChase&&!festaPending()){const p=G.player;const far=Math.hypot(p.x-31*16,p.y-5*16)>120;spawnHorse(far?31:52,far?5:36,54);UI.toast('CORRI A CASA.','bad')}
+ if(out&&t>21*60+30&&t%10===0&&!F.finaleChase&&!isFree(st))addQuiete(-1);
+ if(out&&t===22*60&&!G.horse.on&&!F.finaleChase&&!festaPending()&&!isFree(st)){AU.play('hooves');UI.toast('Zoccoli. Lontani. Poi meno lontani.','bad')}
+ if(out&&t>=22*60+30&&!G.horse.on&&!G.cut&&!F.finaleChase&&!festaPending()&&!isFree(st)){const p=G.player;const far=Math.hypot(p.x-31*16,p.y-5*16)>120;spawnHorse(far?31:52,far?5:36,54);UI.toast('CORRI A CASA.','bad')}
  if(t>=26*60)passOut();
 }
 function chooseMusic(){if(G.mode==='title')return 'title';if(G.cutMusic)return G.cutMusic;if(G.chase)return 'tense';const m=G.map;if(!m)return 'none';if(m.id==='barn'||m.id==='wood')return 'silent';if(m.interior)return 'indoor';const t=G.st.time;if(t>=20*60||t<6*60||G.horror>.7)return 'night';return 'day'}
@@ -195,7 +198,7 @@ function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  requestAnimationFrame(loop)}
 async function boot(){
  try{await Promise.race([document.fonts.ready,sleep(2500)])}catch(e){}
- genAll();initEntities();UI.init();NET.init();
+ genAll();genFreeArt();initEntities();UI.init();NET.init();
  toTitle();$('#loading').classList.add('hide');requestAnimationFrame(loop);
 }
 boot();

@@ -136,3 +136,8 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #gprev{width:calc(36*var(--u));height:calc(54*var(--u));image-rendering:pixelated;background:radial-gradient(circle at 50% 40%,#6a5a7a,#2a2030);box-shadow:0 0 0 var(--u) #140a06,0 0 0 calc(2*var(--u)) var(--gold)}
 .gpick>div{flex:1}
 #dchoices.lock button{opacity:.45;pointer-events:none}
+.cgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:calc(2*var(--u));margin-bottom:calc(4*var(--u))}
+.cslot{position:relative;aspect-ratio:1;background:linear-gradient(#3a2618,#24160e);box-shadow:inset 0 0 0 var(--u) #07040a;cursor:pointer}
+.cslot canvas{width:100%;height:100%;image-rendering:pixelated}
+.cslot i{position:absolute;right:calc(1*var(--u));bottom:0;font-style:normal;font-size:calc(7*var(--u));color:var(--gold2);text-shadow:1px 1px 0 #000}
+#hbrow{position:absolute;left:calc(-21*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(7*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto}

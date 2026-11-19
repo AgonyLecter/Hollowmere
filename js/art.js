@@ -463,7 +463,7 @@ function genCropsHD(){const S=fn=>{const P=new PX(32,48);fn(P);P.outline();const
   S(P=>{P.capsule(16,43,16,28,1.5,rp('#8a9a7a'));[[5,24],[26,24],[8,15],[24,15],[12,9],[20,9],[16,7]].forEach(([a,b],i)=>P.capsule(16,i<2?38:32,a,b,1.1,i%2?kale:kale2,{r2:3.4,mod:bumpy,spec:.2}))})];
  CROPIMG.dead=S(P=>{const d=rp('#7a5a32');P.ellipse(16,42,6,2,soil,{edge:false});P.capsule(16,42,12,30,.7,d);P.capsule(16,42,21,32,.7,d);P.ellipse(10,31,3,1.4,d);P.ellipse(23,34,3,1.4,rp('#6a4a2a'));P.capsule(16,42,16,34,.7,d)});
  // versioni appassite: ingiallite e piegate verso terra
- for(const t in CROPS)CROPW[t]=CROPIMG[t].map(src=>{const [c,x]=mk(src.width,src.height);x.drawImage(src,0,4);const d=x.getImageData(0,0,c.width,c.height),a=d.data;
+ for(const t in CROPS)if(CROPIMG[t])CROPW[t]=CROPIMG[t].map(src=>{const [c,x]=mk(src.width,src.height);x.drawImage(src,0,4);const d=x.getImageData(0,0,c.width,c.height),a=d.data;
   for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const L=(a[i]*.3+a[i+1]*.59+a[i+2]*.11)/255;a[i]=a[i]*.35+175*L*1.15*.65;a[i+1]=a[i+1]*.35+130*L*1.15*.65;a[i+2]=a[i+2]*.35+60*L*.65}
   x.putImageData(d,0,0);c.s=src.s;c.top=Math.min(c.height/c.s,(src.top||0)+2);return c})}
 function imgTop(c){const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3])return y/(c.s||1);return 0}
@@ -488,6 +488,7 @@ function drawPrints(m,dt){for(const p of G.prints){if(p.m!==m.id)continue;const 
 function updPrints(dt){for(const p of G.prints)p.t+=dt;G.prints=G.prints.filter(p=>p.t<p.life)}
 // ---------- anteprima della casella bersaglio ----------
 function aimInfo(){const st=G.st,m=G.map;if(G.mode!=='game'||G.cut||UI.busy()||m.id!=='main')return null;const it=selItem();if(!it)return null;const def=ITEMS[it.id];
+ {const [ax,ay]=frontTile(),fa=freeAimOk(it,ax,ay);if(fa!==null)return {tx:ax,ty:ay,ok:fa,id:it.id}}
  const tool=it.id==='hoe'||it.id==='can'||def.t==='seed'||def.t==='bad'||def.t==='fert';if(!tool)return null;
  const [tx,ty]=frontTile(),k=tx+','+ty,f=st.farm[k],g=m.get(tx,ty),free=!m.objAt(tx,ty)&&(g===1||g===12);let ok=false;
  if(f&&f.c&&cropStage(f.c)===3)ok=true;
@@ -818,6 +819,7 @@ function makeParch(){const [c,x]=mk(64,64);srand(31);x.fillStyle='#ead8ae';x.fil
  for(let i=0;i<4;i++){const g=x.createRadialGradient(ri(0,64),ri(0,64),0,32,32,ri(6,14));g.addColorStop(0,'rgba(160,110,50,.1)');g.addColorStop(1,'rgba(160,110,50,0)');x.fillStyle=g;x.fillRect(0,0,64,64)}
  document.documentElement.style.setProperty('--parch','url('+c.toDataURL()+')')}
 function drawWxIcon(c,wx){const x=c.getContext('2d');x.clearRect(0,0,20,20);const P=(col,X,Y,w=1,h=1)=>{x.fillStyle=col;x.fillRect(X,Y,w,h)};
+ if(wx==='neve'){for(const [a,b] of [[4,4],[12,3],[8,9],[15,10],[4,14],[11,15]]){P('#eef6ff',a,b,3,1);P('#eef6ff',a+1,b-1,1,3)}return}
  const cloud=(col,dk,y=6)=>{disc(x,7,y+4,4,dk);disc(x,12,y+3,5,dk);disc(x,7,y+3,3,col);disc(x,12,y+2,4,col);P(dk,3,y+7,14,2)};
  if(wx==='sereno'){disc(x,10,10,5,'#f0a030');disc(x,10,10,4,'#ffd860');P('#fff6c0',8,8,2,2);for(const [a,b] of [[10,1],[10,17],[1,10],[17,10],[4,4],[15,4],[4,15],[15,15]])P('#ffd860',a,b,2,2)}
  else if(wx==='nuvoloso'){disc(x,6,7,3,'#ffd860');cloud('#e8e4e0','#9a96a0')}

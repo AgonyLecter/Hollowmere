@@ -75,7 +75,7 @@ function npcIdle(n,s,dt){n.idleT=(n.idleT||0)-dt;
 }
 function npcBarks(dt){if(G.cut||UI.busy()||G.map.id!=='main')return;const p=G.player;
  for(const n of G.npcs){if(n.hidden||n.script||n.map!=='main'||n.barkT>0)continue;const d=Math.hypot(n.x-p.x,n.y-p.y);if(d>52)continue;
-  n.barkT=35+Math.random()*30;const L=(G.st.chapter>=2&&Math.random()<.6?BARKS2:BARKS)[n.id];if(L)bubble(n,L[Math.random()*L.length|0])}
+  n.barkT=35+Math.random()*30;const L=(isFree()?FREE_BARKS:G.st.chapter>=2&&Math.random()<.6?BARKS2:BARKS)[n.id];if(L)bubble(n,L[Math.random()*L.length|0])}
  for(const b of G.bubbles)b.life-=dt;G.bubbles=G.bubbles.filter(b=>b.life>0)}
 function snapNPCs(){for(const n of G.npcs){if(n.script)continue;n.goal=null;n.lastIn=null;const s=schedOf(n.id);
  if(s&&s.in){n.lastIn=s.in;n.hidden=true;n.map='main';n.path=[]}
@@ -141,10 +141,10 @@ async function talkTo(n){const st=G.st;n.dir=[3,2,1,0][G.player.dir];G.cut++;
  try{if(festaLive()&&await festaTalk(n))return;
   if(massNow()&&n.map==='chapel'&&n.id!=='lucius')return say(n.id,['Sssh. Dopo.','Shh… sta per cominciare.','Non qui, {n}. Dopo.'][Math.random()*3|0]);
   if(await favorDeliver(n))return;
-  await redReact(n);
+  if(!isFree(st))await redReact(n);
   const it=selItem();
   if(it&&GIFTABLE(it.id)&&!st.gifted[n.id]&&st.flags.met[n.id]){const c=await ask(null,`Vuoi regalare ${ITEMS[it.id].n} a ${n.name}?`,['Regala','Parla e basta']);if(c===0){await gift(n,it.id);return}}
-  await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
+  if(isFree(st))await say(n.id,freeTalkLine(n.id));else await TALK[n.id](n);await favorTell(n);await secretTell(n);if(!st.talked[n.id]){st.talked[n.id]=1;addFriend(n.id,1)}UI.quest();
  }catch(e){console.error(e)}finally{G.cut--}}
 async function gift(n,id){const st=G.st;removeItem(id,1);st.gifted[n.id]=1;
  if(id==='bacche'){addFriend(n.id,-3);addQuiete(-6);AU.play('sting');return say(n.id,n.id==='tobia'?'Hihi! Rosse! …Nascondile. Nascondile prima che le veda il Vecchio.':'Toglimele di davanti. Subito. E lavati le mani, {n}. Con la cenere.','dark')}
@@ -249,7 +249,7 @@ const QUESTS=[
  {s:st=>st.flags.festaOn&&!st.flags.conteggio,t:()=>'Alla Festa: parla con tutti. Non bere il sidro.',d:()=>false},
  {s:()=>G.festaChase,t:()=>'SCAPPA AL VARCO!',d:()=>false,alarm:1},
  {s:()=>G.erede,t:()=>'Insegui il forestiero',d:()=>false,alarm:1},
- {s:st=>st.choreOk&&!st.choreDone,t:st=>'Faccenda: '+CHORES[st.chore].t,d:st=>st.choreDone},
+ {s:st=>st.choreOk&&!st.choreDone,t:st=>'Faccenda: '+CHORES[st.chore].t,d:st=>st.choreDone,free:1},
 ];
 function hintText(){const st=G.st,t=st.time,crops=Object.values(st.farm).filter(f=>f.c);
  const fv=(st.favors||[]).find(f=>!f.done&&countItem(f.item)>=f.n);if(fv)return `Hai ciò che chiede ${NAMES[fv.id]}: portaglielo (${fmtItems(fv.item,fv.n)}).`;
@@ -261,4 +261,4 @@ function hintText(){const st=G.st,t=st.time,crops=Object.values(st.farm).filter(
  if(!st.choreOk)return 'Leggi la bacheca in piazza: c\'è una faccenda pagata.';
  if(st.inv.some(s=>s&&ITEMS[s.id].t==='seed')&&Object.keys(st.farm).length<30)return 'Hai ancora semi: zappa altra terra e semina.';
  return 'Parla con gli abitanti, esplora la valle, o riposa su una panchina fino a sera.'}
-function activeQuests(){const st=G.st,q=QUESTS.filter(q=>q.s(st));for(const f of st.favors||[]){if(!f.told||f.done)continue;q.push({s:()=>1,t:()=>`Favore per ${NAMES[f.id]}: ${fmtItems(f.item,f.n)} (${SC(f.reward)}, entro ${DAYN[(f.until+3)%7]})`,d:()=>false})}return q}
+function activeQuests(){const st=G.st,q=QUESTS.filter(q=>q.s(st)&&(!isFree(st)||q.free));for(const f of st.favors||[]){if(!f.told||f.done)continue;q.push({s:()=>1,t:()=>`Favore per ${NAMES[f.id]}: ${fmtItems(f.item,f.n)} (${SC(f.reward)}, entro ${DAYN[(f.until+3)%7]})`,d:()=>false})}return q}
