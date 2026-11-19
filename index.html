@@ -2091,7 +2091,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Bacheca delle Faccende</h2>
    <div class="paper"><p><b>Faccenda del giorno:</b><br>${c?esc(c.t):'Nessuna.'}<br><span class="small">Ricompensa: ${CZ(c?c.pay:0)}</span></p>
    <p>${st.choreDone?'✓ Completata. Grazie, vicino.':st.choreOk?'Accettata. Il villaggio conta su di te.':`<button class="btn" id="acc">Accetta la faccenda</button>`}</p></div>
-   ${fv.length?`<h3>Richieste del villaggio</h3><p class="small">${fv.map(f=>`• ${NAMES[f.id]} cerca ${fmtItems(f.item,f.n)} — ${CZ(f.reward)}, entro ${DAYN[(f.until+3)%7]}`).join('<br>')}</p>`:''}<h3>Avvisi</h3><p class="small">• Chi trova oggetti ROSSI li seppellisca. Subito.<br>• Festa del Raccolto: ${fest?`tra ${fest} giorni`:'<b>presto</b>'}. Portate zucche.<br>• Al suono della campana: a casa.<br>${st.demand?`• Quotazione del giorno: ${PL[st.demand]} +40% nella cassetta.<br>`:''}${PREPT[st.day]?`• ${PREPT[st.day]}<br>`:''}${st.chapter>=2?'• <span style="color:#8a0f0f">'+fmt('Benvenut{o|a}')+', '+esc(st.name)+'. '+fmt('Ti abbiamo contat{o|a}.')+'</span>':'• Si cerca un aiuto per la fucina. Chiedere a Brom.'}</p>`);
+   ${fv.length?`<h3>Richieste del villaggio</h3><p class="small">${fv.map(f=>`• ${NAMES[f.id]} cerca ${fmtItems(f.item,f.n)} — ${CZ(f.reward)}, entro ${DAYN[(f.until+3)%7]}`).join('<br>')}</p>`:''}<h3>Avvisi</h3><p class="small">• Chi trova oggetti ROSSI li seppellisca. Subito.<br>• Festa del Raccolto: ${st.chapter>=4?'<b>stasera</b>':st.flags.ch3end||fest===1?'<b>domani</b>':fest>1?`tra ${fest} giorni`:'<b>presto</b>'}. Portate zucche.<br>• Al suono della campana: a casa.<br>${st.demand?`• Quotazione del giorno: ${PL[st.demand]} +40% nella cassetta.<br>`:''}${PREPT[st.day]?`• ${PREPT[st.day]}<br>`:''}${st.chapter>=2?'• <span style="color:#8a0f0f">'+fmt('Benvenut{o|a}')+', '+esc(st.name)+'. '+fmt('Ti abbiamo contat{o|a}.')+'</span>':'• Si cerca un aiuto per la fucina. Chiedere a Brom.'}</p>`);
   const a=$('#acc');if(a)a.onclick=()=>{st.choreOk=true;AU.play('ok');if(st.chore==='foglie')rebuildMaps();this.close();this.quest();this.toast('Faccenda accettata!')}},
  nameless(){const draw=()=>{const L=(NET.msgs||[]).slice(-8);
   this.open(`<button class="btn mclose" data-close>✕</button><h2>Lapide senza nome</h2><p class="small">Una pietra nera, liscia. Chi è passato di qui ci ha inciso qualcosa. ${NET.ok?'(Le incisioni sono lasciate da altri giocatori.)':'(Offline: solo le tue incisioni.)'}</p>
@@ -2386,11 +2386,11 @@ const CH3L={
 
 // ---------- scene del giorno 7 ----------
 async function claraAlly(n){const st=G.st,F=st.flags;
- await say('clara','{n}. Sei vivo. Meno male.','fear');
+ await say('clara','{n}. Sei viv{o|a}. Meno male.','fear');
  await say('clara','Posso dirti una cosa? Anche mio padre era un nuovo arrivato. Come te, come tuo nonno. Sparì quando avevo sei anni.');
  await say('clara','Dissero che era partito. Ma da qui non parte nessuno. Il ponte non c\'è mai stato: lo sai anche tu, ormai.','sad');
  const c=await ask('clara','Voglio sapere cosa c\'è oltre il bosco. E cosa ne è stato di lui. Mi aiuti?',['Ti aiuterò','È pericoloso, Clara']);
- if(c===0){addFriend('clara',3);await say('clara','Lo sapevo. Sapevo che eri diverso dagli altri.')}
+ if(c===0){addFriend('clara',3);await say('clara','Lo sapevo. Sapevo che eri divers{o|a} dagli altri.')}
  else{addFriend('clara',1);await say('clara','Lo so che è pericoloso. Per questo non voglio andarci da sola.','sad')}
  await say('clara','Prendi la mia lanterna. Nel bosco si vede solo con la luce. E la luce gialla… beh, è l\'unica che abbiamo.');
  giveItem('lanterna');F.claraAlly=1;addQuiete(3);UI.quest()}
@@ -2412,7 +2412,7 @@ async function ezekielTruth(n){const st=G.st,F=st.flags;
  await say('ezekiel','In cambio, a ogni generazione, l\'Albero prende un forestiero. Uno solo. È il prezzo della pace.','dark');
  await say('ezekiel','Il costume lo costruirono i miei padri, dopo. Per spaventare chi voleva andarsene. Un Cavaliere senza testa tiene tutti dentro meglio di qualsiasi recinto.');
  await say('ezekiel','Abbiamo costruito la paura per non dover guardare quella vera.','stern');
- const d=await ask('ezekiel','Chiedi pure, ragazzo. Non ho più niente da nascondere.',['E mio nonno?','Il Cavaliere è un costume, allora?']);
+ const d=await ask('ezekiel','Chiedi pure, {ragazzo|ragazza}. Non ho più niente da nascondere.',['E mio nonno?','Il Cavaliere è un costume, allora?']);
  if(d===0)await say('ezekiel','Tuo nonno fu risparmiato. Così dicono i registri. Il resto… non l\'ho mai voluto vedere.','dark');
  else await say('ezekiel','Il costume sì. Ma stanotte i zoccoli erano veri. E non li abbiamo fatti noi.','dark');
  await say('ezekiel','Il Varco si apre a chi lo cerca con una luce. Non ti fermerò: non potrei. E forse non voglio.','stern');
@@ -2471,7 +2471,7 @@ async function woodRun(id){const st=G.st,F=st.flags;
  else if(id==='s3'){await narr('Una voce, vicinissima. Molte voci, in realtà, una dentro l\'altra.',{dark:1});
   const ok=await woodChoice('Come ti chiami, viandante?',[[st.name,1],['Elias',0],['Nessuno',0]]);
   if(ok){await say('coro','Un nome vero. Passa, per ora.',null,{dark:1});addQuiete(-2);F.woodStage=3}
-  else{await say('coro','Bugiardo. Ti conteremo noi.',null,{dark:1});addQuiete(-12);await woodPull(15,40)}}
+  else{await say('coro','Bugiard{o|a}. Ti conteremo noi.',null,{dark:1});addQuiete(-12);await woodPull(15,40)}}
  else if(id==='s4'){await narr('Hai seguito le impronte di zoccoli, a destra, dove il sentiero è battuto. Le voci ti seguono, più vicine.');
   const ok=await woodChoice('Sei dei nostri?',[['Sì, sono dei vostri',0],['No. Non sono uno di voi.',1],['Aiutatemi',0]]);
   if(ok){await say('coro','…No. Non ancora.',null,{dark:1});addQuiete(-2);F.woodStage=4}
@@ -2500,7 +2500,8 @@ async function treeScene(){const st=G.st,F=st.flags;G.cutMusic='silent';
  F.treeSeen=1;F.woodDone=1;F.ch3end=1;st.flags.woodStage=6;
  await UI.fade(1,900);
  await UI.card('Fine del Capitolo III','L\'Albero dei Morti','Il Cavaliere è reale.<br>Il debito è tuo.',true,true,2000);
- await UI.card('Prossimamente','Capitolo IV — La Festa del Raccolto','Domani, la Conta. Qualcuno, a Hollowmere, sta per esserci di troppo.',false,true,1600);
+ await narr('Non ricordi la strada del ritorno. Ricordi solo il recinto giallo che si richiude alle tue spalle, e le lanterne della Valle accese tutte insieme, come occhi.',{dark:1});
+ await narr('Domani è la Festa del Raccolto. Domani ti contano. Per l\'ultima volta.',{dark:1});
  G.cutMusic=null;G.cut--;await endDay(false,true);G.cut++}
 Object.assign(ACT,{
  woodgrave:(o)=>{const L=NET.msgs||[],m=L[L.length-1-o.gi];UI.toast(m&&m.t?`«${m.t}»${m.n?' — '+m.n:''}`:WOOD_EPI[o.gi%WOOD_EPI.length])},
@@ -2510,7 +2511,7 @@ function drawWoodExtras(m){for(const [tx,ty] of WOOD_PRINTS){const X=tx*16+4,Y=t
 
 // ================= ABITANTI: reazioni, segreti, aiuti =================
 const CH3T={agatha:['Ezekiel ti ha parlato, vero? Si vede dalla faccia. Si vede sempre.'],lucius:['So che sai. Non dire niente: i muri hanno orecchie, e i morti pure.'],brom:['Ti ha detto dei ferri? No? Meglio così.'],clara:['Ora siamo in due a sapere. Tre, con Tobia.'],tobia:['Hihi. Ora sai chi cavalca. O quasi.']};
-const CH3W={agatha:['Sei tornato dal bosco, tesoro. Lo so dal fango. E dalla faccia.'],lucius:['Sei tornato. Conto otto, ma stavolta ti perdono.'],brom:['Mh. Sei tornato. Allora bisogna fare altri ferri.'],clara:['Sei vivo! Dimmi tutto, ma non qui.'],tobia:['Hihi. Hai visto il Vecchio Albero? Ha le mani?']};
+const CH3W={agatha:['Sei tornat{o|a} dal bosco, tesoro. Lo so dal fango. E dalla faccia.'],lucius:['Sei tornat{o|a}. Conto otto, ma stavolta ti perdono.'],brom:['Mh. Sei tornat{o|a}. Allora bisogna fare altri ferri.'],clara:['Sei viv{o|a}! Dimmi tutto, ma non qui.'],tobia:['Hihi. Hai visto il Vecchio Albero? Ha le mani?']};
 const CAUGHTL={ezekiel:'Stanotte eri fuori dopo la campana, {n}. Non farlo più. Non per me.',agatha:'Hai le occhiaie, tesoro. Stanotte hai fatto un giro sbagliato?',lucius:'Ti ho sentito correre. Di notte le mie orecchie sono buone.',clara:'Ti ho visto stamattina, sporco di terra. Stai bene?',brom:'Mh. Unghie piene di terra.',tobia:'Hihi. Hai corso! Anch\'io corro, quando mi inseguono.'};
 const MISSL={ezekiel:'La focaccia, {n}. Era una cosa semplice.',agatha:'Qualcuno ha dimenticato il ceppo, ieri. Chissà chi, tesoro.',lucius:'La porta incisa… l\'ho vista. Non dirò niente.',clara:'Mi dispiace per la focaccia. Dovevo ricordartelo.',brom:'Porta graffiata. Fuori. Ripara tu.',tobia:'Hihi. Hanno grattato, grattato! Avevi dimenticato!'};
 // segreti: si sbloccano con l'amicizia (cuori) e finiscono nella scheda Lore
@@ -2531,20 +2532,20 @@ async function redReact(n){const st=G.st;if(!RED_R[n.id]||!(countItem('nastro')|
  const friend=countItem('nastro')&&!countItem('bacche')&&hearts(n.id)>=(n.id==='brom'?3:2);
  if(friend){await say(n.id,RED_F[n.id],'fear');addQuiete(1)}else{await say(n.id,RED_R[n.id],'fear');addQuiete(-3)}}
 async function ezekielCh3(n){const st=G.st,F=st.flags;
- const B=F.woodDone?['Sei tornato. Non tutti tornano, {n}.','Hai visto, allora. Meglio saperlo prima della Festa.','Domani il Conteggio. Ti prego: non fare sciocchezze. Pensa a Clara.','Hai ancora della terra rossa sulle scarpe. Lavala prima della Festa.']
+ const B=F.woodDone?['Sei tornat{o|a}. Non tutti tornano, {n}.','Hai visto, allora. Meglio saperlo prima della Festa.','Domani il Conteggio. Ti prego: non fare sciocchezze. Pensa a Clara.','Hai ancora della terra rossa sulle scarpe. Lavala prima della Festa.']
   :F.ezTruth?['Ora sai. Sapere non cambia niente, ma pesa in modo diverso.','Non ti fermo, {n}. Ma le campane le conosci. E io conosco te.','Se vai nel bosco, non fidarti della voce di chi hai amato.','Clara sa. Tobia sa. Non è un\'accusa: è un conto.']
   :[countItem('mantello')?'Il giallo ti sta bene, {n}. Così ti riconoscono.':'Hai ricevuto il mantello? Portalo. È così che ti riconoscono.','Oggi è un bel giorno, {n}.','Dormi bene? Qualcuno, stanotte, no. Ma è passato.','Niente parole inutili, oggi. Lavora, sorridi, aspetta la Festa.'];
  if(isSunday(st)&&F['mass'+st.day])B.push('Ti ho visto alla messa, stamattina. Bene. Molto bene.');
  return say('ezekiel',pickLine('ezekiel',[...B,...B,...B]),F.ezTruth?'dark':'stern')}
 async function claraAllyTalk(n){const st=G.st,F=st.flags;
- const c=await ask('clara',F.woodDone?'Sei tornato… dimmi.':'Dimmi, {n}.',['Chiacchiera','Cosa dovrei fare?','Niente']);if(c===2)return;
+ const c=await ask('clara',F.woodDone?'Sei tornat{o|a}… dimmi.':'Dimmi, {n}.',['Chiacchiera','Cosa dovrei fare?','Niente']);if(c===2)return;
  if(c===0)return say('clara',pickLine('clara',['Mi sento meno sola. È strano, vero?','Ogni giorno conto le persone. Poi mi ricordo che non spetta a me.']));
  let t;
  if(!F.tobiaScene)t='Tobia… di giorno non lo vedo più in giro. Credo si nasconda nel fienile. Prova ad andarci.';
  else if(!F.ezTruth)t='Ora parla con l\'Anziano Ezekiel. Digli che sai del costume e del Registro. Vedrai come cambia faccia.';
  else if(!F.woodDone)t='Nel bosco: a destra, dove la terra è battuta e ci sono le impronte. Alle voci, di\' la verità. E se senti la voce del nonno… non girarti. Mai.';
  else if(st.chapter>=4)t=canBreak()?'Stasera. Se arriva il momento: il nastro, la testa di tuo nonno e il fuoco della mia lanterna. Io ci sono.':'Stasera la Festa. Non bere il sidro. Se tutto va storto, corri al Varco: ti aspetto lì.';
- else t=countItem('nastro')?'Domani è la Festa. Non andare da solo. E tieni quel nastro: non seppellirlo.':'Domani è la Festa. Non andare da solo. Se trovi un nastro rosso, tienilo.';
+ else t=countItem('nastro')?'Domani è la Festa. Non andare da sol{o|a}. E tieni quel nastro: non seppellirlo.':'Domani è la Festa. Non andare da sol{o|a}. Se trovi un nastro rosso, tienilo.';
  return say('clara',t,F.woodDone?'fear':'')}
 // ---------- indicatore dell'obiettivo ----------
 function guideTarget(){const st=G.st,m=G.map;if(st.day<1)return null;const q=activeQuests().filter(q=>!q.d(st))[0];if(!q)return null;const txt=q.t(st);
@@ -2625,7 +2626,7 @@ async function drinkCup(){const st=G.st,F=st.flags;F.drank=1;AU.play('whisper');
  await narr('Le lanterne cominciano a respirare. Le voci della piazza si allungano, come se venissero da sott\'acqua.',{dark:1});
  G.glitch=12;addQuiete(-15);document.body.classList.add('corrupt2');UI.toast('Qualcosa nel sidro. Le gambe sono pesanti.','bad')}
 async function festaTalk(n){const st=G.st,F=st.flags,id=n.id,h=hearts(id);
- if(id==='ezekiel'){if(F.drank){await say('ezekiel','Bravo ragazzo. Siediti. Tra poco ti sentirai molto leggero.','stern');return true}
+ if(id==='ezekiel'){if(F.drank){await say('ezekiel','{Bravo ragazzo|Brava ragazza}. Siediti. Tra poco ti sentirai molto legger{o|a}.','stern');return true}
   if(F.refusedE){await say('ezekiel','Il Conteggio è alle undici, {n}. Non allontanarti.','stern');return true}
   await say('ezekiel','Un brindisi, {n}. Al Raccolto. Alle cose che tornano.','stern');
   const c=await ask('ezekiel','Ti porge una coppa di sidro dorato. Sorride, e non è un sorriso che gli hai mai visto fare.',['Bevi','Rifiuta']);
@@ -2654,6 +2655,8 @@ async function festaTalk(n){const st=G.st,F=st.flags,id=n.id,h=hearts(id);
   await say('tobia',['Otto, otto, otto! Hihi!','La zucca ti ha vista. Ti ha vista bene.','Nel cerchio c\'è un posto vuoto. Tutto per te.'][st.time%3],'dark');return true}
  return false}
 // ---------- il Conteggio ----------
+const FESTA_HELP={agatha:'Agatha rovescia una tavolata davanti agli zoccoli. «Oh, che sbadata!», dice, senza smettere di sorridere.',brom:'Brom si para davanti al Cavaliere con il martello in mano. Non dice niente. Non serve.',lucius:'Lucius ricomincia a contare ad alta voce, sbagliando apposta. Il Cavaliere si volta verso di lui, confuso.',tobia:'Tobia ride, fortissimo, e corre dalla parte opposta: «Di qua! Di qua, Vecchio! Hihi!»'};
+const FESTA_FOE={agatha:'«È lì! Va verso il Varco!» grida Agatha, con la voce dolce di sempre.',lucius:'«Di là» sussurra Lucius, e indica il Varco. Non riesce a guardarti.',brom:'Brom sposta una panca, piano, per lasciare passare il Cavaliere.',tobia:'Tobia batte le mani. «Corri, corri! Tanto ti prende! Hihi!»'};
 function ringDir(x,y){const dx=43-x,dy=20-y;return Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0)}
 function addClone(tx,ty,dir){const o={id:'faceless',name:'???',map:'main',x:tx*16+8,y:ty*16+14,dir,anim:0,path:null,tgt:null,hidden:false,speed:34,script:true,clone:1};G.npcs.push(o);return o}
 async function moveHorse(tx,ty,sp){const h=G.horse;h.on=true;while(Math.hypot(h.x-tx*16-8,h.y-ty*16-14)>3){const dx=tx*16+8-h.x,dy=ty*16+14-h.y,d=Math.hypot(dx,dy);h.x+=dx/d*sp*.05;h.y+=dy/d*sp*.05;if(Math.abs(dx)>2)h.dir=dx<0?1:2;h.anim+=.5;G.shake=Math.max(G.shake,.8);if(Math.random()<.4)AU.play('hooves');await sleep(50)}}
@@ -2693,7 +2696,12 @@ async function conteggio(){const st=G.st,F=st.flags;F.conteggio=1;G.cut++;
   await cleanFesta();
   if(ch==='heir'){await ending2(false,'accetti');return}
   if(ch==='break'){await breakPact();return}
-  G.redTint=.3;G.cutMusic=null;G.horse.on=false;spawnHorse(43,29,57);G.festaChase=true;
+  {const H=['agatha','brom','lucius','tobia'],help=H.filter(id=>hearts(id)>=3),foes=H.filter(id=>hearts(id)<=1),clara=F.claraAlly&&hearts('clara')>=3;
+   if(!help.length&&foes.length===H.length&&!clara){await narr('Fai un passo. Una mano ti stringe il polso, forte: è Brom. Non ti guarda negli occhi.',{dark:1});await say('brom','Mh. Mi dispiace. Non abbastanza.','dark');
+    await narr('Nessuno, nel cerchio, si muove per aiutarti. Nessuno ti ha mai conosciuto abbastanza da provarci.',{dark:1});await ending2(true,'consegnato');return}
+   for(const id of help.slice(0,2))await narr(FESTA_HELP[id]);
+   if(foes.length>=2&&help.length<2){const id=foes.find(x=>FESTA_FOE[x]);await narr(FESTA_FOE[id],{dark:1})}
+   G.redTint=.3;G.cutMusic=null;G.horse.on=false;spawnHorse(43,29+Math.min(help.length,3)*3,57-help.length*2+(foes.length>=3?3:0));G.festaChase=true}
   UI.toast('CORRI AL VARCO!','bad');UI.quest()}
  finally{cutDec()}}
 // ---------- finale 1: la Fuga ----------
@@ -2707,7 +2715,9 @@ async function escapeEnd(){const st=G.st,F=st.flags;G.cut++;G.chase=false;G.hors
   await narr('Correte per ore, o per minuti. Le teste, fra le radici, sussurrano i vostri nomi. Poi, a poco a poco, smettono: il bosco finisce.');
   G.redTint=0;await showScene('strada','All\'alba, il bosco finisce su una strada asfaltata.');
   await say('clara','Un camion… {n}, un camion! Allora è vero. È tutto vero.');
+  await narr('Sul fianco del camion, un adesivo di revisione con una data stampata. Non è il 1800. Non lo è da moltissimo tempo.',{dark:1});
   await narr('Fuori è il mondo di oggi. Hollowmere è una riserva privata, comprata dai fondatori. Nessuno, qui fuori, sa che esiste.');
+  await say('clara','Il Registro diceva 1846. Mio padre… tuo nonno… Che anno è, {n}? Che anno è davvero?','fear');
   await say('clara','Guarda quelle luci, laggiù. Non si spengono mai. Non… non si spengono mai.');
   const reg=(NET.regNames||[]).filter(x=>x&&x!==st.name),who=reg.length?reg[reg.length-1]:'Marlowe';
   await UI.paper(`<h2>Una lettera, altrove</h2><div class="paper"><p>Caro ${esc(who)},</p><p>se leggi queste righe, il tuo vecchio zio se n'è andato.</p><p>Ti lascio una casa in una valle tranquilla. La gente è gentile, l'aria profuma di mele.</p><p>Vai a viverci. Coltiva. Sii felice.</p><p class="ink"><s>non venire</s></p></div>`,'Chiudi');
@@ -2729,14 +2739,14 @@ async function ending2(taken,why){const st=G.st,F=st.flags;G.cut++;G.chase=false
 async function eredeChase(){const st=G.st,F=st.flags;F.bridgeGone=0;st.weather='nebbia';st.time=21*60+10;G.festaDark=true;rebuildMaps();G.map=G.maps.main;st.map='main';
  for(const n of G.npcs){n.hidden=true;n.script=true}
  setPos(G.player,44,45,3);updateCam(0);await UI.fade(0,900);
- await say('cocchiere','«Più in là non vado, {signore|signora}. Nessuno ci va.»');
+ await say('cocchiere',`«Più in là non vado, ${st.g==='f'?'signore':'signora'}. Nessuno ci va.»`);
  await narr('Dalla diligenza è sceso qualcuno con una valigia e una lettera in mano. Guarda la Valle. Sorride, sollevat'+(st.g==='f'?'o':'a')+'.');
  await narr('Tu sei alle sue spalle, sul ponte. Sei alto. Il tuo cavallo non esiste. Non ti serve.',{dark:1});
  LOOKS.prey=PLAYER_LOOKS[st.g==='f'?'m':'f'];delete SHEET.prey;G.prey={x:44*16+8,y:40*16+14,dir:3,anim:0,moving:true,wp:1,speed:58};
  G.erede=true;G.player.speed=76;G.player.dir=3;UI.toast('Insegui il forestiero. Il debito va pagato.','bad');UI.quest();
  const hold=G.cut;G.cut=0;const res=await new Promise(r=>{G.eredeRes=r});G.cut=hold;   // libera i controlli: il giocatore è il Cavaliere
  G.erede=false;G.prey=null;G.player.speed=66;AU.play('scream');G.scare=1.6;G.shake=8;await sleep(1500);
- await narr(res?'Lo raggiungi in mezzo alla strada, dove la nebbia è più fitta. Non urla. Nessuno urla, a quel punto.':'Si chiude in cappella e tira il chiavistello. Aspetti. Hai tutta la notte. Hai tutte le notti.',{dark:1})}
+ await narr(res?(st.g==='f'?'Lo':'La')+' raggiungi in mezzo alla strada, dove la nebbia è più fitta. Non urla. Nessuno urla, a quel punto.':'Si chiude in cappella e tira il chiavistello. Aspetti. Hai tutta la notte. Hai tutte le notti.',{dark:1})}
 function eredeTick(dt){const pr=G.prey,p=G.player;if(!pr||G.cut||UI.busy())return;
  const WP=[[44,40],[44,31],[43,24],[43,19],[43,13]],w=WP[pr.wp];
  if(w){const dx=w[0]*16+8-pr.x,dy=w[1]*16+14-pr.y,d=Math.hypot(dx,dy);if(d<4)pr.wp++;else{pr.x+=dx/d*pr.speed*dt;pr.y+=dy/d*pr.speed*dt;pr.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);pr.anim+=dt*9}}
