@@ -137,6 +137,7 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .gpick{display:flex;gap:calc(8*var(--u));align-items:center}
 #gprev{width:calc(36*var(--u));height:calc(54*var(--u));image-rendering:pixelated;background:radial-gradient(circle at 50% 40%,#6a5a7a,#2a2030);box-shadow:0 0 0 var(--u) #140a06,0 0 0 calc(2*var(--u)) var(--gold)}
 .gpick>div{flex:1}
+#dchoices.lock button{opacity:.45;pointer-events:none}
 </style></head><body>
 <div id="stage">
  <canvas id="game"></canvas>
@@ -1916,7 +1917,7 @@ function activeQuests(){const st=G.st,q=QUESTS.filter(q=>q.s(st));for(const f of
 const NAMES=Object.fromEntries(NPC_DEF);NAMES.voce='Voce dietro la porta';NAMES.cocchiere='Cocchiere';
 function fmt(t){const f=G.st&&G.st.g==='f';return String(t).replace(/\{n\}/g,G.st&&G.st.name||(f?'forestiera':'forestiero')).replace(/\{([^{}|]*)\|([^{}|]*)\}/g,(_,a,b)=>f?b:a)}
 function glitchText(t,h){const g='▓▒░█#';return t.split('').map(c=>c!==' '&&c!=='\n'&&Math.random()<(h-.5)*.12?g[Math.random()*g.length|0]:c).join('')}
-const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:null,ci:0,
+const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:null,ci:0,_lock:0,
  init(){
   $('#bPause').onclick=()=>{AU.play('ui');this.pauseKey()};$('#bFull').onclick=()=>goFull();
   document.querySelectorAll('#tmenu button').forEach(b=>b.onclick=()=>{AU.resume();AU.play('ui');TITLE[b.dataset.a]()});
@@ -1939,10 +1940,10 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   this._typ=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i%6===0)AU.play('blip');if(i>=t.length)this.finishType()},24);
  })},
  finishType(){clearInterval(this._typ);this._typ=null;$('#dtext').textContent=this._full;
-  if(this._choices){const box=$('#dchoices');box.innerHTML='';this._choices.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c;b.onclick=e=>{e.stopPropagation();AU.play('ui');this.closeDlg(i)};b.onpointerdown=e=>e.stopPropagation();box.appendChild(b)});this.markChoice()}
+  if(this._choices){const box=$('#dchoices');box.innerHTML='';this._choices.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c;b.onclick=e=>{e.stopPropagation();if(performance.now()<this._lock)return;AU.play('ui');this.closeDlg(i)};b.onpointerdown=e=>e.stopPropagation();box.appendChild(b)});this.markChoice();this._lock=performance.now()+800;box.classList.add('lock');setTimeout(()=>box.classList.remove('lock'),800)}
   else $('#dnext').style.visibility='visible'},
  markChoice(){[...$('#dchoices').children].forEach((b,i)=>b.classList.toggle('cur',i===this.ci))},
- advance(){if(!this.dlgOpen)return;if(this._typ){this.finishType();return}if(this._choices){this.closeDlg(this.ci);return}this.closeDlg()},
+ advance(){if(!this.dlgOpen)return;if(this._typ){this.finishType();return}if(this._choices){if(performance.now()<this._lock)return;this.closeDlg(this.ci);return}this.closeDlg()},
  closeDlg(v){$('#dlg').classList.add('hide');this.dlgOpen=false;const r=this._res;this._res=null;this._choices=null;if(r)r(v)},
  toast(t,cls){const d=document.createElement('div');d.className='toast'+(cls?' '+cls:'');d.textContent=fmt(t);const box=$('#toasts');box.appendChild(d);while(box.children.length>4)box.firstChild.remove();setTimeout(()=>d.remove(),2800)},
  // ---------- HUD ----------
