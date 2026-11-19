@@ -307,12 +307,17 @@ function render(){
  if(G.mode==='game')list.push({pl:1,sy:G.player.y});
  if(G.horse.on&&m.id==='main')list.push({horse:1,sy:G.horse.y});
  if(G.prey&&m.id==='main')list.push({prey:1,sy:G.prey.y});
+ if(G.coach&&m.id==='main')list.push({coach:1,sy:G.coach.y});
+ if(m.id==='main'&&G.amb){if(G.amb.deer&&G.amb.deer.on)list.push({deer:G.amb.deer,sy:G.amb.deer.y});if(G.night>.45)list.push({hog:G.amb.hog,sy:G.amb.hog.y})}
  if(m.id==='main'&&G.critters)for(const c of G.critters)if(c.x>cx-30&&c.x<cx+W+30&&c.y>cy-20&&c.y<cy+H+40)list.push({crit:c,sy:c.k==='crow'&&c.st!=='perch'?9e9:c.k==='duck'?43*16+2:c.y});
  list.sort((a,b)=>a.sy-b.sy);
  for(const e of list){
   if(e.crit)drawCritter(e.crit);
   else if(e.pl){if(G.erede)drawEredeHorse();else drawSprite('player',G.player)}
   else if(e.prey)drawSprite('prey',G.prey);
+  else if(e.coach)drawCoach();
+  else if(e.deer)drawDeer(e.deer);
+  else if(e.hog)drawHog(e.hog);
   else if(e.npc){drawSprite(e.npc.id,e.npc);favorMark(e.npc)}
   else if(e.horse){const h=G.horse,img=IMG.horse[Math.floor(h.anim/2)%2];ctx.drawImage(SHADOW,h.x-12,h.y-3,24,6);if(h.dir===1){ctx.save();ctx.translate(Math.round(h.x),0);ctx.scale(-1,1);dImg(ctx,img,-22,Math.round(h.y-38));ctx.restore()}else dImg(ctx,img,Math.round(h.x-22),Math.round(h.y-38))}
   else if(e.img.canopyH){const im=e.img,ch=im.canopyH,S2=im.s||1,IW=iw(im),IH=ih(im),wind=G.st.weather==='pioggia'?1:.25,sw=Math.round(Math.sin(G.t*(1.1+wind)+e.tx*.9+e.ty*.4)*(.65+wind));ctx.drawImage(im,0,0,im.width,ch*S2,Math.round(e.dx)+sw,Math.round(e.dy),IW,ch);ctx.drawImage(im,0,ch*S2,im.width,im.height-ch*S2,Math.round(e.dx),Math.round(e.dy)+ch,IW,IH-ch)}
@@ -339,6 +344,7 @@ function render(){
   ctx.drawImage(LC,0,0);ctx.globalCompositeOperation='lighter';
   for(const l of L){const g=ctx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r);g.addColorStop(0,l.red?'rgba(200,30,10,.35)':'rgba(255,150,60,.16)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(l.x-l.r,l.y-l.r,l.r*2,l.r*2)}
   ctx.globalCompositeOperation='source-over';}
+ ctx.save();ctx.translate(-cx,-cy);drawAmbTop(m);ctx.restore();
  atmosphere(m);
  ctx.save();ctx.translate(-cx,-cy);drawBubbles(m);drawPrompt();ctx.restore();
  // nebbia

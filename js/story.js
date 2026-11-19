@@ -217,7 +217,7 @@ function loreHTML(){const st=G.st,F=st.flags,E=[];
  if(F.treeSeen)E.push(['L\'Albero dei Morti','Fra le radici rosse, le teste dei Contati. Il Cavaliere è il corpo di Elias, legato all\'Albero: non fu risparmiato, fu rimandato. Con un nastro rosso, le radici si ritraggono.']);
  if(F.conteggio)E.push(['Il Conteggio','Alla Festa Lucius conta: sette presenti, e il numero continua a salire. A mezzanotte, dal Varco, arriva il Cavaliere.']);
  let nSec=0,tot=0;for(const id of Object.keys(SECRETS))for(const [h,t] of SECRETS[id]){tot++;if(F['sec_'+id+h]){nSec++;E.push([NAMES[id]+' confida',t])}}
- return E.map(([a,b])=>`<h3>${esc(a)}</h3><p class="small">${esc(fmt(b))}</p>`).join('')+`<p class="small" style="opacity:.7">Segreti degli abitanti: ${nSec}/${tot}. Più cresce l'amicizia, più si confidano.</p>`+(()=>{const f=JSON.parse(LS.get('hm_endings')||'[]');return f.length?`<h3>Finali scoperti</h3><p class="small">${f.map(n=>({1:'La Fuga',2:'L\'Erede',3:'Spezzare il patto'}[n])).join(' · ')} (${f.length}/3)</p>`:''})()}
+ return E.map(([a,b])=>`<h3>${esc(a)}</h3><p class="small">${esc(fmt(b))}</p>`).join('')+eggLore()+`<p class="small" style="opacity:.7">Segreti degli abitanti: ${nSec}/${tot}. Più cresce l'amicizia, più si confidano.</p>`+(()=>{const f=JSON.parse(LS.get('hm_endings')||'[]');return f.length?`<h3>Finali scoperti</h3><p class="small">${f.map(n=>({1:'La Fuga',2:'L\'Erede',3:'Spezzare il patto'}[n])).join(' · ')} (${f.length}/3)</p>`:''})()}
 
 // ================= CAPITOLO IV — LA FESTA DEL RACCOLTO =================
 NAMES.padre='Il Senza Volto';

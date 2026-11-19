@@ -56,7 +56,7 @@ function farmAct(tx,ty){
  if(id==='hoe'){
   if(!inFarm(tx,ty)){if(free)UI.toast('La terra qui è troppo dura. Coltiva nei campi del nonno.');return}
   if(f){UI.toast('È già dissodato.');return}if(!free)return;if(!useEnergy(st.up&&st.up.hoe?1:2))return;
-  st.farm[k]={w:false,c:null};AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
+  st.farm[k]={w:false,c:null};eggDig(tx,ty);AU.play('hoe');burst('dust',tx*16+8,ty*16+10,8);G.shake=.6;tip('tutHoe','Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');return}
  if(id==='can'){if(!f){if(m.get(tx,ty)===3){UI.toast('L\'annaffiatoio è già pieno.');return}UI.toast('Niente da annaffiare.');return}if(f.w)return;if(!useEnergy(1))return;f.w=true;waterWide(tx,ty);AU.play('water');burst('water',tx*16+8,ty*16+4,10);if(f.c){st.flags.watered=(st.flags.watered||0)+1;tip('tutWater',`Annaffiata! Cresce di notte, se la bagni ogni giorno: ${CROPS[f.c.t].n.toLowerCase()} matura in ${CROPS[f.c.t].days} notti.`)}return}
  if(def&&def.t==='seed'){if(!f){UI.toast('Prima dissoda la terra con la zappa.');return}if(f.c){UI.toast('C\'è già qualcosa qui.');return}f.c={t:def.crop,a:0,dry:0};removeItem(id,1);AU.play('plant');st.flags.planted++;burst('dust',tx*16+8,ty*16+10,5);floatText('Seminato: '+CROPS[def.crop].n,tx*16+8,ty*16-4,'#f6e6c0');tip('tutSeed','Seminato! Ora prendi l\'annaffiatoio (slot 2) e bagna la terra.');return}
  if(f&&f.c){const c=f.c,n=CROPS[c.t].n;if(c.dead){UI.toast(`${n}: è seccata. Ripulisci la zolla con la zappa.`,'bad');return}const l=cropLeft(c);
@@ -65,9 +65,11 @@ function farmAct(tx,ty){
 // ================= AZIONI =================
 function doAction(){const [fx,fy]=frontTile();const p=G.player;
  if(G.map.id==='main'&&G.critters){const ax=p.x+DIRV[p.dir][0]*14,ay=p.y+DIRV[p.dir][1]*14;for(const c of G.critters){if(Math.hypot(c.x-ax,c.y-ay)>14)continue;
-  if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
+  if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');eggCat();floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
   if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}
  for(const n of G.npcs){if(n.hidden||n.map!==G.map.id)continue;const [nx,ny]=ptile(n);const near=Math.hypot(n.x-(p.x+DIRV[p.dir][0]*14),n.y-(p.y+DIRV[p.dir][1]*14))<14;if((nx===fx&&ny===fy)||near){talkTo(n);return}}
+ if(eggAt(fx,fy))return;
+ if(G.map.id==='main'&&hogAt(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return;
  const o=G.map.objAt(fx,fy);if(o&&o.act){runAct(o);return}
  if(useKey())return;
  if(eatSel())return;

@@ -13,18 +13,22 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
  if(st.flags.ch3end&&!st.flags.ch4card){st.flags.ch4card=1;st.flags.ch4day=st.day;st.chapter=4}   // salvataggi dopo il Capitolo III: la Festa è oggi
  if(st.flags.ch2end)st.flags.finaleChase=0;   // salvataggi dopo il Capitolo II: gli abitanti tornano a uscire di casa
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
-async function startFrom(st){UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
+async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
  rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
  snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
-function toTitle(){G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
+function toTitle(){G.coach=null;G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // ---------- prologo ----------
-async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,44,46,3);
+async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,43,46,3);
+ G.coach={x:45*16+4,y:47*16+30,moving:false};await arrivalCinematic();
  const ez=NPC('ezekiel'),cl=NPC('clara');ez.script=cl.script=true;placeNPC(ez,'main',44,39,0);placeNPC(cl,'main',46,39,0);updateCam(0);G.cutMusic='title';
  await UI.card('Prologo','Hollowmere','La Valle Quieta',false,false,2200);
- await UI.fade(0,1500);AU.play('hooves');
- await narr('La diligenza si ferma prima del ponte. Il cocchiere non scende nemmeno.');
+ await UI.fade(0,1500);
+ await narr('Scendi con la valigia. Il cocchiere ha già girato i cavalli, prima ancora che tu toccassi terra.');
  await say('cocchiere','«Più in là non vado, {signore|signora}. Nessuno ci va.»');
- AU.play('hooves');await narr('Il rumore delle ruote si allontana. Poi più niente. Nemmeno gli uccelli.');
+ const cl0=await ask('cocchiere','«Se fossi in voi, risalirei. Riparto adesso. Non torno.»',['Resto','Perché nessuno ci va?']);
+ if(cl0===1)await say('cocchiere','«Perché quelli che ci vanno, poi, non scrivono più. Tranne uno. E guardate dove ha mandato voi.»');
+ await say('cocchiere','«Che Dio… no. Che vi vada bene, ecco.»');
+ await coachLeave();await narr('Il rumore delle ruote si allontana. Poi più niente. Nemmeno gli uccelli.');
  await walkPlayer(44,41);
  await say('ezekiel','Benvenut{o|a} a Hollowmere, {n}. Io sono Ezekiel Thorne, l\'Anziano. Ti aspettavamo.');
  await say('clara','Ciao! Benvenut{o|a}! Hai fatto buon viaggio? Sei stanc{o|a}? Hai fame?');
@@ -40,7 +44,7 @@ async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuil
  UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,900);G.cut--;
  await sleep(300);G.cut++;await narr('La casa del nonno. Odora di legno, lavanda e di qualcosa di chiuso da tanto tempo.');await narr('Fuori ti aspettano i campi. E il villaggio. Esci dalla porta in basso.\n(Muoviti con WASD o il pollice sinistro. E / Spazio / A per agire.)');G.cut--}
 // ---------- giornata ----------
-function morningSetup(){const st=G.st,F=st.flags;
+function morningSetup(){const st=G.st,F=st.flags;G.amb=null;
  if(F.ch2end){F.finaleChase=0;if(st.chapter<3)st.chapter=3}if(F.ch3end&&st.chapter<4)st.chapter=4;if(st.day>=2)F.bridgeGone=1;if(st.day>=2&&!F.gotPaint)F.ezWait=1;
  const ks=Object.keys(CHORES).filter(k=>k!==st.lastChore);st.chore=ks[Math.random()*ks.length|0];st.lastChore=st.chore;st.choreOk=false;st.choreDone=false;st.leaves=[0,0,0,0];F.bucket=0;F.barnDark=0;
  const wr=Math.random();st.weather=st.day<=1?'sereno':wr<.45?'sereno':wr<.65?'nuvoloso':wr<(st.chapter>=2?.85:.8)?'nebbia':'pioggia';
@@ -178,7 +182,7 @@ function updHorror(dt){const st=G.st;if(!st)return;let h=(100-st.quiete)/100*.75
 let _last=performance.now(),_hudT=0;
 function update(dt){
  const frozen=UI.modalOpen;
- if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);woodTick(dt);festaTick(dt);
+ if(!frozen){updatePlayer(dt);if(!UI.dlgOpen){for(const n of G.npcs)updateNPC(n,dt);npcBarks(dt);updChats(dt)}updCritters(dt);ambTick(dt);woodTick(dt);festaTick(dt);
   if(G.st.weather==='pioggia'&&!G.map.interior&&!G.cut&&Math.random()<dt*.01){G.flash={a:.5,c:'#dfe8ff'};AU.play('thunder',.5)}if(!G.cut&&!UI.dlgOpen)updateHorse(dt);clock(dt)}
  updParts(dt);updPrints(dt);if(G.map)updateCam(dt);updHorror(dt);
  G.flash.a=Math.max(0,G.flash.a-dt*1.5);G.scare=Math.max(0,G.scare-dt*.7);
