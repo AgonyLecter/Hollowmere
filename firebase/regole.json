@@ -65,11 +65,18 @@
           ".read": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           "$id": {
             ".write": "auth != null && ((!data.exists() && newData.exists()) || (!newData.exists() && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid))",
-            ".validate": "!newData.exists() || newData.child('t').val() === 'water' || newData.child('t').val() === 'gift'"
+            ".validate": "!newData.exists() || newData.child('t').val() === 'water' || newData.child('t').val() === 'gift' || newData.child('t').val() === 'sale' || newData.child('t').val() === 'invite'"
           }
         }
       },
 
+      "mercato": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && root.child('hollowmere/proprietari/' + newData.child('seller').val() + '/uid').val() === auth.uid) || (data.exists() && !data.child('buyer').exists() && newData.exists() && newData.child('buid').val() === auth.uid && newData.child('seller').val() === data.child('seller').val() && newData.child('item').val() === data.child('item').val() && newData.child('n').val() === data.child('n').val() && newData.child('price').val() === data.child('price').val()) || (!newData.exists() && (data.child('buid').val() === auth.uid || root.child('hollowmere/proprietari/' + data.child('seller').val() + '/uid').val() === auth.uid)))",
+          ".validate": "!newData.exists() || (newData.child('item').isString() && newData.child('n').isNumber() && newData.child('n').val() >= 1 && newData.child('price').isNumber() && newData.child('price').val() >= 1)"
+        }
+      },
       "registro": {
         ".read": true,
         "$id": {

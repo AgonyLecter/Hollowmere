@@ -71,14 +71,14 @@ function genBuildArt(){const wood=rp('#8a5a30'),dk=rp('#5a3a1e'),I=(id,fn)=>{con
 // arredo in casa
 function furnFree(m,x,y){const g=m.get(x,y),st=G.st;return g===6&&!m.objAt(x,y)&&!(m.doors||[]).some(d=>Math.abs(d.tx-x)<=0&&Math.abs(d.ty-y)<=1)}
 function houseAct(fx,fy){const st=G.st,m=G.map;if(!isFree(st)||m.id!=='house'||G.visit)return false;const it=selItem(),id=it&&it.id,o=m.objAt(fx,fy),k=fkey(fx,fy);st.free.inside=st.free.inside||{};
- if(o&&o.kind==='furn'){if(id==='accetta'||id==='piccone'){if(!addItem(o.fid,1))return true;delete st.free.inside[o.fk];G.maps.house=buildHouse(st);addExits(G.maps.house);buildGround(G.maps.house);G.map=G.maps.house;AU.play('pick');UI.toast(ITEMS[o.fid].n+' raccolto.');return true}
+ if(o&&o.kind==='furn'){if(id==='accetta'||id==='piccone'){if(!addItem(o.fid,1))return true;delete st.free.inside[o.fk];G.maps.house=buildHouse(st);addExits(G.maps.house);buildGround(G.maps.house);applyLook(G.maps.house,st);G.map=G.maps.house;AU.play('pick');UI.toast(ITEMS[o.fid].n+' raccolto.');return true}
   if(o.fid==='cucina'){cookModal(true);return true}if(o.fid==='libreria'){recipeBook();return true}UI.toast(ITEMS[o.fid].n+'. Per spostarlo usa l\'accetta.');return true}
  if(id&&ITEMS[id].t==='arredo'){const wall=ITEMS[id].wall;if(wall?!(m.get(fx,fy)===9&&!m.objAt(fx,fy)):!furnFree(m,fx,fy)){UI.toast(wall?'I quadri vanno appesi alla parete in alto.':'Non qui: serve un posto libero sul pavimento.');return true}
-  st.free.inside[k]={id};removeItem(id,1);G.maps.house=buildHouse(st);addExits(G.maps.house);buildGround(G.maps.house);G.map=G.maps.house;AU.play('plant');st.flags.decor=(st.flags.decor||0)+1;return true}
+  st.free.inside[k]={id};removeItem(id,1);G.maps.house=buildHouse(st);addExits(G.maps.house);buildGround(G.maps.house);applyLook(G.maps.house,st);G.map=G.maps.house;AU.play('plant');st.flags.decor=(st.flags.decor||0)+1;return true}
  return false}
 function addFurniture(m,st){if(!isFree(st))return;for(const k in (st.free.inside||{})){const [x,y]=k.split(',').map(Number),f=st.free.inside[k],flat=ITEMS[f.id]&&ITEMS[f.id].flat;
  if(flat){m.add({kind:'furn',tx:x,ty:y,img:FREEIMG[f.id],dx:x*16-4,dy:y*16+2,sy:-1,solid:[],hits:[[x,y]],fid:f.id,fk:k,deco:0});continue}
- m.add(OB('furn',x,y,FREEIMG[f.id],{fid:f.id,fk:k,act:'furn',lift:ITEMS[f.id].wall?-6:0,solid:ITEMS[f.id].wall?[]:[[x,y]],hits:[[x,y]]}));if(f.id==='lampada'||f.id==='lanternacarta')m.lights.push({x:x*16+8,y:y*16-10,r:60,fire:1})}}
+ m.add(OB('furn',x,y,FREEIMG[f.id],{fid:f.id,fk:k,act:'furn',lift:ITEMS[f.id].wall?-6:0,solid:ITEMS[f.id].wall?[]:[[x,y]],hits:[[x,y]]}));if(f.id==='lampada'||f.id==='lanternacarta'||f.id==='lampadario')m.lights.push({x:x*16+8,y:y*16-10,r:60,fire:1})}}
 ACT.furn=()=>{};PROMPT.furn='Usa';
 // Brom amplia la casa
 async function houseUpMenu(){const st=G.st,lv=houseLv(),nx=HOUSE_UP[lv+1],o=st.free.houseJob;

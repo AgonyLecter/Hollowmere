@@ -47,13 +47,14 @@ async function travelMenu(){const st=G.visit?G.home:G.st;if(!isFree(st))return f
  const list=(await MP.list()).filter(v=>v.pid!==st.pid);if(!UI.modalOpen)return true;
  const fr=st.mpFriends,row=(v,tag)=>`<div class="mrow"><span><b>${esc(v.name||'?')}</b> <span class="small">${tag||''}</span><br><span class="small">${v.season!=null?`${SEASONS[v.season]} ${v.sday||''}${v.year>1?' · anno '+v.year:''} · `:''}${v.anim?v.anim+' bestie · ':''}${v.built?v.built+' costruzioni':''}</span></span><button class="btn" data-v="${esc(v.pid)}">Visita</button></div>`;
  const known=new Set(fr.map(f=>f.pid));
- UI.open(`<button class="btn mclose" data-close>✕</button><h2>La strada di fuori</h2><p class="small">Il tuo codice: <b>${esc(st.pid)}</b>. Dallo agli amici per farti visitare.</p>`+
+ UI.open(`<button class="btn mclose" data-close>✕</button><h2>La strada di fuori</h2><p class="small">Il tuo codice: <b>${esc(st.pid)}</b>. Dallo agli amici per farti visitare.</p><p><button class="btn" id="tvMkt">Il mercato del ponte</button></p>`+
   (G.visit?`<p><button class="btn" data-home="1">Torna a casa</button></p>`:'')+
   `<h3>Amici</h3>${fr.length?fr.map(f=>row(Object.assign({},list.find(v=>v.pid===f.pid)||{},f),'')).join(''):'<p class="small">Nessuno, per ora. Aggiungi un amico con il suo codice.</p>'}`+
-  `<p><input class="tx" id="frIn" maxlength="9" placeholder="HM-XXXXXX" style="width:50%;text-transform:uppercase"> <button class="btn" id="frAdd">Aggiungi amico</button></p>`+
+  `<p><input class="tx" id="frIn" maxlength="9" placeholder="HM-XXXXXX" style="width:50%;text-transform:uppercase"> <button class="btn" id="frAdd">Aggiungi amico</button> <button class="btn" id="frInv">Invita</button></p><p class="small">«Invita» manda il tuo villaggio all'amico: lo troverà qui anche se adesso è offline. I villaggi si visitano sempre, anche quando il padrone non c'è.</p>`+
   `<h3>Villaggi vicini</h3>${list.filter(v=>!known.has(v.pid)).slice(0,10).map(v=>row(v)).join('')||'<p class="small">Nessun altro villaggio, per ora.</p>'}`);
  $('#mbox').querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{UI._mclose=null;UI.close();startVisit(b.dataset.v)});
  const h=$('#mbox').querySelector('[data-home]');if(h)h.onclick=()=>{UI._mclose=null;UI.close();endVisit()};
+ {const mk=$('#tvMkt');if(mk)mk.onclick=()=>{UI._mclose=null;marketMenu()};const iv=$('#frInv');if(iv)iv.onclick=()=>{const c=$('#frIn').value.trim().toUpperCase();UI._mclose=null;UI.close();inviteFriend(c)}}
  $('#frAdd').onclick=async()=>{const c=$('#frIn').value.trim().toUpperCase();if(!/^HM-[A-Z0-9]{6}$/.test(c)){UI.toast('Il codice è fatto così: HM-XXXXXX.');return}if(c===st.pid){UI.toast('Quello è il tuo codice.');return}
   const s=await MP.load(c);if(!s){UI.toast('Nessun villaggio con questo codice.','bad');return}if(!fr.some(f=>f.pid===c))fr.push({pid:c,name:s.name});AU.play('ok');UI.toast(`${s.name} aggiunto agli amici.`);UI._mclose=null;UI.close();travelMenu()};
  return true}
@@ -82,6 +83,8 @@ function giftMenu(){const st=G.st,L=st.inv.map((s,i)=>[s,i]).filter(([s])=>s&&IT
 function inboxStart(){const st=G.st;if(INBOX_OFF||!isFree(st)||!st.pid)return;INBOX_OFF=MP.inbox(st.pid,a=>inboxApply(a))||null}
 function inboxApply(a){const st=G.visit?G.home:G.st;if(!st||!isFree(st))return;st.flags.mpVisited=1;st.mailbox=st.mailbox||[];G.inboxN=G.inboxN||{};
  if(a.t==='water'){const f=st.farm[a.k];if(f&&a.day===st.day&&f.c){f.w=true;const k=a.from||'Qualcuno';G.inboxN[k]=(G.inboxN[k]||0)+1;clearTimeout(G.inboxT);G.inboxT=setTimeout(()=>{for(const n in G.inboxN)UI.toast(`Visita di ${n}: ha annaffiato ${G.inboxN[n]} ${G.inboxN[n]===1?'pianta':'piante'} nei tuoi campi.`);G.inboxN={}},800)}}
+ else if(a.t==='sale'&&ITEMS[a.item]){st.money+=(+a.price||0);UI.hud();AU.play('coin');UI.toast(`Mercato: ${a.from||'qualcuno'} ha comprato ${a.n} × ${ITEMS[a.item].n}. +${SC(+a.price||0)}`);NET.save(st)}
+ else if(a.t==='invite'){inviteReceived(a,st);NET.save(st)}
  else if(a.t==='gift'&&ITEMS[a.item]){st.mailbox.push({item:a.item,n:a.n||1,from:a.from||'Qualcuno'});UI.toast(`${a.from||'Qualcuno'} ti ha lasciato un regalo nella cassetta delle spedizioni.`)}}
 function mailboxTake(){const st=G.st;if(G.visit||!st.mailbox||!st.mailbox.length)return false;const left=[];for(const m of st.mailbox){if(!addItem(m.item,m.n)){left.push(m);continue}UI.toast(`Dalla cassetta: ${ITEMS[m.item].n} — da ${m.from}.`)}st.mailbox=left;AU.play('ok');return true}
 // pulsante e tasto per scrivere

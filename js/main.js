@@ -11,7 +11,8 @@ const TITLE={
  opts(){UI.open(`<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`);const vm=$('#vm'),vs=$('#vs');vm.oninput=()=>{AU.vol.m=+vm.value;AU.applyVol();LS.set('hm_vol',JSON.stringify(AU.vol))};vs.oninput=()=>{AU.vol.s=+vs.value;AU.applyVol();AU.play('blip');LS.set('hm_vol',JSON.stringify(AU.vol))}},
  full(){goFull()},
  // la Valle: il gioco libero, con il suo salvataggio separato (e il suo codice di villaggio)
- async valle(){let st=null;try{st=JSON.parse(LS.get('hm_free'))}catch(e){}
+ async valle(){if(!JSON.parse(LS.get('hm_endings')||'[]').length&&!LS.get('hm_free')){UI.open(`<button class="btn mclose" data-close>✕</button><h2>La Valle</h2><p>Dopo la storia, Hollowmere diventa un mondo da vivere insieme agli altri giocatori: stagioni, feste, il tuo villaggio, le visite, il mercato dei materiali rari.</p><p><b>🔒 Si apre quando finisci la storia</b>, con uno qualsiasi dei tre finali.</p>`);return}
+  let st=null;try{st=JSON.parse(LS.get('hm_free'))}catch(e){}
   if(NET.ok&&st&&st.pid){const r=await NET.load(st.pid);if(r&&r.free&&(r.ts||0)>(st.ts||0))st=r}
   if(st&&st.free){startFrom(st);return}
   let base=null;try{base=JSON.parse(LS.get('hm_freebase')||LS.get('hm_save'))}catch(e){}
@@ -217,7 +218,7 @@ function loop(now){const dt=Math.min(.05,(now-_last)/1000);_last=now;G.t+=dt;
  requestAnimationFrame(loop)}
 async function boot(){
  try{await Promise.race([document.fonts.ready,sleep(2500)])}catch(e){}
- genAll();genFreeArt();genAnimalArt();genMissionArt();genBuildArt();genGardenArt();genDishArt();genFestArt();genFarm2Art();initEntities();UI.init();NET.init();
+ genAll();genFreeArt();genAnimalArt();genMissionArt();genBuildArt();genGardenArt();genDishArt();genFestArt();genFarm2Art();genTradeArt();initEntities();UI.init();NET.init();
  toTitle();$('#loading').classList.add('hide');requestAnimationFrame(loop);
 }
 boot();

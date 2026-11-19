@@ -140,9 +140,9 @@ function applyFree(m,st){if(m.id!=='main'||!isFree(st))return;const W2=st.free;a
   if(st.day-g.day>=(o.kind==='tree'&&skLv('racc',st)>=10?5:REGROW[o.kind])){delete W2.gone[fkey(o.tx,o.ty)];continue}
   mapRemove(m,o);if(o.kind==='tree'&&!g.stumpGone)m.add(OB('ceppo',o.tx,o.ty,IMG.stump,{act:'ceppo',of:fkey(o.tx,o.ty)}))}
  for(const k in W2.debris){const [x,y]=k.split(',').map(Number),t=W2.debris[k];if(m.hit[k]||m.solid(x,y)){delete W2.debris[k];continue}m.add(OB('debris',x,y,FREEIMG[t],{act:'debris',dt:t,solid:[],hits:[[x,y]]}))}
- for(const k in W2.built){const [x,y]=k.split(',').map(Number),b=W2.built[k];if(ITEMS[b.id].size){addBigBuilt(m,k,b);continue}const img=placeImg(b.id,b),o=m.add(OB('built',x,y,img,{act:'built',bk:k,bid:b.id,canopy:!!ITEMS[b.id].tree}));
+ for(const k in W2.built){const [x,y]=k.split(',').map(Number),b=W2.built[k];if(ITEMS[b.id].size){addBigBuilt(m,k,b);continue}const img=placeImg(b.id,b),o=m.add(OB('built',x,y,img,{act:'built',bk:k,bid:b.id,canopy:!!ITEMS[b.id].tree,frames:Array.isArray(FREEIMG[b.id])?FREEIMG[b.id]:null}));
   if(b.id==='lampione')m.lights.push({x:x*16+8,y:y*16-14,r:62});}}
-function placeImg(id,b){if(ITEMS[id]&&ITEMS[id].tree)return fruitTreeImg(b||{id,d:G.st.day});return ({banco:FREEIMG.banco,cassa:FREEIMG.cassa,irrigatore:FREEIMG.irrigatore,lampione:IMG.lamp,recinto:IMG.fenceV,panchina:IMG.bench}[id])||FREEIMG[id]}
+function placeImg(id,b){if(ITEMS[id]&&ITEMS[id].tree)return fruitTreeImg(b||{id,d:G.st.day});return ({banco:FREEIMG.banco,cassa:FREEIMG.cassa,irrigatore:FREEIMG.irrigatore,lampione:IMG.lamp,recinto:IMG.fenceV,panchina:IMG.bench}[id])||(Array.isArray(FREEIMG[id])?FREEIMG[id][0]:FREEIMG[id])}
 // ogni mattina: nuovi detriti nei prati e nei campi vuoti; gli irrigatori bagnano
 function freeMorning(st){if(!isFree(st))return;const W2=st.free,m=G.maps&&G.maps.main;
  const n=Object.keys(W2.debris).length;if(n<40){const add=6+Math.floor(Math.random()*6);for(let i=0;i<add;i++){const x=4+Math.floor(Math.random()*56),y=6+Math.floor(Math.random()*36),k=fkey(x,y);
@@ -159,23 +159,23 @@ function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main'||G.visit
  if(animalAct(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return true;
  // raccogliere i detriti
  if(o&&o.kind==='debris'){const t=o.dt,need={ramo:'accetta',sasso:'piccone'}[t];if(need&&id!==need){UI.toast(t==='ramo'?'Un ramo secco. Ti serve l\'accetta.':'Un sasso. Ti serve il piccone.');return true}
-  if(!useEnergy(1))return true;const got=t.startsWith('w_')?[t.slice(2),1]:{ramo:['legna',1+(Math.random()<.5?1:0)],sasso:['pietra',1+(Math.random()<.4?1:0)],erbaccia:['fibra',1],uovo:['uovo',1]}[t];if(!addItem(got[0],got[1]))return true;
+  markHit(o);if(!useEnergy(1))return true;const got=t.startsWith('w_')?[t.slice(2),1]:{ramo:['legna',1+(Math.random()<.5?1:0)],sasso:['pietra',1+(Math.random()<.4?1:0)],erbaccia:['fibra',1],uovo:['uovo',1]}[t];if(!addItem(got[0],got[1]))return true;
   if(t.startsWith('w_')&&skLv('racc')>=8&&Math.random()<.3)addItem(got[0],1);addXP('racc',t.startsWith('w_')?4:2);
-  delete W2.debris[k];mapRemove(m,o);AU.play(t==='sasso'?'mine':t==='ramo'?'chop':'pick');hitFx(fx,fy,t==='sasso'?'#a8a59a':'#8a6a3a');floatText(`+${got[1]} ${ITEMS[got[0]].n}`,fx*16+8,fy*16-4);st.flags.debris=(st.flags.debris||0)+1;return true}
+  delete W2.debris[k];mapRemove(m,o);AU.play(t==='sasso'?'mine':t==='ramo'?'chop':'pick');hitFx(fx,fy,t==='sasso'?'#a8a59a':'#8a6a3a');flyPop(got[0],fx*16+8,fy*16+4);floatText(`+${got[1]} ${ITEMS[got[0]].n}`,fx*16+8,fy*16-4);st.flags.debris=(st.flags.debris||0)+1;return true}
  // alberi, ceppi, tronchi: accetta
  if(o&&(o.kind==='tree'||o.kind==='ceppo'||o.kind==='log')){if(id!=='accetta'){if(o.kind==='ceppo'){UI.toast('Un ceppo. Con l\'accetta lo togli.');return true}return false}
-  const hk=fkey(o.tx,o.ty),need={tree:5,ceppo:2,log:6}[o.kind];if(!useEnergy(skLv('racc')>=2?1:2))return true;G.hits[hk]=(G.hits[hk]||0)+1;AU.play('chop');hitFx(o.tx,o.ty,'#8a6a3a');
+  const hk=fkey(o.tx,o.ty),need=Math.max(1,{tree:5,ceppo:2,log:6}[o.kind]-(goldTools()?1:0));if(!useEnergy(skLv('racc')>=2?1:2))return true;G.hits[hk]=(G.hits[hk]||0)+1;markHit(o);AU.play('chop');hitFx(o.tx,o.ty,'#8a6a3a');
   if(o.kind==='tree'&&Math.random()<.5)for(let i=0;i<4;i++)G.parts.push({k:'spark',x:o.tx*16+8+(Math.random()-.5)*30,y:o.ty*16-30,vx:(Math.random()-.5)*20,vy:10,t:0,life:1,c:seasonOf()===1?'#eef3fa':['#d86a28','#e8a040','#6a9a3a','#5a9a2a'][seasonOf()]});
   if(G.hits[hk]<need){floatText('•'.repeat(G.hits[hk]),o.tx*16+8,o.ty*16-6,'#f6d98a',.6);return true}
   delete G.hits[hk];const n={tree:8+Math.floor(Math.random()*5),ceppo:3,log:14}[o.kind]+(skLv('racc')>=4?1:0);addXP('racc',{tree:10,ceppo:3,log:12}[o.kind]);if(!addItem('legna',n))return true;
   if(o.kind==='tree'){W2.gone[hk]={day:st.day};AU.play('slam');G.shake=3;mapRemove(m,o);m.add(OB('ceppo',o.tx,o.ty,IMG.stump,{act:'ceppo',of:hk}));st.flags.felled=(st.flags.felled||0)+1;tip('tutFell','Albero abbattuto! Tra una decina di giorni ne ricrescerà uno. Il ceppo si toglie con l\'accetta.')}
   else if(o.kind==='ceppo'){const g=W2.gone[o.of];if(g)g.stumpGone=1;mapRemove(m,o)}
   else{W2.gone[hk]={day:st.day};mapRemove(m,o)}
-  floatText(`+${n} Legna`,o.tx*16+8,o.ty*16-10);return true}
+  flyPop('legna',o.tx*16+8,o.ty*16-6);floatText(`+${n} Legna`,o.tx*16+8,o.ty*16-10);return true}
  // rocce: piccone
- if(o&&o.kind==='rock'){if(id!=='piccone')return false;const hk=fkey(o.tx,o.ty);if(!useEnergy(skLv('racc')>=2?1:2))return true;G.hits[hk]=(G.hits[hk]||0)+1;AU.play('mine');hitFx(o.tx,o.ty,'#a8a59a');
-  if(G.hits[hk]<3){floatText('•'.repeat(G.hits[hk]),o.tx*16+8,o.ty*16-6,'#f6d98a',.6);return true}
-  delete G.hits[hk];const n=4+Math.floor(Math.random()*3)+(skLv('racc')>=4?1:0);if(!addItem('pietra',n))return true;addXP('racc',10);if(Math.random()<(skLv('racc')>=6?.5:.3)){addItem('ferro',1+(Math.random()<.3?1:0));floatText('+ Minerale di ferro',o.tx*16+8,o.ty*16-16,'#c8703a')}W2.gone[hk]={day:st.day};mapRemove(m,o);floatText(`+${n} Pietra`,o.tx*16+8,o.ty*16-6);st.flags.mined=(st.flags.mined||0)+1;return true}
+ if(o&&o.kind==='rock'){if(id!=='piccone')return false;const hk=fkey(o.tx,o.ty);if(!useEnergy(skLv('racc')>=2?1:2))return true;G.hits[hk]=(G.hits[hk]||0)+1;markHit(o);AU.play('mine');hitFx(o.tx,o.ty,'#a8a59a');
+  if(G.hits[hk]<(goldTools()?2:3)){floatText('•'.repeat(G.hits[hk]),o.tx*16+8,o.ty*16-6,'#f6d98a',.6);return true}
+  delete G.hits[hk];const n=4+Math.floor(Math.random()*3)+(skLv('racc')>=4?1:0);if(!addItem('pietra',n))return true;rareDrop(o);addXP('racc',10);if(Math.random()<(skLv('racc')>=6?.5:.3)){addItem('ferro',1+(Math.random()<.3?1:0));floatText('+ Minerale di ferro',o.tx*16+8,o.ty*16-16,'#c8703a')}W2.gone[hk]={day:st.day};mapRemove(m,o);flyPop('pietra',o.tx*16+8,o.ty*16-4);floatText(`+${n} Pietra`,o.tx*16+8,o.ty*16-6);st.flags.mined=(st.flags.mined||0)+1;return true}
  // oggetti costruiti
  if(o&&o.kind==='built'){const b=W2.built[o.bk];
   if((ITEMS[b.id]&&ITEMS[b.id].tree)&&id==='accetta'){if(!useEnergy(2))return true;delete W2.built[o.bk];mapRemove(m,o);addItem('legna',st.day-b.d>=12?6:1);AU.play('chop');UI.toast('Hai tagliato l\'albero.');return true}
@@ -190,7 +190,7 @@ function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main'||G.visit
  if(id&&ITEMS[id].t==='place'){const g=m.get(fx,fy),free=!o&&!m.solid(fx,fy)&&(g===1||g===12||g===2);
   if(!free||st.farm[k]&&st.farm[k].c){UI.toast('Non qui: serve un posto libero.');return true}if(!ownedAt(fx,fy)){UI.toast('Questa terra non è tua. Le terre le vende l\'Anziano Ezekiel.');return true}if(fx<4||fx>59||fy<4||fy>41){UI.toast('Troppo vicino al bosco.');return true}
   if(st.farm[k])delete st.farm[k];W2.built[k]={id};if(ITEMS[id].tree)W2.built[k].d=st.day;addXP('arti',3);if(id==='cassa')W2.built[k].inv=Array(20).fill(null);removeItem(id,1);
-  const nb=m.add(OB('built',fx,fy,placeImg(id,W2.built[k]),{act:'built',bk:k,bid:id}));if(id==='lampione')m.lights.push({x:fx*16+8,y:fy*16-14,r:62});
+  const nb=m.add(OB('built',fx,fy,placeImg(id,W2.built[k]),{act:'built',bk:k,bid:id,frames:Array.isArray(FREEIMG[id])?FREEIMG[id]:null}));nb.popT=G.t;if(id==='lampione')m.lights.push({x:fx*16+8,y:fy*16-14,r:62});
   AU.play('plant');hitFx(fx,fy,'#8a6a3a');st.flags.built=(st.flags.built||0)+1;return true}
  return false}
 ACT.debris=()=>{};ACT.ceppo=()=>UI.toast('Un ceppo. Con l\'accetta lo togli.');ACT.built=()=>{};
