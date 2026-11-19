@@ -115,6 +115,7 @@ const RECIPES=[{id:'zuppa',need:{rapa:2},min:30},{id:'arrosto',need:{patata:2},m
 const needTxt=r=>Object.entries(r.need).map(([k,v])=>`${v} ${ITEMS[k].n.toLowerCase()}`).join(' + ');
 const canCook=r=>Object.entries(r.need).every(([k,v])=>countItem(k)>=v);
 async function cookMenu(){const st=G.st;
+ if(isFree(st)&&st.time<22*60)return cookModal();
  if(st.time>=22*60)return narr('È troppo tardi per accendere la pentola. Il fuoco ti basta per scaldare le mani.');
  const c=await ask(null,G.horror>.5?'Il fuoco crepita. La pentola borbotta da sola. Cosa prepari?':'Il camino del nonno, con la sua pentola annerita. Cosa prepari?',[...RECIPES.map(r=>`${ITEMS[r.id].n} (${needTxt(r)})${canCook(r)?'':' ✗'}`),'Niente']);
  const r=RECIPES[c];if(!r)return;

@@ -140,7 +140,7 @@ function applyFree(m,st){if(m.id!=='main'||!isFree(st))return;const W2=st.free;
   if(st.day-g.day>=REGROW[o.kind]){delete W2.gone[fkey(o.tx,o.ty)];continue}
   mapRemove(m,o);if(o.kind==='tree'&&!g.stumpGone)m.add(OB('ceppo',o.tx,o.ty,IMG.stump,{act:'ceppo',of:fkey(o.tx,o.ty)}))}
  for(const k in W2.debris){const [x,y]=k.split(',').map(Number),t=W2.debris[k];if(m.hit[k]||m.solid(x,y)){delete W2.debris[k];continue}m.add(OB('debris',x,y,FREEIMG[t],{act:'debris',dt:t,solid:[],hits:[[x,y]]}))}
- for(const k in W2.built){const [x,y]=k.split(',').map(Number),b=W2.built[k];const img=placeImg(b.id),o=m.add(OB('built',x,y,img,{act:'built',bk:k,bid:b.id}));
+ for(const k in W2.built){const [x,y]=k.split(',').map(Number),b=W2.built[k];if(ITEMS[b.id].size){addBigBuilt(m,k,b);continue}const img=placeImg(b.id),o=m.add(OB('built',x,y,img,{act:'built',bk:k,bid:b.id}));
   if(b.id==='lampione')m.lights.push({x:x*16+8,y:y*16-14,r:62});}}
 function placeImg(id){return {banco:FREEIMG.banco,cassa:FREEIMG.cassa,irrigatore:FREEIMG.irrigatore,lampione:IMG.lamp,recinto:IMG.fenceV,panchina:IMG.bench}[id]}
 // ogni mattina: nuovi detriti nei prati e nei campi vuoti; gli irrigatori bagnano
@@ -148,15 +148,17 @@ function freeMorning(st){if(!isFree(st))return;const W2=st.free,m=G.maps&&G.maps
  const n=Object.keys(W2.debris).length;if(n<40){const add=6+Math.floor(Math.random()*6);for(let i=0;i<add;i++){const x=4+Math.floor(Math.random()*56),y=6+Math.floor(Math.random()*36),k=fkey(x,y);
   if(W2.debris[k]||W2.built[k]||st.farm[k])continue;if(x>=40&&x<=50&&y>=13&&y<=24)continue;
   W2.debris[k]=inFarm(x,y)?['erbaccia','sasso','ramo','erbaccia'][i%4]:['ramo','sasso','erbaccia'][i%3]}}
+ animalsMorning(st);
  for(const k in W2.built){if(W2.built[k].id!=='irrigatore')continue;const [x,y]=k.split(',').map(Number);for(const [a,b] of DIRV){const f=st.farm[fkey(x+a,y+b)];if(f)f.w=true}}}
 
 // ---------- azioni con gli attrezzi ----------
 G.hits={};
 function hitFx(x,y,col){burst('dust',x*16+8,y*16+8,6,col);G.shake=Math.max(G.shake,.6)}
-function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main')return false;const m=G.map,it=selItem(),id=it&&it.id,o=m.objAt(fx,fy),k=fkey(fx,fy),W2=st.free;
+function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main')return false;const m=G.map,it=selItem(),id=it&&it.id,o=m.objAt(fx,fy),k=fkey(fx,fy),W2=st.free,p=G.player;
+ if(animalAct(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return true;
  // raccogliere i detriti
  if(o&&o.kind==='debris'){const t=o.dt,need={ramo:'accetta',sasso:'piccone'}[t];if(need&&id!==need){UI.toast(t==='ramo'?'Un ramo secco. Ti serve l\'accetta.':'Un sasso. Ti serve il piccone.');return true}
-  if(!useEnergy(1))return true;const got={ramo:['legna',1+(Math.random()<.5?1:0)],sasso:['pietra',1+(Math.random()<.4?1:0)],erbaccia:['fibra',1]}[t];if(!addItem(got[0],got[1]))return true;
+  if(!useEnergy(1))return true;const got={ramo:['legna',1+(Math.random()<.5?1:0)],sasso:['pietra',1+(Math.random()<.4?1:0)],erbaccia:['fibra',1],uovo:['uovo',1]}[t];if(!addItem(got[0],got[1]))return true;
   delete W2.debris[k];mapRemove(m,o);AU.play(t==='sasso'?'mine':t==='ramo'?'chop':'pick');hitFx(fx,fy,t==='sasso'?'#a8a59a':'#8a6a3a');floatText(`+${got[1]} ${ITEMS[got[0]].n}`,fx*16+8,fy*16-4);st.flags.debris=(st.flags.debris||0)+1;return true}
  // alberi, ceppi, tronchi: accetta
  if(o&&(o.kind==='tree'||o.kind==='ceppo'||o.kind==='log')){if(id!=='accetta'){if(o.kind==='ceppo'){UI.toast('Un ceppo. Con l\'accetta lo togli.');return true}return false}
@@ -173,11 +175,12 @@ function freeAct(fx,fy){const st=G.st;if(!isFree(st)||G.map.id!=='main')return f
   if(G.hits[hk]<3){floatText('•'.repeat(G.hits[hk]),o.tx*16+8,o.ty*16-6,'#f6d98a',.6);return true}
   delete G.hits[hk];const n=4+Math.floor(Math.random()*3);if(!addItem('pietra',n))return true;W2.gone[hk]={day:st.day};mapRemove(m,o);floatText(`+${n} Pietra`,o.tx*16+8,o.ty*16-6);st.flags.mined=(st.flags.mined||0)+1;return true}
  // oggetti costruiti
- if(o&&o.kind==='built'){const b=W2.built[o.bk];if(id&&id===PLACE_TOOL[b.id]){if(b.id==='cassa'&&(b.inv||[]).some(Boolean)){UI.toast('Svuota la cassa prima di spostarla.');return true}
+ if(o&&o.kind==='built'){const b=W2.built[o.bk];if(id&&id===PLACE_TOOL[b.id]){if(b.id==='cassa'&&(b.inv||[]).some(Boolean)){UI.toast('Svuota la cassa prima di spostarla.');return true}if(ITEMS[b.id].size&&animalsOf(o.bk).length){UI.toast('Dentro ci vivono delle bestie. Non si smonta.');return true}
    if(!addItem(b.id,1))return true;delete W2.built[o.bk];mapRemove(m,o);if(b.id==='lampione')m.lights=m.lights.filter(l=>!(l.x===o.tx*16+8&&l.y===o.ty*16-14));AU.play('pick');UI.toast(ITEMS[b.id].n+' raccolto.');return true}
-  if(b.id==='banco'){craftMenu();return true}if(b.id==='cassa'){chestMenu(o.bk);return true}if(b.id==='panchina'){runAct({act:'bench',tx:o.tx,ty:o.ty});return true}
+  if(b.id==='banco'){craftMenu();return true}if(b.id==='pollaio'||b.id==='stalla'){barnMenu(o.bk);return true}if(b.id==='cassa'){chestMenu(o.bk);return true}if(b.id==='panchina'){runAct({act:'bench',tx:o.tx,ty:o.ty});return true}
   UI.toast(ITEMS[b.id].n+(PLACE_TOOL[b.id]?` — per spostarlo usa ${PLACE_TOOL[b.id]==='accetta'?'l\'accetta':'il piccone'}.`:''));return true}
  // piazzare un oggetto
+ if(id&&ITEMS[id].size){if(!bigFree(id,fx,fy)){UI.toast(`Serve un prato libero di ${ITEMS[id].size.join('×')} caselle, davanti a te.`);return true}W2.built[k]={id};removeItem(id,1);addBigBuilt(m,k,W2.built[k]);AU.play('slam');G.shake=2;hitFx(fx,fy,'#8a6a3a');st.flags.built=(st.flags.built||0)+1;UI.toast(ITEMS[id].n+(id==='stalla'?' costruita':' costruito')+'! Usalo per comprare le bestie.');return true}
  if(id&&ITEMS[id].t==='place'){const g=m.get(fx,fy),free=!o&&!m.solid(fx,fy)&&(g===1||g===12||g===2);
   if(!free||st.farm[k]&&st.farm[k].c){UI.toast('Non qui: serve un posto libero.');return true}if(fx<4||fx>59||fy<4||fy>41){UI.toast('Troppo vicino al bosco.');return true}
   if(st.farm[k])delete st.farm[k];W2.built[k]={id};if(id==='cassa')W2.built[k].inv=Array(20).fill(null);removeItem(id,1);
@@ -251,6 +254,7 @@ function shopItems(){const s=seasonOf();return [...Object.keys(ITEMS).filter(k=>
 function freeAimOk(it,tx,ty){const st=G.st,m=G.map,o=m.objAt(tx,ty),id=it.id;if(!isFree(st))return null;
  if(id==='accetta')return !!o&&(o.kind==='tree'||o.kind==='ceppo'||o.kind==='log'||(o.kind==='debris'&&o.dt==='ramo')||(o.kind==='built'&&PLACE_TOOL[o.bid]==='accetta'));
  if(id==='piccone')return !!o&&(o.kind==='rock'||(o.kind==='debris'&&o.dt==='sasso')||(o.kind==='built'&&PLACE_TOOL[o.bid]==='piccone'));
+ if(ITEMS[id].size)return bigFree(id,tx,ty);
  if(ITEMS[id].t==='place'){const g=m.get(tx,ty);return !o&&!m.solid(tx,ty)&&(g===1||g===12||g===2)&&!(st.farm[fkey(tx,ty)]&&st.farm[fkey(tx,ty)].c)}return null}
 PROMPT.built='Usa';
 const FREE_BARKS={ezekiel:['Buona giornata, {n}.','Le stagioni passano. Finalmente.'],agatha:['Semi freschi, tesoro!','Passa a trovarmi!'],lucius:['Pace a te, {n}.','Sette. Va bene così.'],clara:['{n}! Ciao!','Che bella giornata!'],brom:['Mh.','Si ricostruisce.'],tobia:['Hihi! Ciao!','Le zucche dormono. Hihi.']};
