@@ -1548,8 +1548,8 @@ const ACT={
     AU.play('door');return goMap('barn',4,6,3);
   }},
  // interni
- bed:async()=>{const t=G.st.time,o=[];if(t<20*60+30)o.push(['Riposa un\'ora',()=>rest(60)]);if(t<12*60)o.push(['Riposa fino a mezzogiorno',()=>rest(12*60-t)]);if(t<18*60)o.push(['Riposa fino alle 18:00',()=>rest(18*60-t)]);o.push(['Dormi fino a domani',()=>endDay(false)]);o.push(['Non ancora',null]);
-  const c=await ask(null,t<18*60?'Il letto del nonno. Coperte gialle, che sanno di lavanda. Puoi riposare un po\', o dormire fino a domattina.':'Il letto del nonno. Coperte gialle, che sanno di lavanda. Dormire?',o.map(a=>a[0]));const f=o[c]&&o[c][1];if(f)await f()},
+ bed:async()=>{const t=G.st.time,o=[],tired=G.st.day===1&&G.st.flags.tired;if(tired)o.push(['Dormi fino a domani',()=>endDay(false)]);if(t<20*60+30)o.push(['Riposa un\'ora',()=>rest(60)]);if(t<12*60)o.push(['Riposa fino a mezzogiorno',()=>rest(12*60-t)]);if(t<18*60)o.push(['Riposa fino alle 18:00',()=>rest(18*60-t)]);if(!tired)o.push(['Dormi fino a domani',()=>endDay(false)]);o.push(['Non ancora',null]);
+  const c=await ask(null,G.st.day===1&&G.st.flags.tired?'Sei sfinit{o|a} dal viaggio. Il letto del nonno sa di lavanda. Dormi fino a domani?':t<18*60?'Il letto del nonno. Coperte gialle, che sanno di lavanda. Puoi riposare un po\', o dormire fino a domattina.':'Il letto del nonno. Coperte gialle, che sanno di lavanda. Dormire?',o.map(a=>a[0]));const f=o[c]&&o[c][1];if(f)await f()},
  bench:async()=>{const t=G.st.time;if(t>=20*60+30)return narr('È tardi. Non è un\'ora per stare seduti all\'aperto.');const o=[['Aspetta un\'ora',60]];if(t<12*60)o.push(['Aspetta fino a mezzogiorno',12*60-t]);if(t<18*60)o.push(['Aspetta fino alle 18:00',18*60-t]);o.push(['Alzati',0]);
   const c=await ask(null,'Una panchina di legno, consumata da generazioni di attese. Ti siedi?',o.map(a=>a[0]));if(o[c]&&o[c][1])await rest(o[c][1],true)},
  chest:async(o)=>{const F=G.st.flags;if(F.openedChest)return narr('La cassa del nonno. Vuota, a parte un odore di tabacco e di terra.');
@@ -1788,6 +1788,7 @@ async function ezekielPaint(n){const st=G.st,F=st.flags;F.ezWait=0;F.gotPaint=1;
  giveItem('vernice');UI.quest()}
 // ================= OBIETTIVI =================
 const QUESTS=[
+ {s:st=>st.day===1&&st.flags.tired,t:()=>'Sei stanc{o|a} dal viaggio: torna a casa e dormi nel letto',d:()=>false},
  {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Presentati agli abitanti (${metCount()}/5)`,d:st=>metCount()>=5},
  {s:st=>st.day>=1&&st.chapter<=1,t:st=>`Zappa la terra nei campi e semina (${Math.min(st.flags.planted,3)}/3 semi)`,d:st=>st.flags.planted>=3},
  {s:st=>st.day>=1&&st.chapter<=1&&st.flags.planted>0,t:st=>`Annaffia i semi con l'annaffiatoio (${Math.min(st.flags.watered||0,3)}/3)`,d:st=>(st.flags.watered||0)>=3},
@@ -1862,7 +1863,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   $('#cdayt').textContent=`${DAYN[(st.day+3)%7]} ${st.day} · Autunno`;if(this._wx!==st.weather){this._wx=st.weather;drawWxIcon($('#cwx'),st.weather)}$('#cmark').style.left=clamp((t-360)/1200,0,1)*100+'%';$('#ctime').textContent=`${h}:${String(mm-mm%10).padStart(2,'0')}`;$('#cmoney').textContent=st.money+' g';
   $('#efill').style.height=(st.energy)+'%';$('#efill').style.background=st.energy<25?'linear-gradient(#ffb07a,#c0221e)':'';
   document.body.classList.toggle('corrupt',G.horror>.35);document.body.classList.toggle('corrupt2',G.horror>.7)},
- quest(){if(!G.st)return;const q=activeQuests().filter(q=>!q.d(G.st));const el=$('#qtext');if(!q.length){el.textContent=fmt(hintText());$('#quest').classList.remove('alarm');return}
+ quest(){if(!G.st)return;{const st=G.st,F=st.flags;if(st.day===1&&!F.tired&&G.mode==='game'&&metCount()>=5&&F.planted>=3){F.tired=1;st.energy=Math.min(st.energy,35);this.hud();this.toast('Il viaggio ti pesa addosso. Torna a casa e dormi: domani è un nuovo giorno.');if(Object.values(st.farm).some(f=>f.c&&!f.w))setTimeout(()=>this.toast('Prima di dormire, annaffia i semi: crescono di notte.'),2900)}}const q=activeQuests().filter(q=>!q.d(G.st));const el=$('#qtext');if(!q.length){el.textContent=fmt(hintText());$('#quest').classList.remove('alarm');return}
   el.textContent=fmt(q[0].t(G.st))+(q.length>1?`  (+${q.length-1})`:'');$('#quest').classList.toggle('alarm',!!q[0].alarm)},
  showHud(v){$('#hud').classList.toggle('hide',!v)},
  // ---------- modali ----------
