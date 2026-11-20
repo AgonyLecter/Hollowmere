@@ -255,7 +255,7 @@ const FREE_L={
 const FREE_SEASON={1:'Che freddo. D\'inverno nella Valle cresce solo il porro, e la pazienza.',2:'Primavera! Fragole, {n}. Le fragole di Hollowmere sono le migliori del mondo. Credo.',3:'Che caldo. Il mais arriva più alto di Brom, quest\'estate.'};
 function freeTalkLine(id){const st=G.st,L=[...(FREE_L[id]||['…'])];const s=seasonOf();if(FREE_SEASON[s])L.push(FREE_SEASON[s]);if(id==='agatha'&&st.demand)L.push('Oggi pago bene: '+PL[st.demand]+', tesoro.');st.talkN=st.talkN||{};const k=st.talkN[id]=(st.talkN[id]||0)+1;return L[(st.day*7+k*5)%L.length]}
 // la notte: cambio di stagione (le colture fuori stagione muoiono)
-function freeNight(st,prev){if(!isFree(st))return;shadowNightRaid(st);const s=seasonOf(st);if(s===prev)return;let n=0;for(const k in st.farm){const c=st.farm[k].c;if(c&&!c.dead&&!cropInSeason(c.t,s)){c.dead=1;n++}}G.seasonNews={s,n}}
+function freeNight(st,prev){if(!isFree(st))return;shadowNightRaid(st);const s=seasonOf(st);if(s===prev)return;let n=0;for(const k in st.farm){const c=st.farm[k].c;if(c&&!c.dead&&!cropInSeason(c.t,s)&&!(typeof inSerra==='function'&&inSerra(...k.split(',').map(Number),st))){c.dead=1;n++}}G.seasonNews={s,n}}
 function shopItems(){const s=seasonOf();return [...Object.keys(ITEMS).filter(k=>ITEMS[k].t==='seed'&&cropInSeason(ITEMS[k].crop,s)),'concime','pane']}
 function freeAimOk(it,tx,ty){const st=G.st,m=G.map,o=m.objAt(tx,ty),id=it.id;if(!isFree(st))return null;
  if(id==='accetta')return !!o&&(o.kind==='tree'||o.kind==='ceppo'||o.kind==='log'||(o.kind==='debris'&&o.dt==='ramo')||(o.kind==='built'&&PLACE_TOOL[o.bid]==='accetta'));

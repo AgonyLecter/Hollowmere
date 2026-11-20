@@ -86,5 +86,5 @@ async function houseUpMenu(){const st=G.st,lv=houseLv(),nx=HOUSE_UP[lv+1],o=st.f
  if(o)return say('brom',`Ci sto lavorando. Pronto ${o.ready-st.day===1?'domani':'tra '+(o.ready-st.day)+' giorni'}.`);
  if(!nx)return say('brom','Più grande di così no. La Valle non è una città.');
  const can=st.money>=nx.cost&&Object.entries(nx.c).every(([k,n])=>countItem(k)>=n);
- const c=await ask('brom',`${nx.n}: ${nx.d} Servono ${SC(nx.cost)}, ${nx.c.legna} legna e ${nx.c.pietra} pietra. Tre giorni.`,[can?'Fallo':'Non ho abbastanza','Niente']);if(c!==0||!can)return;
+ const c=await ask('brom',`${nx.n}: ${nx.d} Servono ${SC(nx.cost)}, ${Object.entries(nx.c).map(([k,n])=>n+' '+ITEMS[k].n.toLowerCase()).join(', ')}. Tre giorni.`,[can?'Fallo':'Non ho abbastanza','Niente']);if(c!==0||!can)return;
  st.money-=nx.cost;for(const [k,n] of Object.entries(nx.c))removeItem(k,n);st.free.houseJob={lv:lv+1,ready:st.day+3};AU.play('coin');UI.hud();return say('brom','Tre giorni. Intanto non toccare le travi.')}
