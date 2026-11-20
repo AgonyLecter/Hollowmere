@@ -6,32 +6,37 @@
 
 G.bm=null;   // {x,y,mode:'piazza'|'sposta'|'togli',carry:{from,data},t}
 const BM_MODES={piazza:'Piazza',sposta:'Sposta',togli:'Togli'};
-const bmHome=()=>isFree(G.st)&&!G.visit&&G.map&&G.map.id==='main';
+const bmHome=()=>isFree(G.st)&&!G.visit&&G.map&&(G.map.id==='main'||G.map.id==='house');
+// fuori si piazzano le costruzioni, in casa i mobili
+const canHere=id=>!!ITEMS[id]&&(G.map&&G.map.id==='house'?ITEMS[id].t==='arredo':ITEMS[id].t==='place');
+function houseRebuild(){const st=G.st;G.maps.house=buildHouse(st);addExits(G.maps.house);buildGround(G.maps.house);applyLook(G.maps.house,st);G.map=G.maps.house}
 function bmOpen(){if(G.mode!=='game'||G.cut||UI.busy())return;if(!isFree(G.st)){UI.toast('La modalità costruzione c\'è nella Valle (gioco libero).');return}
- if(G.visit){UI.toast('Sei ospite: qui non puoi costruire.');return}if(G.map.id!=='main'){UI.toast('Esci all\'aperto per costruire.');return}
- const [fx,fy]=frontTile();const it=selItem();G.bm={x:fx,y:fy,mode:it&&ITEMS[it.id].t==='place'?'piazza':'sposta',carry:null,t:0};G.player.moving=false;AU.play('ui');bmBar()}
+ if(G.visit){UI.toast('Sei ospite: qui non puoi costruire.');return}if(G.map.id!=='main'&&G.map.id!=='house'){UI.toast('Qui non si costruisce: esci all\'aperto o torna a casa.');return}
+ const [fx,fy]=frontTile();const it=selItem();G.bm={x:fx,y:fy,mode:it&&canHere(it.id)?'piazza':'sposta',carry:null,t:0};G.player.moving=false;AU.play('ui');bmBar()}
 function bmClose(){const b=G.bm;if(!b)return;if(b.carry){bmPut(b.carry.from,b.carry.data,true);b.carry=null}G.bm=null;$('#bmbar')&&$('#bmbar').classList.add('hide');AU.play('ui');NET.save(G.st)}
 function bmBar(){let el=$('#bmbar');if(!el){el=document.createElement('div');el.id='bmbar';el.className='dark hide';($('#hud')||document.body).appendChild(el);
   el.addEventListener('pointerdown',e=>e.stopPropagation());
   el.addEventListener('click',e=>{const a=e.target.closest('[data-bm]');if(!a)return;e.stopPropagation();const v=a.dataset.bm;if(v==='esci')return bmClose();if(v==='ok')return bmAction();if(G.bm.carry){UI.toast('Prima metti giù quello che stai spostando.');return}G.bm.mode=v;AU.play('ui');bmBar()})}
  const b=G.bm;if(!b){el.classList.add('hide');return}const it=selItem(),st=G.st,W2=st.free;
- const what=b.carry?`Stai spostando: <b>${ITEMS[b.carry.data.id].n}</b>`:b.mode==='piazza'?(it&&ITEMS[it.id].t==='place'?`In mano: <b>${ITEMS[it.id].n}</b> ×${it.n}`:'Scegli nella barra qualcosa da costruire.'):b.mode==='sposta'?'Punta una costruzione e premi A per sollevarla.':'Punta una costruzione o una lastra: torna nello zaino.';
- el.innerHTML=`<b>Costruzione</b><p>${what}</p><p class="tb">${Object.entries(BM_MODES).map(([k,n])=>`<button class="btn ${b.mode===k?'on':''}" data-bm="${k}">${n}</button>`).join(' ')} <button class="btn" data-bm="ok">A · Fai</button> <button class="btn" data-bm="esci">Esci (B)</button></p>`;el.classList.remove('hide')}
+ const what=b.carry?`Stai spostando: <b>${ITEMS[b.carry.data.id].n}</b>`:b.mode==='piazza'?(it&&canHere(it.id)?`In mano: <b>${ITEMS[it.id].n}</b> ×${it.n}`:'Scegli nella barra qualcosa da costruire.'):b.mode==='sposta'?'Punta una costruzione e premi A per sollevarla.':'Punta una costruzione o una lastra: torna nello zaino.';
+ el.classList.toggle('top',!!(G.map&&G.map.id==='house'));el.innerHTML=`<b>Costruzione</b><p>${what}</p><p class="tb">${Object.entries(BM_MODES).map(([k,n])=>`<button class="btn ${b.mode===k?'on':''}" data-bm="${k}">${n}</button>`).join(' ')} <button class="btn" data-bm="ok">A · Fai</button> <button class="btn" data-bm="esci">Esci (B)</button></p>`;el.classList.remove('hide')}
 // regole di posa: le stesse del gioco, ma sul cursore
-function bmCanPlace(id,x,y){const st=G.st,m=G.maps.main,k=fkey(x,y),g=m.get(x,y),o=m.objAt(x,y);
+function bmCanPlace(id,x,y){if(G.map&&G.map.id==='house'){const m=G.map,o=m.objAt(x,y);if(!ITEMS[id]||ITEMS[id].t!=='arredo')return 'In casa vanno i mobili.';if(ITEMS[id].wall)return (m.get(x,y)===9&&!o)?'':'I quadri vanno sulla parete in alto.';return furnFree(m,x,y)?'':'Non qui: serve un posto libero sul pavimento, lontano dalla porta.'}
+ const st=G.st,m=G.maps.main,k=fkey(x,y),g=m.get(x,y),o=m.objAt(x,y);
  if(ITEMS[id].size)return bigFree(id,x,y)?'':'Serve un prato libero di '+ITEMS[id].size.join('×')+' sulle tue terre.';
  if(!ownedAt(x,y))return 'Questa terra non è tua.';if(x<4||x>96||y<4||y>41)return 'Troppo vicino al bosco.';
  if(id==='lastre')return (!o&&!st.farm[k]&&(g===1||g===12||g===2))?'':'Le lastre vanno sull\'erba o sui vialetti liberi.';
  if(o||m.solid(x,y)||!(g===1||g===12||g===2))return 'Non qui: serve un posto libero.';if(st.farm[k]&&st.farm[k].c)return 'C\'è una pianta.';return ''}
 function bmPut(k,data,quiet){const st=G.st,W2=st.free,[x,y]=k.split(',').map(Number);
+ if(G.map&&G.map.id==='house'){W2.inside=W2.inside||{};W2.inside[k]=data;houseRebuild();if(!quiet){AU.play('plant');const o=G.map.objAt(x,y);if(o)o.popT=G.t}return}
  if(data.id==='lastre'){W2.tiles=W2.tiles||{};W2.tiles[k]=11}else{if(st.farm[k]&&!ITEMS[data.id].size)delete st.farm[k];W2.built[k]=data}
  rebuildMaps();G.map=G.maps.main;if(!quiet){AU.play(ITEMS[data.id].size?'slam':'plant');hitFx(x,y,'#8a6a3a');const o=G.map.objAt(x,y);if(o)o.popT=G.t}}
 // le cose che vivono dentro una costruzione la seguono
 function bmRekey(from,to){const st=G.st,W2=st.free;for(const a of W2.animals||[])if(a.home===from)a.home=to;for(const r of W2.residents||[])if(r.house===from)r.house=to}
-function bmTarget(x,y){const m=G.maps.main,o=m.objAt(x,y);if(o&&o.kind==='built'&&G.st.free.built[o.bk])return o;return null}
-function bmAction(){const b=G.bm;if(!b)return;const st=G.st,W2=st.free,m=G.maps.main,x=b.x,y=b.y;
- if(b.carry){const d=b.carry.data,anchor=fkey(x,y),why=bmCanPlace(d.id,x,y);if(why){UI.toast(why);AU.play('no');return}bmPut(anchor,d);bmRekey(b.carry.from,anchor);b.carry=null;UI.toast(ITEMS[d.id].n+': spostato.');bmBar();return}
- if(b.mode==='piazza'){const it=selItem();if(!it||ITEMS[it.id].t!=='place'){UI.toast('Seleziona nella barra qualcosa da costruire.');return}const why=bmCanPlace(it.id,x,y);if(why){UI.toast(why);AU.play('no');return}
+function bmTarget(x,y){if(G.map&&G.map.id==='house'){const o=G.map.objAt(x,y);return o&&o.kind==='furn'&&(G.st.free.inside||{})[o.fk]?o:null}const m=G.maps.main,o=m.objAt(x,y);if(o&&o.kind==='built'&&G.st.free.built[o.bk])return o;return null}
+function bmAction(){const b=G.bm;if(!b)return;if(G.map&&G.map.id==='house')return bmActionHouse();const st=G.st,W2=st.free,m=G.maps.main,x=b.x,y=b.y;
+ if(b.carry){const d=b.carry.data,anchor=fkey(x,y),why=bmCanPlace(d.id,x,y);if(why){UI.toast(why);AU.play('no');return}bmPut(anchor,d);bmRekey(b.carry.from,anchor);b.carry=null;UI.toast('Spostato: '+ITEMS[d.id].n+'.');bmBar();return}
+ if(b.mode==='piazza'){const it=selItem();if(!it||!canHere(it.id)){UI.toast(G.map.id==='house'?'Seleziona nella barra un mobile o un quadro.':'Seleziona nella barra qualcosa da costruire.');return}const why=bmCanPlace(it.id,x,y);if(why){UI.toast(why);AU.play('no');return}
   if(it.id==='casetta'){const r=myRank(st),cnt=Object.values(W2.built).filter(q=>q.id==='casetta').length;if(r<1||cnt>=resCap(r)){UI.toast(r<1?'Le casette si costruiscono dal rango Borgo.':`Per ora il Consiglio permette ${resCap(r)} casette.`);return}}
   const id=it.id,d={id};if(ITEMS[id].tree)d.d=st.day;if(id==='cassa')d.inv=Array(20).fill(null);removeItem(id,1);bmPut(fkey(x,y),d);addXP('arti',ITEMS[id].size?10:3);st.flags.built=(st.flags.built||0)+1;
   if(id==='casetta')UI.toast('Casetta costruita! Domattina arriverà qualcuno ad abitarla.');UI.hotbar();bmBar();return}
@@ -62,8 +67,8 @@ addEventListener('keydown',e=>{if(e.code!=='KeyB'||e.repeat||(e.target&&e.target
 function drawBM(){const b=G.bm;if(!b||!G.map)return;const st=G.st,m=G.map,cx=G.cam.x,cy=G.cam.y;ctx.save();
  // le tue terre a puntini
  ctx.fillStyle='rgba(246,217,138,.35)';const x0=Math.max(0,Math.floor(cx/16)),y0=Math.max(0,Math.floor(cy/16)),x1=Math.min(m.w-1,x0+Math.ceil(W/16)+1),y1=Math.min(m.h-1,y0+Math.ceil(H/16)+1);
- for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(ownedAt(x,y))ctx.fillRect(Math.round(x*16-cx)+7,Math.round(y*16-cy)+7,2,2);
- const it=selItem(),id=b.carry?b.carry.data.id:(b.mode==='piazza'&&it&&ITEMS[it.id].t==='place'?it.id:null);
+ if(m.id==='main')for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(ownedAt(x,y))ctx.fillRect(Math.round(x*16-cx)+7,Math.round(y*16-cy)+7,2,2);
+ const it=selItem(),id=b.carry?b.carry.data.id:(b.mode==='piazza'&&it&&canHere(it.id)?it.id:null);
  if(id){const ok=!bmCanPlace(id,b.x,b.y),sz=ITEMS[id].size,T=sz?bldFoot(id,b.x,b.y).T:[[b.x,b.y]];
   ctx.fillStyle=ok?'rgba(110,220,110,.32)':'rgba(230,80,60,.38)';for(const [x,y] of T)ctx.fillRect(Math.round(x*16-cx),Math.round(y*16-cy),16,16);
   const img=sz?AIMG[id]:(id==='lastre'?null:placeImg(id,b.carry?b.carry.data:{id,d:st.day}));
@@ -74,7 +79,7 @@ function drawBM(){const b=G.bm;if(!b||!G.map)return;const st=G.st,m=G.map,cx=G.c
  for(const [ax,ay,sx,sy] of [[0,0,1,1],[16,0,-1,1],[0,16,1,-1],[16,16,-1,-1]]){ctx.beginPath();ctx.moveTo(X+ax+.5*sx,Y+ay+5*sy);ctx.lineTo(X+ax+.5*sx,Y+ay+.5*sy);ctx.lineTo(X+ax+5*sx,Y+ay+.5*sy);ctx.stroke()}
  ctx.restore()}
 {const _dg=drawGuide;drawGuide=function(){if(G.bm){drawBM();return}_dg()}}
-{const _sel=UI.selectSlot.bind(UI);UI.selectSlot=function(n){_sel(n);if(G.bm){const it=selItem();if(!G.bm.carry&&it&&ITEMS[it.id].t==='place')G.bm.mode='piazza';bmBar()}}}
+{const _sel=UI.selectSlot.bind(UI);UI.selectSlot=function(n){_sel(n);if(G.bm){const it=selItem();if(!G.bm.carry&&it&&canHere(it.id))G.bm.mode='piazza';bmBar()}}}
 SFX.no=SFX.no||((a,t)=>{a.osc('square',160,t,.08,.06)});
 
 // ================= EDIFICI CHE FANNO QUALCOSA (con tre livelli) =================
@@ -180,3 +185,23 @@ function isProtected(x,y){if(PROTECT.some(r=>inRect(x,y,r)))return true;
  for(const k in BLD){if(k==='house')continue;const b=BLD[k],[dx,dy]=bdoor(k);if(x>=b.x-1&&x<=b.x+b.w&&y>=b.y-1&&y<=b.y+b.h)return true;if(x>=dx-1&&x<=dx+1&&y>=dy&&y<=dy+2)return true}
  return false}
 {const _own=ownedAt;ownedAt=function(x,y,st){const id=_own(x,y,st);if(!id)return null;if(id!=='casa'&&isProtected(x,y))return null;return id}}
+
+// in casa: piazza, sposta e togli i mobili (la cucina, la libreria, i quadri…)
+function bmActionHouse(){const b=G.bm,st=G.st,W2=st.free,x=b.x,y=b.y,k=fkey(x,y);W2.inside=W2.inside||{};
+ if(b.carry){const d=b.carry.data,why=bmCanPlace(d.id,x,y);if(why){UI.toast(why);AU.play('no');return}bmPut(k,d);b.carry=null;UI.toast('Spostato: '+ITEMS[d.id].n+'.');bmBar();return}
+ if(b.mode==='piazza'){const it=selItem();if(!it||!canHere(it.id)){UI.toast('Seleziona nella barra un mobile o un quadro.');return}const why=bmCanPlace(it.id,x,y);if(why){UI.toast(why);AU.play('no');return}
+  const id=it.id;removeItem(id,1);bmPut(k,{id});st.flags.decor=(st.flags.decor||0)+1;UI.hotbar();bmBar();return}
+ const o=bmTarget(x,y);if(!o){UI.toast(b.mode==='sposta'?'Qui non c\'è un mobile da spostare.':'Qui non c\'è un mobile da togliere.');return}const d=W2.inside[o.fk];
+ if(b.mode==='togli'){if(!addItem(d.id,1))return;delete W2.inside[o.fk];houseRebuild();AU.play('pick');UI.toast(ITEMS[d.id].n+' nello zaino.');UI.hotbar();return}
+ b.carry={from:o.fk,data:d};delete W2.inside[o.fk];houseRebuild();AU.play('pick');bmBar()}
+
+// ================= MAI PIÙ INCASTRATI =================
+// se per qualunque motivo il personaggio si ritrova dentro qualcosa di solido (un mobile appena messo, una
+// costruzione, un salvataggio strano), dopo un attimo viene spostato nella casella libera più vicina
+{const _up=updatePlayer;updatePlayer=function(dt){_up(dt);const p=G.player,m=G.map;if(!m||G.mode!=='game'||G.cut||p.auto||G.erede)return;
+ if(!boxHit(m,p.x,p.y)){p.stuckT=0;return}p.stuckT=(p.stuckT||0)+dt;if(p.stuckT<.15)return;p.stuckT=0;
+ const [x,y]=ptile(p);let best=null,bd=1e9;for(let r=0;r<6&&!best;r++)for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const a=x+i,c=y+j;if(!m.inb(a,c)||m.solid(a,c))continue;const d=Math.hypot(a*16+8-p.x,c*16+14-p.y);if(d<bd){bd=d;best=[a,c]}}
+ if(best)setPos(p,best[0],best[1],p.dir)}}
+GUIDES.push({id:'casa_arredo',v:7,n:'Arredare la casa come vuoi',steps:[
+ {t:'Adesso la modalità costruzione funziona anche in casa: premi B o il martello 🔨 e sposta mobili, cucina, libreria e quadri dove vuoi, con l\'anteprima verde o rossa.'},
+ {t:'«Sposta» solleva un mobile e lo rimette dove scegli; «Togli» lo rimette nello zaino. Se mai restassi incastrat{o|a} dentro un mobile, il gioco ti libera da solo.'}]});
