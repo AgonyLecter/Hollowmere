@@ -6,7 +6,7 @@ const isSunday=st=>st.day>=1&&WD(st)===6;
 const massNow=()=>{const st=G.st;return !!st&&isSunday(st)&&st.time>=9*60&&st.time<10*60+30};
 const MASS_SEATS={lucius:[7,3,0],ezekiel:[2,4,3],agatha:[3,4,3],brom:[10,4,3],clara:[11,4,3]};
 const rainy=st=>st.weather==='pioggia';
-const sellPrice=id=>Math.round(ITEMS[id].v*(G.st&&G.st.demand===id?1.4:1)*(isFree()?(skLv('agri')>=8?1.25:skLv('agri')>=2?1.1:1):1));
+const sellPrice=id=>Math.round(ITEMS[id].v*(typeof evMult==='function'?evMult(id):1)*(G.st&&G.st.demand===id?1.4:1)*(isFree()?(skLv('agri')>=8?1.25:skLv('agri')>=2?1.1:1):1));
 
 // ---------- lampioni: Lucius li accende (e li spegne) uno per uno; gli ultimi tre si accendono "da soli" ----------
 const LAMPS=[[38,15],[51,15],[51,23],[38,23],[45,26],[44,38],[29,17],[11,18]];
