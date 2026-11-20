@@ -7,7 +7,7 @@
 const MP={
  // ---- rete (sostituibile nei test) ----
  ok(){return NET.ok},
- async publish(st){if(!NET.ok||!st.pid||!isFree(st))return;try{await NET.api.set(NET.r('villaggi/'+st.pid),{name:st.name,g:st.g,season:seasonOf(st),sday:seasonDay(st),year:yearOf(st),ts:Date.now(),anim:(st.free.animals||[]).length,built:Object.keys(st.free.built).length})}catch(e){}},
+ async publish(st){if(!NET.ok||!st.pid||!isFree(st))return;try{await (NET.api.update||NET.api.set)(NET.r('villaggi/'+st.pid),{name:st.name,g:st.g,season:seasonOf(st),sday:seasonDay(st),year:yearOf(st),ts:Date.now(),anim:(st.free.animals||[]).length,built:Object.keys(st.free.built).length})}catch(e){}},
  async list(){if(!NET.ok)return [];try{const D=NET.api,s=await D.get(D.query(NET.r('villaggi'),D.orderByChild('ts'),D.limitToLast(25)));const v=s.val()||{};return Object.entries(v).map(([pid,o])=>Object.assign({pid},o)).sort((a,b)=>(b.ts||0)-(a.ts||0))}catch(e){return []}},
  async load(pid){return NET.load(pid)},
  async act(owner,a){if(!NET.ok)return;try{await NET.api.push(NET.r('visite/'+owner),Object.assign({ts:Date.now()},a))}catch(e){}},

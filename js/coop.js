@@ -8,7 +8,7 @@
 // ---------- i permessi ----------
 const myHome=()=>G.visit?G.home:G.st;
 {const _pub=MP.publish.bind(MP);MP.publish=async function(st){await _pub(st);if(!NET.ok||!st||!st.pid||!isFree(st))return;
- try{await NET.api.set(NET.r('villaggi/'+st.pid+'/uid'),NET.uid||'');const T={};for(const f of (st.mpFriends||[]))if(f.coop)T[f.pid]=true;await NET.api.set(NET.r('villaggi/'+st.pid+'/trust'),T)}catch(e){}}}
+ try{await NET.api.set(NET.r('villaggi/'+st.pid+'/uid'),NET.uid||'');const T={},U={};for(const f of (st.mpFriends||[]))if(f.coop){T[f.pid]=true;if(f.uid)U[f.uid]=true}await NET.api.set(NET.r('villaggi/'+st.pid+'/trust'),T);await NET.api.set(NET.r('villaggi/'+st.pid+'/trustU'),U)}catch(e){}}}
 // ogni messaggio porta chi lo manda davvero (le regole possono verificarlo: uid === auth.uid)
 {const _act=MP.act.bind(MP);MP.act=function(owner,a){return _act(owner,Object.assign({uid:NET.uid||''},a))}}
 async function coopToggle(pid){const st=myHome(),f=(st.mpFriends||[]).find(x=>x.pid===pid);if(!f)return;f.coop=!f.coop;
@@ -79,3 +79,29 @@ function visitChip(){let el=$('#vchip');if(!el){el=document.createElement('div')
  const v=G.visit;el.classList.toggle('hide',!v||G.mode!=='game');if(!v)return;el.innerHTML=v.coop?`In visita da <b>${esc(v.name)}</b> · <span style="color:#a8f08a">🔨 puoi costruire</span>`:`In visita da <b>${esc(v.name)}</b> · ospite: annaffia e lascia regali`}
 // il martello si vede anche in visita, se hai il permesso (sul telefono non c'è il tasto B)
 {const _h=UI.hud.bind(UI);UI.hud=function(){_h();const b=$('#bBuild');if(b&&G.visit)b.classList.toggle('hide',!(G.visit.coop&&G.map&&G.map.id==='main'));visitChip()}}
+
+// ---------- il permesso, a prova di codice cambiato ----------
+// vale per codice (trust/<pid>) o per identità (trustU/<uid>); se non c'è, si spiega perché
+async function coopHas(owner){const me=G.home.pid;let a=null,b=null;try{a=(await NET.api.get(NET.r('villaggi/'+owner+'/trust/'+me))).val()}catch(e){}
+ try{if(NET.uid)b=(await NET.api.get(NET.r('villaggi/'+owner+'/trustU/'+NET.uid))).val()}catch(e){}return a===true||b===true}
+async function coopWhy(owner,name){try{const T=(await NET.api.get(NET.r('villaggi/'+owner+'/trust'))).val()||{},k=Object.keys(T);const me=G.home.pid;
+ if(!k.length)return `${name} non ti ha ancora dato il permesso (al ponte, «🔨 Può costruire» accanto al tuo nome).`;
+ return `${name} ha dato il permesso a: ${k.join(', ')}. Il tuo codice è ${me}: se è diverso, chiedile di toglierti e riaggiungerti dall'albo.`}catch(e){return ''}}
+startVisit=(_=>async function(pid){await _(pid);if(!G.visit||!NET.ok)return;const v=G.visit;if(!v.coop&&await coopHas(pid)){v.coop=true;v.snap=coopSnap();UI.toast(`${v.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto.`)}
+ if(!v.coop)v.why=await coopWhy(pid,v.name);UI.hud()})(startVisit);
+coopCheck=async function(){const v=G.visit;if(!v||!NET.ok)return;const ok=await coopHas(v.pid);if(!G.visit||G.visit!==v)return;
+ if(ok&&!v.coop){v.coop=true;v.why='';v.snap=coopSnap();UI.toast(`${v.name} ti ha dato il permesso: adesso puoi costruire qui. Tocca 🔨 in alto.`)}
+ else if(!ok&&v.coop){if(G.bm)bmClose();v.coop=false;UI.toast(`${v.name} ha tolto il permesso di costruire.`)}if(!ok)v.why=await coopWhy(v.pid,v.name);UI.hud()};
+{const _vc=visitChip;visitChip=function(){_vc();const el=$('#vchip'),v=G.visit;if(el&&v&&!v.coop&&v.why)el.innerHTML+=`<br><span class="small">${esc(v.why)}</span>`}}
+// gli amici che hanno cambiato codice: al ponte si ritrovano per nome e la lista si aggiorna da sola
+async function friendsRepair(st){if(!NET.ok||friendsRepair.t&&Date.now()-friendsRepair.t<60000)return;friendsRepair.t=Date.now();let list=null;
+ for(const f of st.mpFriends||[]){let ok=false;try{ok=!!(await NET.api.get(NET.r('villaggi/'+f.pid+'/name'))).val()}catch(e){continue}if(ok){if(!f.uid)try{f.uid=(await NET.api.get(NET.r('villaggi/'+f.pid+'/uid'))).val()||''}catch(e){}continue}
+  list=list||await MP.list(200);const same=list.filter(v=>v.name===f.name&&v.pid!==st.pid);if(same.length!==1)continue;const old=f.pid;f.pid=same[0].pid;try{f.uid=(await NET.api.get(NET.r('villaggi/'+f.pid+'/uid'))).val()||''}catch(e){}
+  UI.toast(`${f.name} ha un codice nuovo (${f.pid} al posto di ${old}): aggiornato tra i tuoi amici.`)}
+ NET.save(st)}
+{const _tm=travelMenu;travelMenu=async function(){const r=await _tm();const st=myHome();if(st&&isFree(st))friendsRepair(st);return r}}
+// quando si dà il permesso: l'identità dell'amico si legge subito, e si avvisa se il suo codice non esiste più
+coopToggle=async function(pid){const st=myHome(),f=(st.mpFriends||[]).find(x=>x.pid===pid);if(!f)return;f.coop=!f.coop;
+ if(f.coop){let nm=null;try{nm=(await NET.api.get(NET.r('villaggi/'+pid+'/name'))).val();f.uid=(await NET.api.get(NET.r('villaggi/'+pid+'/uid'))).val()||f.uid||''}catch(e){}
+  if(!nm)UI.toast(`Attenzione: il codice ${pid} di ${f.name} non risulta più nella Valle. Cercalo nell'albo e riaggiungilo.`,'bad')}
+ AU.play('ok');UI.toast(f.coop?`${f.name} adesso può costruire nel tuo villaggio quando ti visita.`:`${f.name} non può più costruire nel tuo villaggio.`);NET.save(st)};
