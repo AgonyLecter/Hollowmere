@@ -375,7 +375,8 @@ const CHATC = [
 ];
 function chatPool() {
   const st = G.st;
-  return CHATS.concat(
+  return Dialoghi.chiacchiere().concat(
+    CHATS,
     H2(st) ? CHATS2 : [],
     CHATC.filter(c => {
       try {

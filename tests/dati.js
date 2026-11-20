@@ -128,6 +128,75 @@ module.exports = async function (t, { browser }) {
           .map(k => c + ':' + k)
       )
     );
+    // dialoghi: chi parla esiste, condizioni scritte bene, nessuno svela la storia prima del tempo
+    const KEYS = new Set([
+      't',
+      'ora',
+      'fase',
+      'cap',
+      'finale',
+      'stagione',
+      'meteo',
+      'cuori',
+      'h2',
+      'flag',
+      'peso',
+      'se',
+      'una',
+      'id',
+      'tra',
+      'righe',
+      'copertura'
+    ]);
+    const tutte = [];
+    for (const tipo of ['saluto', 'passaggio', 'sfuggito'])
+      for (const [chi, L] of Object.entries(Dialoghi.db[tipo]))
+        for (const e of L) tutte.push({ tipo, chi, e, testi: [e.t] });
+    for (const tipo of ['chiacchiera', 'bisbiglio'])
+      for (const e of Dialoghi.db[tipo])
+        tutte.push({ tipo, chi: e.tra.join('+'), e, testi: e.righe.map(r => r[1]) });
+    bad(
+      'dialoghi di personaggi inesistenti',
+      tutte.filter(x => x.chi.split('+').some(c => c !== '*' && !NAMES[c])).map(x => x.tipo + ':' + x.chi)
+    );
+    bad(
+      'conversazioni con chi non partecipa',
+      tutte.filter(x => x.e.righe && x.e.righe.some(r => !x.e.tra.includes(r[0]))).map(x => x.chi)
+    );
+    bad(
+      'coperture di chi non partecipa',
+      tutte
+        .filter(x => x.e.copertura && !x.e.tra.includes(x.e.copertura.split(':')[0].trim()))
+        .map(x => x.chi)
+    );
+    bad(
+      'dialoghi con condizioni sconosciute',
+      tutte
+        .filter(x => Object.keys(x.e).some(k => !KEYS.has(k)))
+        .map(x => x.chi + ':' + Object.keys(x.e).filter(k => !KEYS.has(k)))
+    );
+    bad(
+      'dialoghi vuoti',
+      tutte.filter(x => x.testi.some(t => !t || t.length < 1)).map(x => x.chi)
+    );
+    // l'Albero lo nomina Ezekiel nel Capitolo II; teste, radici rosse e catene si vedono solo alla radura (Capitolo III)
+    const prima = (x, c) =>
+      x.e.fase !== 'valle' &&
+      !x.e.finale &&
+      !(x.e.cap && x.e.cap[0] >= c) &&
+      !RES_POOL.some(r => x.chi.split('+').includes(r.id));
+    bad(
+      "dialoghi che nominano l'Albero prima del Capitolo II",
+      tutte
+        .filter(x => prima(x, 2) && x.testi.some(t => /\bAlbero\b/.test(t)))
+        .map(x => x.chi + ': ' + x.testi[0].slice(0, 40))
+    );
+    bad(
+      'dialoghi che svelano la radura prima del Capitolo III',
+      tutte
+        .filter(x => prima(x, 3) && x.testi.some(t => /radici rosse|\bteste\b|catene/i.test(t)))
+        .map(x => x.chi + ': ' + x.testi[0].slice(0, 40))
+    );
     // ogni aspetto produce i suoi fotogrammi senza errori
     const sheetErr = [];
     for (const k of Object.keys(LOOKS)) {
