@@ -48,7 +48,7 @@ registroMenu=function(){const st=homeSt();if(!st||!isFree(st))return;const P=sco
 function rankBadge(){let el=$('#rbadge');const st=homeSt();if(!el){el=document.createElement('div');el.id='rbadge';el.className='dark';el.innerHTML='<span id="rbn"></span><div id="rbbar"><div></div></div>';($('#hud')||document.body).appendChild(el);
   el.addEventListener('pointerdown',e=>{e.stopPropagation();if(G.mode==='game'&&!G.cut&&!UI.busy()){AU.play('ui');registroMenu()}})}
  const show=st&&isFree(st)&&G.mode==='game';el.classList.toggle('hide',!show);if(!show)return;const sc=villageScore(st),r=rankOf(sc),a=rankStart(r),b=rankNext(r);
- $('#rbn').textContent=`${rankName(r)} · ${sc}/${b}`;$('#rbbar').firstChild.style.width=Math.max(0,Math.min(100,(sc-a)/(b-a)*100))+'%'}
+ $('#rbn').textContent=`🏘 Rango: ${rankName(r)} · ${sc}/${b} ›`;$('#rbbar').firstChild.style.width=Math.max(0,Math.min(100,(sc-a)/(b-a)*100))+'%'}
 {const _h=UI.hud.bind(UI);UI.hud=function(){_h();try{rankBadge()}catch(e){}}}
 // «+N prestigio» quando sale
 let PRE_LAST=null,PRE_T=0;
@@ -59,3 +59,14 @@ GUIDES.push({id:'rango',v:8,n:'Il rango del villaggio, spiegato',steps:[
  {t:'Sotto l\'orologio adesso c\'è il tuo rango, con la barra verso il prossimo. Toccala quando vuoi: si apre il registro del villaggio.'},
  {t:'Il registro dice da dove viene il prestigio, voce per voce, quanto manca al prossimo rango e cosa sblocca. E ti dà tre consigli su cosa fare adesso.'},
  {t:'Ogni volta che il prestigio sale, sopra di te compare «+ prestigio»: così vedi subito cosa conta. Costruire, comprare terre, ampliare la casa, gli abitanti, il museo: tutto aiuta.'}]});
+
+// ---------- la pietra del villaggio, in piazza ----------
+// una lapide di pietra con la targa d'ottone: dice il rango del villaggio e apre il registro
+const PIETRA_AT=[38,17];
+function genPietraArt(){IMG.pietra=SP(14,24,P=>{P.body(10,46,()=>14,Y=>Y<14?(Y-10)*1.6+6:12+(Y-14)*.08,rp('#8a877d'),{nyF:Y=>Y<16?-.4:.1,mod:(X,Y,v)=>((X*3+Y*7)%13===0)?v-.25:v});P.rect(6,20,16,10,rp('#c8a03a'),{spec:.9});P.line(9,24,19,24,C('#5a3a1e'));P.line(9,27,17,27,C('#5a3a1e'));P.rect(3,44,22,4,rp('#6a6760'))})}
+{const _af=applyFree;applyFree=function(m,st){_af(m,st);if(m.id!=='main'||!isFree(st))return;if(!IMG.pietra&&PX.prototype.line)genPietraArt();const [x,y]=PIETRA_AT;const o=m.objAt(x,y);if(o&&o.kind!=='built')mapRemove(m,o);if(!m.objAt(x,y))m.add(OB('pietra',x,y,IMG.pietra,{act:'pietra'}))}}
+PROMPT.pietra='Il villaggio';
+ACT.pietra=()=>{if(G.visit){const st=G.st,sc=villageScore(st),r=rankOf(sc);UI.open(`<button class="btn mclose" data-close>✕</button><h2>Il villaggio di ${esc(st.name)}</h2><p style="font-size:1.2em">${rankName(r)}</p><p class="small">Prestigio <b>${sc}</b>. Il registro del tuo villaggio lo trovi sulla pietra della tua piazza, o toccando il rango sotto l'orologio.</p>`);return}registroMenu()};
+GUIDES.push({id:'pietra',v:14,n:'La pietra del villaggio',steps:[
+ {t:'In piazza, accanto alla bacheca, c\'è la pietra del villaggio. Toccala: ti dice il rango, quanto manca al prossimo e cosa fare per salire.',at:()=>({x:PIETRA_AT[0]*16+8,y:PIETRA_AT[1]*16,l:'La pietra'})},
+ {t:'Il rango lo vedi sempre anche sullo schermo, in alto a destra, sotto l\'ora e i soldi: «Rango». Toccalo e si apre lo stesso registro.'}]});

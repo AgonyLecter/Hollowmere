@@ -23,7 +23,7 @@ async function coopToggle(pid){const st=myHome(),f=(st.mpFriends||[]).find(x=>x.
 
 // ---------- in visita: sei un costruttore fidato? ----------
 {const _sv=startVisit;startVisit=async function(pid){await _sv(pid);if(!G.visit||!NET.ok)return;const me=G.home.pid;
- try{const s=await NET.api.get(NET.r('villaggi/'+pid+'/trust/'+me));if(s.val()===true){G.visit.coop=true;G.visit.snap=coopSnap();UI.toast(`${G.visit.name} ti ha dato il permesso: qui puoi costruire (B), zappare e seminare con le tue cose.`)}}catch(e){}}}
+ try{const s=await NET.api.get(NET.r('villaggi/'+pid+'/trust/'+me));if(s.val()===true){G.visit.coop=true;G.visit.snap=coopSnap();UI.toast(`${G.visit.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto (o premi B), zappa e semina con le tue cose.`)}}catch(e){}UI.hud()}}
 const coopSnap=()=>({b:JSON.parse(JSON.stringify(G.st.free.built||{})),t:JSON.parse(JSON.stringify(G.st.free.tiles||{}))});
 // confronta il villaggio prima e dopo un'azione e manda al padrone quello che è cambiato
 function coopSync(){const v=G.visit;if(!v||!v.coop||(G.bm&&G.bm.carry))return;const A=v.snap,B=coopSnap(),me=G.home.pid,who=G.home.name,send=a=>MP.act(v.pid,Object.assign({from:me,name:who},a));
@@ -67,3 +67,15 @@ GUIDES.push({id:'coop',v:9,n:'Costruire insieme',steps:[
  {t:'Adesso puoi costruire insieme ai tuoi amici. Al ponte, accanto a ogni amico, c\'è «🔨 Può costruire»: se lo accendi, quando ti visita può costruire nel tuo villaggio.',at:()=>({x:44*16+16,y:41*16+4,l:'Il ponte'})},
  {t:'Chi ha il permesso, in visita, preme B come a casa sua: piazza e sposta con le sue cose, zappa e semina. Può togliere solo quello che ha messo lui, e il raccolto resta tuo.'},
  {t:'Se sei online vedi le modifiche subito; se no le trovi al prossimo ingresso, con un avviso di chi ha fatto cosa. Il permesso lo togli quando vuoi, dallo stesso bottone.'}]});
+
+// ---------- in visita: si vede se puoi costruire, e il permesso si aggiorna da solo ----------
+async function coopCheck(){const v=G.visit;if(!v||!NET.ok)return;const me=G.home.pid;
+ try{const s=await NET.api.get(NET.r('villaggi/'+v.pid+'/trust/'+me));const ok=s.val()===true;if(!G.visit||G.visit!==v)return;
+  if(ok&&!v.coop){v.coop=true;v.snap=coopSnap();UI.toast(`${v.name} ti ha dato il permesso: adesso puoi costruire qui. Tocca 🔨 in alto.`)}
+  else if(!ok&&v.coop){if(G.bm)bmClose();v.coop=false;UI.toast(`${v.name} ha tolto il permesso di costruire.`)}UI.hud()}catch(e){}}
+let COOP_T=20;
+{const _mt=mpTick;mpTick=function(dt){_mt(dt);if(!G.visit)return;COOP_T-=dt;if(COOP_T<=0){COOP_T=20;coopCheck()}}}
+function visitChip(){let el=$('#vchip');if(!el){el=document.createElement('div');el.id='vchip';el.className='dark hide';($('#hud')||document.body).appendChild(el)}
+ const v=G.visit;el.classList.toggle('hide',!v||G.mode!=='game');if(!v)return;el.innerHTML=v.coop?`In visita da <b>${esc(v.name)}</b> · <span style="color:#a8f08a">🔨 puoi costruire</span>`:`In visita da <b>${esc(v.name)}</b> · ospite: annaffia e lascia regali`}
+// il martello si vede anche in visita, se hai il permesso (sul telefono non c'è il tasto B)
+{const _h=UI.hud.bind(UI);UI.hud=function(){_h();const b=$('#bBuild');if(b&&G.visit)b.classList.toggle('hide',!(G.visit.coop&&G.map&&G.map.id==='main'));visitChip()}}
