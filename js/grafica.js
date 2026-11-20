@@ -408,12 +408,17 @@ const ART2={
   // tetto conico
   for(let Y=10;Y<34;Y++){const h2=4+(Y-10)*.85;for(let X=Math.round(48-h2);X<Math.round(48+h2);X++){const n=(X+.5-48)/h2;let t=(Y-10)%4===3?1:3;if(n<-.4)t++;if(n>.4)t--;if(n>.8)t--;B.S(P,X,Y,B.tc(RF,t))}}
   B.F(P,26,32,44,3,B.tc(RF,1));
-  // pale
-  for(const a of [0,1,2,3]){const t=a*Math.PI/2+Math.PI/4,ca=Math.cos(t),sa=Math.sin(t),ca2=-sa,sa2=ca;
-   for(let Y=0;Y<70;Y++)for(let X=0;X<96;X++){const dx=X+.5-48,dy=Y+.5-26,r=dx*ca+dy*sa,q=dx*ca2+dy*sa2;
+  // pale (girano: le disegna MULINO_PALE a ogni fotogramma, qui solo se la grafica animata manca)
+  if(typeof window.MULINO_ANIM==='undefined')mulinoPale(P,B,Math.PI/4)}),
+ _x:()=>null,
+};
+function mulinoPale(P,B,off,hy=26){const WD=B.R6('#8a5a32'),CL=B.R6('#e8e0d0');
+  for(const a of [0,1,2,3]){const t=a*Math.PI/2+off,ca=Math.cos(t),sa=Math.sin(t),ca2=-sa,sa2=ca;
+   for(let Y=0;Y<hy+44;Y++)for(let X=0;X<96;X++){const dx=X+.5-48,dy=Y+.5-hy,r=dx*ca+dy*sa,q=dx*ca2+dy*sa2;
     if(r>=0&&r<36&&Math.abs(q)<1.3){B.S(P,X,Y,B.tc(WD,q<0?4:2));continue}
     if(r<10||r>=34||q<1.3||q>=9)continue;const lat=(Math.floor(r)%5===0)||q>=8;B.S(P,X,Y,lat?B.tc(WD,2):B.tc(CL,q<4?4:3))}}
-  for(let yy=-4;yy<=4;yy++)for(let xx=-4;xx<=4;xx++)if(xx*xx+yy*yy<=16)B.S(P,48+xx,26+yy,B.tc(WD,xx+yy<0?4:2));B.S(P,48,26,C('#2e2e34'))}),
+  for(let yy=-4;yy<=4;yy++)for(let xx=-4;xx<=4;xx++)if(xx*xx+yy*yy<=16)B.S(P,48+xx,hy+yy,B.tc(WD,xx+yy<0?4:2));B.S(P,48,hy,C('#2e2e34'))}
+Object.assign(ART2,{
  silos:()=>GB(32,56,(P,B)=>{const M=B.R6('#b8483a'),G=B.R6('#a8acb4'),I=B.R6('#4a4a54');
   for(let Y=16;Y<108;Y++)for(let X=8;X<56;X++){const n=(X+.5-32)/24;let t=3;if(n<-.75)t=4;else if(n<-.4)t=4;if(n>.45)t=2;if(n>.8)t=1;const r=(Y-16)%6;if(r===0)t++;else if(r===5)t--;if(((Y-16)%30)<2)t=1;B.S(P,X,Y,B.tc(M,t))}
   // fascia bianca
@@ -465,7 +470,7 @@ const ART2={
   // stemma nel timpano
   for(let yy=-5;yy<=5;yy++)for(let xx=-5;xx<=5;xx++){const d=xx*xx+yy*yy;if(d<=25)B.S(P,64+xx,25+yy,B.tc(G,d>16?1:(xx+yy<0?5:3)))}
   B.F(P,62,8,4,3,B.tc(G,4))}),
-};
+});
 {const W=(name,keys,tgt)=>{const f=window[name];if(typeof f!=='function')return;window[name]=function(){const r=f.apply(this,arguments);for(const k of keys){try{tgt()[k]=ART2[k]()}catch(e){console.error(e)}}return r}};
  W('genAnimalArt',['pollaio','stalla'],()=>AIMG);W('genCostrArt',['serra','mulino','silos','pozzogrande'],()=>AIMG);W('genEspArt',['casetta'],()=>AIMG);W('genSempreArt',['museo'],()=>IMG)}
 
