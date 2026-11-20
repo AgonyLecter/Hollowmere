@@ -92,7 +92,7 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
   $('#mbox').querySelectorAll('canvas[data-p]').forEach(c=>{const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(portrait(c.dataset.p,''),0,0)});
   const vm=$('#vm'),vs=$('#vs');if(vm){vm.oninput=()=>{AU.vol.m=+vm.value;AU.applyVol();LS.set('hm_vol',JSON.stringify(AU.vol))};vs.oninput=()=>{AU.vol.s=+vs.value;AU.applyVol();AU.play('blip');LS.set('hm_vol',JSON.stringify(AU.vol))};$('#fs').onclick=goFull;$('#gd').onchange=e=>{G.guideOn=e.target.checked;LS.set('hm_guide',G.guideOn?'1':'0')}}
   const sq=$('#sq');if(sq)sq.onclick=async()=>{const [tx,ty]=ptile(G.player);st.map=G.map.id;st.px=tx;st.py=ty;st.dir=G.player.dir;await NET.save(st);this.close();toTitle()};
-  const sn=$('#sNow');if(sn)sn.onclick=async()=>{if(G.visit){UI.toast('Sei in visita: si salva quando torni a casa.');return}const [tx,ty]=ptile(G.player);st.map=G.map.id;st.px=tx;st.py=ty;st.dir=G.player.dir;sn.disabled=true;await NET.save(st);UI.toast(NET.saveErr?'Salvataggio online rifiutato: '+NET.saveErr:NET.ok?'Salvato, anche online.':'Salvato su questo dispositivo.');this.close()};
+  const sn=$('#sNow');if(sn)sn.onclick=async()=>{if(!NET.ok){UI.toast('Mi collego alla Valle…');await NET.init()}if(G.visit){UI.toast('Sei in visita: si salva quando torni a casa.');return}const [tx,ty]=ptile(G.player);st.map=G.map.id;st.px=tx;st.py=ty;st.dir=G.player.dir;sn.disabled=true;await NET.save(st);UI.toast(NET.saveErr?'Salvataggio online rifiutato: '+NET.saveErr:NET.ok?'Salvato, anche online.':'Salvato su questo dispositivo.');this.close()};
  },
  pauseKey(){if(this.modalOpen){this.close();return}if(G.mode==='game')this.pause()},
  // ---------- schermate ----------

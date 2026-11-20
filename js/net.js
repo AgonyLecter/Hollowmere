@@ -7,15 +7,20 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
    const tmo=(ms)=>new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms));
    // tutti i moduli insieme; l'accesso anonimo PRIMA di aprire il database, così la connessione nasce già con l'identità
    const [A,D,AU2]=await Promise.race([Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js'),import(B+'firebase-auth.js')]),tmo(15000)]);
-   const app=A.initializeApp(FBCFG,'hollowmere');this.api=D;this.AU=AU2;this.auth=AU2.getAuth(app);
+   const app=(A.getApps&&A.getApps().find(x=>x.name==='hollowmere'))||A.initializeApp(FBCFG,'hollowmere');this.api=D;this.AU=AU2;this.auth=AU2.getAuth(app);
    await this.signIn();
-   this.db=D.getDatabase(app);
+   this.db=this.db||D.getDatabase(app);
    await Promise.race([D.get(D.ref(this.db,'.info/serverTimeOffset')),tmo(12000)]);
    this.ok=true;import(B+'firebase-analytics.js').then(an=>{try{an.getAnalytics(app)}catch(e){}}).catch(()=>{});
-   this.listen();
-  }catch(e){this.ok=false;console.warn('Hollowmere offline:',e&&e.message)}
-  if(!this.ok){try{this.msgs=JSON.parse(LS.get('hm_lap')||'[]')}catch(e){}}
+   if(!this._listening){this._listening=1;this.listen()}this.netErr=null;
+  }catch(e){this.ok=false;this.netErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere offline:',e&&e.message)}
+  if(!this.ok){try{this.msgs=JSON.parse(LS.get('hm_lap')||'[]')}catch(e){}
+   // niente connessione: si riprova da soli, sempre più di rado; appena riesce si riattiva tutto
+   this._tries=(this._tries||0)+1;clearTimeout(this._rt);this._rt=setTimeout(()=>this.init(),Math.min(120000,15000*this._tries))}
+  else if(this._tries){this._tries=0;this.reconnected()}
   this.status()},
+ // tornati online durante la partita: salva, presenza, posta, novità
+ reconnected(){try{const st=G.visit?G.home:G.st;if(G.mode==='game'&&st&&st.pid){this.save(st);if(isFree(st)){presenceJoin(G.visit?G.visit.pid:st.pid);inboxStart()}UI.toast('Collegato alla Valle: ora sei online.')}}catch(e){console.warn(e)}},
  r(p){return this.api.ref(this.db,this.ROOT+'/'+p)},
  // identità anonima: nessuna schermata, serve alle regole per sapere di chi è un salvataggio. Se non riesce, si riprova al salvataggio.
  async signIn(){if(!this.AU||!this.auth)return false;if(this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.authErr=null;return true}
@@ -30,7 +35,8 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
  _own:{},
  key(pid){return LS.get('hm_key_'+pid)},
  // un salvataggio online appartiene a chi l'ha creato; da un altro dispositivo serve la chiave di recupero
- async own(pid){if(this._own[pid])return true;if(!this.ok||!pid)return false;if(!this.uid&&!(await this.signIn())){this.ownErr='nessuna identità ('+(this.authErr||'?')+')';return false}const D=this.api;let k=this.key(pid),made=false;
+ own(pid){if(this._own[pid])return Promise.resolve(true);this._ownP=this._ownP||{};if(this._ownP[pid])return this._ownP[pid];const pr=this._own1(pid).finally(()=>{delete this._ownP[pid]});this._ownP[pid]=pr;return pr},
+ async _own1(pid){if(this._own[pid])return true;if(!this.ok||!pid)return false;if(!this.uid&&!(await this.signIn())){this.ownErr='nessuna identità ('+(this.authErr||'?')+')';return false}const D=this.api;let k=this.key(pid),made=false;
   try{if(!k){k=rkey();await D.set(this.r('segreti/'+pid),k);made=true}await D.set(this.r('proprietari/'+pid),{uid:this.uid||'',k});LS.set('hm_key_'+pid,k);this._own[pid]=true;return true}
   catch(e){this.ownErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: proprietà del salvataggio non registrata',pid,e&&e.message);return false}},
  async save(st){if(G.visit)return;st.ts=Date.now();LS.set(isFree(st)?'hm_free':'hm_save',JSON.stringify(st));if(st.pid)LS.set('hm_pid',st.pid);if(!this.ok||!st.pid)return;
@@ -50,7 +56,7 @@ function newPid(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='HM-';for(let
 function rkey(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<8;i++){s+=A[Math.random()*A.length|0];if(i===3)s+='-'}return s}
 // diagnosi della connessione, mostrata nel menu Salvataggio
 function netDiag(){const N=NET,ok=v=>`<span style="color:#3a7a1a">✔ ${v}</span>`,ko=v=>`<span style="color:#a8301a">✘ ${v}</span>`;
- if(!N.ok)return ko('Firebase non raggiungibile (offline). Su Brave: disattiva gli Scudi per questo sito.');
+ if(!N.ok)return ko('Non collegato alla Valle'+(N.netErr?' ('+esc(N.netErr)+')':'')+'. Il gioco riprova da solo; «Salva adesso» riprova subito. Su Brave: disattiva gli Scudi per questo sito. Nei browser dentro le app (Instagram, WhatsApp, Telegram) apri il gioco in Chrome.');
  return [N.uid?ok('Identità anonima'):ko('Identità anonima: '+(N.authErr||'non ancora pronta')+' — in Firebase va abilitato «Anonimo».'),
   N.saveOk?ok('Ultimo salvataggio online alle '+new Date(N.saveOk).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})):N.saveErr?ko('Salvataggio online rifiutato: '+N.saveErr+(N.ownErr?' (proprietà: '+N.ownErr+')':'')):'… nessun salvataggio online ancora in questa sessione'].join('<br>')}
 // ---------- compressione dei salvataggi (LZ, alfabeto base64: sicuro per Firebase) ----------
