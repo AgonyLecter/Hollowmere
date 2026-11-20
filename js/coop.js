@@ -1,0 +1,69 @@
+'use strict';
+// ================= COSTRUIRE INSIEME =================
+// Il padrone di un villaggio può dare a un amico il permesso di costruire («🔨 Può costruire»). Quando quell'amico
+// lo visita può piazzare, spostare e togliere (solo quello che ha messo lui), zappare e seminare, con i suoi oggetti.
+// Ogni modifica parte come messaggio (visite/<padrone>): il padrone la applica subito se è online, altrimenti alla
+// prossima volta che entra. I permessi stanno in villaggi/<padrone>/trust, l'identità di chi scrive in uid.
+
+// ---------- i permessi ----------
+const myHome=()=>G.visit?G.home:G.st;
+{const _pub=MP.publish.bind(MP);MP.publish=async function(st){await _pub(st);if(!NET.ok||!st||!st.pid||!isFree(st))return;
+ try{await NET.api.set(NET.r('villaggi/'+st.pid+'/uid'),NET.uid||'');const T={};for(const f of (st.mpFriends||[]))if(f.coop)T[f.pid]=true;await NET.api.set(NET.r('villaggi/'+st.pid+'/trust'),T)}catch(e){}}}
+// ogni messaggio porta chi lo manda davvero (le regole possono verificarlo: uid === auth.uid)
+{const _act=MP.act.bind(MP);MP.act=function(owner,a){return _act(owner,Object.assign({uid:NET.uid||''},a))}}
+async function coopToggle(pid){const st=myHome(),f=(st.mpFriends||[]).find(x=>x.pid===pid);if(!f)return;f.coop=!f.coop;
+ if(f.coop){try{const s=await NET.api.get(NET.r('villaggi/'+pid+'/uid'));f.uid=s.val()||''}catch(e){}}
+ AU.play('ok');UI.toast(f.coop?`${f.name} adesso può costruire nel tuo villaggio quando ti visita.`:`${f.name} non può più costruire nel tuo villaggio.`);NET.save(st)}
+// nel ponte, accanto a ogni amico: il permesso
+{const _tm=travelMenu;travelMenu=async function(){const r=await _tm();const box=$('#mbox');if(!r||!UI.modalOpen||!box)return r;const st=myHome(),fr=st.mpFriends||[];
+ box.querySelectorAll('[data-v]').forEach(b=>{const f=fr.find(x=>x.pid===b.dataset.v);if(!f)return;const t=document.createElement('button');t.className='btn'+(f.coop?' on':'');t.textContent=f.coop?'🔨 Può costruire ✓':'🔨 Può costruire';t.title='Permetti a questo amico di costruire nel tuo villaggio';
+  t.onclick=async()=>{await coopToggle(f.pid);UI._mclose=null;travelMenu()};b.after(t)});
+ const h=[...box.querySelectorAll('h3')].find(h=>/Amici/.test(h.textContent));if(h){const p=document.createElement('p');p.className='small';p.textContent='«🔨 Può costruire»: quando ti visita, quell\'amico può costruire, spostare, zappare e seminare nel tuo villaggio, con le sue cose. Puoi toglierlo quando vuoi.';h.after(p)}
+ return r}}
+
+// ---------- in visita: sei un costruttore fidato? ----------
+{const _sv=startVisit;startVisit=async function(pid){await _sv(pid);if(!G.visit||!NET.ok)return;const me=G.home.pid;
+ try{const s=await NET.api.get(NET.r('villaggi/'+pid+'/trust/'+me));if(s.val()===true){G.visit.coop=true;G.visit.snap=coopSnap();UI.toast(`${G.visit.name} ti ha dato il permesso: qui puoi costruire (B), zappare e seminare con le tue cose.`)}}catch(e){}}}
+const coopSnap=()=>({b:JSON.parse(JSON.stringify(G.st.free.built||{})),t:JSON.parse(JSON.stringify(G.st.free.tiles||{}))});
+// confronta il villaggio prima e dopo un'azione e manda al padrone quello che è cambiato
+function coopSync(){const v=G.visit;if(!v||!v.coop||(G.bm&&G.bm.carry))return;const A=v.snap,B=coopSnap(),me=G.home.pid,who=G.home.name,send=a=>MP.act(v.pid,Object.assign({from:me,name:who},a));
+ const gone=Object.keys(A.b).filter(k=>!B.b[k]),born=Object.keys(B.b).filter(k=>!A.b[k]);
+ for(const k of gone){const j=JSON.stringify(A.b[k]),to=born.find(n=>JSON.stringify(B.b[n])===j);if(to){born.splice(born.indexOf(to),1);send({t:'cmove',k,to})}else send({t:'cdel',k})}
+ for(const k of born)send({t:'cbuild',k,d:B.b[k]});
+ for(const k of new Set([...Object.keys(A.t),...Object.keys(B.t)]))if(A.t[k]!==B.t[k])send({t:'ctile',k,v:B.t[k]||0});
+ v.snap=B}
+// la modalità costruzione si apre anche in visita, se hai il permesso (solo all'aperto)
+{const _bo=bmOpen;bmOpen=function(){if(G.visit&&G.visit.coop&&G.map.id==='main'){const v=G.visit;G.visit=null;try{_bo()}finally{G.visit=v}if(G.bm){v.snap=coopSnap();UI.toast(`Costruisci nel villaggio di ${v.name}. Puoi togliere solo quello che hai messo tu.`)}return}return _bo()}}
+{const _ba=bmAction;bmAction=function(){const v=G.visit;if(!(v&&v.coop))return _ba();const b=G.bm,o=bmTarget(b.x,b.y),me=G.home.pid;
+ if(!b.carry&&b.mode==='togli'&&o&&G.st.free.built[o.bk]&&G.st.free.built[o.bk].by!==me){UI.toast(`Questo l'ha messo ${v.name}: puoi spostarlo, non toglierlo.`);return}
+ // chi piazza resta scritto sulla costruzione
+ const keys=new Set(Object.keys(G.st.free.built)),wasCarry=!!b.carry;_ba();if(!wasCarry&&!b.carry)for(const k in G.st.free.built)if(!keys.has(k)&&!G.st.free.built[k].by)G.st.free.built[k].by=me;coopSync()}}
+{const _bc=bmClose;bmClose=function(){_bc();if(G.visit&&G.visit.coop)coopSync()}}
+// le regole di bmHome guardano G.visit: in visita con permesso, la modalità resta aperta
+{const _up=updatePlayer;updatePlayer=function(dt){const v=G.visit;if(G.bm&&v&&v.coop){G.visit=null;try{_up(dt)}finally{G.visit=v}return}return _up(dt)}}
+// zappare e seminare da ospite fidato
+{const _va=visitAct;visitAct=function(fx,fy){const v=G.visit;if(!(v&&v.coop))return _va(fx,fy);const st=G.st,m=G.map,it=selItem(),id=it&&it.id,k=fkey(fx,fy),f=st.farm[k],o=m.objAt(fx,fy),g=m.get(fx,fy);
+ const send=a=>MP.act(v.pid,Object.assign({from:G.home.pid,name:G.home.name},a));
+ if(id==='hoe'&&!f&&!o&&(g===1||g===12)&&ownedAt(fx,fy)){if(!useEnergy(2))return true;st.farm[k]={w:false,c:null};AU.play('hoe');burst('dust',fx*16+8,fy*16+10,8);send({t:'ctill',k});return true}
+ if(id&&ITEMS[id]&&ITEMS[id].t==='seed'&&f&&!f.c){if(!cropInSeason(ITEMS[id].crop,seasonOf())&&!inSerra(fx,fy)){UI.toast('Non è stagione per questi semi.');return true}f.c={t:ITEMS[id].crop,a:0,dry:0};removeItem(id,1);AU.play('plant');send({t:'cplant',k,c:ITEMS[id].crop});return true}
+ if(f&&f.c&&cropStage(f.c)===3){UI.toast(`Il raccolto è di ${v.name}: lascialo a lui.`);return true}
+ return _va(fx,fy)}}
+
+// ---------- il padrone applica quello che fanno gli amici ----------
+function coopRekey(st,from,to){for(const a of st.free.animals||[])if(a.home===from)a.home=to;for(const r of st.free.residents||[])if(r.house===from)r.house=to}
+{const _ia=inboxApply;inboxApply=function(a){if(!a||!/^c(build|del|move|tile|till|plant)$/.test(a.t))return _ia(a);const st=myHome();if(!st||!isFree(st))return;
+ const f=(st.mpFriends||[]).find(x=>x.pid===a.from);if(!f||!f.coop||(f.uid&&a.uid&&f.uid!==a.uid))return;   // solo gli amici col permesso
+ const W2=st.free,nm=a.name||f.name,back=d=>{if(d&&ITEMS[d.id])MP.act(a.from,{t:'gift',item:d.id,n:1,from:st.name})};let msg='';
+ if(a.t==='cbuild'){const d=a.d;if(!d||!ITEMS[d.id]||W2.built[a.k]){back(d);return}W2.built[a.k]=d;msg=`${nm} ha costruito ${ITEMS[d.id].n.toLowerCase()} nel tuo villaggio.`}
+ if(a.t==='cdel'){const d=W2.built[a.k];if(!d||d.by!==a.from)return;delete W2.built[a.k];msg=`${nm} ha ripreso ${ITEMS[d.id].n.toLowerCase()}.`}
+ if(a.t==='cmove'){const d=W2.built[a.k];if(!d||W2.built[a.to])return;delete W2.built[a.k];W2.built[a.to]=d;coopRekey(st,a.k,a.to);msg=`${nm} ha spostato ${ITEMS[d.id].n.toLowerCase()}.`}
+ if(a.t==='ctile'){W2.tiles=W2.tiles||{};if(a.v)W2.tiles[a.k]=a.v;else delete W2.tiles[a.k];msg=''}
+ if(a.t==='ctill'){if(!st.farm[a.k])st.farm[a.k]={w:false,c:null};msg=`${nm} ha zappato nei tuoi campi.`}
+ if(a.t==='cplant'){const fm=st.farm[a.k];if(fm&&!fm.c&&CROPS[a.c])fm.c={t:a.c,a:0,dry:0};msg=`${nm} ha seminato nei tuoi campi.`}
+ if(!G.visit&&G.st===st&&G.mode==='game'){rebuildMaps();if(G.map)G.map=G.maps[G.map.id]}
+ if(msg){clearTimeout(G.coopT);G.coopN=(G.coopN||[]).concat(msg).slice(-5);G.coopT=setTimeout(()=>{for(const t of G.coopN)UI.toast('🔨 '+t);G.coopN=[]},700)}
+ NET.save(st)}}
+GUIDES.push({id:'coop',v:9,n:'Costruire insieme',steps:[
+ {t:'Adesso puoi costruire insieme ai tuoi amici. Al ponte, accanto a ogni amico, c\'è «🔨 Può costruire»: se lo accendi, quando ti visita può costruire nel tuo villaggio.',at:()=>({x:44*16+16,y:41*16+4,l:'Il ponte'})},
+ {t:'Chi ha il permesso, in visita, preme B come a casa sua: piazza e sposta con le sue cose, zappa e semina. Può togliere solo quello che ha messo lui, e il raccolto resta tuo.'},
+ {t:'Se sei online vedi le modifiche subito; se no le trovi al prossimo ingresso, con un avviso di chi ha fatto cosa. Il permesso lo togli quando vuoi, dallo stesso bottone.'}]});
