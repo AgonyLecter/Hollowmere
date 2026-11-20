@@ -1,6 +1,6 @@
 // Service worker di Hollowmere: il gioco si installa e si apre anche senza rete.
 // Strategia "prima la rete": quando c'è connessione si prende sempre la versione nuova, altrimenti quella salvata.
-const CACHE='hollowmere-v8';
+const CACHE='hollowmere-v9';
 const CORE=['index.html', 'css/style.css', 'js/core.js', 'js/art.js', 'js/world.js', 'js/farm.js', 'js/npc.js', 'js/ui.js', 'js/net.js', 'js/life.js', 'js/story.js', 'js/cine.js', 'js/ambient.js', 'js/free.js', 'js/animals.js', 'js/mp.js', 'js/missions.js', 'js/build.js', 'js/garden.js', 'js/relations.js', 'js/feste.js', 'js/farm2.js', 'js/trade.js', 'js/anim.js', 'js/valle.js', 'js/espansione.js', 'js/costruire.js', 'js/miniera.js', 'js/main.js', 'icons/icon-192.png', 'icons/icon-512.png', 'manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))).then(()=>self.clients.claim()))});

@@ -3,19 +3,24 @@
 const FBCFG={apiKey:"AIzaSyBiKEfo1c7c12kAYxlRuZNjh-Spz4W1Tbw",authDomain:"wandertutto.firebaseapp.com",databaseURL:"https://wandertutto-default-rtdb.europe-west1.firebasedatabase.app",projectId:"wandertutto",storageBucket:"wandertutto.firebasestorage.app",messagingSenderId:"933606082300",appId:"1:933606082300:web:3ef3d5e1a233f86f7f3979",measurementId:"G-0Z5BRG4X4Z"};
 const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'hollowmere',
  async init(){
-  try{const v='10.12.5',B=`https://www.gstatic.com/firebasejs/${v}/`;
-   const to=new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000));
-   const [A,D]=await Promise.race([Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js')]),to]);
-   const app=A.initializeApp(FBCFG,'hollowmere');this.api=D;this.db=D.getDatabase(app);
-   await Promise.race([D.get(D.ref(this.db,'.info/serverTimeOffset')),to]);
-   // identità anonima: nessuna schermata, serve alle regole per sapere di chi è un salvataggio
-   try{const AU2=await Promise.race([import(B+'firebase-auth.js'),to]);this.auth=AU2.getAuth(app);const cr=await Promise.race([AU2.signInAnonymously(this.auth),to]);this.uid=cr.user.uid}catch(e){this.authErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: accesso anonimo non riuscito',e&&e.message)}
+  try{const v='10.12.5',B=`https://www.gstatic.com/firebasejs/${v}/`;this.B=B;
+   const tmo=(ms)=>new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms));
+   // tutti i moduli insieme; l'accesso anonimo PRIMA di aprire il database, così la connessione nasce già con l'identità
+   const [A,D,AU2]=await Promise.race([Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js'),import(B+'firebase-auth.js')]),tmo(15000)]);
+   const app=A.initializeApp(FBCFG,'hollowmere');this.api=D;this.AU=AU2;this.auth=AU2.getAuth(app);
+   await this.signIn();
+   this.db=D.getDatabase(app);
+   await Promise.race([D.get(D.ref(this.db,'.info/serverTimeOffset')),tmo(12000)]);
    this.ok=true;import(B+'firebase-analytics.js').then(an=>{try{an.getAnalytics(app)}catch(e){}}).catch(()=>{});
    this.listen();
   }catch(e){this.ok=false;console.warn('Hollowmere offline:',e&&e.message)}
   if(!this.ok){try{this.msgs=JSON.parse(LS.get('hm_lap')||'[]')}catch(e){}}
   this.status()},
  r(p){return this.api.ref(this.db,this.ROOT+'/'+p)},
+ // identità anonima: nessuna schermata, serve alle regole per sapere di chi è un salvataggio. Se non riesce, si riprova al salvataggio.
+ async signIn(){if(!this.AU||!this.auth)return false;if(this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.authErr=null;return true}
+  try{const cr=await Promise.race([this.AU.signInAnonymously(this.auth),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),15000))]);this.uid=cr.user.uid;this.authErr=null;return true}
+  catch(e){this.authErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: accesso anonimo non riuscito',e&&e.message);return false}},
  listen(){const D=this.api;
   D.onValue(D.query(this.r('registro'),D.limitToLast(40)),s=>{const v=s.val()||{};this.regNames=Object.values(v).map(o=>String(o&&o.name||'').slice(0,20));this.status()},()=>{});
   D.onValue(D.query(this.r('lapidi'),D.limitToLast(20)),s=>{const v=s.val()||{};this.msgs=Object.values(v).filter(Boolean).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(o=>({t:String(o.t||'').slice(0,80),n:String(o.n||'').slice(0,20)}));UI.refreshNameless&&UI.refreshNameless()},()=>{});
@@ -25,7 +30,7 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
  _own:{},
  key(pid){return LS.get('hm_key_'+pid)},
  // un salvataggio online appartiene a chi l'ha creato; da un altro dispositivo serve la chiave di recupero
- async own(pid){if(this._own[pid])return true;if(!this.ok||!pid)return false;const D=this.api;let k=this.key(pid),made=false;
+ async own(pid){if(this._own[pid])return true;if(!this.ok||!pid)return false;if(!this.uid&&!(await this.signIn())){this.ownErr='nessuna identità ('+(this.authErr||'?')+')';return false}const D=this.api;let k=this.key(pid),made=false;
   try{if(!k){k=rkey();await D.set(this.r('segreti/'+pid),k);made=true}await D.set(this.r('proprietari/'+pid),{uid:this.uid||'',k});LS.set('hm_key_'+pid,k);this._own[pid]=true;return true}
   catch(e){this.ownErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: proprietà del salvataggio non registrata',pid,e&&e.message);return false}},
  async save(st){if(G.visit)return;st.ts=Date.now();LS.set(isFree(st)?'hm_free':'hm_save',JSON.stringify(st));if(st.pid)LS.set('hm_pid',st.pid);if(!this.ok||!st.pid)return;
