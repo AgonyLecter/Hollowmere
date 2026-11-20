@@ -75,5 +75,6 @@
 <script src="js/miniera.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/main.js"></script>
-<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script src="js/update.js"></script>
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{}));</script>
 </body></html>
