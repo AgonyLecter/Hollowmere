@@ -29,7 +29,10 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
   try{if(!k){k=rkey();await D.set(this.r('segreti/'+pid),k);made=true}await D.set(this.r('proprietari/'+pid),{uid:this.uid||'',k});LS.set('hm_key_'+pid,k);this._own[pid]=true;return true}
   catch(e){this.ownErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: proprietà del salvataggio non registrata',pid,e&&e.message);return false}},
  async save(st){if(G.visit)return;st.ts=Date.now();LS.set(isFree(st)?'hm_free':'hm_save',JSON.stringify(st));if(st.pid)LS.set('hm_pid',st.pid);if(!this.ok||!st.pid)return;
-  await this.own(st.pid);MP.publish(st);   // sono le regole del database a decidere: se il salvataggio non è tuo, la scrittura viene rifiutata
+  let mine=await this.own(st.pid);
+  // un villaggio della Valle registrato a un'altra identità (chiave di recupero persa): ne apriamo uno nuovo, così il giocatore torna visibile a tutti
+  if(!mine&&isFree(st)&&!this.key(st.pid)&&/PERMISSION|permission/.test(this.ownErr||'')&&!this._forked){this._forked=1;const old=st.pid;st.pid=newPid();LS.set('hm_free',JSON.stringify(st));LS.set('hm_pid',st.pid);mine=await this.own(st.pid);if(mine)UI.toast(`Il codice ${old} era registrato a un altro dispositivo: il tuo villaggio ora è ${st.pid}.`)}
+  MP.publish(st);   // sono le regole del database a decidere: se il salvataggio non è tuo, la scrittura viene rifiutata
   try{await this.api.set(this.r('players/'+st.pid),{name:st.name,day:st.day,ch:st.chapter,ts:st.ts,save:JSON.stringify(st)});this.saveOk=Date.now();this.saveErr=null}catch(e){this.saveErr=(e&&(e.code||e.message))||'errore';console.warn(e);if(!this._warned){this._warned=1;UI.toast('Il salvataggio online non è riuscito: resta su questo dispositivo.','bad')}}},
  async load(pid){if(!this.ok)return null;try{const s=await this.api.get(this.r('players/'+pid));const v=s.val();return v&&v.save?JSON.parse(v.save):null}catch(e){return null}},
  async register(name){if(!this.ok)return;try{await this.api.push(this.r('registro'),{name:name.slice(0,20),ts:Date.now()});await this.api.runTransaction(this.r('stats/arrivi'),c=>(c||0)+1)}catch(e){console.warn(e)}},
