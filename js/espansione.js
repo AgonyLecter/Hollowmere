@@ -137,6 +137,11 @@ const RES_POOL=[
   shop:[['quadro',240],['lanternacarta',120],['ghirlanda',110]],req:['ciliegie','fragola','mela','barbabietola'],L:['Dipingo la Valle ogni giorno. Ogni giorno il quadro viene diverso.','Le facce, qui, non vengono mai bene. Si muovono anche nel ritratto.','Colora il tuo tetto. La Valle ha bisogno di colore.']},
  {id:'gaspare',n:'Gaspare l\'apicoltore',job:'api',look:{skin:'#e0b090',hair:'#c8c0b0',style:'short',eye:'#4a4a3a',shirt:'#e8c84a',pants:'#5a5a4a',shoe:'#2a1c14',hat:'tall',hatCol:'#e8e0d0',hatBand:'#5a5a5a'},
   shop:[['apiario',380],['miele',55]],req:['camomilla','tarassaco','ciliegie'],L:['Le api sanno chi sei. Non mentire mai vicino a un alveare.','Il miele della Valle è scuro. Dolce, ma scuro.','Più fiori pianti, più le api ti vogliono bene.']},
+ // aggiunti con i contenuti nuovi: il pastore e la contadina
+ {id:'elio',n:'Elio il pastore',job:'pecore',look:{skin:'#d8a07a',hair:'#3a2a1a',style:'messy',beard:'#3a2a1a',eye:'#3a4a3a',shirt:'#8a6a4a',vest:'#e8dcc0',pants:'#4a4030',shoe:'#2a1c14',hat:'cap',hatCol:'#5a4a3a'},
+   shop:[['fieno',15],['s_grano',30],['ovile',650]],req:['lana','latte_capra','formaggio','fieno','grano'],L:['Le pecore non sono stupide. Sono prudenti. C\'è differenza.','D\'estate le porto in alto. D\'inverno le tengo vicine. Come la gente.','Il latte di capra fa venire la forza. E un po\' di carattere.']},
+  {id:'rina',n:'Rina la contadina',job:'orto',look:{skin:'#e8b890',hair:'#c8702a',style:'bun',eye:'#5a6a2a',shirt:'#e8d8b0',dress:'#6a7a3a',pants:'#3a3a3a',shoe:'#3a2414',hat:'bonnet',hatCol:'#e8d8a8'},
+   shop:[['s_piselli',38],['s_zucchina',42],['s_mirtilli',62],['s_cavolfiore',58],['alb_albicocco',340],['alb_noce',360]],req:['piselli','zucchina','cavolfiore','girasole','ravanello','mirtilli'],L:['La terra della Valle è nera e grassa. Le manca solo qualcuno che la ascolti.','Il ravanello è impaziente come un bambino. Il cavolfiore come un vecchio.','Pianta girasoli ai bordi dei campi: le api ti ringrazieranno.']},
 ];
 const RES=Object.fromEntries(RES_POOL.map(r=>[r.id,r]));
 for(const r of RES_POOL){NPC_DEF.push([r.id,r.n]);NAMES[r.id]=r.n;LOOKS[r.id]=Object.assign({pants:'#3a3a4a',shoe:'#2a1c14'},r.look);HOMES[r.id]='ponte'}
@@ -144,7 +149,7 @@ const residents=st=>((st||G.st).free&&(st||G.st).free.residents)||[];
 const resOf=(id,st)=>residents(st).find(r=>r.id===id);
 function resDoor(r,st){const b=(st||G.st).free.built[r.house];if(!b)return null;const [ax,ay]=r.house.split(',').map(Number);return [ax,ay+1]}
 // la giornata di un abitante: davanti a casa, al lavoro nella sua zona, in piazza la sera
-const RES_WORK={pesca:()=>zoneOpen('lago')?[64,30,2]:[40,42,3],miniera:()=>zoneOpen('collina')?[86,9,0]:[33,6,0],fiori:()=>[24,10,0],erbe:()=>[30,6,3],legno:()=>[36,15,0],arte:()=>[50,24,3],api:()=>[22,20,0],mulino:()=>[46,22,0]};
+const RES_WORK={pesca:()=>zoneOpen('lago')?[64,30,2]:[40,42,3],miniera:()=>zoneOpen('collina')?[86,9,0]:[33,6,0],fiori:()=>[24,10,0],erbe:()=>[30,6,3],legno:()=>[36,15,0],arte:()=>[50,24,3],api:()=>[22,20,0],mulino:()=>[46,22,0],pecore:()=>[14,38,0],orto:()=>[12,28,1]};
 for(const R of RES_POOL)SCHED[R.id]=function(st){if(!isFree(st))return null;const r=resOf(R.id,st);if(!r||st.day<=r.day)return null;const d=resDoor(r,st);if(!d)return null;const t=st.time,wk=RES_WORK[R.job]();
  if(t>=7*60&&t<9*60)return at(d[0],d[1],0,'idle',1);if(t>=9*60&&t<13*60)return at(wk[0],wk[1],wk[2],'idle',2);if(t>=13*60&&t<14*60+30)return at(44+((R.id.length*3)%5)-2,18+(R.id.length%3),0,'idle',2);
  if(t>=14*60+30&&t<18*60)return at(wk[0],wk[1],wk[2],'idle',2);if(t>=18*60&&t<20*60+30)return at(42+(R.id.charCodeAt(0)%7),21,0,'chat',1);return null};
