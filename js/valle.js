@@ -113,7 +113,7 @@ function tourPick(st){const S=guidesSeen(st);for(const g of GUIDES)if(!S[g.id])r
  return null}
 function tourTick(dt){const st=homeSt(),el=$('#tour');
  if(G.mode!=='game'||!st||!isFree(st)){if(G.tour){G.tour=null}if(el)el.classList.add('hide');return}
- if(el&&G.tour)el.classList.toggle('hide',!!G.cut||UI.modalOpen);
+ if(el&&G.tour)el.classList.toggle('hide',!!G.cut||UI.modalOpen||!!G.bm);
  if(G.tour){const s=tourStep();if(s&&s.done&&s.done()&&!G.cut&&!UI.busy())tourNext();return}
  if(G.cut||UI.busy()||G.visit){TOUR_WAIT=Math.max(TOUR_WAIT,1.5);return}
  TOUR_WAIT-=dt;if(TOUR_WAIT>0)return;TOUR_WAIT=3;const g=tourPick(st);if(g)tourStart(g)}
