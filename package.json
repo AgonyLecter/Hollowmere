@@ -1,0 +1,15 @@
+{
+  "name": "hollowmere",
+  "private": true,
+  "description": "Hollowmere — La Valle Quieta. Il gioco non ha bisogno di build: questi script servono solo agli sviluppatori.",
+  "scripts": {
+    "test": "node tests/run.js",
+    "test:aggiorna": "node tests/run.js --aggiorna",
+    "format": "prettier --write \"js/**/*.js\" \"tests/**/*.js\""
+  },
+  "devDependencies": {
+    "playwright": "1.63.0",
+    "prettier": "3.6.2",
+    "acorn": "8.14.0"
+  }
+}
