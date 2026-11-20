@@ -96,10 +96,14 @@ const UI={dlgOpen:false,modalOpen:false,_res:null,_typ:null,_full:'',_choices:nu
  },
  pauseKey(){if(this.modalOpen){this.close();return}if(G.mode==='game')this.pause()},
  // ---------- schermate ----------
- fade(v,ms=400){return new Promise(r=>{const f=$('#fade');f.style.transition=`opacity ${ms}ms`;f.style.opacity=v;setTimeout(r,ms+20)})},
- card(k,t,s,red,click=true,ms=1600){return new Promise(res=>{const c=$('#card');$('#cardk').textContent=k||'';$('#cardt').textContent=fmt(t||'');$('#cards').innerHTML=fmt(s||'')+(click?'<br><br><span class="small" style="opacity:.6">— tocca per continuare —</span>':'');c.classList.toggle('red',!!red);c.classList.remove('hide');
-  const done=()=>{c.classList.add('hide');c.onclick=null;removeEventListener('keydown',kd);res()};const kd=e=>{if(ok&&(e.code==='Space'||e.code==='Enter'||e.code==='KeyE'))done()};let ok=false;
-  setTimeout(()=>{ok=true;if(!click)done()},ms);c.onclick=()=>{if(ok)done()};addEventListener('keydown',kd)})},
+ fade(v,ms=400){return new Promise(r=>{const f=$('#fade');if(Math.abs((parseFloat(getComputedStyle(f).opacity)||0)-v)<.02){f.style.transition='';f.style.opacity=v;r();return}f.style.transition=`opacity ${ms}ms`;f.style.opacity=v;setTimeout(r,ms+20)})},
+ // le schede (capitoli, finali, giorni). Quelle da toccare: «tocca per continuare» compare appena si può toccare
+ // (prima 1,4-2,2 s di tocchi ignorati sembravano un blocco), si tocca ovunque, e dopo 12 s vanno avanti da sole.
+ card(k,t,s,red,click=true,ms=1600){return new Promise(res=>{const c=$('#card');$('#cardk').textContent=k||'';$('#cardt').textContent=fmt(t||'');$('#cards').innerHTML=fmt(s||'')+(click?'<br><br><span class="small cardhint" style="opacity:0;transition:opacity .4s">— tocca per continuare —</span>':'');c.classList.toggle('red',!!red);c.classList.remove('hide');
+  let ok=false,fin=false;const lock=click?Math.min(ms,900):ms;
+  const done=()=>{if(fin)return;fin=true;clearTimeout(auto);c.classList.add('hide');c.onpointerdown=null;removeEventListener('keydown',kd);res()};const kd=e=>{if(ok&&(e.code==='Space'||e.code==='Enter'||e.code==='KeyE'))done()};
+  setTimeout(()=>{ok=true;if(!click){done();return}const h=c.querySelector('.cardhint');if(h)h.style.opacity='.6'},lock);const auto=click?setTimeout(done,lock+12000):0;
+  c.onpointerdown=e=>{e.preventDefault();if(ok)done()};addEventListener('keydown',kd)})},
  askName(){return new Promise(res=>{this.open(`<h2>Chi sei?</h2><p>Il notaio ha scritto il tuo nome sulla lettera del nonno. Con la stessa calligrafia, qualcuno lo scriverà anche altrove.</p><div class="gpick"><canvas id="gprev" width="36" height="54"></canvas><div><p style="margin:0 0 calc(3*var(--u))"><button class="btn gb on" data-g="m">Ragazzo</button> <button class="btn gb" data-g="f">Ragazza</button></p><input class="tx" id="nm" maxlength="14" placeholder="Il tuo nome" autocomplete="off"></div></div><p style="text-align:right;margin-top:6px"><button class="btn" data-close>Indietro</button> <button class="btn" id="nmok">Inizia</button></p>`,()=>res(null));
   let g='m';const prev=()=>{const c=$('#gprev'),x=c.getContext('2d');x.clearRect(0,0,36,54);heroFrame(PLAYER_LOOKS[g],0,null,0,false).put(x,0,0)};prev();
   $('#mbox').querySelectorAll('.gb').forEach(b=>b.onclick=()=>{g=b.dataset.g;AU.play('ui');$('#mbox').querySelectorAll('.gb').forEach(o=>o.classList.toggle('on',o===b));prev()});

@@ -152,3 +152,16 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #bmbar>b{display:block;font-size:calc(6.5*var(--u));color:var(--gold);letter-spacing:.14em;text-transform:uppercase}#bmbar p{margin:calc(2*var(--u)) 0 0}#bmbar p b{color:#f6d98a}
 #bmbar .tb{text-align:center}#bmbar .btn{font-size:calc(7*var(--u));padding:calc(2*var(--u)) calc(5*var(--u))}
 @media (max-aspect-ratio:4/3){#bmbar{width:calc(100% - 12*var(--u));bottom:calc(70*var(--u))}}
+
+#bChat2{position:absolute;right:calc(-21*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(8*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto;color:#fff;border:0;padding:0}
+#bChat2 i{position:absolute;right:calc(-3*var(--u));top:calc(-3*var(--u));min-width:calc(8*var(--u));height:calc(8*var(--u));border-radius:calc(4*var(--u));background:#c8301a;color:#fff;font-size:calc(5.5*var(--u));font-style:normal;line-height:calc(8*var(--u));display:none}
+#bChat2.new i{display:block}#bChat2.new{animation:pulse .6s infinite alternate}
+#chatbox{position:absolute;left:50%;bottom:calc(31*var(--u));transform:translateX(-50%);width:min(calc(260*var(--u)),92%);padding:calc(4*var(--u)) calc(5*var(--u));z-index:4;pointer-events:auto;font-size:calc(7.5*var(--u))}
+#chatbox .chhead{display:flex;align-items:center;gap:calc(3*var(--u))}#chatbox .chhead b{color:var(--gold);letter-spacing:.14em;text-transform:uppercase;font-size:calc(6.5*var(--u))}
+#chwho{flex:1;color:#b8a07a;font-size:calc(6*var(--u));overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#chatbox #chclose{width:calc(12*var(--u));height:calc(12*var(--u));font-size:calc(6*var(--u))}
+#chlog{max-height:calc(62*var(--u));overflow-y:auto;margin:calc(2*var(--u)) 0;padding-right:calc(2*var(--u))}#chlog p{margin:calc(1*var(--u)) 0;line-height:1.25;overflow-wrap:anywhere}
+#chquick{display:flex;gap:calc(2*var(--u));overflow-x:auto;padding-bottom:calc(2*var(--u))}#chquick .btn{flex:none;font-size:calc(6.5*var(--u));padding:calc(1.5*var(--u)) calc(4*var(--u))}
+#chatbox .chrow{display:flex;gap:calc(3*var(--u))}#chatbox .chrow .tx{flex:1;min-width:0}#chatbox .chrow .btn{font-size:calc(7*var(--u))}
+#chatfeed{position:absolute;left:calc(6*var(--u));bottom:calc(31*var(--u));width:min(calc(170*var(--u)),45%);pointer-events:none;z-index:3}
+#chatfeed p{margin:calc(1.5*var(--u)) 0 0;padding:calc(1.5*var(--u)) calc(4*var(--u));background:rgba(18,11,16,.78);color:#f1e2bf;font-size:calc(7*var(--u));box-shadow:0 0 0 var(--u) #07040a;animation:fin .3s;transition:opacity .6s;overflow-wrap:anywhere}
+#chatfeed p.out{opacity:0}

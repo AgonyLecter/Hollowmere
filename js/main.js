@@ -125,9 +125,12 @@ async function endDay(passed,faded){if(G.visit)await endVisit(true);const st=G.s
   G.farmNews=news;
   const pay=st.shipped.reduce((a,[id,n])=>a+sellPrice(id)*n,0);st.money+=pay;st.shipped=[];
   const prevS=seasonOf(st);st.day++;freeNight(st,prevS);st.time=6*60;st.energy=passed?60:100;if(!passed)addQuiete(H2(st)?6:10);st.talked={};st.gifted={};
+  // la scheda del nuovo giorno compare subito: il lavoro sotto (mappe, salvataggio) si fa mentre la si legge
+  const dayCard=UI.card('',isFree(st)?`${seasonName()} · giorno ${seasonDay()}`:`Giorno ${st.day}`,`${isFree(st)?DAYN[(st.day+3)%7]+(yearOf()>1?' · anno '+yearOf():''):DAYN[(st.day+3)%7]+' · Autunno'}${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
+  await sleep(30);
   morningSetup();rebuildMaps();snapNPCs();spawnCritters();st.flags.pettedToday=0;G.parts=[];G.map=G.maps.house;setPos(G.player,2,3,0);
   NET.save(st);UI.hud();UI.quest();UI.hotbar();
-  await UI.card('',isFree(st)?`${seasonName()} · giorno ${seasonDay()}`:`Giorno ${st.day}`,`${isFree(st)?DAYN[(st.day+3)%7]+(yearOf()>1?' · anno '+yearOf():''):DAYN[(st.day+3)%7]+' · Autunno'}${pay?` · Spedizione: +${SC(pay)}`:''}`,false,false,1300);
+  await dayCard;
   updateCam(0);await UI.fade(0,800);
  }finally{G.cut--}
  await morningEvents()}
