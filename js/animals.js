@@ -77,10 +77,10 @@ function drawFarmAnimal(e){const im=e.a.kind==='mucca'?AIMG.mucca[e.st==='move'?
  if(e.dir<0){ctx.save();ctx.translate(X,0);ctx.scale(-1,1);ctx.drawImage(im,-w/2,Y-h,w,h);ctx.restore()}else ctx.drawImage(im,X-w/2,Y-h,w,h);
  if(e.st==='sleep'&&Math.floor(G.t*1.5+e.hx)%3===0){ctx.fillStyle='#fff';ctx.font='8px "Pixelify Sans",monospace';ctx.fillText('z',X+4,Y-h-2)}
  if(e.a.kind==='mucca'&&e.a.prod&&e.st!=='sleep'){ctx.fillStyle='#fbfbf6';ctx.fillRect(X-1,Y-h-6,3,4);ctx.fillStyle='#2a1a10';ctx.fillRect(X-1,Y-h-7,3,1)}}
-function animalAct(ax,ay){const e=(G.fanimals||[]).find(e=>Math.hypot(e.x-ax,e.y-ay)<14);if(!e)return false;const a=e.a;
+function animalAct(ax,ay){const e=(G.fanimals||[]).find(e=>Math.hypot(e.x-ax,e.y-ay)<18);if(!e)return false;const a=e.a;
  if(a.kind==='mucca'&&a.prod){if(!addItem('latte',1))return true;a.prod=false;AU.play('pick');floatText('+1 Latte',e.x,e.y-24);if(!a.pet){a.pet=true;a.love=Math.min(10,a.love+1)}return true}
  if(!a.pet){a.pet=true;a.love=Math.min(10,a.love+1);AU.play(a.kind==='gallina'?'cluck':'ok');floatText('♥',e.x,e.y-22,'#ff7a6a');UI.toast(`${a.name} ${a.kind==='gallina'?'chioccia contenta':'muggisce piano'}.`)}
- else UI.toast(`${a.name} ti guarda. ${a.hungry?'Ha fame.':'Sta bene.'}`);return true}
+ else{floatText('♥',e.x,e.y-22,'#ffb0a0',.7);UI.toast(`${a.name} oggi è già stat${a.kind==='gallina'?'a':'a'} coccolat${a.kind==='gallina'?'a':'a'}. ${a.hungry?'Ha fame: metti fieno nella mangiatoia.':'Sta bene.'}`)}return true}
 // ogni mattina: si mangia (pascolo o fieno), si produce, l'affetto cresce o cala
 function animalsMorning(st){if(!isFree(st)||!st.free.animals)return;const win=seasonOf(st)===1;
  for(const a of st.free.animals){const b=st.free.built[a.home];if(!b)continue;b.hay=b.hay||0;

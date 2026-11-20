@@ -64,6 +64,8 @@ function farmAct(tx,ty){
 }
 // ================= AZIONI =================
 function doAction(){const [fx,fy]=frontTile();const p=G.player;toolSwing();
+ // le bestie del tuo pollaio e della tua stalla prima delle galline selvatiche del paese
+ if(G.map.id==='main'&&isFree(G.st)&&typeof animalAct==='function'&&animalAct(p.x+DIRV[p.dir][0]*14,p.y+DIRV[p.dir][1]*14))return;
  if(G.map.id==='main'&&G.critters){const ax=p.x+DIRV[p.dir][0]*14,ay=p.y+DIRV[p.dir][1]*14;for(const c of G.critters){if(Math.hypot(c.x-ax,c.y-ay)>14)continue;
   if(c.k==='cat'){c.st='sit';c.t=4;AU.play('meow');eggCat();floatText('♥',c.x,c.y-20,'#ff8a8a');if(!G.st.flags.pettedToday){G.st.flags.pettedToday=1;addQuiete(2)}UI.toast(['Fa le fusa. Ha un occhio giallo e uno… anche giallo.','Il gatto nero ti si struscia sulle gambe.','Miao. Sembra che ti conosca da sempre.'][Math.random()*3|0]);return}
   if(c.k==='chicken'){AU.play('cluck');UI.toast('Coccodè! La gallina ti guarda storto.');c.tx=c.x+(c.x-p.x)*2;c.ty=c.y+(c.y-p.y)*2;c.st='move';return}}}
