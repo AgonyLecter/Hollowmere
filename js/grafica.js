@@ -508,7 +508,7 @@ const ART3={
 // ---------- foglie, petali e pollini nell'aria (solo all'aperto, di giorno) ----------
 {const _amb=drawAmbTop;drawAmbTop=function(m){_amb(m);try{
   if(m.id!=='main'||!G.st||G.night>.5||G.horror>.6||G.st.weather==='pioggia'||G.st.weather==='neve')return;
-  const s=typeof seasonOf==='function'?seasonOf(G.st):0;if(s===1)return;const T=G.t,cx=G.cam.x,cy=G.cam.y,a=1-G.night*1.6;if(a<=0)return;
+  const s=typeof seasonOf==='function'?seasonOf(G.st):0;if(s!==3)return;const T=G.t,cx=G.cam.x,cy=G.cam.y,a=1-G.night*1.6;if(a<=0)return;
   const pal=s===0?['#d8742a','#e8a83a','#b8481e','#c89030']:s===2?['#f4c8d8','#fbeef2','#e8a8c0']:['#fff0b0','#f8e080'];
   const n=s===3?22:16;ctx.globalAlpha=a;
   for(let i=0;i<n;i++){const sp=s===3?3:9+(i%4)*2,x=cx+((i*131.7+T*(4+(i%3))+Math.sin(T*1.1+i)*14)%(W+40)+W+40)%(W+40)-20,y=cy+((i*71.3+T*sp)%(H+30))-15,c=pal[i%pal.length];
