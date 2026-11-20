@@ -10,7 +10,14 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
    const app=(A.getApps&&A.getApps().find(x=>x.name==='hollowmere'))||A.initializeApp(FBCFG,'hollowmere');this.api=D;this.AU=AU2;this.auth=AU2.getAuth(app);
    await this.signIn();
    this.db=this.db||D.getDatabase(app);
-   await Promise.race([D.get(D.ref(this.db,'.info/serverTimeOffset')),tmo(12000)]);
+   const ping=()=>Promise.race([D.get(D.ref(this.db,'.info/serverTimeOffset')),tmo(12000)]);
+   try{await ping()}catch(e){if(!/token|auth|permission/i.test((e&&(e.code||e.message))||''))throw e;
+    // il server rifiuta l'identità salvata nel browser (spesso data/ora del dispositivo sbagliate): identità nuova e riprova
+    console.warn('Hollowmere: identità rifiutata, ne creo una nuova',e&&e.message);this.tokenErr=(e&&(e.code||e.message))||'token';
+    try{await AU2.signOut(this.auth)}catch(_){}this.uid=null;await this.signIn();
+    try{await ping()}catch(e2){
+     // ancora niente: ci colleghiamo senza identità. Si legge tutto (bacheca, albo, visite), ma non si salva online.
+     try{await AU2.signOut(this.auth)}catch(_){}this.uid=null;this.authErr='identità rifiutata dal server: controlla che data e ora del dispositivo siano automatiche';this.noAuth=true;await ping()}}
    this.ok=true;import(B+'firebase-analytics.js').then(an=>{try{an.getAnalytics(app)}catch(e){}}).catch(()=>{});
    if(!this._listening){this._listening=1;this.listen()}this.netErr=null;
   }catch(e){this.ok=false;this.netErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere offline:',e&&e.message)}
@@ -23,7 +30,7 @@ const NET={ok:false,api:null,db:null,regNames:[],heirs:[],msgs:[],count:0,ROOT:'
  reconnected(){try{const st=G.visit?G.home:G.st;if(G.mode==='game'&&st&&st.pid){this.save(st);if(isFree(st)){presenceJoin(G.visit?G.visit.pid:st.pid);inboxStart()}UI.toast('Collegato alla Valle: ora sei online.')}}catch(e){console.warn(e)}},
  r(p){return this.api.ref(this.db,this.ROOT+'/'+p)},
  // identità anonima: nessuna schermata, serve alle regole per sapere di chi è un salvataggio. Se non riesce, si riprova al salvataggio.
- async signIn(){if(!this.AU||!this.auth)return false;if(this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.authErr=null;return true}
+ async signIn(){if(!this.AU||!this.auth||this.noAuth)return false;if(this.auth.currentUser){this.uid=this.auth.currentUser.uid;this.authErr=null;return true}
   try{const cr=await Promise.race([this.AU.signInAnonymously(this.auth),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),15000))]);this.uid=cr.user.uid;this.authErr=null;return true}
   catch(e){this.authErr=(e&&(e.code||e.message))||'errore';console.warn('Hollowmere: accesso anonimo non riuscito',e&&e.message);return false}},
  listen(){const D=this.api;
@@ -57,7 +64,7 @@ function rkey(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;
 // diagnosi della connessione, mostrata nel menu Salvataggio
 function netDiag(){const N=NET,ok=v=>`<span style="color:#3a7a1a">✔ ${v}</span>`,ko=v=>`<span style="color:#a8301a">✘ ${v}</span>`;
  if(!N.ok)return ko('Non collegato alla Valle'+(N.netErr?' ('+esc(N.netErr)+')':'')+'. Il gioco riprova da solo; «Salva adesso» riprova subito. Su Brave: disattiva gli Scudi per questo sito. Nei browser dentro le app (Instagram, WhatsApp, Telegram) apri il gioco in Chrome.');
- return [N.uid?ok('Identità anonima'):ko('Identità anonima: '+(N.authErr||'non ancora pronta')+' — in Firebase va abilitato «Anonimo».'),
+ return [N.uid?ok('Identità anonima'):ko('Identità anonima: '+esc(N.authErr||'non ancora pronta')+(N.noAuth?' — sei collegato in sola lettura: vedi bacheca, albo e villaggi, ma il salvataggio resta qui.':'')+' Data e ora di questo dispositivo: '+new Date().toLocaleString('it-IT')+'.'),
   N.saveOk?ok('Ultimo salvataggio online alle '+new Date(N.saveOk).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})):N.saveErr?ko('Salvataggio online rifiutato: '+N.saveErr+(N.ownErr?' (proprietà: '+N.ownErr+')':'')):'… nessun salvataggio online ancora in questa sessione'].join('<br>')}
 // ---------- compressione dei salvataggi (LZ, alfabeto base64: sicuro per Firebase) ----------
 const LZ=(()=>{const K='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';const R={};for(let i=0;i<K.length;i++)R[K[i]]=i;
