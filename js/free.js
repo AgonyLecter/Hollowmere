@@ -504,7 +504,7 @@ function mapRemove(m, o) {
   for (const q of m.objs) for (const [x, y] of q.solid || []) m.block(x, y);
 }
 const REGROW = { tree: 10, rock: 14, log: 20 };
-function applyFree(m, st) {
+function applyFreeBase(m, st) {
   if (m.id !== 'main' || !isFree(st)) return;
   const W2 = st.free;
   applyTiles(m, st);
@@ -549,6 +549,14 @@ function applyFree(m, st) {
     if (b.id === 'lampione') m.lights.push({ x: x * 16 + 8, y: y * 16 - 14, r: 62 });
   }
 }
+// punto di estensione: gli altri file si iscrivono con Ext.on('applyFree…') invece di sovrascriverla
+function applyFree(m, st) {
+  Ext.runPrima('applyFree:prima', m, st);
+  const v = applyFreeBase(m, st);
+  Ext.run('applyFree', m, st);
+  return v;
+}
+
 function placeImg(id, b) {
   if (ITEMS[id] && ITEMS[id].tree) return fruitTreeImg(b || { id, d: G.st.day });
   return (
@@ -563,7 +571,7 @@ function placeImg(id, b) {
   );
 }
 // ogni mattina: nuovi detriti nei prati e nei campi vuoti; gli irrigatori bagnano
-function freeMorning(st) {
+function freeMorningBase(st) {
   if (!isFree(st)) return;
   const W2 = st.free,
     m = G.maps && G.maps.main;
@@ -608,6 +616,13 @@ function freeMorning(st) {
     }
   }
 }
+// punto di estensione: gli altri file si iscrivono con Ext.on('freeMorning…') invece di sovrascriverla
+function freeMorning(st) {
+  Ext.runPrima('freeMorning:prima', st);
+  const v = freeMorningBase(st);
+  Ext.run('freeMorning', st);
+  return v;
+}
 
 // ---------- azioni con gli attrezzi ----------
 G.hits = {};
@@ -615,7 +630,7 @@ function hitFx(x, y, col) {
   burst('dust', x * 16 + 8, y * 16 + 8, 6, col);
   G.shake = Math.max(G.shake, 0.6);
 }
-function freeAct(fx, fy) {
+function freeActBase(fx, fy) {
   const st = G.st;
   if (!isFree(st) || G.map.id !== 'main' || G.visit) return false;
   const m = G.map,
@@ -878,6 +893,14 @@ function freeAct(fx, fy) {
   }
   return false;
 }
+// punto di estensione: gli altri file si iscrivono con Ext.on('freeAct…') invece di sovrascriverla
+function freeAct(fx, fy) {
+  const r = Ext.intercetta('freeAct:intercetta', fx, fy);
+  if (r) return r;
+  const v = freeActBase(fx, fy);
+  return v;
+}
+
 ACT.debris = () => {};
 ACT.ceppo = () => UI.toast("Un ceppo. Con l'accetta lo togli.");
 ACT.built = () => {};
@@ -940,49 +963,10 @@ function craftMenu() {
 // ---------- cassa ----------
 function chestMenu(bk) {
   const b = G.st.free.built[bk];
+  if (!b) return;
   if (!b.inv) b.inv = Array(20).fill(null);
-  const cell = (s, w, i) =>
-    `<div class="cslot" data-w="${w}" data-i="${i}"><canvas width="32" height="32"></canvas><i>${s && s.n > 1 ? s.n : ''}</i></div>`;
-  const draw = () => {
-    UI.open(
-      `<button class="btn mclose" data-close>✕</button><h2>Cassa</h2><p class="small">Tocca un oggetto per spostarlo tra lo zaino e la cassa.</p><h3>Cassa</h3><div class="cgrid">${b.inv.map((s, i) => cell(s, 'c', i)).join('')}</div><h3>Zaino</h3><div class="cgrid">${G.st.inv.map((s, i) => cell(s, 'z', i)).join('')}</div>`
-    );
-    $('#mbox')
-      .querySelectorAll('.cslot')
-      .forEach(el => {
-        const L = el.dataset.w === 'c' ? b.inv : G.st.inv,
-          s = L[+el.dataset.i];
-        if (s && ICON[s.id]) el.firstChild.getContext('2d').drawImage(ICON[s.id], 0, 0);
-        if (s) el.title = ITEMS[s.id].n;
-        el.onclick = () => {
-          const from = el.dataset.w === 'c' ? b.inv : G.st.inv,
-            to = el.dataset.w === 'c' ? G.st.inv : b.inv,
-            i = +el.dataset.i,
-            s = from[i];
-          if (!s) return;
-          if (el.dataset.w === 'z' && ITEMS[s.id].t === 'key') {
-            UI.toast('Questo lo tieni con te.');
-            return;
-          }
-          const same = to.find(q => q && q.id === s.id);
-          if (same) same.n += s.n;
-          else {
-            const j = to.findIndex(q => !q);
-            if (j < 0) {
-              UI.toast(el.dataset.w === 'c' ? 'Lo zaino è pieno!' : 'La cassa è piena!', 'bad');
-              return;
-            }
-            to[j] = { id: s.id, n: s.n };
-          }
-          from[i] = null;
-          AU.play('blip');
-          UI.hotbar();
-          UI._mclose = null;
-          draw();
-        };
-      });
-  };
-  draw();
+  ZPICK = null;
+  zaino(bk);
 }
 
 // ---------- inizio del gioco libero ----------

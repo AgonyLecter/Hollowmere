@@ -131,7 +131,7 @@ const VIETATI = {
   };
 }
 // il vecchio invio «a pezzi» lascia il posto alle differenze
-coopSync = function () {};
+
 {
   const _sv2 = startVisit;
   startVisit = async function (pid) {
@@ -310,9 +310,7 @@ function hostClock() {
   }
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     try {
       coopSend(dt);
       ownerBroadcast(dt);
@@ -320,7 +318,7 @@ function hostClock() {
     } catch (e) {
       console.error(e);
     }
-  };
+  });
 }
 
 // ---------- dare al volo ----------

@@ -8,7 +8,8 @@ const SUITES = {
   sintassi: require('./sintassi'),
   dati: require('./dati'),
   impronta: require('./impronta'),
-  fumo: require('./fumo')
+  fumo: require('./fumo'),
+  toppe: require('./toppe')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

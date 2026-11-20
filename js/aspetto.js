@@ -385,8 +385,7 @@ function telaioMenu() {
     );
 }
 {
-  const _fa = freeAct;
-  freeAct = function (fx, fy) {
+  Ext.on('freeAct:intercetta', function (fx, fy) {
     const st = G.st;
     if (isFree(st) && !G.visit && G.map.id === 'main') {
       const o = G.map.objAt(fx, fy),
@@ -396,8 +395,7 @@ function telaioMenu() {
         return true;
       }
     }
-    return _fa(fx, fy);
-  };
+  });
 }
 function genAspettoArt() {
   const wood = rp('#8a5a32'),
@@ -419,11 +417,9 @@ function genAspettoArt() {
   ICON.telaio = pxCanvas(P);
 }
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
+  Ext.on('applyFree:prima', function (m, st) {
     if (!FREEIMG.telaio && PX.prototype.line) genAspettoArt();
-    _af(m, st);
-  };
+  });
 }
 
 // ---------- gli altri ti vedono così ----------
@@ -447,33 +443,7 @@ const avCode = () => {
     return h;
   };
 }
-drawOther = function (o) {
-  let k = 'mp_' + (o.g === 'f' ? 'f' : 'm');
-  if (o.lk) {
-    k = 'mp_' + o.name;
-    if (LOOKS[k] && LOOKS[k]._lk === o.lk) {
-    } else {
-      try {
-        LOOKS[k] = Object.assign(avLook(o.g, JSON.parse(o.lk)), { _lk: o.lk });
-        delete SHEET[k];
-      } catch (e) {
-        k = 'mp_' + (o.g === 'f' ? 'f' : 'm');
-      }
-    }
-  }
-  if (!LOOKS[k]) LOOKS[k] = PLAYER_LOOKS[o.g === 'f' ? 'f' : 'm'];
-  drawSprite(k, o);
-  ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
-  ctx.textAlign = 'center';
-  const t = o.name || '?',
-    w = Math.ceil(ctx.measureText(t).width) + 6,
-    X = Math.round(o.x),
-    Y = Math.round(o.y - 36);
-  ctx.fillStyle = 'rgba(18,11,16,.75)';
-  ctx.fillRect(X - w / 2, Y - 8, w, 10);
-  ctx.fillStyle = '#bfe3ff';
-  ctx.fillText(t, X, Y);
-};
+
 GUIDES.push({
   id: 'aspetto',
   v: 13,

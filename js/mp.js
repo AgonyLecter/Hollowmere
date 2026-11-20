@@ -142,7 +142,7 @@ function presenceLeave() {
   CHAT_OFF = null;
   G.others = {};
 }
-function mpTick(dt) {
+function mpTickBase(dt) {
   if (!PRES || G.mode !== 'game') return;
   const p = G.player,
     st = G.st;
@@ -183,8 +183,27 @@ function mpTick(dt) {
   if (G.chatB) for (const b of G.chatB) b.life -= dt;
   if (G.chatB) G.chatB = G.chatB.filter(b => b.life > 0);
 }
+// punto di estensione: gli altri file si iscrivono con Ext.on('mpTick…') invece di sovrascriverla
+function mpTick(dt) {
+  const v = mpTickBase(dt);
+  Ext.run('mpTick', dt);
+  return v;
+}
+
 function drawOther(o) {
-  const k = 'mp_' + (o.g === 'f' ? 'f' : 'm');
+  let k = 'mp_' + (o.g === 'f' ? 'f' : 'm');
+  if (o.lk) {
+    k = 'mp_' + o.name;
+    if (LOOKS[k] && LOOKS[k]._lk === o.lk) {
+    } else {
+      try {
+        LOOKS[k] = Object.assign(avLook(o.g, JSON.parse(o.lk)), { _lk: o.lk });
+        delete SHEET[k];
+      } catch (e) {
+        k = 'mp_' + (o.g === 'f' ? 'f' : 'm');
+      }
+    }
+  }
   if (!LOOKS[k]) LOOKS[k] = PLAYER_LOOKS[o.g === 'f' ? 'f' : 'm'];
   drawSprite(k, o);
   ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';

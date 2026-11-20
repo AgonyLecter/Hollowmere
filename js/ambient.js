@@ -132,57 +132,39 @@ function ambTick(dt) {
 function drawDeer(e) {
   const X = Math.round(e.x),
     Y = Math.round(e.y),
-    s = e.dir,
     run = e.st === 'flee',
-    k = run ? Math.sin(e.f) * 2 : 0,
-    R = (c, a, b, w, h) => {
-      ctx.fillStyle = c;
-      ctx.fillRect(s > 0 ? X + a : X - a - w, Y + b, w, h);
-    };
+    img = run ? DEER.run[Math.floor((e.f || 0) * 1.2) % 4] : e.st === 'graze' ? DEER.graze : DEER.stand,
+    w = iw(img),
+    h = ih(img);
   ctx.fillStyle = 'rgba(0,0,0,.22)';
-  ctx.fillRect(X - 7, Y - 1, 14, 2);
-  R('#5a3a22', -5, -6 + k * 0.3, 1, 6 - k);
-  R('#5a3a22', 4, -6 - k * 0.3, 1, 6 + k);
-  R('#4a2e1a', -3, -6, 1, 6);
-  R('#4a2e1a', 2, -6, 1, 6);
-  R('#8a5a32', -6, -11, 12, 6);
-  R('#a8744a', -5, -11, 10, 2);
-  R('#f2e6d0', -7, -10, 2, 2);
-  const hy = e.st === 'graze' ? -7 : -17;
-  R('#8a5a32', 5, hy + 3, 3, e.st === 'graze' ? 4 : 8);
-  R('#8a5a32', 6, hy, 4, 4);
-  R('#2a1a10', 9, hy + 1, 1, 1);
-  if (e.st !== 'graze') {
-    R('#6a4a2a', 6, hy - 3, 1, 3);
-    R('#6a4a2a', 8, hy - 4, 1, 4);
-    R('#6a4a2a', 5, hy - 4, 1, 1);
-    R('#6a4a2a', 9, hy - 5, 1, 1);
-  }
+  ctx.beginPath();
+  ctx.ellipse(X, Y, 8, 1.8, 0, 0, 7);
+  ctx.fill();
+  if (e.dir < 0) {
+    ctx.save();
+    ctx.translate(X, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -w / 2, Y - h + 1, w, h);
+    ctx.restore();
+  } else ctx.drawImage(img, X - w / 2, Y - h + 1, w, h);
 }
 function drawHog(h) {
   const X = Math.round(h.x),
     Y = Math.round(h.y);
   ctx.fillStyle = 'rgba(0,0,0,.25)';
-  ctx.fillRect(X - 4, Y, 8, 1);
-  if (h.ball > 0) {
-    ctx.fillStyle = '#4a3a2a';
-    ctx.fillRect(X - 3, Y - 5, 6, 5);
-    ctx.fillStyle = '#6a5a44';
-    ctx.fillRect(X - 2, Y - 5, 1, 1);
-    ctx.fillRect(X + 1, Y - 4, 1, 1);
-    return;
-  }
-  const s = h.dir;
-  ctx.fillStyle = '#4a3a2a';
-  ctx.fillRect(X - 4, Y - 4, 8, 4);
-  ctx.fillStyle = '#6a5a44';
-  for (let i = 0; i < 4; i++) ctx.fillRect(X - 4 + i * 2, Y - 5, 1, 1);
-  ctx.fillStyle = '#c8a888';
-  ctx.fillRect(s > 0 ? X + 4 : X - 6, Y - 3, 2, 2);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(s > 0 ? X + 5 : X - 6, Y - 3, 1, 1);
-  ctx.fillStyle = '#a01810';
-  ctx.fillRect(X - 1, Y - 6, 2, 1);
+  ctx.beginPath();
+  ctx.ellipse(X, Y, 4.5, 1.2, 0, 0, 7);
+  ctx.fill();
+  const img = h.ball > 0 ? HOG.ball : HOG.walk[Math.floor(h.f || 0) % 2],
+    w = iw(img),
+    hh = ih(img);
+  if (h.dir < 0 && !(h.ball > 0)) {
+    ctx.save();
+    ctx.translate(X, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -w / 2, Y - hh + 1, w, hh);
+    ctx.restore();
+  } else ctx.drawImage(img, X - w / 2, Y - hh + 1, w, hh);
 }
 function hogAt(ax, ay) {
   const h = G.amb && G.amb.hog;
@@ -197,7 +179,7 @@ function hogAt(ax, ay) {
   h.seen = 1;
   return true;
 }
-function drawAmbTop(m) {
+function drawAmbTopBase(m) {
   if (m.id !== 'main' || !G.amb) return;
   const A = G.amb,
     T = G.t,
@@ -272,6 +254,12 @@ function drawAmbTop(m) {
       ctx.fillRect(X, Y, 3, 1);
     }
   }
+}
+// punto di estensione: gli altri file si iscrivono con Ext.on('drawAmbTop…') invece di sovrascriverla
+function drawAmbTop(m) {
+  const v = drawAmbTopBase(m);
+  Ext.run('drawAmbTop', m);
+  return v;
 }
 
 // ---------- curiosità (easter egg) ----------

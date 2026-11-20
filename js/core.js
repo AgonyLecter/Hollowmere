@@ -76,6 +76,48 @@ addEventListener('touchend', fsTap, { passive: true });
 addEventListener('click', fsTap);
 addEventListener('orientationchange', () => setTimeout(fit, 250));
 fit();
+// ---------- punti di estensione ----------
+// Un file che vuole aggiungere qualcosa a una funzione di un altro file NON la sovrascrive: si iscrive qui.
+//   Ext.on('applyFree', (m, st) => { ... })        dopo la funzione, in ordine di caricamento
+//   Ext.on('applyFree:prima', (m, st) => { ... })  prima della funzione, in ordine inverso di caricamento
+//   Ext.on('freeAct', (fx, fy) => true)             intercetta: chi restituisce true ferma gli altri;
+//                                                   l'ultimo file caricato ha la precedenza
+// Ext.elenco() mostra chi è iscritto a cosa (utile in console).
+const Ext = {
+  _h: {},
+  on(punto, fn) {
+    const L = (this._h[punto] = this._h[punto] || []);
+    L.push(fn);
+    return fn;
+  },
+  // dopo: in ordine di iscrizione
+  run(punto, ...a) {
+    for (const f of this._h[punto] || []) f(...a);
+  },
+  // prima: dall'ultimo iscritto al primo (come quando ognuno avvolgeva il precedente)
+  runPrima(punto, ...a) {
+    const L = this._h[punto] || [];
+    for (let i = L.length - 1; i >= 0; i--) L[i](...a);
+  },
+  // intercetta: dall'ultimo iscritto al primo, si ferma al primo che restituisce un valore vero
+  intercetta(punto, ...a) {
+    const L = this._h[punto] || [];
+    for (let i = L.length - 1; i >= 0; i--) {
+      const r = L[i](...a);
+      if (r) return r;
+    }
+    return false;
+  },
+  // somma: ogni iscritto aggiunge un numero
+  somma(punto, ...a) {
+    let s = 0;
+    for (const f of this._h[punto] || []) s += f(...a) || 0;
+    return s;
+  },
+  elenco() {
+    return Object.fromEntries(Object.entries(this._h).map(([k, L]) => [k, L.length]));
+  }
+};
 const LS = {
   get(k) {
     try {

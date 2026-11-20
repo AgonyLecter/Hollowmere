@@ -799,7 +799,7 @@ function drawShoe(X, Y) {
   ctx.fillRect(X + 4, Y, 1, 4);
   ctx.fillRect(X + 1, Y + 4, 3, 1);
 }
-function drawWorldExtras(m) {
+function drawWorldExtrasBase(m) {
   if (m.id === 'wood') return drawWoodExtras(m);
   if (m.id !== 'main') return;
   const st = G.st,
@@ -859,4 +859,10 @@ function drawWorldExtras(m) {
       }
     }
   }
+}
+// punto di estensione: gli altri file si iscrivono con Ext.on('drawWorldExtras…') invece di sovrascriverla
+function drawWorldExtras(m) {
+  const v = drawWorldExtrasBase(m);
+  Ext.run('drawWorldExtras', m);
+  return v;
 }

@@ -120,26 +120,22 @@ function addAlbo(m) {
   m.lights.push({ x: x * 16 + 28, y: y * 16 - 14, r: 30 });
 }
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
-    _af(m, st);
+  Ext.on('applyFree', function (m, st) {
     if (m.id === 'main' && isFree(st)) addAlbo(m);
-  };
+  });
 }
 PROMPT.albo = 'Bacheca comune';
 ACT.albo = () => {
   alboMenu('news');
 };
 {
-  const _fa = freeAct;
-  freeAct = function (fx, fy) {
+  Ext.on('freeAct:intercetta', function (fx, fy) {
     const o = G.map.objAt(fx, fy);
     if (o && o.act === 'albo' && !G.visit) {
       alboMenu('news');
       return true;
     }
-    return _fa(fx, fy);
-  };
+  });
 }
 {
   const _va = visitAct;
@@ -553,11 +549,9 @@ function tourTick(dt) {
   if (g) tourStart(g);
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     tourTick(dt);
-  };
+  });
 }
 // freccia: la guida indica la tappa (anche se la freccia degli obiettivi è spenta); dalle case indica l'uscita
 {

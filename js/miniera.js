@@ -512,16 +512,12 @@ function mineTick(dt) {
   });
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     mineTick(dt);
-  };
+  });
 }
 {
-  const _we = drawWorldExtras;
-  drawWorldExtras = function (m) {
-    _we(m);
+  Ext.on('drawWorldExtras', function (m) {
     if (m.id !== 'miniera') return;
     for (const s of G.mshad || []) {
       drawShadow(s);
@@ -530,7 +526,7 @@ function mineTick(dt) {
         ctx.fillRect(s.x - 6, s.y - 28, 12, 26);
       }
     }
-  };
+  });
 }
 // buio pesto, tranne le torce e la tua lanterna
 {
@@ -583,12 +579,6 @@ function mineTick(dt) {
 }
 // il prestigio conta anche la profondità
 {
-  const _vs = villageScore;
-  villageScore = function (st) {
-    st = st || homeSt();
-    const s = _vs(st);
-    return st && isFree(st) && st.free.mine ? s + Math.min(400, (st.free.mine.deep || 0) * 3) : s;
-  };
 }
 
 // ---------- grafica ----------
@@ -715,11 +705,9 @@ function genMineArt() {
   });
 }
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
+  Ext.on('applyFree:prima', function (m, st) {
     if (!IMG.imbocco && PX.prototype.line) genMineArt();
-    _af(m, st);
-  };
+  });
 }
 GUIDES.push({
   id: 'miniera',

@@ -112,29 +112,7 @@ const coopSnap = () => ({
   t: JSON.parse(JSON.stringify(G.st.free.tiles || {}))
 });
 // confronta il villaggio prima e dopo un'azione e manda al padrone quello che è cambiato
-function coopSync() {
-  const v = G.visit;
-  if (!v || !v.coop || (G.bm && G.bm.carry)) return;
-  const A = v.snap,
-    B = coopSnap(),
-    me = G.home.pid,
-    who = G.home.name,
-    send = a => MP.act(v.pid, Object.assign({ from: me, name: who }, a));
-  const gone = Object.keys(A.b).filter(k => !B.b[k]),
-    born = Object.keys(B.b).filter(k => !A.b[k]);
-  for (const k of gone) {
-    const j = JSON.stringify(A.b[k]),
-      to = born.find(n => JSON.stringify(B.b[n]) === j);
-    if (to) {
-      born.splice(born.indexOf(to), 1);
-      send({ t: 'cmove', k, to });
-    } else send({ t: 'cdel', k });
-  }
-  for (const k of born) send({ t: 'cbuild', k, d: B.b[k] });
-  for (const k of new Set([...Object.keys(A.t), ...Object.keys(B.t)]))
-    if (A.t[k] !== B.t[k]) send({ t: 'ctile', k, v: B.t[k] || 0 });
-  v.snap = B;
-}
+function coopSync() {}
 // la modalità costruzione si apre anche in visita, se hai il permesso (solo all'aperto)
 {
   const _bo = bmOpen;
@@ -356,16 +334,14 @@ async function coopCheck() {
 }
 let COOP_T = 20;
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     if (!G.visit) return;
     COOP_T -= dt;
     if (COOP_T <= 0) {
       COOP_T = 20;
       coopCheck();
     }
-  };
+  });
 }
 function visitChip() {
   let el = $('#vchip');

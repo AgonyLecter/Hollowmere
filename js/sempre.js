@@ -244,11 +244,9 @@ function evMorning(st) {
   setTimeout(() => UI.toast(`Oggi nella Valle — ${EVENTI[id].n}: ${EVENTI[id].d}`), 2600);
 }
 {
-  const _fm = freeMorning;
-  freeMorning = function (st) {
-    _fm(st);
+  Ext.on('freeMorning', function (st) {
     if (isFree(st) && !G.visit) evMorning(st);
-  };
+  });
 }
 function evMult(id) {
   const st = freeSt();
@@ -383,9 +381,7 @@ ACT.museo = () => {
   museoMenu();
 };
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
-    _af(m, st);
+  Ext.on('applyFree', function (m, st) {
     if (m.id !== 'main' || !isFree(st)) return;
     if (!IMG.museo) genSempreArt();
     const [x, y] = MUSEO_AT;
@@ -403,7 +399,7 @@ ACT.museo = () => {
     for (const [a, b] of T) m.set(a, b, 1);
     for (let i = x; i <= x + 1; i++) m.set(i, y + 1, 2);
     m.add(OB('museo', x - 1, y, IMG.museo, { wt: 4, act: 'museo', solid: T, hits: T }));
-  };
+  });
 }
 
 // ================= TRAGUARDI =================
@@ -494,11 +490,9 @@ function tragTick(dt) {
   ricordiTick();
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     tragTick(dt);
-  };
+  });
 }
 function tragHTML(st) {
   const T = fx6(st).trag,
@@ -545,16 +539,6 @@ function tragHTML(st) {
   };
 }
 {
-  const _vs = villageScore;
-  villageScore = function (st) {
-    st = st || homeSt();
-    let s = _vs(st);
-    if (st && isFree(st)) {
-      const F = fx6(st);
-      s += museoN(st) * 3 + Object.keys(F.trag).length * 5 + (st.flags.nove ? 50 : 0);
-    }
-    return s;
-  };
 }
 
 // ================= MISSIONI A ORARI E STAGIONI: I QUATTRO RICORDI =================
@@ -691,11 +675,9 @@ function ricordiAt(fx, fy) {
   return false;
 }
 {
-  const _fa = freeAct;
-  freeAct = function (fx, fy) {
+  Ext.on('freeAct:intercetta', function (fx, fy) {
     if (ricordiAt(fx, fy)) return true;
-    return _fa(fx, fy);
-  };
+  });
 }
 // un brivido quando sei nel posto giusto all'ora giusta
 function ricordiTick() {

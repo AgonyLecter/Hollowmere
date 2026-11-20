@@ -144,6 +144,8 @@ module.exports = async function (t, { browser }) {
       }, tm);
       await page.waitForTimeout(400);
     }
+    const sc = await page.evaluate(() => [villageScore(G.st), scoreParts(G.st).reduce((a, p) => a + p[1], 0)]);
+    t.eq('il prestigio è la somma delle voci del registro', sc[0], sc[1]);
     t.eq('Valle: nessun errore', errors.join('\n'), '');
     await page.close();
   }

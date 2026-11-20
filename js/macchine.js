@@ -406,22 +406,29 @@ function fruitTreeImg(b) {
     grow = skLv('racc') >= 10 ? 6 : 12,
     s = seasonOf(),
     fr = b.fruit || 0,
-    key = b.id + s + (age >= grow ? 'T' : 'S' + Math.min(2, Math.floor(age / 4))) + fr;
+    tree = ITEMS[b.id].tree,
+    key = 'N' + b.id + s + (age >= grow ? 'T' : 'S' + Math.min(2, Math.floor(age / 4))) + fr;
   if (FTC.has(key)) return FTC.get(key);
   let c;
   if (age < grow) {
     const st2 = Math.min(2, Math.floor(age / 4));
-    c = SP(10, 12 + st2 * 4, P => {
-      const h = 24 + st2 * 8;
-      P.capsule(10, h - 1, 10, h - 10 - st2 * 4, 1 + st2 * 0.4, rp('#6a4428'));
+    c = spr2(20, 24 + st2 * 8, P => {
+      const h = 48 + st2 * 16,
+        M = new MK2(P.w, P.h);
+      paint2(P, M.rect(9, h - 22 - st2 * 8, 2 + Math.floor(st2 / 2), 22 + st2 * 8), R6b('#6a4428'), {
+        thin: 1
+      });
       for (let i = 0; i < 3 + st2 * 2; i++)
-        P.ellipse(
-          10 + Math.cos(i * 2.1) * (3 + st2),
-          h - 12 - st2 * 4 + Math.sin(i * 2.1) * 3,
-          3,
-          2.4,
-          rp(s === 1 ? '#8a7a6a' : '#5a9a2a'),
-          { spec: 0.3 }
+        paint2(
+          P,
+          new MK2(P.w, P.h).ell(
+            10 + Math.cos(i * 2.1) * (3 + st2 * 1.5),
+            h - 24 - st2 * 8 + Math.sin(i * 2.1) * 3,
+            3.6,
+            2.6
+          ),
+          R6b(s === 1 ? '#8a7a6a' : i % 2 ? '#5a9a2a' : '#3f7a2a'),
+          { thin: 1 }
         );
     });
   } else {
@@ -437,17 +444,41 @@ function fruitTreeImg(b) {
     x.imageSmoothingEnabled = false;
     x.drawImage(src, 0, 0, w, h);
     if (fr && s !== 1) {
-      const col = FRUIT[ITEMS[b.id].tree].c;
+      const col = FRUIT[tree].c,
+        d = shade(col, -0.4),
+        l = shade(col, 0.45);
       srand(b.d * 7 + fr);
-      for (let i = 0; i < fr * 4; i++) {
-        const a = ri(12, w - 12),
-          yy = ri(10, Math.round(h * 0.45));
+      for (let i = 0; i < fr * 5; i++) {
+        const a = ri(14, w - 14),
+          yy = ri(12, Math.round(h * 0.46));
+        if (tree === 'ciliegie') {
+          for (const o of [0, 4]) {
+            x.fillStyle = '#2a1006';
+            x.fillRect(a + o - 1, yy - 1, 5, 5);
+            x.fillStyle = col;
+            x.fillRect(a + o, yy, 3, 3);
+            x.fillStyle = l;
+            x.fillRect(a + o, yy, 1, 1);
+          }
+          x.fillStyle = '#3a5a1a';
+          x.fillRect(a + 1, yy - 4, 1, 3);
+          x.fillRect(a + 5, yy - 4, 1, 3);
+          x.fillRect(a + 2, yy - 5, 3, 1);
+          continue;
+        }
+        const big = tree === 'pera' || tree === 'fico' ? 1 : 0;
         x.fillStyle = '#2a1006';
-        x.fillRect(a - 1, yy - 1, 6, 6);
+        x.fillRect(a - 1, yy - 1, 7, 7 + big);
+        x.fillRect(a, yy - 2, 5, 1);
+        x.fillStyle = d;
+        x.fillRect(a, yy, 5, 5 + big);
         x.fillStyle = col;
-        x.fillRect(a, yy, 4, 4);
-        x.fillStyle = 'rgba(255,255,255,.6)';
-        x.fillRect(a, yy, 1, 1);
+        x.fillRect(a, yy, 4, 4 + big);
+        x.fillRect(a + 1, yy - 1, 3, 1);
+        x.fillStyle = l;
+        x.fillRect(a + 1, yy + 1, 1, 1);
+        x.fillStyle = '#4a2a10';
+        x.fillRect(a + 2, yy - 2, 1, 1);
       }
     }
   }

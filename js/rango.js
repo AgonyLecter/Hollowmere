@@ -53,9 +53,7 @@ function scoreParts(st) {
   return P;
 }
 // da qui in poi il prestigio è esattamente la somma delle voci (quello che si vede è quello che conta)
-villageScore = function (st) {
-  return scoreParts(st).reduce((a, p) => a + p[1], 0);
-};
+
 const rankStart = r =>
   r < RANKS.length ? RANKS[r][1] : RANKS[RANKS.length - 1][1] + (r - RANKS.length + 1) * 2500;
 function nextUnlock(r) {
@@ -81,25 +79,7 @@ function rankTips(st) {
   T.push('Parla e fai regali agli abitanti: +3 per ogni cuore');
   return T.slice(0, 3);
 }
-registroMenu = function () {
-  const st = homeSt();
-  if (!st || !isFree(st)) return;
-  const P = scoreParts(st),
-    sc = P.reduce((a, p) => a + p[1], 0),
-    r = rankOf(sc),
-    a = rankStart(r),
-    b = rankNext(r),
-    pc = Math.max(0, Math.min(100, Math.round(((sc - a) / (b - a)) * 100)));
-  UI.open(`<button class="btn mclose" data-close>✕</button><h2>Il tuo villaggio</h2><p style="font-size:1.2em;margin:0"><b>${esc(st.name)}</b> · ${rankName(r)}</p>
-  <p class="small">Prestigio <b>${sc}</b> · prossimo rango (${r + 1 < RANKS.length ? RANKS[r + 1][0] : 'una stella'}) a <b>${b}</b>: mancano <b>${b - sc}</b></p>
-  <div style="height:calc(6*var(--u));background:#c8b48a;box-shadow:inset 0 0 0 var(--u) #5a3a1e"><div style="height:100%;width:${pc}%;background:linear-gradient(#f6d98a,#c8902a)"></div></div>
-  <p class="small">Al prossimo rango: ${esc(nextUnlock(r))}</p>
-  <h3>Cosa fare adesso</h3>${rankTips(st)
-    .map(t => `<p class="small">➜ ${esc(t)}</p>`)
-    .join('')}
-  <h3>Da dove viene il prestigio</h3>${P.map(([n, v, d]) => `<div class="mrow" style="padding:calc(1.5*var(--u)) 0"><span style="flex:1"><b>${esc(n)}</b><br><span class="small">${esc(d)}</span></span><b>${v}</b></div>`).join('')}
-  <h3>I ranghi</h3>${RANKS.map(([n, s], i) => `<p class="small">${r >= i ? '✔' : '○'} <b>${n}</b> (${s})${i ? ': ' + esc(RANK_GIFTS[i] || '') : ''}</p>`).join('')}<p class="small">Dopo Città: una stella ogni 2500 punti, senza fine.</p>`);
-};
+
 // il rango sotto l'orologio
 function rankBadge() {
   let el = $('#rbadge');
@@ -163,11 +143,9 @@ function prestigeTick(dt) {
   PRE_LAST = sc;
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     prestigeTick(dt);
-  };
+  });
 }
 GUIDES.push({
   id: 'rango',
@@ -206,16 +184,14 @@ function genPietraArt() {
   });
 }
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
-    _af(m, st);
+  Ext.on('applyFree', function (m, st) {
     if (m.id !== 'main' || !isFree(st)) return;
     if (!IMG.pietra && PX.prototype.line) genPietraArt();
     const [x, y] = PIETRA_AT;
     const o = m.objAt(x, y);
     if (o && o.kind !== 'built') mapRemove(m, o);
     if (!m.objAt(x, y)) m.add(OB('pietra', x, y, IMG.pietra, { act: 'pietra' }));
-  };
+  });
 }
 PROMPT.pietra = 'Il villaggio';
 ACT.pietra = () => {

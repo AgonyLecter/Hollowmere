@@ -10,13 +10,11 @@ const INV_FREE = 30;
 const ORD = ['tool', 'seed', 'fert', 'crop', 'food', 'res', 'place', 'arredo', 'gift', 'bad', 'key'];
 // lo zaino della Valle è di 30 posti
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
-    _af(m, st);
+  Ext.on('applyFree', function (m, st) {
     if (m.id === 'main' && isFree(st) && !G.visit) {
       while (st.inv.length < INV_FREE) st.inv.push(null);
     }
-  };
+  });
 }
 // la fila della barra: ⇅1, ⇅2, ⇅3
 {
@@ -278,13 +276,7 @@ function zDrag(box) {
   });
 }
 // la cassa: stessa schermata, due griglie
-chestMenu = function (bk) {
-  const b = G.st.free.built[bk];
-  if (!b) return;
-  if (!b.inv) b.inv = Array(20).fill(null);
-  ZPICK = null;
-  zaino(bk);
-};
+
 // il pulsante 🎒 accanto alla barra, e il tasto I
 {
   const _bh = UI.buildHotbar.bind(UI);

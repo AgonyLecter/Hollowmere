@@ -35,24 +35,7 @@ const BIG_BUILT = {
   banco: 4
 };
 function villageScore(st) {
-  st = st || homeSt();
-  if (!st || !isFree(st)) return 0;
-  const W2 = st.free;
-  let s = 0;
-  for (const k in W2.built) {
-    const id = W2.built[k].id;
-    s += BIG_BUILT[id] || 1;
-  }
-  s +=
-    (houseLv(st) - 1) * 80 +
-    Math.max(0, (W2.land || ['casa']).length - 1) * 60 +
-    (W2.animals || []).length * 8 +
-    Object.keys(W2.recipes || {}).length * 4 +
-    (W2.residents || []).length * 50 +
-    Object.keys(W2.inside || {}).length * 2;
-  for (const k in SKILLS) s += skLv(k, st) * 6;
-  for (const id in st.friends) s += Math.max(0, Math.floor((st.friends[id] || 0) / 2)) * 3;
-  return Math.round(s);
+  return scoreParts(st).reduce((a, p) => a + p[1], 0);
 }
 // oltre la Città il rango continua: una stella ogni 2500 punti
 function rankOf(score) {
@@ -248,11 +231,9 @@ function buildEast(m, st) {
 }
 // le zone si costruiscono prima che il gioco libero applichi tagli, detriti e costruzioni
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
+  Ext.on('applyFree:prima', function (m, st) {
     buildEast(m, st);
-    _af(m, st);
-  };
+  });
 }
 PROMPT.cancello = 'Cancello';
 PROMPT.torre = 'La torre';
@@ -269,9 +250,7 @@ ACT.torre = () =>
   );
 // i detriti crescono anche nelle zone aperte
 {
-  const _fm = freeMorning;
-  freeMorning = function (st) {
-    _fm(st);
+  Ext.on('freeMorning', function (st) {
     if (!isFree(st)) return;
     const W2 = st.free;
     for (const z in ZONES) {
@@ -291,7 +270,7 @@ ACT.torre = () =>
         n++;
       }
     }
-  };
+  });
 }
 // le terre nuove nel menu di Ezekiel (con il rango richiesto)
 function landMenu() {
@@ -330,34 +309,23 @@ function landMenu() {
 }
 // il registro del villaggio: da Ezekiel e dalla bacheca comune
 function registroMenu() {
-  const st = homeSt(),
-    sc = villageScore(st),
+  const st = homeSt();
+  if (!st || !isFree(st)) return;
+  const P = scoreParts(st),
+    sc = P.reduce((a, p) => a + p[1], 0),
     r = rankOf(sc),
-    nx = rankNext(r),
-    pv = r < RANKS.length ? RANKS[r][1] : RANKS[RANKS.length - 1][1] + (r - RANKS.length + 1) * 2500,
-    W2 = st.free;
-  const pc = Math.max(0, Math.min(100, Math.round(((sc - pv) / (nx - pv)) * 100)));
-  const items = [
-    ['Costruzioni', Object.keys(W2.built).length],
-    ['Terre', (W2.land || ['casa']).length],
-    ['Livello della casa', houseLv(st)],
-    ['Animali', (W2.animals || []).length],
-    ['Ricette', Object.keys(W2.recipes || {}).length],
-    ['Abitanti nuovi', (W2.residents || []).length]
-  ];
-  UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>Il registro del villaggio</h2><p style="font-size:1.25em"><b>${esc(st.name)}</b> · ${rankName(r)}</p>` +
-      `<p class="small">Prestigio <b>${sc}</b> — prossimo rango a <b>${nx}</b></p><div style="height:calc(6*var(--u));background:#c8b48a;box-shadow:inset 0 0 0 var(--u) #5a3a1e"><div style="height:100%;width:${pc}%;background:linear-gradient(#f6d98a,#c8902a)"></div></div>` +
-      `<h3>Il villaggio</h3><p class="small">${items.map(([n, v]) => `${n}: <b>${v}</b>`).join(' · ')}</p>` +
-      `<h3>Cosa sblocca il rango</h3>` +
-      [1, 2, 3, 4]
-        .map(
-          k =>
-            `<p class="small">${r >= k ? '✔' : '🔒'} <b>${RANKS[k][0]}</b> (${RANKS[k][1]}): ${RANK_GIFTS[k]}</p>`
-        )
-        .join('') +
-      `<p class="small">Il prestigio cresce con tutto: costruzioni (le grandi valgono di più), terre, casa, animali, abilità, ricette, amicizie e abitanti nuovi.</p>`
-  );
+    a = rankStart(r),
+    b = rankNext(r),
+    pc = Math.max(0, Math.min(100, Math.round(((sc - a) / (b - a)) * 100)));
+  UI.open(`<button class="btn mclose" data-close>✕</button><h2>Il tuo villaggio</h2><p style="font-size:1.2em;margin:0"><b>${esc(st.name)}</b> · ${rankName(r)}</p>
+  <p class="small">Prestigio <b>${sc}</b> · prossimo rango (${r + 1 < RANKS.length ? RANKS[r + 1][0] : 'una stella'}) a <b>${b}</b>: mancano <b>${b - sc}</b></p>
+  <div style="height:calc(6*var(--u));background:#c8b48a;box-shadow:inset 0 0 0 var(--u) #5a3a1e"><div style="height:100%;width:${pc}%;background:linear-gradient(#f6d98a,#c8902a)"></div></div>
+  <p class="small">Al prossimo rango: ${esc(nextUnlock(r))}</p>
+  <h3>Cosa fare adesso</h3>${rankTips(st)
+    .map(t => `<p class="small">➜ ${esc(t)}</p>`)
+    .join('')}
+  <h3>Da dove viene il prestigio</h3>${P.map(([n, v, d]) => `<div class="mrow" style="padding:calc(1.5*var(--u)) 0"><span style="flex:1"><b>${esc(n)}</b><br><span class="small">${esc(d)}</span></span><b>${v}</b></div>`).join('')}
+  <h3>I ranghi</h3>${RANKS.map(([n, s], i) => `<p class="small">${r >= i ? '✔' : '○'} <b>${n}</b> (${s})${i ? ': ' + esc(RANK_GIFTS[i] || '') : ''}</p>`).join('')}<p class="small">Dopo Città: una stella ogni 2500 punti, senza fine.</p>`);
 }
 {
   const _ez = FREE_ASK.ezekiel;
@@ -414,12 +382,10 @@ function rankTick(dt) {
   })();
 }
 {
-  const _mt = mpTick;
-  mpTick = function (dt) {
-    _mt(dt);
+  Ext.on('mpTick', function (dt) {
     rankTick(dt);
     fishTick(dt);
-  };
+  });
 }
 // il rango si vede nell'albo
 {
@@ -1036,8 +1002,7 @@ function resShop(R) {
 const FISH_IDS = new Set(['trota', 'carpa', 'luccio', 'persico', 'anguilla', 'tinca', 'salmerino']);
 // la casetta: si costruisce dal Borgo, e solo se c'è posto per un abitante nuovo
 {
-  const _fa = freeAct;
-  freeAct = function (fx, fy) {
+  Ext.on('freeAct:intercetta', function (fx, fy) {
     const st = G.st,
       it = selItem();
     if (G.fish && isFree(st) && !G.visit) {
@@ -1064,8 +1029,7 @@ const FISH_IDS = new Set(['trota', 'carpa', 'luccio', 'persico', 'anguilla', 'ti
         return true;
       }
     }
-    return _fa(fx, fy);
-  };
+  });
 }
 // al mattino: se c'è una casetta vuota, arriva qualcuno
 async function residentMorning(st) {

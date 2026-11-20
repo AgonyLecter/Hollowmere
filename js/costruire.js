@@ -690,8 +690,7 @@ function funcMenu(k) {
   }
 }
 {
-  const _fa = freeAct;
-  freeAct = function (fx, fy) {
+  Ext.on('freeAct:intercetta', function (fx, fy) {
     const st = G.st;
     if (isFree(st) && !G.visit && G.map.id === 'main') {
       const o = G.map.objAt(fx, fy),
@@ -707,30 +706,31 @@ function funcMenu(k) {
         return true;
       }
     }
-    return _fa(fx, fy);
-  };
+  });
 }
 // al mattino: il silos riempie le mangiatoie, il pozzo bagna, il mulino finisce
 {
-  const _fm = freeMorning;
-  freeMorning = function (st) {
-    if (isFree(st)) {
-      const W2 = st.free;
-      if (seasonOf(st) === 1)
-        for (const k in W2.built) {
-          const s = W2.built[k];
-          if (s.id !== 'silos' || !s.hay) continue;
-          for (const k2 in W2.built) {
-            const b = W2.built[k2];
-            if (b.id !== 'pollaio' && b.id !== 'stalla') continue;
-            const need = Math.max(0, animalsOf(k2).length * 2 - (b.hay || 0)),
-              n = Math.min(need, s.hay);
-            b.hay = (b.hay || 0) + n;
-            s.hay -= n;
-          }
+  // d'inverno il silos riempie le mangiatoie di tutte le case degli animali (prima della mattina)
+  Ext.on('freeMorning:prima', function (st) {
+    if (!isFree(st)) return;
+    const W2 = st.free,
+      homes = new Set(Object.values(ANIMALS).map(A => A.home));
+    if (seasonOf(st) === 1)
+      for (const k in W2.built) {
+        const s = W2.built[k];
+        if (s.id !== 'silos' || !s.hay) continue;
+        for (const k2 in W2.built) {
+          const b = W2.built[k2];
+          if (!homes.has(b.id)) continue;
+          const need = Math.max(0, animalsOf(k2).length * 2 - (b.hay || 0)),
+            n = Math.min(need, s.hay);
+          b.hay = (b.hay || 0) + n;
+          s.hay -= n;
         }
-    }
-    _fm(st);
+      }
+  });
+  // il pozzo grande bagna i campi intorno (dopo la mattina)
+  Ext.on('freeMorning', function (st) {
     if (!isFree(st)) return;
     const W2 = st.free;
     for (const k in W2.built) {
@@ -743,7 +743,7 @@ function funcMenu(k) {
           if (f) f.w = true;
         }
     }
-  };
+  });
 }
 // la serra e il pozzo: l'area si vede quando le guardi in modalità costruzione
 {
@@ -1016,24 +1016,11 @@ function genCostrArt() {
   });
 }
 {
-  const _af = applyFree;
-  applyFree = function (m, st) {
+  Ext.on('applyFree:prima', function (m, st) {
     if (!AIMG.serra && PX.prototype.line) genCostrArt();
-    _af(m, st);
-  };
+  });
 }
 {
-  const _vs = villageScore;
-  villageScore = function (st) {
-    st = st || homeSt();
-    let s = _vs(st);
-    if (st && isFree(st))
-      for (const k in st.free.built) {
-        const b = st.free.built[k];
-        if (FUNC[b.id]) s += (fLv(b) - 1) * 15;
-      }
-    return s;
-  };
 }
 
 // ================= LA CASA CRESCE ANCORA =================
