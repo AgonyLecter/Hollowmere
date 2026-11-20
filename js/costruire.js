@@ -171,3 +171,12 @@ GUIDES.push({id:'costruire',v:3,n:'Costruire sul serio',steps:[
  {t:'<b>Piazza</b> quello che hai in mano (verde = si può, rosso = no). <b>Sposta</b> qualsiasi costruzione: le bestie, le casse e gli abitanti vengono con lei. <b>Togli</b> e torna nello zaino.'},
  {t:'Al banco da lavoro, in Edifici: <b>serra</b> (si semina tutto l\'anno), <b>mulino</b> (farina e ricette nuove), <b>silos</b> (sfama le bestie d\'inverno), <b>pozzo d\'irrigazione</b>. Ognuno sale fino al livello 3.'},
  {t:'Brom ora allarga la casa fino al <b>salone</b>, e Agatha ha i <b>temi</b> per ricolorare tutte le tue costruzioni: gotico, fiorito, invernale, bosco.'}]});
+
+// ================= DOVE NON SI COSTRUISCE MAI =================
+// La piazza, il cimitero, le case degli abitanti (con un margine e l'ingresso) e le strade del paese
+// non sono di nessuno: anche dentro una terra comprata, lì non si zappa, non si costruisce, non si fanno vialetti.
+const PROTECT=[[37,13,52,24],[47,3,60,12],[10,19,51,20],[61,17,72,18],[72,6,72,18],[72,8,86,8],[61,31,66,31],[86,4,91,7]];
+function isProtected(x,y){if(PROTECT.some(r=>inRect(x,y,r)))return true;
+ for(const k in BLD){if(k==='house')continue;const b=BLD[k],[dx,dy]=bdoor(k);if(x>=b.x-1&&x<=b.x+b.w&&y>=b.y-1&&y<=b.y+b.h)return true;if(x>=dx-1&&x<=dx+1&&y>=dy&&y<=dy+2)return true}
+ return false}
+{const _own=ownedAt;ownedAt=function(x,y,st){const id=_own(x,y,st);if(!id)return null;if(id!=='casa'&&isProtected(x,y))return null;return id}}
