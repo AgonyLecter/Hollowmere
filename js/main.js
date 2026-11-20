@@ -34,7 +34,7 @@ function migrate(st){const d=newState(st.name||'?',st.g||'m');for(const k in d)i
  if(st.free){st.free.land=st.free.land||['casa'];st.free.tiles=st.free.tiles||{};st.free.inside=st.free.inside||{};st.free.recipes=st.free.recipes||{};while(st.inv.length<20)st.inv.push(null);if(!has('pala'))put('pala')}
  if(st.flags.gotPaint&&st.flags.posts.filter(Boolean).length<5&&!has('vernice'))put('vernice');if(st.flags.gotChestKey&&!st.flags.openedChest&&!has('key'))put('key');if(st.flags.barnKey&&!has('keyI'))put('keyI');return st}
 async function startFrom(st){G.coach=null;G.amb=null;UI.hideTitle();await UI.fade(1,400);G.st=migrate(st);applyUpgrades();G.festaDark=false;G.erede=false;G.prey=null;G.festaChase=false;G.redTint=0;G.npcs=G.npcs.filter(n=>!n.clone);if(!st.pid)st.pid=newPid();setPlayerLook(st.g);G.parts=[];G.cutMusic=null;G.chase=false;G.horse.on=false;
- rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);
+ rebuildMaps();G.map=G.maps[st.map||'house']||G.maps.house;setPos(G.player,st.px??2,st.py??3,st.dir??0);if(G.map.id==='house'&&st.px==null)setPos(G.player,2,3,0);safeSpot(st);
  snapNPCs();spawnCritters();G.mode='game';UI.showHud(true);UI.hotbar();UI.hud();UI.quest();updateCam(0);await UI.fade(0,600);if(isFree(G.st)){const S=G.st;NET.save(S).catch(()=>{}).then(()=>{if(G.st===S){presenceJoin(S.pid);inboxStart()}})}UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`)}
 function toTitle(){G.coach=null;presenceLeave();G.visit=null;G.home=null;G.erede=false;G.prey=null;G.festaChase=false;G.festaDark=false;G.redTint=0;G.scare=0;G.shadows=[];G.player.speed=66;G.npcs=G.npcs.filter(n=>!n.clone);G.mode='title';G.cut=0;G.chase=false;G.horse.on=false;G.cutMusic=null;const st=newState('');st.flags.arrived=1;st.time=19*60+10;G.st=st;rebuildMaps();spawnCritters();G.map=G.maps.main;G.horror=0;document.body.classList.remove('corrupt','corrupt2');UI.showTitle()}
 // chi ha finito la storia con una versione vecchia del gioco non ha il segno dei finali: lo si riconosce dal salvataggio (era già alla Festa)
@@ -43,6 +43,14 @@ function legacyDone(){return !!legacySave()}
 function legacyEnding(){const H={1:'La Fuga — sei scappat{o|a} dal Varco',2:'L\'Erede — sei diventat{o|a} il Cavaliere',3:'Spezzare il patto — il debito è chiuso'};
  UI.open(`<button class="btn mclose" data-close>✕</button><h2>Hai già finito la storia</h2><p>Hai giocato il finale con una versione precedente di Hollowmere, che non lo segnava. Con quale finale l'hai chiusa? La Valle comincia da lì.</p>`+[1,2,3].map(n=>`<p><button class="btn" data-le="${n}" style="width:100%;text-align:left">${fmt(H[n].replace(/\{o\|a\}/g,'{o|a}'))}</button></p>`).join('')+`<p class="small">Se non te lo ricordi, scegli «Spezzare il patto».</p>`);
  $('#mbox').querySelectorAll('[data-le]').forEach(b=>b.onclick=()=>{const n=+b.dataset.le,base=legacySave();LS.set('hm_endings',JSON.stringify([n]));if(base){base.endingN=n;LS.set('hm_freebase',JSON.stringify(base))}UI._mclose=null;UI.close();UI.showTitle();TITLE.valle()})}
+// un salvataggio può avere la mappa giusta e le coordinate di un'altra (es. la casa): il personaggio finirebbe
+// dentro un muro o nel bosco, invisibile e bloccato. Lo riportiamo in un posto sicuro.
+function safeSpot(st){const m=G.map,p=G.player,[x,y]=ptile(p),F=st.flags;
+ const bad=!Number.isFinite(p.x)||!Number.isFinite(p.y)||!m.inb(x,y)||m.solid(x,y)||(m.id==='main'&&(x<4||y<4||y>41||x>(m.w>64?96:59)));
+ if(!bad)return;
+ if(m.id==='main'&&st.chapter>=4&&F.ch4day===st.day&&!F.festaDone&&st.time>=18*60){setPos(p,43,20,3);return}
+ if(m.id==='main'){const [a,b]=bdoor('house');setPos(p,a,b+1,0);return}
+ const [a,b]=freeNear(m,Math.max(1,Math.min(m.w-2,x||2)),Math.max(2,Math.min(m.h-2,y||3)));setPos(p,a,b,0)}
 // ---------- prologo ----------
 async function prologue(){G.cut++;const st=G.st;st.day=0;st.time=18*60+25;rebuildMaps();G.map=G.maps.main;setPos(G.player,43,46,3);
  G.coach={x:45*16+4,y:47*16+30,moving:false};await arrivalCinematic();

@@ -242,7 +242,7 @@ function festaTick(dt){const st=G.st;if(G.mode!=='game'||!st||st.chapter<4||G.cu
   return}
  if(!F.conteggio&&t>=23*60)festaGo(conteggio)}
 async function festaStart(forced){const st=G.st,F=st.flags;if(F.festaOn)return;F.festaOn=1;G.cut++;
- try{try{LS.set('hm_prefesta',JSON.stringify(st))}catch(e){}
+ try{try{const cp=JSON.parse(JSON.stringify(st));cp.map='main';cp.px=43;cp.py=20;cp.dir=3;LS.set('hm_prefesta',JSON.stringify(cp))}catch(e){}
   if(forced){await UI.fade(1,500);AU.play('knock');G.shake=3;await narr('Bussano alla porta. Non forte. Con pazienza.');await narr('«È ora, {n}. Ti aspettiamo in piazza.» Non una voce sola: tante, a tempo.',{dark:1});
    G.map=G.maps.main;st.map='main';setPos(G.player,43,20,0);snapNPCs();updateCam(0);await UI.fade(0,800)}
   G.cutMusic='title';
