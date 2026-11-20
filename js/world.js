@@ -23,9 +23,9 @@ const BLD={house:{x:7,y:5,w:6,h:5},chapel:{x:40,y:5,w:7,h:7},store:{x:52,y:12,w:
 function bdoor(k){const b=BLD[k];const dx={house:2,store:3,elder:3,barn:2,cottage:2,forge:2,chapel:3}[k];return [b.x+dx,b.y+b.h-1]}
 
 function buildMain(st){
- const m=new GMap('main',64,48,{name:'Hollowmere'});const F=st.flags;srand(1234);
- for(let y=0;y<48;y++)for(let x=0;x<64;x++){const out=x<3||x>60||y<3||y>42;m.set(x,y,out?5:1)}
- m.fill(0,43,63,44,3);
+ const MW=isFree(st)?100:64,m=new GMap('main',MW,48,{name:'Hollowmere'});const F=st.flags;srand(1234);
+ for(let y=0;y<48;y++)for(let x=0;x<MW;x++){const out=x<3||x>60||y<3||y>42;m.set(x,y,out?5:1)}
+ m.fill(0,43,MW-1,44,3);
  if(!F.bridgeGone)m.fill(44,43,45,44,4);
  m.fill(43,45,46,47,2);
  // sentieri
@@ -81,10 +81,10 @@ function buildMain(st){
  for(let i=0;i<500;i++){const x=ri(5,58),y=ri(5,40);if(ok(x,y)&&rnd()<.5){m.add(OB('tree',x,y,IMG.tree[ri(0,4)],{act:'tree'}))}}
  for(let i=0;i<40;i++){const x=ri(5,58),y=ri(5,40);if(ok(x,y))m.add(OB('bush',x,y,IMG.bush,{act:'bush'}))}
  // bosco esterno
- for(let y=-1;y<48;y++)for(let x=-1;x<65;x++){
+ for(let y=-1;y<48;y++)for(let x=-1;x<MW+1;x++){
   const band=(x<=2||x>=61||y<=2||y>=45);if(!band)continue;
   if((x===30||x===31)&&y<=2)continue;if(y>=45&&y<47)continue;if(m.get(x,y)===3)continue;if(x>=43&&x<=46&&y>=45)continue;
-  if(((x*7+y*13)%3)!==0&&!(y<=1||y>=46||x<=1||x>=62))continue;
+  if(((x*7+y*13)%3)!==0&&!(y<=1||y>=46||x<=1||x>=62))continue;if(x>=65&&((x*5+y*11)%2))continue;
   if(POSTS.some(([px,py])=>Math.abs(px-x)<=1&&y>=py-1&&y<=py+2))continue;
   const o=OB('pine',x,y,IMG.pine[hsh(x,y)%3],{act:'pine'});o.dx+=(hsh(x,y)%7)-3;m.add(o);
  }
