@@ -24,7 +24,7 @@ function drawLand(m){if(m.id!=='main'||!isFree()||G.visit)return;const it=selIte
 Object.assign(ITEMS,{pala:{n:'Pala',t:'tool',d:'Fa i vialetti nell\'erba e rimette a prato la terra zappata. Solo sulle tue terre.'}});
 function setGround(m,x,y,v){m.set(x,y,v);buildGround(m);seasonGround(m)}
 function shovelAct(fx,fy){const st=G.st,m=G.map,k=fkey(fx,fy),f=st.farm[k],W2=st.free;
- if(!ownedAt(fx,fy)){UI.toast('Questa terra non è tua. Le terre le vende l\'Anziano Ezekiel.');return true}
+ if(!ownedAt(fx,fy)){const o=m.objAt(fx,fy);if(o&&o.act)return false;UI.toast('Questa terra non è tua. Le terre le vende l\'Anziano Ezekiel.');return true}
  if(f){if(f.c&&!f.c.dead&&!cropGone(f)){UI.toast('C\'è una pianta che cresce. Prima raccoglila, o toglila se è appassita.');return true}if(!useEnergy(1))return true;delete st.farm[k];AU.play('hoe');burst('dust',fx*16+8,fy*16+10,8,'#5a8a2a');UI.toast('La terra torna prato.');return true}
  if(m.objAt(fx,fy)){UI.toast('C\'è qualcosa in mezzo.');return true}
  const g=m.get(fx,fy);W2.tiles=W2.tiles||{};

@@ -116,7 +116,7 @@ function genDishArt(){const I=(id,fn)=>{const P=new PX(32,32);fn(P);P.outline();
 const FREE_ASK={
  ezekiel:async n=>{const c=await ask('ezekiel',freeTalkLine('ezekiel'),['Chiacchiera','Le terre in vendita','Niente']);if(c===1)landMenu();return c<2},
  brom:async n=>{const c=await ask('brom',freeTalkLine('brom'),['Chiacchiera','Ampliare la casa','Migliorare gli attrezzi','Niente']);if(c===1)await houseUpMenu();if(c===2)await forgeMenu();return c<3},
- agatha:async n=>{const c=await ask('agatha',freeTalkLine('agatha'),['Chiacchiera','Arredo e attrezzi','Personalizza casa e recinti','Niente']);if(c===1)decorShop();if(c===2)lookMenu();return c<3},
+ agatha:async n=>{const c=await ask('agatha',freeTalkLine('agatha'),['Semi e provviste','Chiacchiera','Arredo e attrezzi','Personalizza casa e recinti','Niente']);if(c===0){await UI.shop();return true}if(c===2)decorShop();if(c===3)lookMenu();return c===1},
 };
 function decorShop(){const st=G.st;UI.open(`<button class="btn mclose" data-close>✕</button><h2>Il catalogo di Agatha</h2><p class="small">«Roba buona, tesoro. Il resto lo fai al banco.» — Hai <b>${CZ(st.money)}</b></p>`+
   DECOR_SHOP.map(([id,p])=>`<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span>${ITEMS[id].n}<br><span class="small">${ITEMS[id].d}</span></span><b class="price">${CZ(p)}</b><button class="btn" data-d="${id}" ${st.money>=p?'':'disabled'}>Compra</button></div>`).join(''));
