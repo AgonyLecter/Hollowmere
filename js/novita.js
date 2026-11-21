@@ -236,6 +236,22 @@ const NOVITA = [
         t: 'Parlare è più facile: se accanto a una persona c’è un gatto, una gallina o un sasso, il tasto agisce su quello più vicino a dove guardi, e il fumetto sopra la testa te lo dice prima.'
       }
     ]
+  },
+  {
+    id: 'zaino_mc',
+    v: 33,
+    n: 'Lo zaino nuovo',
+    steps: [
+      {
+        t: 'Lo zaino (🎒 o tasto I) funziona come in Minecraft. <b>Tocca</b> una pila per prenderla in mano, poi tocca dove posarla: uguali si uniscono, diverse si scambiano. In alto vedi sempre cosa hai in mano.'
+      },
+      {
+        t: '<b>Doppio tocco</b>: sposti una pila al volo tra la barra e il resto dello zaino, oppure tra zaino e cassa. <b>Tieni premuto</b>: prendi metà pila; con qualcosa in mano, tieni premuto su un posto per posarne uno solo.'
+      },
+      {
+        t: 'La barra adesso è staccata in fondo, come in Minecraft. Per buttare qualcosa prendilo in mano e tocca il cestino. E niente si perde: se chiudi con qualcosa in mano, torna da solo nello zaino.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
