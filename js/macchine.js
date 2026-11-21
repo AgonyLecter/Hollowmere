@@ -86,7 +86,11 @@ Object.assign(ITEMS, {
     p: 12,
     d: "Per lastricare i vialetti. Tienile in mano e usale sull'erba delle tue terre."
   },
-  fornace: { n: 'Fornace', t: 'place', d: '5 minerali di ferro e 1 legna: il mattino dopo, un lingotto.' },
+  fornace: {
+    n: 'Fornace',
+    t: 'place',
+    d: 'Ogni 5 minerali di ferro e 1 legna, un lingotto il mattino dopo. Puoi metterne dentro di più insieme.'
+  },
   barattolo: {
     n: 'Barattolo delle conserve',
     t: 'place',
@@ -342,19 +346,27 @@ function machineAct(k, b, o) {
     UI.toast(`Ne servono ${need}.`);
     return true;
   }
+  // più lotti insieme: mette dentro tutto quello che hai (fino a 10 lotti), ogni lotto dà il suo prodotto
+  let lotti = Math.min(10, Math.floor(countItem(id) / need));
   if (b.id === 'fornace') {
-    if (!countItem('legna')) {
+    lotti = Math.min(lotti, countItem('legna'));
+    if (!lotti) {
       UI.toast('Serve anche 1 legna per il fuoco.');
       return true;
     }
-    removeItem('legna', 1);
+    removeItem('legna', lotti);
   }
-  removeItem(id, need);
+  removeItem(id, need * lotti);
   const fast = skLv('arti') >= 8 ? 1 : 0;
-  b.job = { out: M.out(id), ready: st.day + Math.max(1, M.days - fast), n: M.n ? M.n(id) : 1, in: id };
+  b.job = {
+    out: M.out(id),
+    ready: st.day + Math.max(1, M.days - fast),
+    n: (typeof M.n === 'function' ? M.n(id) : 1) * lotti,
+    in: id
+  };
   AU.play('plant');
   UI.toast(
-    `Dentro! Sarà pronto ${b.job.ready - st.day === 1 ? 'domani' : 'tra ' + (b.job.ready - st.day) + ' giorni'}: ${ITEMS[b.job.out].n}.`
+    `Dentro! ${b.job.n} × ${ITEMS[b.job.out].n}, pronto ${b.job.ready - st.day === 1 ? 'domani mattina' : 'tra ' + (b.job.ready - st.day) + ' giorni'}.`
   );
   return true;
 }
@@ -393,6 +405,7 @@ function drawMachines(m) {
       // al lavoro: un cartellino con cosa sta facendo e quanto manca (sennò sembra che le cose spariscano)
       const g = b.job.ready - st.day,
         txt =
+          (b.job.n > 1 ? b.job.n + ' ' : '') +
           (ITEMS[b.job.out] ? ITEMS[b.job.out].n.split(' ')[0] : '') +
           ' · ' +
           (g === 1 ? 'domani' : g + ' giorni');
