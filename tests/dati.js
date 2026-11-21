@@ -145,6 +145,22 @@ module.exports = async function (t, { browser }) {
       'ricette che usano un ingrediente detestato da chi le insegna',
       COOK.filter(r => r.da && (DISLIKES[r.da] || []).some(x => r.need[x])).map(r => r.da + ':' + r.id)
     );
+    // la wiki (js/wiki.js) si costruisce dai dati: ogni oggetto, ricetta e abitante deve comparirci
+    try {
+      const w = Wiki.pagina({ spoiler: true }).replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+      bad(
+        'oggetti che mancano nella wiki',
+        Object.keys(ITEMS).filter(k => !w.includes(ITEMS[k].n.replace(/&/g, '&')))
+      );
+      bad(
+        'personaggi che mancano nella wiki',
+        NPC_DEF.map(d => d[0]).filter(
+          id => LOOKS[id] && !w.includes(NAMES[id]) && !['faceless', 'mercante'].includes(id)
+        )
+      );
+    } catch (e) {
+      P.push(['la wiki non si costruisce', [String(e.stack || e)]]);
+    }
     // dialoghi: chi parla esiste, condizioni scritte bene, nessuno svela la storia prima del tempo
     const KEYS = new Set([
       't',

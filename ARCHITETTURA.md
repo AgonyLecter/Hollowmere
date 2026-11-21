@@ -38,6 +38,10 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   `aspetto.js`, `zaino.js`, `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
 - **Multiplayer**: `mp.js`, `missions.js`, `chat.js`, `coop.js`, `scambi.js`, `postino.js`, `coop_vivo.js`.
 - **Grafica rifatta**: `grafica.js` (personaggi, edifici, animali, attrezzi, cibi, atmosfera, strutture animate).
+- **Wiki**: `wiki.js` (in fondo a tutto). Si costruisce dal vivo dai dati del gioco: un oggetto, una ricetta, una
+  coltura, un animale o un abitante nuovo compare da solo, con la sua icona. Si apre dal titolo e dalla scheda «Wiki»
+  del menu di pausa; «Salva PDF» la stampa. Per un easter egg nuovo basta aggiungere `dove: '…'` ai suoi dati.
+  I testi di racconto (lore, capitoli, finali) sono scritti in `wiki.js`: se cambia la storia, aggiornali lì.
 
 ## Strumenti di manutenzione (`tools/`)
 Script usati per i lavori di pulizia (spostare funzioni, togliere toppe, convertirle in `Ext`). Non fanno parte del gioco.
