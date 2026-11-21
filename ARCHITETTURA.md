@@ -46,6 +46,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   alambicco, seminatrice, compostiera, forno a legna: ognuna con la sua animazione), `natura_cucina.js` (ricette che si
   imparano dagli abitanti, da soli o con l'esperienza; effetti dei piatti), `natura_fauna.js` (animali selvatici e
   taccuino del naturalista). La grafica si fa nel punto `arte`; macchine e animali si disegnano con `listaMondo`.
+- **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,
+  piume, commenti, gara della settimana. Dati in `hollowmere/gazzetta` (regole in `firebase/regole.json`).
 - **Novità**: `novita.js` — ogni aggiornamento ha una voce che Ottavio il postino annuncia ai giocatori (tranne la wiki).
 - **Wiki**: `wiki.js` (in fondo a tutto). Si costruisce dal vivo dai dati del gioco: un oggetto, una ricetta, una
   coltura, un animale o un abitante nuovo compare da solo, con la sua icona. È privata (nessun pulsante): si apre con

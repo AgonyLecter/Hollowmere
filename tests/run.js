@@ -11,7 +11,8 @@ const SUITES = {
   fumo: require('./fumo'),
   toppe: require('./toppe'),
   economia: require('./economia'),
-  aggiornamento: require('./aggiornamento')
+  aggiornamento: require('./aggiornamento'),
+  gazzetta: require('./gazzetta')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

@@ -143,6 +143,22 @@ const NOVITA = [
         t: 'Quando sei nel villaggio di un amico, o un amico è nel tuo, adesso vi vedete camminare in modo fluido, senza scatti e con meno ritardo.'
       }
     ]
+  },
+  {
+    id: 'gazzetta',
+    v: 27,
+    n: 'La Gazzetta della Valle',
+    steps: [
+      {
+        t: 'Ti ho portato un collega: <b>Pennino</b>, il piccione viaggiatore. Vive su un trespolo che trovi nello zaino: mettilo vicino a casa. Se l’hai perso, si costruisce al banco (Esterni).'
+      },
+      {
+        t: 'Usando il trespolo si apre la <b>Gazzetta della Valle</b>: la bacheca di tutti i giocatori. Puoi scrivere biglietti sul tuo villaggio e scattare fotografie con la macchina a soffietto: Pennino le porta a tutti.'
+      },
+      {
+        t: 'Ai biglietti degli altri si regalano piume e si scrivono commenti. Ogni settimana la fotografia con più piume vince il <b>Nastro della Gazzetta</b> e 1500 scudi. Quando arriva posta, Pennino torna con una lettera nel becco.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

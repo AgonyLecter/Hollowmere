@@ -54,7 +54,11 @@ function rankName(r) {
 function rankNext(r) {
   return r < RANKS.length - 1 ? RANKS[r + 1][1] : RANKS[RANKS.length - 1][1] + (r - RANKS.length + 2) * 2500;
 }
-const myRank = st => rankOf(villageScore(st));
+// (fotoRango: il rango salvato in una fotografia della Gazzetta, che si ridisegna con quel villaggio)
+const myRank = st => {
+  const s = st || G.st;
+  return s && s.free && s.free.fotoRango != null ? s.free.fotoRango : rankOf(villageScore(st));
+};
 const resCap = r => Math.min(RES_POOL.length, r); // Borgo 1 abitante, Paese 2, Cittadina 3, Città 4, poi uno per stella: fino a 10
 const RANK_GIFTS = {
   1: 'La Collina a est si apre: legna, pietre e terre nuove. E puoi costruire una casetta per un nuovo abitante.',

@@ -3,7 +3,6 @@
     "hollowmere": {
       ".read": false,
       ".write": false,
-
       "admin": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
@@ -11,7 +10,6 @@
           ".validate": "newData.val() === true"
         }
       },
-
       "segreti": {
         "$pid": {
           ".read": false,
@@ -26,7 +24,6 @@
           ".validate": "newData.hasChildren(['uid','k'])"
         }
       },
-
       "players": {
         ".read": true,
         "$pid": {
@@ -36,7 +33,9 @@
       },
       "villaggi": {
         ".read": true,
-        ".indexOn": ["ts"],
+        ".indexOn": [
+          "ts"
+        ],
         "$pid": {
           ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 20"
@@ -65,11 +64,10 @@
           ".read": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           "$id": {
             ".write": "auth != null && ((!data.exists() && newData.exists()) || (!newData.exists() && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid))",
-            ".validate": "!newData.exists() || newData.child('t').val() === 'water' || newData.child('t').val() === 'gift' || newData.child('t').val() === 'sale' || newData.child('t').val() === 'invite'"
+            ".validate": "!newData.exists() || newData.child('t').val().matches(/^(water|gift|sale|invite|lettera|dono|scudi|cpatch|osync|cplant|ctill|cbuild|cdel|cmove|ctile)$/)"
           }
         }
       },
-
       "mercato": {
         ".read": true,
         "$id": {
@@ -105,7 +103,6 @@
           ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
         }
       },
-
       "missioni": {
         ".read": true,
         ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
@@ -117,6 +114,34 @@
       "novita": {
         ".read": true,
         ".write": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true"
+      },
+      "gazzetta": {
+        ".read": true,
+        "post": {
+          ".indexOn": [
+            "ts"
+          ],
+          "$id": {
+            ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + newData.child('pid').val() + '/uid').val() === auth.uid) || (!newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['pid','n','ts']) && newData.child('n').isString() && newData.child('n').val().length <= 20 && newData.child('ts').isNumber() && (!newData.child('v').exists() || (newData.child('v').isString() && newData.child('v').val().length <= 30)) && (!newData.child('t').exists() || (newData.child('t').isString() && newData.child('t').val().length <= 240)) && !newData.child('f').exists() && (!newData.child('s').exists() || (newData.child('s').isString() && newData.child('s').val().length <= 20000 && newData.child('s').val().beginsWith('{') && !newData.child('s').val().contains('data:') && !newData.child('s').val().contains('http'))) && (newData.child('t').exists() || newData.child('s').exists()))"
+          }
+        },
+        "piume": {
+          "$id": {
+            "$pid": {
+              ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+              ".validate": "!newData.exists() || newData.val() === true"
+            }
+          }
+        },
+        "commenti": {
+          "$id": {
+            "$cid": {
+              ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + newData.child('pid').val() + '/uid').val() === auth.uid) || (!newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid))",
+              ".validate": "!newData.exists() || (newData.hasChildren(['pid','n','t','ts']) && newData.child('t').isString() && newData.child('t').val().length <= 140 && newData.child('n').isString() && newData.child('n').val().length <= 20)"
+            }
+          }
+        }
       }
     }
   }
