@@ -204,6 +204,22 @@ const NOVITA = [
         t: 'E puoi metterne dentro <b>più di un lotto</b> alla volta: con 10 ferro e 2 legna la fornace ti fa 2 lingotti. Anche il suono è più pulito: niente più gracchiare sotto la pioggia e i tuoni.'
       }
     ]
+  },
+  {
+    id: 'macchine_gui',
+    v: 31,
+    n: 'Le macchine hanno la loro schermata',
+    steps: [
+      {
+        t: 'Tocca la fornace (o il barattolo, la botte, il frantoio…): si apre la sua schermata. A sinistra metti quello che vuoi lavorare, e nella fornace anche la <b>legna</b> sotto il fuoco. A destra escono i prodotti: toccali per prenderli.'
+      },
+      {
+        t: 'La freccia al centro si riempie e ti dice quanto manca. Le macchine lavorano un pezzo alla volta, anche quando non le guardi e mentre dormi: la fornace fa un lingotto ogni ora e mezza. Sopra la macchina, una barretta ti mostra a che punto è.'
+      },
+      {
+        t: 'Quello che avevi già messo nelle macchine ti aspetta, pronto, nello spazio a destra. E una macchina con qualcosa dentro non si smonta più per sbaglio.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

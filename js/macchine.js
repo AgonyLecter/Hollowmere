@@ -89,14 +89,14 @@ Object.assign(ITEMS, {
   fornace: {
     n: 'Fornace',
     t: 'place',
-    d: 'Ogni 5 minerali di ferro e 1 legna, un lingotto il mattino dopo. Puoi metterne dentro di più insieme.'
+    d: 'Ferro e legna a sinistra, lingotti a destra: ogni 5 minerali e 1 legna, un lingotto in un’ora e mezza.'
   },
   barattolo: {
     n: 'Barattolo delle conserve',
     t: 'place',
-    d: 'Un raccolto dentro, il giorno dopo una conserva che vale molto di più.'
+    d: 'Un raccolto dentro, in tre ore una conserva che vale molto di più.'
   },
-  botte: { n: 'Botte', t: 'place', d: 'Frutta dentro: in tre giorni, succo da vendere caro.' },
+  botte: { n: 'Botte', t: 'place', d: 'Frutta dentro: in otto ore, succo da vendere caro.' },
   apiario: {
     n: 'Apiario',
     t: 'place',
@@ -292,16 +292,133 @@ function craftMenu(cat) {
 }
 
 // ---------- macchine ----------
+// Ogni macchina ha la sua schermata (stile fornace): a sinistra quello che metti dentro (e la legna, se brucia),
+// al centro la freccia che si riempie, a destra quello che esce. Lavora un pezzo alla volta, col tempo del gioco:
+// la fornace fa un lingotto ogni ora e mezza, anche quando non la guardi e mentre dormi.
+// Lo stato sta in b.m: { i: cosa c'è dentro, in: quanti, f: legna, o: cosa è uscito, on: quanti, t0: inizio del pezzo }
 const MACH = {
-  barattolo: { days: 1, ok: id => ITEMS['cons_' + id], out: id => 'cons_' + id, n: 'conserva' },
-  botte: { days: 3, ok: id => ITEMS['succo_' + id], out: id => 'succo_' + id, n: 'succo' },
-  fornace: { days: 1, ok: id => id === 'ferro', need: 5, out: () => 'lingotto', n: 'lingotto' }
+  barattolo: { days: 1, ok: id => ITEMS['cons_' + id], out: id => 'cons_' + id },
+  botte: { days: 3, ok: id => ITEMS['succo_' + id], out: id => 'succo_' + id },
+  fornace: {
+    days: 1,
+    ok: id => id === 'ferro',
+    need: 5,
+    out: () => 'lingotto',
+    fuel: 'legna',
+    vuole: 'ferro'
+  }
 };
-function machineAct(k, b, o) {
-  const st = G.st,
-    it = selItem(),
-    id = it && it.id,
+// minuti di gioco per ogni pezzo (un'ora di gioco sono 25 secondi veri)
+const MAC_MIN = {
+  fornace: 90,
+  barattolo: 180,
+  botte: 480,
+  frantoio: 360,
+  essiccatoio: 240,
+  zangola: 120,
+  alambicco: 600,
+  seminatrice: 120,
+  compostiera: 360,
+  fornoalegna: 90
+};
+const MAC_MAX = 99;
+const macAbs = (st = G.st) => st.day * 1440 + st.time;
+const macDur = b => MAC_MIN[b.id] || (MACH[b.id].days || 1) * 240;
+const macNeed = (M, id) => (typeof M.need === 'function' ? M.need(id) : M.need || 1);
+const macOutN = (M, id) => (typeof M.n === 'function' ? M.n(id) : 1);
+// lo stato della macchina (e i lavori del vecchio sistema diventano prodotti pronti)
+function macStato(b) {
+  if (!b.m) b.m = { i: null, in: 0, f: 0, o: null, on: 0, t0: null };
+  if (b.job) {
+    if (b.job.out && ITEMS[b.job.out] && (!b.m.o || b.m.o === b.job.out)) {
+      b.m.o = b.job.out;
+      b.m.on += b.job.n > 0 ? b.job.n : 1;
+    }
+    delete b.job;
+  }
+  return b.m;
+}
+// perché è ferma (o '' se può lavorare)
+function macFermo(b) {
+  const m = macStato(b),
     M = MACH[b.id];
+  if (!m.i || !m.in) return 'vuota';
+  if (m.in < macNeed(M, m.i)) return 'poco';
+  if (M.fuel && !(m.f > 0)) return 'fuoco';
+  const out = M.out(m.i);
+  if (m.on > 0 && m.o !== out) return 'piena';
+  if (m.on + macOutN(M, m.i) > MAC_MAX) return 'piena';
+  return '';
+}
+// fa avanzare il lavoro fino ad adesso (si chiama prima e dopo ogni cambiamento, e quando la si guarda)
+function macSim(b, now = macAbs()) {
+  const m = macStato(b),
+    M = MACH[b.id];
+  if (!M) return m;
+  for (let g = 0; g < 1000; g++) {
+    if (macFermo(b)) {
+      m.t0 = null;
+      return m;
+    }
+    if (m.t0 == null) {
+      m.t0 = now;
+      return m;
+    }
+    const d = macDur(b);
+    if (now - m.t0 < d) return m;
+    const id = m.i;
+    m.in -= macNeed(M, id);
+    if (M.fuel) m.f--;
+    m.o = M.out(id);
+    m.on += macOutN(M, id);
+    m.t0 += d;
+    if (m.in <= 0) {
+      m.in = 0;
+      m.i = null;
+    }
+  }
+  return m;
+}
+// lavora adesso?
+function macLav(b) {
+  if (!b || !MACH[b.id]) return false;
+  return macSim(b).t0 != null;
+}
+// quanto manca al pezzo in corso (0..1 fatto, minuti che mancano)
+function macProg(b) {
+  const m = macSim(b);
+  if (m.t0 == null) return { p: 0, rest: 0 };
+  const d = macDur(b),
+    e = macAbs() - m.t0;
+  return { p: Math.max(0, Math.min(1, e / d)), rest: Math.max(0, d - e) };
+}
+// quanti pezzi si possono ancora fare con quello che c'è dentro
+function macPezzi(b) {
+  const m = macStato(b),
+    M = MACH[b.id];
+  if (!m.i) return 0;
+  let n = Math.floor(m.in / macNeed(M, m.i));
+  if (M.fuel) n = Math.min(n, m.f || 0);
+  return n;
+}
+const macVuota = b => !b.m || (!b.m.in && !b.m.f && !b.m.on);
+function macMin(n) {
+  n = Math.ceil(n);
+  const h = Math.floor(n / 60),
+    mm = n % 60;
+  return h ? `${h} h${mm ? ' ' + mm + ' min' : ''}` : `${mm} min`;
+}
+function macOra(abs) {
+  const st = G.st,
+    d = Math.floor(abs / 1440) - st.day,
+    t = ((abs % 1440) + 1440) % 1440,
+    s = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  return d <= 0 ? 'alle ' + s : d === 1 ? 'domani alle ' + s : `tra ${d} giorni`;
+}
+
+function machineAct(k, b, o) {
+  const it = selItem(),
+    id = it && it.id;
   if (b.id === 'apiario') {
     if (b.ready) {
       if (!addItem('miele', b.n || 1)) return true;
@@ -317,59 +434,215 @@ function machineAct(k, b, o) {
       );
     return true;
   }
-  if (!M) return false;
-  if (b.job) {
-    if (st.day >= b.job.ready) {
-      if (!addItem(b.job.out, b.job.n || 1)) return true;
-      AU.play('pick');
-      floatText(`+${b.job.n || 1} ${ITEMS[b.job.out].n}`, o.tx * 16 + 8, o.ty * 16 - 10);
-      b.job = null;
-      addXP('arti', 5);
-    } else
-      UI.toast(
-        `${ITEMS[b.job.out].n}: pronto ${b.job.ready - st.day === 1 ? 'domani mattina' : 'tra ' + (b.job.ready - st.day) + ' giorni'}.`
-      );
-    return true;
-  }
-  if (!id || !M.ok(id)) {
-    UI.toast(
-      M.aiuto
-        ? M.aiuto
-        : b.id === 'fornace'
-          ? 'Ci vogliono 5 minerali di ferro (e 1 legna).'
-          : `Tieni in mano ${b.id === 'botte' ? 'della frutta' : 'un raccolto'} e usalo sulla ${ITEMS[b.id].n.toLowerCase().includes('botte') ? 'botte' : ITEMS[b.id].n.toLowerCase()}.`
-    );
-    return true;
-  }
-  const need = typeof M.need === 'function' ? M.need(id) : M.need || 1;
-  if (countItem(id) < need) {
-    UI.toast(`Ne servono ${need}.`);
-    return true;
-  }
-  // più lotti insieme: mette dentro tutto quello che hai (fino a 10 lotti), ogni lotto dà il suo prodotto
-  let lotti = Math.min(10, Math.floor(countItem(id) / need));
-  if (b.id === 'fornace') {
-    lotti = Math.min(lotti, countItem('legna'));
-    if (!lotti) {
-      UI.toast('Serve anche 1 legna per il fuoco.');
-      return true;
-    }
-    removeItem('legna', lotti);
-  }
-  removeItem(id, need * lotti);
-  const fast = skLv('arti') >= 8 ? 1 : 0;
-  b.job = {
-    out: M.out(id),
-    ready: st.day + Math.max(1, M.days - fast),
-    n: (typeof M.n === 'function' ? M.n(id) : 1) * lotti,
-    in: id
-  };
-  AU.play('plant');
-  UI.toast(
-    `Dentro! ${b.job.n} × ${ITEMS[b.job.out].n}, pronto ${b.job.ready - st.day === 1 ? 'domani mattina' : 'tra ' + (b.job.ready - st.day) + ' giorni'}.`
-  );
+  if (!MACH[b.id]) return false;
+  if (id && id === PLACE_TOOL[b.id]) return false;
+  macGui(k, b);
   return true;
 }
+
+// ---------- la schermata della macchina ----------
+const MACG = { k: null, b: null, timer: 0, firma: '' };
+function macIcona(el, id, ghost) {
+  const c = el.querySelector('canvas');
+  if (!c) return;
+  const x = c.getContext('2d');
+  x.clearRect(0, 0, 32, 32);
+  if (id && ICON[id]) {
+    x.globalAlpha = ghost ? 0.22 : 1;
+    x.drawImage(ICON[id], 0, 0);
+    x.globalAlpha = 1;
+  }
+}
+function macTesto(b) {
+  const m = macSim(b),
+    M = MACH[b.id],
+    perche = macFermo(b);
+  if (!perche) {
+    const pr = macProg(b),
+      n = macPezzi(b),
+      nome = ITEMS[M.out(m.i)].n,
+      fine = macAbs() + pr.rest + (n - 1) * macDur(b);
+    return (
+      `<b>${esc(nome)}</b>: il prossimo tra <b>${macMin(pr.rest)}</b>.` +
+      (n === 2
+        ? ` Poi un altro, pronto ${macOra(fine)}.`
+        : n > 2
+          ? ` Poi altri ${n - 1}, tutto pronto ${macOra(fine)}.`
+          : '')
+    );
+  }
+  if (perche === 'piena') return 'Prendi quello che è pronto: la macchina è piena e si è fermata.';
+  if (perche === 'fuoco') return 'Il fuoco è spento: metti della <b>legna</b> qui sotto.';
+  if (perche === 'poco')
+    return `Ne servono <b>${macNeed(M, m.i)}</b> per volta: aggiungine ancora ${macNeed(M, m.i) - m.in}.`;
+  return M.fuel
+    ? `Metti <b>${macNeed(M, M.vuole)} ${esc(ITEMS[M.vuole].n.toLowerCase())}</b> e <b>1 legna</b> per ogni ${esc(ITEMS[M.out(M.vuole)].n.toLowerCase())}. Ognuno ci mette ${macMin(macDur(b))}.`
+    : `${esc(M.aiuto || 'Tocca nello zaino quello che vuoi metterci dentro.')} Ogni pezzo ci mette ${macMin(macDur(b))}.`;
+}
+function macGui(k, b) {
+  MACG.k = k;
+  MACG.b = b;
+  G.macGui = k;
+  macSim(b);
+  const M = MACH[b.id],
+    m = b.m,
+    Z = G.st.inv,
+    slot = (w, cls = '') =>
+      `<div class="islot mslot ${cls}" data-m="${w}"><canvas width="32" height="32"></canvas><i></i></div>`;
+  UI.open(
+    `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}</h2>
+    <div class="mac">
+      <div class="mac-sx">${slot('in')}${M.fuel ? `<div class="mac-fuoco"><div class="mac-fiamma"><b></b></div></div>${slot('f')}` : ''}</div>
+      <div class="mac-freccia"><div class="mac-barra"><b></b></div><span class="mac-t"></span></div>
+      ${slot('o', 'mac-out')}
+    </div>
+    <div class="iinfo mac-info"></div>
+    <h3>Zaino <span class="small">— tocca per mettere dentro</span></h3>` + zGrid('z', Z, ''),
+    () => {
+      clearInterval(MACG.timer);
+      MACG.k = MACG.b = null;
+      G.macGui = null;
+      UI.hotbar();
+      if (G.st && G.st.free) NET.save(myHome());
+    }
+  );
+  const box = $('#mbox');
+  box.querySelectorAll('.islot[data-w]').forEach(el => {
+    const s = Z[+el.dataset.i];
+    if (s && ICON[s.id]) el.firstChild.getContext('2d').drawImage(ICON[s.id], 0, 0);
+    if (s) {
+      el.title = ITEMS[s.id].n;
+      const dentro = M.ok(s.id) || (M.fuel && s.id === M.fuel);
+      if (!dentro) el.classList.add('mno');
+    }
+    el.onclick = () => macMetti(+el.dataset.i);
+  });
+  box.querySelectorAll('.mslot').forEach(el => (el.onclick = () => macTogli(el.dataset.m)));
+  MACG.firma = '';
+  macAggiorna();
+  clearInterval(MACG.timer);
+  MACG.timer = setInterval(macAggiorna, 150);
+}
+// aggiorna solo le parti che cambiano (la freccia, i numeri, le icone)
+function macAggiorna() {
+  const b = MACG.b,
+    box = $('#mbox');
+  if (!b || !UI.modalOpen || !box.querySelector('.mac')) {
+    clearInterval(MACG.timer);
+    return;
+  }
+  // il tempo scorre anche con la schermata aperta, ma prima della mezzanotte passata la si chiude
+  if (G.st.time >= 25 * 60 + 45) {
+    UI.close();
+    return;
+  }
+  const M = MACH[b.id],
+    m = macSim(b),
+    pr = macProg(b),
+    lav = m.t0 != null,
+    firma = [m.i, m.in, m.f, m.o, m.on, lav].join('|');
+  box.querySelector('.mac-barra b').style.width = (pr.p * 100).toFixed(1) + '%';
+  box.querySelector('.mac-t').textContent = lav ? macMin(pr.rest) : '';
+  const fi = box.querySelector('.mac-fiamma');
+  if (fi) {
+    fi.classList.toggle('on', lav);
+    fi.firstChild.style.height = (lav ? 100 - pr.p * 100 : m.f > 0 ? 100 : 0).toFixed(1) + '%';
+  }
+  const info = macTesto(b),
+    ie = box.querySelector('.mac-info');
+  if (ie.innerHTML !== info) ie.innerHTML = info;
+  if (firma === MACG.firma) return;
+  MACG.firma = firma;
+  const set = (w, id, n, ghost) => {
+    const el = box.querySelector(`.mslot[data-m="${w}"]`);
+    if (!el) return;
+    macIcona(el, id || ghost, !id);
+    el.querySelector('i').textContent = id && n > 1 ? n : '';
+    el.title = id ? ITEMS[id].n : '';
+    el.classList.toggle('pieno', !!id);
+  };
+  set('in', m.i, m.in, M.vuole);
+  if (M.fuel) set('f', m.f > 0 ? M.fuel : null, m.f, M.fuel);
+  set('o', m.on > 0 ? m.o : null, m.on, m.i ? M.out(m.i) : M.vuole ? M.out(M.vuole) : null);
+  box.querySelector('.mac-out').classList.toggle('pronto', m.on > 0);
+}
+function macRidisegna() {
+  if (!MACG.b) return;
+  const { k, b } = MACG;
+  UI._mclose = null;
+  const t = MACG.timer;
+  macGui(k, b);
+  clearInterval(t);
+}
+// dallo zaino alla macchina: tutta la pila (fino a 99)
+function macMetti(i) {
+  const b = MACG.b,
+    M = MACH[b.id],
+    Z = G.st.inv,
+    s = Z[i];
+  if (!s) return;
+  const m = macSim(b);
+  let dove = null;
+  if (M.fuel && s.id === M.fuel) dove = 'f';
+  else if (M.ok(s.id)) dove = 'in';
+  if (!dove) {
+    AU.play('err');
+    UI.toast(M.aiuto || `Nella ${ITEMS[b.id].n.toLowerCase()} questo non ci va.`);
+    return;
+  }
+  if (dove === 'in' && m.i && m.i !== s.id && m.in > 0) {
+    AU.play('err');
+    UI.toast(`Dentro c'è già ${ITEMS[m.i].n.toLowerCase()}: toccalo per riprenderlo.`);
+    return;
+  }
+  const ora = dove === 'f' ? m.f || 0 : m.in || 0,
+    n = Math.min(s.n, MAC_MAX - ora);
+  if (n <= 0) {
+    UI.toast('È piena.');
+    return;
+  }
+  s.n -= n;
+  if (s.n <= 0) Z[i] = null;
+  if (dove === 'f') m.f = ora + n;
+  else {
+    m.i = s.id;
+    m.in = ora + n;
+  }
+  AU.play('blip');
+  macSim(b);
+  macRidisegna();
+}
+// dalla macchina allo zaino
+function macTogli(w) {
+  const b = MACG.b,
+    M = MACH[b.id],
+    m = macSim(b);
+  if (w === 'o') {
+    if (!m.on) return;
+    const n = m.on,
+      id = m.o;
+    if (!addItem(id, n)) return;
+    m.on = 0;
+    m.o = null;
+    AU.play('pick');
+    addXP('arti', Math.min(40, 4 * n));
+    UI.toast(`+${n} ${ITEMS[id].n}`);
+  } else if (w === 'in') {
+    if (!m.in) return;
+    if (!addItem(m.i, m.in)) return;
+    m.in = 0;
+    m.i = null;
+    AU.play('blip');
+  } else if (w === 'f') {
+    if (!m.f) return;
+    if (!addItem(M.fuel, m.f)) return;
+    m.f = 0;
+    AU.play('blip');
+  }
+  macSim(b);
+  macRidisegna();
+}
+
 function machinesMorning(st) {
   if (!isFree(st)) return;
   for (const k in st.free.built) {
@@ -391,6 +664,7 @@ function machinesMorning(st) {
     }
   }
 }
+// sopra le macchine: il fumetto con quello che è pronto, e mentre lavorano una barretta sottile che si riempie
 function drawMachines(m) {
   if (m.id !== 'main' || !isFree() || G.visit) return;
   const st = G.st,
@@ -399,56 +673,39 @@ function drawMachines(m) {
     if (o.kind !== 'built') continue;
     const b = st.free.built[o.bk];
     if (!b) continue;
-    const rd =
-      (b.job && st.day >= b.job.ready) || b.ready || (ITEMS[b.id] && ITEMS[b.id].tree && b.fruit > 0);
-    if (!rd && b.job) {
-      // al lavoro: un fumetto come quello di «pronto», ma fermo e più scuro: icona del prodotto,
-      // quanti ne escono e quando (una lunetta = domani mattina, altrimenti i giorni che mancano)
-      const g = b.job.ready - st.day,
-        ic = ICON[b.job.out],
-        dopo = g <= 1 ? '' : g + 'g',
-        num = b.job.n > 1 ? '×' + b.job.n : '';
-      ctx.save();
-      ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      const wn = num ? Math.ceil(ctx.measureText(num).width) + 1 : 0,
-        wd = dopo ? Math.ceil(ctx.measureText(dopo).width) + 1 : 6,
-        w = 3 + 8 + (num ? 1 + wn : 0) + 2 + wd + 2,
-        X = Math.round(o.tx * 16 + 8 - w / 2),
-        Y = Math.round(o.dy - 13);
+    const mac = !!MACH[b.id],
+      mm = mac ? macSim(b) : null,
+      out =
+        mac && mm.on > 0
+          ? mm.o
+          : b.ready
+            ? 'miele'
+            : ITEMS[b.id] && ITEMS[b.id].tree && b.fruit > 0
+              ? ITEMS[b.id].tree
+              : null;
+    const X = o.tx * 16 + 8;
+    if (mac && mm.t0 != null && !out) {
+      const p = macProg(b).p,
+        w = 14,
+        x0 = Math.round(X - w / 2),
+        y0 = Math.round(o.dy - 5);
       ctx.fillStyle = '#2a1406';
-      ctx.fillRect(X, Y, w, 11);
-      ctx.fillRect(X + ((w / 2) | 0) - 1, Y + 11, 3, 2);
-      ctx.fillStyle = '#e8c87a';
-      ctx.fillRect(X + 1, Y + 1, w - 2, 9);
-      if (ic) ctx.drawImage(ic, X + 2, Y + 1.5, 8, 8);
-      let cx = X + 11;
-      ctx.fillStyle = '#2a1406';
-      if (num) {
-        ctx.fillText(num, cx + 1, Y + 9);
-        cx += 1 + wn;
-      }
-      cx += 2;
-      if (dopo) ctx.fillText(dopo, cx, Y + 9);
-      else {
-        // lunetta: pronto domani mattina
-        ctx.fillStyle = '#4a5a8a';
-        ['..###', '.##..', '##...', '##...', '##...', '.##..', '..###'].forEach((r, j) => {
-          for (let i = 0; i < 5; i++) if (r[i] === '#') ctx.fillRect(cx + i, Y + 2 + j, 1, 1);
-        });
-      }
-      ctx.restore();
-      continue;
+      ctx.fillRect(x0 - 1, y0 - 1, w + 2, 4);
+      ctx.fillStyle = '#5a3a20';
+      ctx.fillRect(x0, y0, w, 2);
+      const f = Math.max(1, Math.round(w * p));
+      ctx.fillStyle = '#f0a040';
+      ctx.fillRect(x0, y0, f, 2);
+      ctx.fillStyle = '#ffe08a';
+      ctx.fillRect(x0, y0, f, 1);
     }
-    if (!rd) continue;
-    const X = o.tx * 16 + 8,
-      Y = o.dy - 6 + bob;
+    if (!out) continue;
+    const Y = o.dy - 6 + bob;
     ctx.fillStyle = '#2a1406';
     ctx.fillRect(X - 5, Y - 6, 11, 10);
     ctx.fillStyle = '#f6d98a';
     ctx.fillRect(X - 4, Y - 5, 9, 8);
-    const ic = ICON[b.job ? b.job.out : b.ready ? 'miele' : ITEMS[b.id].tree];
+    const ic = ICON[out];
     if (ic) ctx.drawImage(ic, X - 4, Y - 5, 8, 8);
   }
 }

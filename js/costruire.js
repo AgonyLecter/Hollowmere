@@ -263,6 +263,10 @@ function bmAction() {
       UI.toast('Svuota la cassa prima di toglierla.');
       return;
     }
+    if (MACH[bd.id] && !macVuota(bd)) {
+      UI.toast(`Svuota la ${ITEMS[bd.id].n.toLowerCase()} prima di toglierla.`);
+      return;
+    }
     if (ITEMS[bd.id].size && animalsOf(o.bk).length) {
       UI.toast('Dentro ci vivono delle bestie. Spostala, invece.');
       return;

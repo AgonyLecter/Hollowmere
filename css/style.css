@@ -264,3 +264,23 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .gz-mod{font:italic 12px Georgia,serif;color:#8a6a4a}
 .gz-post textarea{width:100%;box-sizing:border-box;font:15px 'Segoe Script','Bradley Hand','Comic Sans MS',cursive;padding:6px;border:1px solid #b89a6a;background:#fffaf0;resize:vertical}
 .gz-uno{grid-template-columns:minmax(260px,520px);justify-content:center}
+/* schermata delle macchine (fornace, barattolo, botte…): dentro → freccia → fuori */
+.mac{display:flex;align-items:center;justify-content:center;gap:calc(8*var(--u));margin:calc(4*var(--u)) auto calc(3*var(--u));padding:calc(7*var(--u)) calc(10*var(--u));background:linear-gradient(#c9a777,#b38f5e);box-shadow:inset 0 0 0 var(--u) #5a3418,inset 0 calc(2*var(--u)) 0 rgba(0,0,0,.18),0 var(--u) 0 rgba(255,240,200,.5);width:max-content;max-width:100%;box-sizing:border-box}
+.mac-sx{display:flex;flex-direction:column;align-items:center;gap:calc(2*var(--u))}
+.mslot{width:calc(24*var(--u));height:calc(24*var(--u));aspect-ratio:auto}
+.mslot i{font-size:calc(7.5*var(--u))}
+.mslot.pieno{background:linear-gradient(#4a3020,#2e1c10)}
+.mac-out{width:calc(30*var(--u));height:calc(30*var(--u))}
+.mac-out.pronto{animation:macPronto 1.2s ease-in-out infinite}
+@keyframes macPronto{0%,100%{box-shadow:inset 0 0 0 var(--u) #07040a,0 0 0 calc(1.5*var(--u)) var(--gold)}50%{box-shadow:inset 0 0 0 var(--u) #07040a,0 0 0 calc(1.5*var(--u)) var(--gold),0 0 calc(8*var(--u)) rgba(255,210,110,.9)}}
+.mac-fuoco{width:calc(12*var(--u));height:calc(13*var(--u))}
+.mac-fiamma{position:relative;width:100%;height:100%;background:#6e5236;clip-path:polygon(50% 0,62% 22%,80% 14%,78% 40%,96% 58%,90% 84%,70% 100%,30% 100%,10% 84%,4% 58%,22% 40%,20% 14%,38% 22%)}
+.mac-fiamma b{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#fff2a0,#ffb040 45%,#e05a18)}
+.mac-fiamma.on{animation:macFiamma .35s steps(2) infinite}
+@keyframes macFiamma{50%{transform:scaleX(.9) translateY(calc(-.5*var(--u)))}}
+.mac-freccia{display:flex;flex-direction:column;align-items:center;gap:calc(1.5*var(--u))}
+.mac-barra{position:relative;width:calc(34*var(--u));height:calc(16*var(--u));background:#6e5236;clip-path:polygon(0 30%,62% 30%,62% 0,100% 50%,62% 100%,62% 70%,0 70%)}
+.mac-barra b{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(#fffbe0,#f6d98a 40%,#e0a040)}
+.mac-t{min-height:calc(7*var(--u));font-size:calc(6.5*var(--u));color:#4a1e08;white-space:nowrap}
+.mac-info{min-height:calc(18*var(--u));text-align:center;color:#3a1a08}
+.islot.mno{opacity:.38}

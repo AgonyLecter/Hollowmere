@@ -1,7 +1,7 @@
 'use strict';
 // ================= NATURA (2): MACCHINARI NUOVI =================
 // Frantoio, essiccatoio, zangola, alambicco, seminatrice, compostiera, forno a legna.
-// Usano il sistema delle macchine di macchine.js (MACH, machineAct, il fumetto «pronto» di drawMachines)
+// Usano il sistema delle macchine di macchine.js (MACH, la schermata macGui, il fumetto «pronto» di drawMachines)
 // e hanno ognuno la sua animazione: si disegnano da soli (punto di estensione 'listaMondo' di world.js),
 // fermi quando sono vuoti e animati quando lavorano. Di notte il fuoco di forno e alambicco fa luce.
 
@@ -73,7 +73,7 @@ natValori();
 const NAT_MACH = {
   frantoio: {
     n: 'Frantoio',
-    d: 'La macina di pietra: 3 olive (o 3 noci, o 2 girasoli) diventano olio in due giorni.',
+    d: 'La macina di pietra: 3 olive (o 3 noci, o 2 girasoli) diventano olio in sei ore.',
     c: { pietra: 40, legna: 20, lingotto: 2 },
     lv: 5,
     tool: 'piccone',
@@ -85,7 +85,7 @@ const NAT_MACH = {
   },
   essiccatoio: {
     n: 'Essiccatoio',
-    d: 'Graticci al sole e al vento: funghi, frutta ed erbe si seccano in un giorno e valgono il doppio.',
+    d: 'Graticci al sole e al vento: funghi, frutta ed erbe si seccano in quattro ore e valgono il doppio.',
     c: { legna: 30, fibra: 15 },
     lv: 2,
     tool: 'accetta',
@@ -97,7 +97,7 @@ const NAT_MACH = {
   },
   zangola: {
     n: 'Zangola',
-    d: 'Su e giù, su e giù: dal latte il burro, dal latte di capra il formaggio. Un giorno.',
+    d: 'Su e giù, su e giù: dal latte il burro, dal latte di capra il formaggio. Due ore.',
     c: { legna: 25, lingotto: 1 },
     lv: 3,
     tool: 'accetta',
@@ -109,7 +109,7 @@ const NAT_MACH = {
   },
   alambicco: {
     n: 'Alambicco',
-    d: 'Rame e fuoco lento: fiori ed erbe diventano essenze preziose in tre giorni.',
+    d: 'Rame e fuoco lento: fiori ed erbe diventano essenze preziose in dieci ore.',
     c: { rame: 4, pietra: 10, lingotto: 1 },
     lv: 6,
     tool: 'piccone',
@@ -122,7 +122,7 @@ const NAT_MACH = {
   },
   seminatrice: {
     n: 'Seminatrice',
-    d: 'Un raccolto dentro, giri la manovella: il giorno dopo, due bustine dei suoi semi.',
+    d: 'Un raccolto dentro, giri la manovella: in due ore, due bustine dei suoi semi.',
     c: { legna: 25, lingotto: 2, fibra: 10 },
     lv: 5,
     tool: 'accetta',
@@ -135,7 +135,7 @@ const NAT_MACH = {
   },
   compostiera: {
     n: 'Compostiera',
-    d: 'Erbacce e avanzi diventano concime in due giorni: 10 fibre fanno 3 concimi, un raccolto ne fa uno.',
+    d: 'Erbacce e avanzi diventano concime in sei ore: 10 fibre fanno 3 concimi, un raccolto ne fa uno.',
     c: { legna: 20, fibra: 10 },
     tool: 'accetta',
     size: [16, 16],
@@ -149,7 +149,7 @@ const NAT_MACH = {
   },
   fornoalegna: {
     n: 'Forno a legna',
-    d: "Cupola di mattoni: 2 farine fanno il pane, 3 castagne le caldarroste, 2 patate l'arrosto. Un giorno.",
+    d: "Cupola di mattoni: 2 farine fanno il pane, 3 castagne le caldarroste, 2 patate l'arrosto. Un'ora e mezza.",
     c: { pietra: 50, legna: 15 },
     lv: 4,
     tool: 'piccone',
@@ -171,6 +171,7 @@ for (const [id, M] of Object.entries(NAT_MACH)) {
     need: M.in ? k => M.in[k] || 1 : M.need,
     out: M.out,
     n: M.n2,
+    vuole: M.in ? Object.keys(M.in)[0] : null,
     aiuto: M.aiuto
   };
 }
@@ -204,8 +205,8 @@ const NAT_ANIM = {
   },
   // aria calda che tremola e piccoli disegni del raccolto sui graticci
   essiccatoio(e, x, y, lav, b) {
-    if (!lav || !b.job) return;
-    const ic = ICON[b.job.in];
+    if (!lav || !b.m || !b.m.i) return;
+    const ic = ICON[b.m.i];
     if (ic)
       for (const [tx, ty] of [
         [4, 8.5],
@@ -300,7 +301,7 @@ Ext.on('drawAmbTop', m => {
     for (const o of m.objs) {
       if (o.kind !== 'built' || (o.bid !== 'fornoalegna' && o.bid !== 'alambicco')) continue;
       const b = G.st.free.built[o.bk];
-      if (!b || !b.job || G.st.day >= b.job.ready) continue;
+      if (!macLav(b)) continue;
       const X = o.dx + (o.bid === 'fornoalegna' ? 10 : 7),
         Y = o.dy + (o.bid === 'fornoalegna' ? 15 : 19),
         r = 22 + Math.sin(G.t * 9) * 1.5,
@@ -319,7 +320,7 @@ function natDrawMach(e) {
   if (!F) return;
   const st = G.st,
     b = st && st.free && st.free.built[e.bk],
-    lav = !!(b && b.job && st.day < b.job.ready),
+    lav = macLav(b),
     fr = lav ? F.work[Math.floor(G.t * F.fps) % F.work.length] : F.idle;
   const x = Math.round(e.dx + (typeof hitShake === 'function' ? hitShake(e) : 0)),
     y = Math.round(e.dy);
