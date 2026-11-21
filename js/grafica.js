@@ -5130,7 +5130,7 @@ function svTick(dt) {
         }
         if (o.kind !== 'built') continue;
         const b = isFree() && st.free && st.free.built ? st.free.built[o.bk] : null,
-          job = b && b.job && !(st.day >= b.job.ready);
+          job = !!(b && typeof macLav === 'function' && macLav(b));
         // mulino: le pale girano (più svelte se macina o se c'è vento)
         if (o.bid === 'mulino') {
           const sp = (job ? 1.6 : 0.6) * (st.weather === 'pioggia' || st.weather === 'neve' ? 1.6 : 1),
@@ -5139,7 +5139,10 @@ function svTick(dt) {
         }
         // fornace: la bocca pulsa
         if (o.bid === 'fornace') {
-          const f = 0.5 + 0.3 * Math.sin(T * 8) + 0.2 * Math.sin(T * 17),
+          // accesa quando lavora, solo un filo di brace quando è ferma
+          const f = job
+              ? 0.5 + 0.3 * Math.sin(T * 8) + 0.2 * Math.sin(T * 17)
+              : 0.12 + 0.04 * Math.sin(T * 1.5),
             X = o.dx + 8,
             Y = o.dy + 18;
           ctx.fillStyle = `rgba(255,${(150 + f * 80) | 0},60,${(0.35 + f * 0.3).toFixed(2)})`;

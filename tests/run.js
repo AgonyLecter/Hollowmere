@@ -13,7 +13,8 @@ const SUITES = {
   economia: require('./economia'),
   aggiornamento: require('./aggiornamento'),
   gazzetta: require('./gazzetta'),
-  suono: require('./suono')
+  suono: require('./suono'),
+  macchine: require('./macchine')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
@@ -48,7 +49,7 @@ const args = process.argv.slice(2),
       if (pick.length && !pick.includes(name)) continue;
       console.log('\n▸ ' + name);
       try {
-        await fn(t, { ROOT, browser, aggiorna });
+        await fn(t, { ROOT, browser, aggiorna, shot: process.env.SHOT });
       } catch (e) {
         t.fail(name + ' si è interrotto', e.stack);
       }

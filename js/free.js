@@ -784,6 +784,10 @@ function freeActBase(fx, fy) {
         UI.toast('Svuota la cassa prima di spostarla.');
         return true;
       }
+      if (MACH[b.id] && !macVuota(b)) {
+        UI.toast(`Svuota la ${ITEMS[b.id].n.toLowerCase()} prima di smontarla.`);
+        return true;
+      }
       if (ITEMS[b.id].size && animalsOf(o.bk).length) {
         UI.toast('Dentro ci vivono delle bestie. Non si smonta.');
         return true;

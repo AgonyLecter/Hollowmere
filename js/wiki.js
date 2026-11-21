@@ -588,7 +588,7 @@ const Wiki = {
       ['fibra', 'Strappa le erbacce. Con 5 fibre fai 2 concimi, con 3 fibre il fieno.'],
       ['fieno', "Banco (3 fibre) o Elio (15). Il cibo d'inverno degli animali; il silos lo conserva."],
       ['ferro', 'Miniera, a tutti i piani. Teo lo vende a 35.'],
-      ['lingotto', 'Fornace: 5 ferro → 1 lingotto in un giorno. Teo lo vende a 85.'],
+      ['lingotto', 'Fornace: 5 ferro + 1 legna → 1 lingotto in un’ora e mezza. Teo lo vende a 85.'],
       ['farina', 'Mulino: grano, mais, patate o castagne.']
     ]
       .map(([k, d]) => `<tr><td>${ic(k)}</td><td><b>${esc(nm(k))}</b></td><td>${esc(d)}</td></tr>`)
@@ -631,9 +631,9 @@ const Wiki = {
       .join('')}
     <h3>Le macchine</h3>
     <table><tr><th></th><th>Macchina</th><th>Cosa fa</th></tr>
-    <tr><td>${ic('fornace')}</td><td><b>Fornace</b></td><td>5 ferro → 1 lingotto, in un giorno.</td></tr>
-    <tr><td>${ic('barattolo')}</td><td><b>Barattolo</b></td><td>Qualsiasi raccolto, frutto o selvatico → <b>conserva</b> in un giorno. Vale di più del raccolto crudo.</td></tr>
-    <tr><td>${ic('botte')}</td><td><b>Botte</b></td><td>Frutta e bacche → <b>succo</b> in tre giorni: ${D.JUICY.map(x => it(x)).join(' ')}</td></tr>
+    <tr><td>${ic('fornace')}</td><td><b>Fornace</b></td><td>5 ferro + 1 legna → 1 lingotto, in un'ora e mezza.</td></tr>
+    <tr><td>${ic('barattolo')}</td><td><b>Barattolo</b></td><td>Qualsiasi raccolto, frutto o selvatico → <b>conserva</b> in tre ore. Vale di più del raccolto crudo.</td></tr>
+    <tr><td>${ic('botte')}</td><td><b>Botte</b></td><td>Frutta e bacche → <b>succo</b> in otto ore: ${D.JUICY.map(x => it(x)).join(' ')}</td></tr>
     <tr><td>${ic('apiario')}</td><td><b>Apiario</b></td><td>Miele ogni tre giorni (non d'inverno).</td></tr>
     <tr><td>${ic('mulino')}</td><td><b>Mulino</b></td><td>Farina (vedi <i>Ricette</i>). Livelli: ${esc(D.FUNC.mulino.lv.join(' → '))}.</td></tr>
     <tr><td>${ic('serra')}</td><td><b>Serra</b></td><td>Le piante intorno non seccano al cambio di stagione. Raggio: ${esc(D.FUNC.serra.lv.join(' → '))}.</td></tr>

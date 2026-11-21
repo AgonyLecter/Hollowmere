@@ -1043,7 +1043,8 @@ async function finale() {
 }
 // ---------- tempo ----------
 function clock(dt) {
-  if (G.cut || UI.busy()) return;
+  // con la schermata di una macchina aperta il tempo scorre (si vede la freccia che si riempie)
+  if (G.cut || (UI.busy() && !(G.macGui && UI.modalOpen && !UI.dlgOpen))) return;
   G.clockAcc += dt / (festaLive() ? 2.2 : 1);
   while (G.clockAcc >= SEC_PER_MIN) {
     G.clockAcc -= SEC_PER_MIN;
@@ -1172,7 +1173,7 @@ function update(dt) {
     }
     if (!G.cut && !UI.dlgOpen) updateHorse(dt);
     clock(dt);
-  }
+  } else if (G.macGui) clock(dt);
   updParts(dt);
   updPrints(dt);
   if (G.map) updateCam(dt);
