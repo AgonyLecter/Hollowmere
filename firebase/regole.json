@@ -122,7 +122,7 @@
             "ts"
           ],
           "$id": {
-            ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + newData.child('pid').val() + '/uid').val() === auth.uid) || (!newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid))",
+            ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + newData.child('pid').val() + '/uid').val() === auth.uid && newData.child('ts').val() >= now - 120000 && newData.child('ts').val() <= now + 120000 && newData.parent().parent().child('ultimo').child(newData.child('pid').val()).val() === newData.child('ts').val()) || (data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid && newData.child('pid').val() === data.child('pid').val() && newData.child('ts').val() === data.child('ts').val() && newData.child('s').val() === data.child('s').val()) || (!newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid))",
             ".validate": "!newData.exists() || (newData.hasChildren(['pid','n','ts']) && newData.child('n').isString() && newData.child('n').val().length <= 20 && newData.child('ts').isNumber() && (!newData.child('v').exists() || (newData.child('v').isString() && newData.child('v').val().length <= 30)) && (!newData.child('t').exists() || (newData.child('t').isString() && newData.child('t').val().length <= 240)) && !newData.child('f').exists() && (!newData.child('s').exists() || (newData.child('s').isString() && newData.child('s').val().length <= 20000 && newData.child('s').val().beginsWith('{') && !newData.child('s').val().contains('data:') && !newData.child('s').val().contains('http'))) && (newData.child('t').exists() || newData.child('s').exists()))"
           }
         },
@@ -140,6 +140,12 @@
               ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('hollowmere/proprietari/' + newData.child('pid').val() + '/uid').val() === auth.uid) || (!newData.exists() && root.child('hollowmere/proprietari/' + data.child('pid').val() + '/uid').val() === auth.uid))",
               ".validate": "!newData.exists() || (newData.hasChildren(['pid','n','t','ts']) && newData.child('t').isString() && newData.child('t').val().length <= 140 && newData.child('n').isString() && newData.child('n').val().length <= 20)"
             }
+          }
+        },
+        "ultimo": {
+          "$pid": {
+            ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
+            ".validate": "newData.isNumber() && newData.val() >= now - 120000 && newData.val() <= now + 120000 && (!data.exists() || newData.val() >= data.val() + 72000000)"
           }
         }
       }
