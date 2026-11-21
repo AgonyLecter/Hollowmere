@@ -308,6 +308,21 @@ module.exports = async function (t, { browser }) {
       return ok;
     })
   );
+  // in miniera si mangia (il pane regalato serviva proprio lì)
+  t.true(
+    'in miniera si mangia',
+    await page.evaluate(async () => {
+      await mineGo(2);
+      const st = G.st;
+      st.energy = 30;
+      addItem('pane', 1);
+      st.sel = st.inv.findIndex(x => x && x.id === 'pane');
+      doAction();
+      const ok = st.energy > 30 && G.map.id === 'miniera';
+      mineLeave && mineLeave();
+      return ok;
+    })
+  );
   t.eq('gazzetta: nessun errore', errors.join('\n'), '');
   await page.close();
 };

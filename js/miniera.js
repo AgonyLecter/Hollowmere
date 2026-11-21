@@ -366,6 +366,14 @@ function mineAct(fx, fy) {
     id = it && it.id,
     o = m.objAt(fx, fy),
     p = G.player;
+  // con un piatto in mano si mangia, anche in miniera (prima ogni azione finiva sulle rocce)
+  if (
+    id &&
+    ITEMS[id] &&
+    ITEMS[id].t === 'food' &&
+    !(o && (o.act === 'scalasu' || o.act === 'scalagiu' || o.act === 'mchest'))
+  )
+    return eatSel();
   // un colpo a un'Ombra davanti
   if (id && ['piccone', 'accetta', 'pala', 'hoe'].includes(id)) {
     const ax = p.x + DIRV[p.dir][0] * 14,

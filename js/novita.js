@@ -169,7 +169,7 @@ const NOVITA = [
         t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: avvicinati e cerca lo spiffero d’aria fredda che sale dalle crepe. Al primo colpo di piccone, quella pietra suona vuota.'
       },
       {
-        t: 'Adesso si può mangiare anche quando sei ospite nel villaggio di un amico. E gli avvisi uguali non si accumulano più sullo schermo.'
+        t: 'Adesso si può mangiare anche in miniera e quando sei ospite nel villaggio di un amico. E gli avvisi uguali non si accumulano più sullo schermo.'
       },
       {
         t: 'Nella Gazzetta Pennino porta un biglietto al giorno: il tuo puoi correggerlo (✏️ Modifica) o toglierlo (🗑 Togli) quando vuoi.'
