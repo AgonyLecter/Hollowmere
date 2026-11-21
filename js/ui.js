@@ -439,7 +439,7 @@ const UI = {
   pause(tab = 'diario') {
     if (G.mode !== 'game' || G.cut || this.dlgOpen) return;
     const st = G.st;
-    const tabs = `<div class="tabs">${[['diario', 'Diario'], ['rich', 'Richieste'], ['amici', 'Abitanti'], ...(isFree(st) ? [['abil', 'Abilità']] : []), ['lore', 'Lore'], ['opz', 'Opzioni'], ['save', 'Salvataggio']].map(([k, n]) => `<button class="btn ${k === tab ? 'on' : ''}" data-t="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[['diario', 'Diario'], ['rich', 'Richieste'], ['amici', 'Abitanti'], ...(isFree(st) ? [['abil', 'Abilità']] : []), ['lore', 'Lore'], ['wiki', 'Wiki'], ['opz', 'Opzioni'], ['save', 'Salvataggio']].map(([k, n]) => `<button class="btn ${k === tab ? 'on' : ''}" data-t="${k}">${n}</button>`).join('')}</div>`;
     let body = '';
     if (tab === 'diario') {
       const qs = activeQuests();
@@ -488,6 +488,10 @@ const UI = {
           (b.onclick = () => {
             AU.play('ui');
             this._mclose = null;
+            if (b.dataset.t === 'wiki') {
+              this.close();
+              return Wiki.apri();
+            }
             this.pause(b.dataset.t);
           })
       );

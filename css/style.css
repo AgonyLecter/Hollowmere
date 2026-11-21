@@ -215,3 +215,10 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #mbox canvas.mini{width:calc(10*var(--u));height:calc(10*var(--u));vertical-align:middle;image-rendering:pixelated;margin-right:2px}
 #bRich.pronta{box-shadow:0 0 0 2px #8ad04a inset;animation:richPulse 1.6s ease-in-out infinite}
 @keyframes richPulse{50%{filter:brightness(1.25)}}
+
+/* la wiki del gioco (js/wiki.js) */
+#wiki{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:#160c08;pointer-events:auto}
+#wiki .wbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:6px 10px;background:#2a1810;color:#f6d070;font-family:Georgia,serif;font-size:15px}
+#wiki .wbar span{display:flex;flex-wrap:wrap;gap:6px}
+#wiki .wbar .btn{font-size:13px;padding:4px 10px}
+#wiki iframe{flex:1;width:100%;border:0;background:#fbf6ea}
