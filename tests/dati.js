@@ -164,6 +164,16 @@ module.exports = async function (t, { browser }) {
         .flat()
         .filter(k => !FREEIMG['w_' + k])
     );
+    bad(
+      'novità del postino con id doppio o senza testo',
+      GUIDES.filter(
+        (g, i, a) => a.findIndex(x => x.id === g.id) !== i || !g.steps || !g.steps.length || !g.n
+      ).map(g => g.id)
+    );
+    bad(
+      'la wiki annunciata dal postino (deve restare segreta)',
+      GUIDES.filter(g => /wiki/i.test(JSON.stringify(g.steps.map(s => s.t)) + g.n)).map(g => g.id)
+    );
     // la wiki (js/wiki.js) si costruisce dai dati: ogni oggetto, ricetta e abitante deve comparirci
     try {
       const w = Wiki.pagina({ spoiler: true }).replace(/&#39;/g, "'").replace(/&amp;/g, '&');

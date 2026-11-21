@@ -64,7 +64,9 @@ const MP = {
     } catch (e) {}
     const off = D.onValue(NET.r('presenza/' + village), s => cb(s.val() || {}));
     return {
+      // send: tutto (nome, aspetto…) · move: solo la posizione (update, pochi byte: si usa mentre cammini)
       send: v => D.set(mine, v).catch(() => {}),
+      move: v => D.update(mine, v).catch(() => {}),
       stop: () => {
         try {
           off && off();
@@ -95,6 +97,8 @@ G.others = {};
 let PRES = null,
   PRES_V = null,
   PRES_T = 0,
+  PRES_FULL = 0,
+  PRES_LAST = null,
   CHAT_OFF = null,
   INBOX_OFF = null;
 async function presenceJoin(village) {
@@ -104,18 +108,29 @@ async function presenceJoin(village) {
   if (!MP.ok() || !me) return;
   if (NET.own) await NET.own(me);
   PRES_V = village;
+  PRES_FULL = 0;
+  PRES_LAST = null;
   G.others = {};
   PRES = MP.presence(village, me, all => {
     const now = performance.now();
     for (const pid in all) {
       if (pid === me) continue;
       const v = all[pid],
-        o = G.others[pid] || (G.others[pid] = { x: v.x, y: v.y, anim: 0 });
+        o =
+          G.others[pid] ||
+          (G.others[pid] = { x: v.x, y: v.y, anim: 0, bx: v.x, by: v.y, vx: 0, vy: 0, rt: now });
+      // la callback arriva quando cambia chiunque: si riparte dalla posizione ricevuta solo se è cambiata davvero
+      if (v.ts !== o.lts || v.x !== o.bx || v.y !== o.by) {
+        o.lts = v.ts;
+        o.bx = v.x;
+        o.by = v.y;
+        o.vx = v.mv ? +v.vx || 0 : 0;
+        o.vy = v.mv ? +v.vy || 0 : 0;
+        o.rt = now;
+      }
       Object.assign(o, {
-        name: v.name,
-        g: v.g,
-        tx: v.x,
-        ty: v.y,
+        name: v.name || o.name,
+        g: v.g || o.g,
         dir: v.dir | 0,
         moving: !!v.mv,
         map: v.map,
@@ -146,19 +161,33 @@ function mpTickBase(dt) {
   if (!PRES || G.mode !== 'game') return;
   const p = G.player,
     st = G.st;
+  // la tua posizione: spesso mentre cammini (solo posizione e velocità), subito quando parti, ti fermi o giri;
+  // tutto il resto (nome, aspetto) ogni 4 secondi
   PRES_T -= dt;
-  if (PRES_T <= 0) {
-    PRES_T = p.moving ? 0.25 : 3;
-    PRES.send({
-      name: (G.visit ? G.home : st).name,
-      g: (G.visit ? G.home : st).g,
-      x: Math.round(p.x),
-      y: Math.round(p.y),
-      dir: p.dir,
-      mv: p.moving ? 1 : 0,
-      map: G.map.id,
-      ts: Date.now()
-    });
+  PRES_FULL -= dt;
+  const L = PRES_LAST,
+    x = Math.round(p.x),
+    y = Math.round(p.y),
+    mv = p.moving ? 1 : 0,
+    svolta = !L || L.mv !== mv || L.dir !== p.dir || L.map !== G.map.id;
+  if (PRES_FULL <= 0 || svolta || (PRES_T <= 0 && mv && (x !== L.x || y !== L.y))) {
+    const dtS = L ? Math.max(0.05, (performance.now() - L.t) / 1000) : 1,
+      v = {
+        x,
+        y,
+        vx: mv && L ? Math.round((x - L.x) / dtS) : 0,
+        vy: mv && L ? Math.round((y - L.y) / dtS) : 0,
+        dir: p.dir,
+        mv,
+        map: G.map.id,
+        ts: Date.now()
+      };
+    if (PRES_FULL <= 0 || !L || !PRES.move) {
+      PRES_FULL = 4;
+      PRES.send(Object.assign({ name: (G.visit ? G.home : st).name, g: (G.visit ? G.home : st).g }, v));
+    } else PRES.move(v);
+    PRES_LAST = { x, y, mv, dir: p.dir, map: G.map.id, t: performance.now() };
+    PRES_T = 0.12;
   }
   const now = performance.now();
   for (const pid in G.others) {
@@ -167,14 +196,19 @@ function mpTickBase(dt) {
       delete G.others[pid];
       continue;
     }
+    // dove dovrebbe essere adesso: l'ultima posizione ricevuta più il pezzo di strada fatto da allora
+    // + un decimo di secondo: il tempo che il dato ha impiegato ad arrivare (mentre cammina)
+    const age = Math.min(0.45, (now - (o.rt || now)) / 1000 + (o.moving ? 0.1 : 0));
+    o.tx = (o.bx ?? o.x) + (o.vx || 0) * age;
+    o.ty = (o.by ?? o.y) + (o.vy || 0) * age;
     const dx = o.tx - o.x,
       dy = o.ty - o.y,
       d = Math.hypot(dx, dy);
-    if (d > 120) {
+    if (d > 160) {
       o.x = o.tx;
       o.y = o.ty;
-    } else if (d > 0.5) {
-      const k = Math.min(1, dt * 8);
+    } else if (d > 0.3) {
+      const k = Math.min(1, dt * 12);
       o.x += dx * k;
       o.y += dy * k;
     }

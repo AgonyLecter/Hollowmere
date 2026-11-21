@@ -271,12 +271,15 @@ function ownerBroadcast(dt) {
       }
     });
     if (!h) return h;
-    const send = h.send;
-    h.send = v => {
-      const st = G.st;
-      if (!G.visit && isFree(st) && village === st.pid) Object.assign(v, { ht: st.time, hd: st.day });
-      return send(v);
-    };
+    const send = h.send,
+      move = h.move,
+      ora = v => {
+        const st = G.st;
+        if (!G.visit && isFree(st) && village === st.pid) Object.assign(v, { ht: st.time, hd: st.day });
+        return v;
+      };
+    h.send = v => send(ora(v));
+    if (move) h.move = v => move(ora(v));
     return h;
   };
 }
@@ -295,8 +298,8 @@ function hostClock() {
       try {
         c = await ask(
           null,
-          `${v.name} è andat${'a'} a dormire: da lei è cominciato un nuovo giorno. Resti nel suo villaggio o torni a casa?`,
-          ['Resto da lei', 'Torno a casa']
+          `${v.name} è andat${h.g === 'f' ? 'a' : 'o'} a dormire: da ${h.g === 'f' ? 'lei' : 'lui'} è cominciato un nuovo giorno. Resti nel suo villaggio o torni a casa?`,
+          [h.g === 'f' ? 'Resto da lei' : 'Resto da lui', 'Torno a casa']
         );
       } finally {
         G.cut--;

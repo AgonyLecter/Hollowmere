@@ -45,8 +45,11 @@ const isEmojiOnly = t => /^[\p{Extended_Pictographic}‍️\s]{1,8}$/u.test(t);
       }
     });
     if (!h) return h;
-    const send = h.send;
-    h.send = v => send(Object.assign(v, { wr: CHAT.typingT > performance.now() ? 1 : 0 }));
+    const send = h.send,
+      move = h.move,
+      wr = v => Object.assign(v, { wr: CHAT.typingT > performance.now() ? 1 : 0 });
+    h.send = v => send(wr(v));
+    if (move) h.move = v => move(wr(v));
     return h;
   };
 }
