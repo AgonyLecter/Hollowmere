@@ -2,7 +2,7 @@
 // ================= LA WIKI DEL GIOCO =================
 // La wiki si costruisce dal vivo con gli stessi dati del gioco (ITEMS, CROPS, COOK, CRAFTS, ANIMALS, RES_POOL,
 // SECRETS, EGGS…): ogni oggetto, ricetta, coltura, animale o abitante aggiunto compare da solo, con la sua icona.
-// Si apre dal titolo («Wiki della Valle») e dal menu di pausa (scheda «Wiki»); «Salva PDF» la stampa.
+// È privata: si apre solo con la chiave nell'indirizzo (vedi in fondo); «Salva PDF» la stampa.
 // Per arricchirla scrivendo solo i dati: «dove:» negli easter egg (EGGS, EGG_EXTRA) dice dove si trovano.
 const Wiki = {
   // i dati del gioco, nella forma che usa la pagina
@@ -80,6 +80,11 @@ const Wiki = {
       D.animalImg[k] = D.big[k] || (k === 'gallina' ? D.crit.chicken : null) || D.icons[ANIMALS[k].prod];
     D.COLL_L = Object.fromEntries(Object.entries(COLL).map(([k, v]) => [v.n || k, v.l()]));
     D.ore = [5, 15, 30, 45].map(f => oreTable(f));
+    D.FAUNA = typeof FAUNA !== 'undefined' ? FAUNA : {};
+    D.faunaIc = {};
+    for (const k of Object.keys(D.FAUNA))
+      D.faunaIc[k] = typeof FAUNA_IMG !== 'undefined' && FAUNA_IMG[k] ? url(FAUNA_IMG[k].icona) : null;
+    D.SKILLS = SKILLS;
     // personaggi che non sono né del villaggio né abitanti nuovi: compaiono in «Altri personaggi»
     const noti = new Set([
       'ezekiel',
@@ -516,6 +521,17 @@ const Wiki = {
           `<tr><td>${ic(k)}</td><td><b>${esc(nm(k))}</b></td><td>${(fishInfo[k] || []).join('<br>')}</td><td>${sc(I[k].v)}</td></tr>`
       )
       .join('')}</table>
+    ${
+      Object.keys(D.FAUNA).length
+        ? `<h3>Animali selvatici</h3><p>Non si cacciano: si osservano. Avvicinandoti a uno nuovo finisce nel <b>Taccuino del naturalista</b> (menu di pausa), con premi a 4, 8, 12 animali e a taccuino completo.</p>
+    <table><tr><th></th><th>Animale</th><th>Quando e dove</th><th>Com'è</th></tr>${Object.entries(D.FAUNA)
+      .map(
+        ([k, F]) =>
+          `<tr><td>${big(D.faunaIc[k], 26)}</td><td><b>${esc(F.n)}</b>${F.raro ? ' <span class="small">(raro)</span>' : ''}</td><td class="small">${esc(F.dove2)}${F.meteo ? ' · con la ' + esc(F.meteo) : ''} · ${F.h.map(([a, b]) => `${Math.floor(a)}:${a % 1 ? '30' : '00'}–${Math.floor(b) % 24}:${b % 1 ? '30' : '00'}`).join(', ')}</td><td>${esc(F.d)}</td></tr>`
+      )
+      .join('')}</table>`
+        : ''
+    }
     <h3>Animali liberi</h3>
     <div class="crit">${[
       ['chicken', 'Galline del villaggio', 'razzolano vicino alla piazza'],
@@ -534,7 +550,7 @@ const Wiki = {
 
     // ---------------- 9. Ricette ----------------
     const recRow = r =>
-      `<tr><td>${ic(r.id, 28)}</td><td><b>${esc(nm(r.id))}</b>${r.adv ? ' <span class="adv">♨ forno</span>' : ''}<br><span class="small">${esc((I[r.id].d || '').replace(/\s*\+\d+ energia\.?/, ''))}</span></td><td>${list(r.need)}</td><td>+${I[r.id].e}</td><td>${r.min}'</td><td class="small">${r.da ? who(r.da) + (r.da === 'ottavio' ? ' (300)' : '') : D.BASE_RECIPES.includes(r.id) ? 'si sa già' : 'si sa già'}</td></tr>`;
+      `<tr><td>${ic(r.id, 28)}</td><td><b>${esc(nm(r.id))}</b>${r.adv ? ' <span class="adv">♨ forno</span>' : ''}<br><span class="small">${esc((I[r.id].d || '').replace(/\s*\+\d+ energia\.?/, ''))}</span></td><td>${list(r.need)}</td><td>+${I[r.id].e}</td><td>${r.min}'</td><td class="small">${r.da ? who(r.da) + (r.da === 'ottavio' ? ' (300)' : '') : r.scopri ? 'da sé, quando hai avuto tutti gli ingredienti' : r.abil ? esc(D.SKILLS[r.abil[0]].n) + ' liv. ' + r.abil[1] : 'si sa già'}${r.b ? ' · <b>effetto</b>' : ''}</td></tr>`;
     sez(
       'ricette',
       'Ricette',
@@ -963,4 +979,59 @@ const Wiki = {
     };
   }
 };
-if (typeof TITLE !== 'undefined') TITLE.wiki = () => Wiki.apri();
+// La wiki è privata: non c'è nessun pulsante. Si apre solo con la chiave nell'indirizzo, per esempio
+// https://…/index.html#wiki=LA-CHIAVE (nel codice c'è solo l'impronta SHA-256 della chiave, non la chiave).
+const WIKI_CHIAVE = 'edeee7d4d7fdcbbcd031d147e80496057c73c66d42ff1ff9e9f7914db57a7f7f';
+// SHA-256 piccolo (funziona anche dove il browser non offre crypto.subtle)
+function wikiSha256(str) {
+  const b = [...new TextEncoder().encode(str)],
+    K = [],
+    H = [];
+  const pr = n => {
+    for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+    return true;
+  };
+  for (let n = 2, k = 0; k < 64; n++)
+    if (pr(n)) {
+      if (k < 8) H[k] = (Math.pow(n, 1 / 2) * 2 ** 32) | 0;
+      K[k++] = (Math.pow(n, 1 / 3) * 2 ** 32) | 0;
+    }
+  const L = b.length * 8;
+  b.push(0x80);
+  while (b.length % 64 !== 56) b.push(0);
+  for (let i = 7; i >= 0; i--) b.push(i > 3 ? 0 : (L >>> (i * 8)) & 255);
+  const r = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let o = 0; o < b.length; o += 64) {
+    const w = [];
+    for (let i = 0; i < 16; i++)
+      w[i] = (b[o + i * 4] << 24) | (b[o + i * 4 + 1] << 16) | (b[o + i * 4 + 2] << 8) | b[o + i * 4 + 3];
+    for (let i = 16; i < 64; i++) {
+      const s0 = r(w[i - 15], 7) ^ r(w[i - 15], 18) ^ (w[i - 15] >>> 3),
+        s1 = r(w[i - 2], 17) ^ r(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0,
+        t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+      [h, g, f, e, d, c, bb, a] = [g, f, e, (d + t1) | 0, c, bb, a, (t1 + t2) | 0];
+    }
+    [a, bb, c, d, e, f, g, h].forEach((v, i) => (H[i] = (H[i] + v) | 0));
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+}
+async function wikiDaIndirizzo() {
+  const m = /^#wiki=(.+)$/.exec(location.hash);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (wikiSha256(decodeURIComponent(m[1])) !== WIKI_CHIAVE) return;
+  for (
+    let i = 0;
+    i < 100 && !(typeof ICON !== 'undefined' && ICON.hoe && typeof G !== 'undefined' && G.mode);
+    i++
+  )
+    await new Promise(r => setTimeout(r, 100));
+  Wiki.apri();
+}
+addEventListener('hashchange', wikiDaIndirizzo);
+wikiDaIndirizzo();

@@ -132,6 +132,11 @@ function countItem(id) {
   return G.st.inv.reduce((a, s) => a + (s && s.id === id ? s.n : 0), 0);
 }
 function addItem(id, n = 1) {
+  const ok = addItemBase(id, n);
+  if (ok) Ext.run('ottieni', id, n); // punto di estensione: qualcosa è entrato nello zaino
+  return ok;
+}
+function addItemBase(id, n = 1) {
   const inv = G.st.inv;
   let s = inv.find(s => s && s.id === id);
   if (s) {
@@ -200,6 +205,7 @@ function useEnergy(n) {
     UI.toast('Sei esaust{o|a}. Vai a dormire.', 'bad');
     return false;
   }
+  if (typeof buffOn === 'function' && buffOn('fatica')) n = Math.ceil(n / 2);
   st.energy = Math.max(0, st.energy - n);
   return true;
 }

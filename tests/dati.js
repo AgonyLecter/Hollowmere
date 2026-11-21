@@ -145,6 +145,25 @@ module.exports = async function (t, { browser }) {
       'ricette che usano un ingrediente detestato da chi le insegna',
       COOK.filter(r => r.da && (DISLIKES[r.da] || []).some(x => r.need[x])).map(r => r.da + ':' + r.id)
     );
+    // natura: macchine animate, animali disegnati, ricette che si possono imparare
+    bad(
+      'macchine nuove senza animazione',
+      Object.keys(NAT_MACH).filter(k => !NAT_MF[k] || NAT_MF[k].work.length < 2 || !MACH[k])
+    );
+    bad(
+      'animali selvatici senza disegni',
+      Object.keys(FAUNA).filter(k => !FAUNA_IMG[k] || !FAUNA_IMG[k].icona)
+    );
+    bad(
+      'ricette che non si imparano in nessun modo',
+      COOK.filter(r => !BASE_RECIPES.includes(r.id) && !r.da && !r.scopri && !r.abil).map(r => r.id)
+    );
+    bad(
+      'selvatici senza disegno nel prato',
+      Object.values(WILD)
+        .flat()
+        .filter(k => !FREEIMG['w_' + k])
+    );
     // la wiki (js/wiki.js) si costruisce dai dati: ogni oggetto, ricetta e abitante deve comparirci
     try {
       const w = Wiki.pagina({ spoiler: true }).replace(/&#39;/g, "'").replace(/&amp;/g, '&');

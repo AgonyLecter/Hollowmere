@@ -519,7 +519,7 @@ function recipeBook() {
           ? `<p class="small"><b>${r.adv ? '♨ ' : ''}${ITEMS[r.id].n}</b> — ${Object.entries(r.need)
               .map(([k, v]) => v + ' ' + ITEMS[k].n.toLowerCase())
               .join(', ')}</p>`
-          : `<p class="small" style="opacity:.6">✦ ??? — la insegna ${who(r.da)}${r.da === 'ottavio' ? ' (la vende)' : ', quando sarete amici'}.</p>`
+          : `<p class="small" style="opacity:.6">✦ ??? — ${typeof natComeSiImpara === 'function' ? natComeSiImpara(r) : 'la insegna ' + who(r.da)}.</p>`
       ).join('')
   );
   const h = $('#mbox h2');

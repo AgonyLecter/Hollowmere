@@ -439,7 +439,22 @@ const UI = {
   pause(tab = 'diario') {
     if (G.mode !== 'game' || G.cut || this.dlgOpen) return;
     const st = G.st;
-    const tabs = `<div class="tabs">${[['diario', 'Diario'], ['rich', 'Richieste'], ['amici', 'Abitanti'], ...(isFree(st) ? [['abil', 'Abilità']] : []), ['lore', 'Lore'], ['wiki', 'Wiki'], ['opz', 'Opzioni'], ['save', 'Salvataggio']].map(([k, n]) => `<button class="btn ${k === tab ? 'on' : ''}" data-t="${k}">${n}</button>`).join('')}</div>`;
+    const tabs = `<div class="tabs">${[
+      ['diario', 'Diario'],
+      ['rich', 'Richieste'],
+      ['amici', 'Abitanti'],
+      ...(isFree(st)
+        ? [
+            ['abil', 'Abilità'],
+            ['tacc', 'Taccuino']
+          ]
+        : []),
+      ['lore', 'Lore'],
+      ['opz', 'Opzioni'],
+      ['save', 'Salvataggio']
+    ]
+      .map(([k, n]) => `<button class="btn ${k === tab ? 'on' : ''}" data-t="${k}">${n}</button>`)
+      .join('')}</div>`;
     let body = '';
     if (tab === 'diario') {
       const qs = activeQuests();
@@ -453,6 +468,7 @@ const UI = {
       body = `<h3>Obiettivi</h3>${qs.map(q => `<p>${q.d(st) ? '✓ <s>' : '• '}${esc(fmt(q.t(st)))}${q.d(st) ? '</s>' : ''}</p>`).join('') || '<p>Nessuno.</p>'}<h3>Oggetti chiave</h3><p>${keys.join(' · ') || '—'}</p><h3>Le Regole</h3><p class="small">I. Il rosso è il colore cattivo. II. Non oltrepassare il recinto giallo. III. Alla campana della sera, a casa. Non aprire a nessuno.</p><h3>Comandi</h3><p class="small">WASD/frecce: muoviti · E/Spazio/clic: usa e parla · 1–0/rotella: oggetto · Esc: menu · F: schermo intero</p>`;
     }
     if (tab === 'abil') body = skillsHTML();
+    if (tab === 'tacc') body = taccuinoHTML();
     if (tab === 'rich') body = Richieste.html(st);
     if (tab === 'amici' && isFree(st)) body = friendsHTML();
     else if (tab === 'amici')
@@ -488,10 +504,6 @@ const UI = {
           (b.onclick = () => {
             AU.play('ui');
             this._mclose = null;
-            if (b.dataset.t === 'wiki') {
-              this.close();
-              return Wiki.apri();
-            }
             this.pause(b.dataset.t);
           })
       );
@@ -503,6 +515,7 @@ const UI = {
         x.drawImage(portrait(c.dataset.p, ''), 0, 0);
       });
     if (tab === 'rich') Richieste.monta($('#mbox'));
+    if (tab === 'tacc') taccuinoMonta($('#mbox'));
     const vm = $('#vm'),
       vs = $('#vs');
     if (vm) {

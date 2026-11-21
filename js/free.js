@@ -660,7 +660,12 @@ function freeActBase(fx, fy) {
           uovo: ['uovo', 1]
         }[t];
     if (!addItem(got[0], got[1])) return true;
-    if (t.startsWith('w_') && skLv('racc') >= 8 && Math.random() < 0.3) addItem(got[0], 1);
+    if (
+      t.startsWith('w_') &&
+      (skLv('racc') >= 8 || (typeof buffOn === 'function' && buffOn('raccolta'))) &&
+      Math.random() < 0.3
+    )
+      addItem(got[0], 1);
     addXP('racc', t.startsWith('w_') ? 4 : 2);
     delete W2.debris[k];
     mapRemove(m, o);
