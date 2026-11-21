@@ -124,6 +124,46 @@ module.exports = async function (t, { browser, shot }) {
     'i lavori di prima diventano prodotti pronti',
     !vecchio.job && vecchio.o === 'succo_mela' && vecchio.on === 1
   );
+  // il mulino: stessa schermata, una macinata all'ora al livello 1, il pulsante per migliorarlo
+  const mulino = await page.evaluate(() => {
+    const st = G.st;
+    st.free.built['30,40'] = { id: 'mulino', job: { n: 4, ready: st.day + 1, t: st.time } };
+    const b = st.free.built['30,40'];
+    st.time = 9 * 60;
+    addItem('mais', 3);
+    macGui('30,40', b);
+    const vecchia = b.m.on;
+    document.querySelector('.mslot[data-m="o"]').click();
+    const Z = G.st.inv;
+    document
+      .querySelector(`#mbox .islot[data-w="z"][data-i="${Z.findIndex(s => s && s.id === 'mais')}"]`)
+      .click();
+    const liv = !!document.querySelector('#mbox [data-liv]');
+    st.time = 9 * 60 + 185;
+    macAggiorna();
+    const fatto = b.m.on;
+    UI.close();
+    return { vecchia, liv, fatto, farina: countItem('farina') };
+  });
+  t.eq('il mulino di prima: la farina che macinava è pronta', mulino.vecchia, 4);
+  t.eq('e si prende', mulino.farina, 4);
+  t.true('nella schermata del mulino c’è «Migliora»', mulino.liv);
+  t.eq('3 mais in tre ore: 6 farine', mulino.fatto, 6);
+  // l'apiario: la sua schermata con il miele pronto da prendere
+  const api = await page.evaluate(() => {
+    const st = G.st;
+    st.free.built['33,40'] = { id: 'apiario', ready: 1, n: 2, t: 0 };
+    const b = st.free.built['33,40'];
+    machineAct('33,40', b, { tx: 33, ty: 40 });
+    const apre = !!document.querySelector('#mbox .mac');
+    document.querySelector('.mac-out').click();
+    const testo = document.querySelector('.mac-info').textContent;
+    UI.close();
+    return { apre, miele: countItem('miele'), ready: b.ready, testo };
+  });
+  t.true('l’apiario ha la sua schermata', api.apre);
+  t.eq('toccando il miele si prende', api.miele, 2);
+  t.true('e la schermata dice quando arriva il prossimo', /prossimo miele/.test(api.testo));
   t.eq('macchine: nessun errore', errors.join('\n'), '');
   await page.close();
 };

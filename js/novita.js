@@ -220,6 +220,22 @@ const NOVITA = [
         t: 'Quello che avevi già messo nelle macchine ti aspetta, pronto, nello spazio a destra. E una macchina con qualcosa dentro non si smonta più per sbaglio.'
       }
     ]
+  },
+  {
+    id: 'mulino_museo_mira',
+    v: 32,
+    n: 'Mulino, apiario, museo nuovo',
+    steps: [
+      {
+        t: 'Anche il <b>mulino</b> e l’<b>apiario</b> hanno la loro schermata. Nel mulino metti grano, mais, orzo, patate o castagne e la farina esce a destra, una macinata all’ora (più svelto ai livelli alti: il pulsante «Migliora…» è in alto). Nell’apiario vedi quanti giorni mancano al miele e lo prendi con un tocco.'
+      },
+      {
+        t: 'Il <b>museo</b> è stato ricostruito: adesso è un vero tempietto con sei colonne, più grande delle case del paese. E il mulino è diventato una torre come si deve.'
+      },
+      {
+        t: 'Parlare è più facile: se accanto a una persona c’è un gatto, una gallina o un sasso, il tasto agisce su quello più vicino a dove guardi, e il fumetto sopra la testa te lo dice prima.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

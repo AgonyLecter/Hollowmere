@@ -407,60 +407,86 @@ function farmAct(tx, ty) {
   }
 }
 // ================= AZIONI =================
+// chi o cosa hai davanti: una persona, una bestia, il gatto o la casella (un sasso, un albero, un oggetto).
+// Vince il più vicino al punto in cui guardi, con un piccolo vantaggio alle persone: così un gatto o un sasso
+// accanto a qualcuno non ti impediscono di parlarci, e una persona accanto a un sasso non ti impedisce di romperlo.
+// La usano sia il tasto azione sia il fumetto sopra la testa, che quindi dicono sempre la stessa cosa.
+const AIM_TILE = ['debris', 'tree', 'pine', 'ceppo', 'log', 'rock', 'built', 'bush'];
+function aimScelta() {
+  const p = G.player,
+    m = G.map,
+    st = G.st;
+  if (!p || !m) return null;
+  const ax = p.x + DIRV[p.dir][0] * 14,
+    ay = p.y + DIRV[p.dir][1] * 14,
+    [fx, fy] = frontTile(),
+    C = [];
+  for (const n of G.npcs) {
+    if (n.hidden || n.map !== m.id) continue;
+    const [nx, ny] = ptile(n),
+      d = Math.hypot(n.x - ax, n.y - ay),
+      davanti = nx === fx && ny === fy;
+    if (d < 18 || davanti) C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
+  }
+  if (m.id === 'main' && isFree(st) && G.fanimals)
+    for (const e of G.fanimals) {
+      const d = Math.hypot(e.x - ax, e.y - ay);
+      if (d < 18) C.push({ k: 'animal', r: e, d });
+    }
+  if (m.id === 'main' && G.critters)
+    for (const c of G.critters) {
+      if (c.k !== 'cat' && c.k !== 'chicken') continue;
+      const d = Math.hypot(c.x - ax, c.y - ay);
+      if (d < 14) C.push({ k: 'critter', r: c, d: d + 2 });
+    }
+  const o = m.objAt(fx, fy),
+    f = m.id === 'main' && st.farm && st.farm[fx + ',' + fy];
+  if ((o && (o.act || AIM_TILE.includes(o.kind))) || (f && f.c))
+    C.push({ k: 'tile', d: Math.hypot(fx * 16 + 8 - ax, fy * 16 + 12 - ay) });
+  C.sort((a, b) => a.d - b.d);
+  return C[0] || null;
+}
+function critterAct(c) {
+  const p = G.player;
+  if (c.k === 'cat') {
+    c.st = 'sit';
+    c.t = 4;
+    AU.play('meow');
+    eggCat();
+    floatText('♥', c.x, c.y - 20, '#ff8a8a');
+    if (!G.st.flags.pettedToday) {
+      G.st.flags.pettedToday = 1;
+      addQuiete(2);
+    }
+    UI.toast(
+      [
+        'Fa le fusa. Ha un occhio giallo e uno… anche giallo.',
+        'Il gatto nero ti si struscia sulle gambe.',
+        'Miao. Sembra che ti conosca da sempre.'
+      ][(Math.random() * 3) | 0]
+    );
+  } else if (c.k === 'chicken') {
+    AU.play('cluck');
+    UI.toast('Coccodè! La gallina ti guarda storto.');
+    c.tx = c.x + (c.x - p.x) * 2;
+    c.ty = c.y + (c.y - p.y) * 2;
+    c.st = 'move';
+  }
+}
 function doAction() {
   const [fx, fy] = frontTile();
   const p = G.player;
   toolSwing();
-  // le bestie del tuo pollaio e della tua stalla prima delle galline selvatiche del paese
-  if (
-    G.map.id === 'main' &&
-    isFree(G.st) &&
-    typeof animalAct === 'function' &&
-    animalAct(p.x + DIRV[p.dir][0] * 14, p.y + DIRV[p.dir][1] * 14)
-  )
+  const sc = aimScelta();
+  if (sc && sc.k === 'npc') {
+    talkTo(sc.r);
     return;
-  if (G.map.id === 'main' && G.critters) {
-    const ax = p.x + DIRV[p.dir][0] * 14,
-      ay = p.y + DIRV[p.dir][1] * 14;
-    for (const c of G.critters) {
-      if (Math.hypot(c.x - ax, c.y - ay) > 14) continue;
-      if (c.k === 'cat') {
-        c.st = 'sit';
-        c.t = 4;
-        AU.play('meow');
-        eggCat();
-        floatText('♥', c.x, c.y - 20, '#ff8a8a');
-        if (!G.st.flags.pettedToday) {
-          G.st.flags.pettedToday = 1;
-          addQuiete(2);
-        }
-        UI.toast(
-          [
-            'Fa le fusa. Ha un occhio giallo e uno… anche giallo.',
-            'Il gatto nero ti si struscia sulle gambe.',
-            'Miao. Sembra che ti conosca da sempre.'
-          ][(Math.random() * 3) | 0]
-        );
-        return;
-      }
-      if (c.k === 'chicken') {
-        AU.play('cluck');
-        UI.toast('Coccodè! La gallina ti guarda storto.');
-        c.tx = c.x + (c.x - p.x) * 2;
-        c.ty = c.y + (c.y - p.y) * 2;
-        c.st = 'move';
-        return;
-      }
-    }
   }
-  for (const n of G.npcs) {
-    if (n.hidden || n.map !== G.map.id) continue;
-    const [nx, ny] = ptile(n);
-    const near = Math.hypot(n.x - (p.x + DIRV[p.dir][0] * 14), n.y - (p.y + DIRV[p.dir][1] * 14)) < 14;
-    if ((nx === fx && ny === fy) || near) {
-      talkTo(n);
-      return;
-    }
+  // le bestie del tuo pollaio e della tua stalla prima delle galline selvatiche del paese
+  if (sc && sc.k === 'animal' && typeof animalAct === 'function' && animalAct(sc.r.x, sc.r.y)) return;
+  if (sc && sc.k === 'critter') {
+    critterAct(sc.r);
+    return;
   }
   if (houseAct(fx, fy)) return;
   if (freeAct(fx, fy)) return;

@@ -549,7 +549,7 @@ Object.assign(BIG_BUILT, { serra: 40, mulino: 35, silos: 25, pozzogrande: 22 });
 const FUNC = {
   serra: { lv: ['raggio 2 intorno', 'raggio 3', 'raggio 4'], r: lv => 1 + lv },
   mulino: {
-    lv: ['10 per volta', '25 per volta', '60 per volta, pronto in giornata'],
+    lv: ['una macinata ogni ora', 'una ogni mezz’ora', 'una ogni quarto d’ora'],
     cap: lv => [10, 25, 60][lv - 1]
   },
   silos: { lv: ['60 fieno', '150 fieno', '400 fieno'], cap: lv => [60, 150, 400][lv - 1] },
@@ -581,6 +581,24 @@ function inSerra(x, y, st) {
   return false;
 }
 const MILL = { mais: [1, 2], patata: [2, 1], castagne: [1, 1] }; // [quanti ne servono, quanta farina danno]
+// il mulino è una macchina come la fornace (macchine.js): macina una porzione alla volta, più svelto ai livelli alti
+MACH.mulino = {
+  ok: id => !!MILL[id],
+  need: id => MILL[id][0],
+  n: id => MILL[id][1],
+  out: () => 'farina',
+  vuole: 'mais',
+  aiuto: 'Il mulino macina grano, mais, orzo, patate e castagne.',
+  preso() {
+    const st = G.st;
+    if (!knows(st, 'panecasa')) {
+      st.free.recipes = st.free.recipes || {};
+      st.free.recipes.panecasa = 1;
+      UI.toast('Hai imparato: Pane fatto in casa.');
+    }
+  }
+};
+MAC_MIN.mulino = b => [60, 30, 15][(b.lv || 1) - 1];
 function funcMenu(k) {
   const st = G.st,
     b = st.free.built[k];
@@ -590,24 +608,8 @@ function funcMenu(k) {
     up = FUNC_UP[lv + 1];
   const canUp = up && st.money >= up.money && Object.entries(up.c).every(([i, n]) => countItem(i) >= n);
   let body = '';
-  if (b.id === 'mulino') {
-    const cap = F.cap(lv);
-    if (b.job) {
-      const ready = st.day >= b.job.ready || (lv >= 3 && st.time >= b.job.t + 180);
-      body = ready
-        ? `<p>Il sacco è pieno: <b>${b.job.n} farina</b>.</p><p><button class="btn" data-mill="take">Prendi la farina</button></p>`
-        : `<p>Sta macinando ${b.job.n} farina. ${lv >= 3 ? 'Pronta tra qualche ora.' : 'Pronta domattina.'}</p>`;
-    } else
-      body =
-        `<p class="small">Fino a ${cap} per volta.</p>` +
-        Object.entries(MILL)
-          .map(([c, [need, out]]) => {
-            const have = countItem(c),
-              q = Math.min(cap, Math.floor(have / need));
-            return `<div class="mrow"><canvas data-i="${c}" width="32" height="32"></canvas><span>${ITEMS[c].n} <span class="small">(${have})</span><br><span class="small">${need} → ${out} farina</span></span><button class="btn" data-mill="${c}" ${q ? '' : 'disabled'}>Macina ${q * need}</button></div>`;
-          })
-          .join('');
-  }
+  if (b.id === 'mulino')
+    body = `<p class="small">Adesso: ${F.lv[lv - 1]}.</p><p><button class="btn" data-mac="1">← Torna alla macina</button></p>`;
   if (b.id === 'silos') {
     const cap = F.cap(lv),
       h = countItem('fieno');
@@ -638,6 +640,14 @@ function funcMenu(k) {
     UI._mclose = null;
     funcMenu(k);
   };
+  {
+    const t = box.querySelector('[data-mac]');
+    if (t)
+      t.onclick = () => {
+        UI._mclose = null;
+        macGui(k, b);
+      };
+  }
   box.querySelectorAll('[data-mill]').forEach(
     x =>
       (x.onclick = () => {
@@ -706,7 +716,8 @@ function funcMenu(k) {
         st.free.built[o.bk] &&
         !(it && it.id === PLACE_TOOL[o.bid])
       ) {
-        funcMenu(o.bk);
+        if (MACH[o.bid]) macGui(o.bk, st.free.built[o.bk]);
+        else funcMenu(o.bk);
         return true;
       }
     }
