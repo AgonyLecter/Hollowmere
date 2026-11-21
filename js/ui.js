@@ -426,7 +426,8 @@ const UI = {
       ['1748', 'Mercy Hale', 'Contata.'],
       ['1781', 'Thomas Ashby', 'Contato due volte.'],
       ['1799', 'Ezra Blackwood', 'Contato.'],
-      ['1846', 'Elias Marlowe', '<b>RISPARMIATO.</b> Debito: uno del suo sangue.']
+      ['1846', 'Elias Marlowe', '<b>RISPARMIATO.</b> Debito: uno del suo sangue.'],
+      ['18··', '<s>un nome grattato via</s>', 'Contato. Lascia una figlia.']
     ];
     const others = [...new Set((NET.regNames || []).filter(n => n && n !== st.name))].slice(-6);
     return this

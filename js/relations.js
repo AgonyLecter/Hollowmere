@@ -36,11 +36,11 @@ Object.assign(LIKES.brom, { peperonata: 3, anguriafresca: 2, castagne: 1 });
 Object.assign(LIKES.tobia, { frittataasparagi: 3, anguriafresca: 3, nocciole: 2 });
 const DISLIKES = {
   ezekiel: ['agrifoglio', 'tarassaco', 'fibra'],
-  agatha: ['aglio', 'cipolla', 'pietra'],
+  agatha: ['aglio', 'peperone', 'pietra'],
   lucius: ['peperone', 'peperonata', 'more'],
   clara: ['radice', 'aglio', 'legna'],
   brom: ['lattuga', 'insalata', 'camomilla'],
-  tobia: ['spinaci', 'porro', 'cavolo'],
+  tobia: ['cipolla', 'porro', 'cavolo'],
   ottavio: ['tarassaco', 'agrifoglio'],
   irene: ['zucca', 'torta']
 };
@@ -266,7 +266,7 @@ const FREE_SECRETS = {
     ],
     [
       8,
-      "Il registro della bottega: segnavo chi comprava semi di zucca, per Ezekiel. Ho smesso il giorno che sei arrivato. Non gliel'ho mai detto."
+      "Il registro della bottega: segnavo chi comprava semi di zucca, per Ezekiel. Ho smesso il giorno che sei arrivat{o|a}. Non gliel'ho mai detto."
     ],
     [
       10,
@@ -320,7 +320,7 @@ const FREE_SECRETS = {
     [6, 'Ho ancora il martello di lei. Lo uso solo per le cose belle. Ho usato quello per la tua casa.'],
     [
       8,
-      "Una notte sono andato fino all'Albero, da solo, con un'ascia. Sono tornato indietro a metà strada. Tu ci sei arrivato. Ti invidio. Ti ammiro."
+      "Una notte sono andato fino all'Albero, da solo, con un'ascia. Sono tornato indietro a metà strada. Tu ci sei arrivat{o|a}. Ti invidio. Ti ammiro."
     ],
     [
       10,

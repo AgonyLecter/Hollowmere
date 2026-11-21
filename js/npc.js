@@ -861,7 +861,7 @@ async function gift(n, id) {
   const L = {
     ezekiel: ['Un dono. Il villaggio ricorda chi dona.', 'Ottimo raccolto. Tuo nonno sarebbe fiero.'],
     agatha: [
-      'Oh, caro! Per me? Lo metto in vetrina!',
+      'Oh, {caro|cara}! Per me? Lo metto in vetrina!',
       'Che zucca magnifica! Alla festa ne servono tante, sai.'
     ],
     lucius: [

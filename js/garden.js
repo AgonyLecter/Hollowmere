@@ -408,12 +408,12 @@ COOK.push(
   { id: 'tisana', need: { camomilla: 1 }, min: 10, da: 'lucius' },
   { id: 'anguriafresca', need: { anguria: 1 }, min: 5, da: 'tobia' },
   { id: 'zuppabietole', need: { barbabietola: 2, aglio: 1 }, min: 40, adv: 1, da: 'irene' },
-  { id: 'pastaaglio', need: { aglio: 1, spinaci: 1, uovo: 1 }, min: 30, da: 'ottavio' }
+  { id: 'pastaaglio', need: { aglio: 1, spinaci: 1, uovo: 1, farina: 1 }, min: 30, da: 'ottavio' }
 );
 Object.assign(ITEMS, {
   minestrone: { n: 'Minestrone', t: 'food', e: 70, d: "Tutto l'orto in una pentola. +70 energia." },
   zuppacipolle: { n: 'Zuppa di cipolle', t: 'food', e: 55, d: 'Col pane di Clara sopra. +55 energia.' },
-  risottofunghi: { n: 'Risotto ai porcini', t: 'food', e: 80, d: "L'autunno buono. +80 energia." },
+  risottofunghi: { n: 'Porcini trifolati', t: 'food', e: 80, d: "L'autunno buono. +80 energia." },
   peperonata: {
     n: 'Peperonata',
     t: 'food',
@@ -522,6 +522,14 @@ function recipeBook() {
           : `<p class="small" style="opacity:.6">✦ ??? — la insegna ${who(r.da)}${r.da === 'ottavio' ? ' (la vende)' : ', quando sarete amici'}.</p>`
       ).join('')
   );
+  const h = $('#mbox h2');
+  if (h && ICON.ricettario) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 32;
+    c.style.cssText = 'vertical-align:middle;margin-right:6px';
+    c.getContext('2d').drawImage(ICON.ricettario, 0, 0);
+    h.prepend(c);
+  }
 }
 // piatti nuovi: icone semplici, ciotola o piatto con il colore dell'ingrediente principale
 function genDishArt() {
@@ -665,7 +673,7 @@ function decorShop() {
 // insegnare ricette: con abbastanza cuori, una volta ogni tanto
 async function teachRecipe(n) {
   const st = G.st;
-  if (!isFree(st) || hearts(n.id) < 3) return false;
+  if (!isFree(st) || hearts(n.id) < 3 || n.id === 'ottavio') return false; // Ottavio le vende
   const r = COOK.find(r => r.da === n.id && !knows(st, r.id));
   if (!r) return false;
   if ((st.free.taught || 0) === st.day) return false;

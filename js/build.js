@@ -221,15 +221,10 @@ Object.assign(ITEMS, {
   quadro: {
     n: 'Quadro della Valle',
     t: 'arredo',
-    d: 'La Valle dipinta da Clara. Il recinto è grigio.',
+    d: 'La Valle dipinta a olio. Nel quadro, il recinto è già grigio.',
     wall: 1
   },
-  credenza: { n: 'Credenza', t: 'arredo', d: 'Piatti, barattoli, ricordi.' },
-  ricettario: {
-    n: 'Ricettario',
-    t: 'key',
-    d: 'Il quaderno delle ricette: le impari dagli abitanti e da Ottavio.'
-  }
+  credenza: { n: 'Credenza', t: 'arredo', d: 'Piatti, barattoli, ricordi.' }
 });
 CRAFTS.push(
   { id: 'tavolino', q: 1, c: { legna: 15 } },
@@ -331,6 +326,7 @@ function genBuildArt() {
     P.rect(4, 8, 24, 3, dk);
     P.rect(15, 13, 2, 4, rp('#d8a84a'));
   });
+  // l'icona del ricettario (si vede nel titolo del Ricettario)
   I('ricettario', P => {
     P.rect(7, 4, 18, 24, rp('#7a3a1a'), { spec: 0.3 });
     P.rect(9, 5, 2, 22, rp('#d8a84a'));

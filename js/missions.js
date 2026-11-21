@@ -123,7 +123,7 @@ async function outsiderTalk(n) {
     F.ireneFoto = 1;
     await say(
       'irene',
-      "Tu sei il nipote di Marlowe? Allora guarda questa. L'ho scattata ieri, davanti al cimitero."
+      "Tu sei {il nipote|la nipote} di Marlowe? Allora guarda questa. L'ho scattata ieri, davanti al cimitero."
     );
     await UI.paper(
       `<h2>Una fotografia</h2><div class="paper"><p>Il cimitero, in bianco e nero. Le tombe, il pioppo, la tomba di Elias Marlowe.</p><p>Davanti alla tomba, di spalle, una figura con un mantello giallo. Nessuno, quel giorno, portava un mantello giallo.</p><p class="ink">Sul retro, a matita, non con la calligrafia di Irene: «otto».</p></div>`
