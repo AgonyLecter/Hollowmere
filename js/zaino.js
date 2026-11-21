@@ -1,9 +1,8 @@
 'use strict';
 // ================= LO ZAINO (inventario vero) =================
 // Nella Valle lo zaino ha tre file da 10 (la barra in basso mostra una fila alla volta: ⇅ cambia fila).
-// Schermata completa (🎒 accanto alla barra, o tasto I): tocca un oggetto e poi un posto per spostarlo, oppure
-// trascinalo. Pile uguali si uniscono, diverse si scambiano. «Metà» divide una pila, «Ordina» riordina e unisce,
-// il cestino butta (gli attrezzi chiedono conferma). La cassa usa lo stesso sistema, con due griglie.
+// Schermata completa (🎒 accanto alla barra, o tasto I), come in Minecraft: tocca per prendere in mano e posare,
+// doppio tocco per spostare veloce, tieni premuto per dividere la pila. La cassa usa lo stesso sistema.
 // Gli oggetti della storia, nella Valle, sono ricordi qualsiasi: si spostano, si mettono in cassa, si buttano.
 
 const INV_FREE = 30;
@@ -27,126 +26,252 @@ const ORD = ['tool', 'seed', 'fert', 'crop', 'food', 'res', 'place', 'arredo', '
   };
 }
 
-let ZPICK = null; // {w,i}: l'oggetto che hai in mano nella schermata
+// ---------- la schermata (stile Minecraft) ----------
+// Tocca una pila: la prendi «in mano». Tocca un posto: la posi (uguali si uniscono, diverse si scambiano).
+// Doppio tocco: spostamento veloce (zaino ↔ cassa, oppure barra ↔ resto dello zaino). Su computer anche Maiusc+clic.
+// Tieni premuto: prendi metà pila; con qualcosa in mano, tieni premuto per posarne uno solo.
+// Trascina: sposta direttamente. Il cestino butta quello che hai in mano (gli attrezzi chiedono conferma).
+// Le pile non si perdono mai: chiudendo, quello che hai in mano torna nello zaino (lo scambio è permesso solo
+// se poi c'è posto per quello che prendi).
+let ZPICK = null; // compatibilità: chi apre lo zaino lo azzera
+let ZCH = null; // la cassa aperta (chiave in built), o null
+const ZH = { s: null, da: null }; // la pila in mano e da dove viene {w,i}
+let ZLAST = null; // l'ultimo tocco (per il doppio tocco)
+let ZINFO = null; // l'oggetto di cui si mostra la descrizione
 function zLists() {
   const L = { z: G.st.inv };
   if (ZCH) L.c = G.st.free.built[ZCH].inv;
   return L;
 }
-let ZCH = null; // la cassa aperta (chiave in built), o null
+const zTool = id => ITEMS[id] && ITEMS[id].t === 'tool';
+const zRiga = () => Math.floor(G.st.sel / 10);
 function zSlot(L, w, i, s) {
-  const hot = w === 'z' && Math.floor(i / 10) === Math.floor(G.st.sel / 10),
+  const hot = w === 'z' && Math.floor(i / 10) === zRiga(),
     sel = w === 'z' && i === G.st.sel,
-    pk = ZPICK && ZPICK.w === w && ZPICK.i === i;
-  return `<div class="islot${hot ? ' hot' : ''}${sel ? ' sel' : ''}${pk ? ' pick' : ''}" data-w="${w}" data-i="${i}"><canvas width="32" height="32"></canvas><i>${s && s.n > 1 ? s.n : ''}</i></div>`;
+    da = ZH.s && ZH.da && ZH.da.w === w && ZH.da.i === i;
+  return `<div class="islot${hot ? ' hot' : ''}${sel ? ' sel' : ''}${da ? ' da' : ''}" data-w="${w}" data-i="${i}"><canvas width="32" height="32"></canvas><i>${s && s.n > 1 ? s.n : ''}</i></div>`;
 }
+// la griglia: per lo zaino prima le file di riserva, poi (staccata) la barra, come in Minecraft
 function zGrid(w, L, label) {
+  const righe = [];
+  for (let r = 0; r * 10 < L.length; r++) righe.push(r);
+  const hr = w === 'z' && L.length > 10 ? zRiga() : -1;
+  const riga = r =>
+    `<div class="igrid">${L.slice(r * 10, r * 10 + 10)
+      .map((s, k) => zSlot(L, w, r * 10 + k, s))
+      .join('')}</div>`;
   let h = '';
-  for (let r = 0; r * 10 < L.length; r++)
-    h +=
-      (w === 'z' && L.length > 10
-        ? `<div class="irow"><span class="small">${r === Math.floor(G.st.sel / 10) ? 'Barra' : 'Fila ' + (r + 1)}</span></div>`
-        : '') +
-      `<div class="igrid">${L.slice(r * 10, r * 10 + 10)
-        .map((s, k) => zSlot(L, w, r * 10 + k, s))
-        .join('')}</div>`;
+  for (const r of righe) if (r !== hr) h += riga(r);
+  if (hr >= 0) h += `<div class="irow ibarra"><span class="small">Barra · ⇅${hr + 1}</span></div>` + riga(hr);
   return (label ? `<h3>${label}</h3>` : '') + h;
 }
-function zInfo() {
-  if (!ZPICK)
-    return '<span class="small">Tocca un oggetto per prenderlo, poi tocca dove metterlo. Puoi anche trascinarlo.</span>';
-  const s = zLists()[ZPICK.w][ZPICK.i];
+function zDesc(s) {
   if (!s) return '';
-  const it = ITEMS[s.id];
-  return `<b>${esc(it.n)}</b>${s.n > 1 ? ' ×' + s.n : ''}<br><span class="small">${esc(it.d || '')}</span>`;
+  const it = ITEMS[s.id],
+    v = it.v || it.p;
+  return `<b>${esc(it.n)}</b>${s.n > 1 ? ' ×' + s.n : ''}${v && !zTool(s.id) ? ` <span class="small">· vale ${v}</span>` : ''}<br><span class="small">${esc(it.d || '')}</span>`;
+}
+function zInfo() {
+  if (ZH.s) return `<span class="ihand-l">In mano</span> ${zDesc(ZH.s)}`;
+  if (ZINFO) return zDesc(ZINFO);
+  return '<span class="small">Tocca per prendere e posare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b>: metà pila (o posane uno) · trascina per spostare.</span>';
 }
 function zaino(chestKey) {
   ZCH = chestKey || null;
-  const st = G.st,
-    L = zLists();
-  if (ZPICK && !(L[ZPICK.w] && L[ZPICK.w][ZPICK.i])) ZPICK = null;
-  const tools = `<div class="itools"><button class="btn" data-z="meta" ${ZPICK && L[ZPICK.w][ZPICK.i] && L[ZPICK.w][ZPICK.i].n > 1 ? '' : 'disabled'}>Metà</button> <button class="btn" data-z="ordina">Ordina</button>${ZCH ? ' <button class="btn" data-z="deposita">Metti tutto in cassa</button> <button class="btn" data-z="prendi">Prendi tutto</button>' : ''} <button class="btn idel" data-z="butta" ${ZPICK ? '' : 'disabled'}>🗑</button></div>`;
+  const L = zLists();
+  const tools = `<div class="itools"><button class="btn" data-z="ordina" title="Riordina e unisce le pile uguali">Ordina</button>${ZCH ? ' <button class="btn" data-z="deposita">Metti tutto in cassa</button> <button class="btn" data-z="prendi">Prendi tutto</button>' : ''}<div class="islot itrash${ZH.s ? ' on' : ''}" data-trash="1" title="Butta">🗑</div></div>`;
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>${ZCH ? 'Cassa' : 'Zaino'}</h2><div class="iinfo">${zInfo()}</div>${tools}` +
-      (ZCH ? zGrid('c', L.c, 'Cassa') : '') +
-      zGrid('z', L.z, ZCH ? 'Zaino' : ''),
+    `<button class="btn mclose" data-close>✕</button><h2>${ZCH ? 'Cassa' : 'Zaino'}</h2>` +
+      `<div class="ihand"><div class="islot ihslot${ZH.s ? ' on' : ''}"><canvas width="32" height="32"></canvas><i>${ZH.s && ZH.s.n > 1 ? ZH.s.n : ''}</i></div><div class="iinfo">${zInfo()}</div></div>` +
+      tools +
+      (ZCH ? zGrid('c', L.c, 'Cassa') + '<h3>Zaino</h3>' : '') +
+      zGrid('z', L.z, ''),
     () => {
-      ZPICK = null;
+      zRimetti();
       ZCH = null;
+      ZINFO = null;
+      ZLAST = null;
       UI.hotbar();
+      if (G.st && G.st.free) NET.save(myHome());
     }
   );
   const box = $('#mbox');
-  box.querySelectorAll('.islot').forEach(el => {
+  box.querySelectorAll('.islot[data-w]').forEach(el => {
     const s = L[el.dataset.w][+el.dataset.i];
     if (s && ICON[s.id]) el.firstChild.getContext('2d').drawImage(ICON[s.id], 0, 0);
     if (s) el.title = ITEMS[s.id].n;
   });
-  box.querySelectorAll('[data-z]').forEach(b => (b.onclick = () => zTool(b.dataset.z)));
+  if (ZH.s && ICON[ZH.s.id])
+    box.querySelector('.ihslot canvas').getContext('2d').drawImage(ICON[ZH.s.id], 0, 0);
+  box.querySelectorAll('[data-z]').forEach(b => (b.onclick = () => zComando(b.dataset.z)));
   zDrag(box);
 }
-// spostare: vuoto → sposta, stesso oggetto → unisce, diverso → scambia
-function zMove(a, b) {
-  const L = zLists(),
-    A = L[a.w],
-    B = L[b.w],
-    s = A[a.i],
-    t = B[b.i];
-  if (!s || (a.w === b.w && a.i === b.i)) return false;
-  if (t && t.id === s.id) {
-    t.n += s.n;
-    A[a.i] = null;
-  } else {
-    B[b.i] = s;
-    A[a.i] = t || null;
-  }
-  AU.play('blip');
-  return true;
-}
-function zTap(w, i) {
-  const L = zLists(),
-    s = L[w][i];
-  if (!ZPICK) {
-    if (s) {
-      ZPICK = { w, i };
-      AU.play('ui');
-    }
-  } else if (ZPICK.w === w && ZPICK.i === i) ZPICK = null;
-  else {
-    zMove(ZPICK, { w, i });
-    ZPICK = null;
-  }
+// ridisegna senza far saltare la schermata (UI.open la riporterebbe in cima)
+function zRidisegna() {
+  const box = $('#mbox'),
+    y = box.scrollTop;
   UI._mclose = null;
   zaino(ZCH);
+  box.scrollTop = y;
 }
-function zTool(k) {
+// c'è un posto per una pila di questo tipo (fuori dalla mano)?
+function zPosto(id) {
+  const L = zLists();
+  for (const w in L) for (const s of L[w]) if (!s || (s.id === id && !zTool(id))) return true;
+  return false;
+}
+// mette una pila nel primo posto adatto di una lista (prima unendo, poi nei vuoti); restituisce quanto resta
+function zInfila(A, s, ordine) {
+  const idx = ordine || A.map((_, i) => i);
+  if (!zTool(s.id))
+    for (const i of idx) {
+      const t = A[i];
+      if (t && t.id === s.id) {
+        t.n += s.n;
+        return 0;
+      }
+    }
+  for (const i of idx)
+    if (!A[i]) {
+      A[i] = { id: s.id, n: s.n };
+      return 0;
+    }
+  return s.n;
+}
+// chiudendo: quello che hai in mano torna a posto (prima da dove veniva, poi nello zaino, poi in cassa)
+function zRimetti() {
+  if (!ZH.s) return;
   const L = zLists(),
-    st = G.st;
-  if (k === 'meta' && ZPICK) {
-    const A = L[ZPICK.w],
-      s = A[ZPICK.i];
-    if (!s || s.n < 2) return;
-    const j = A.findIndex(x => !x);
-    if (j < 0) {
-      UI.toast("Non c'è un posto libero per dividere.");
+    s = ZH.s,
+    da = ZH.da;
+  ZH.s = ZH.da = null;
+  if (da && L[da.w]) {
+    const A = L[da.w],
+      t = A[da.i];
+    if (!t) {
+      A[da.i] = s;
       return;
     }
-    const h = Math.floor(s.n / 2);
-    s.n -= h;
-    A[j] = { id: s.id, n: h };
-    ZPICK = { w: ZPICK.w, i: j };
+    if (t.id === s.id && !zTool(s.id)) {
+      t.n += s.n;
+      return;
+    }
   }
+  if (!zInfila(L.z, s)) return;
+  if (L.c && !zInfila(L.c, s)) return;
+  addItem(s.id, s.n);
+}
+// tocco su un posto
+function zTocca(w, i, lungo) {
+  const L = zLists(),
+    A = L[w],
+    t = A[i];
+  if (!ZH.s) {
+    if (!t) return;
+    ZINFO = t;
+    if (lungo && t.n > 1) {
+      // metà pila (arrotondata per eccesso), il resto rimane
+      const h = Math.ceil(t.n / 2);
+      t.n -= h;
+      ZH.s = { id: t.id, n: h };
+    } else {
+      ZH.s = t;
+      A[i] = null;
+    }
+    ZH.da = { w, i };
+    AU.play('ui');
+    return;
+  }
+  const h = ZH.s;
+  if (lungo) {
+    // posane uno solo
+    if (!t || (t.id === h.id && !zTool(h.id))) {
+      if (t) t.n++;
+      else A[i] = { id: h.id, n: 1 };
+      h.n--;
+      if (h.n <= 0) ZH.s = ZH.da = null;
+      AU.play('blip');
+    }
+    return;
+  }
+  if (!t) {
+    A[i] = h;
+    ZH.s = ZH.da = null;
+  } else if (t.id === h.id && !zTool(h.id)) {
+    t.n += h.n;
+    ZH.s = ZH.da = null;
+  } else {
+    // scambio: solo se poi c'è un posto per quello che prendi in mano
+    A[i] = h;
+    if (!zPosto(t.id)) {
+      A[i] = t;
+      AU.play('err');
+      UI.toast('Non c’è posto per scambiarli: prima libera un posto.');
+      return;
+    }
+    ZH.s = t;
+    ZH.da = { w, i };
+    ZINFO = t;
+  }
+  AU.play('blip');
+}
+// spostamento veloce di una pila: zaino ↔ cassa, oppure barra ↔ resto dello zaino
+function zVeloce(w, i) {
+  const L = zLists(),
+    A = L[w],
+    s = A[i];
+  if (!s) return;
+  let B, ordine;
+  if (L.c) {
+    B = w === 'z' ? L.c : L.z;
+    if (B === L.z) {
+      // dalla cassa: prima la barra, poi il resto
+      const r = zRiga();
+      ordine = [...Array(L.z.length).keys()].sort(
+        (a, b) => (Math.floor(b / 10) === r) - (Math.floor(a / 10) === r)
+      );
+    }
+  } else {
+    B = L.z;
+    const r = zRiga(),
+      inBarra = Math.floor(i / 10) === r;
+    ordine = [...Array(L.z.length).keys()].filter(k => (Math.floor(k / 10) === r) !== inBarra);
+  }
+  A[i] = null;
+  const resto = zInfila(B, s, ordine);
+  if (resto) {
+    A[i] = s;
+    AU.play('err');
+    UI.toast(L.c ? 'Non c’è posto.' : 'Non c’è posto dall’altra parte.');
+    return;
+  }
+  ZINFO = s;
+  AU.play('blip');
+}
+function zButta() {
+  const h = ZH.s;
+  if (!h) return;
+  const it = ITEMS[h.id];
+  if (it.t === 'tool' && !confirm(`Buttare ${it.n}? Non torna più.`)) return;
+  ZH.s = ZH.da = null;
+  ZINFO = null;
+  AU.play('pick');
+  UI.toast(`Hai buttato: ${it.n}${h.n > 1 ? ' ×' + h.n : ''}.`);
+}
+function zComando(k) {
+  const L = zLists();
   if (k === 'ordina') {
+    zRimetti();
     for (const w in L) {
       const A = L[w],
         m = {},
         keep = [];
       for (const s of A) {
         if (!s) continue;
-        if (ITEMS[s.id].t === 'tool' || !m[s.id]) {
+        if (zTool(s.id) || !m[s.id]) {
           const c = { id: s.id, n: s.n };
           keep.push(c);
-          if (ITEMS[s.id].t !== 'tool') m[s.id] = c;
+          if (!zTool(s.id)) m[s.id] = c;
         } else m[s.id].n += s.n;
       }
       keep.sort(
@@ -154,82 +279,54 @@ function zTool(k) {
           ORD.indexOf(ITEMS[a.id].t) - ORD.indexOf(ITEMS[b.id].t) ||
           ITEMS[a.id].n.localeCompare(ITEMS[b.id].n)
       );
-      for (let i = 0; i < A.length; i++) A[i] = keep[i] || null;
+      // nello zaino gli attrezzi restano nella barra: si riempie prima la fila in uso
+      if (w === 'z') {
+        const r = zRiga(),
+          ord = [...Array(A.length).keys()].sort(
+            (a, b) => (Math.floor(b / 10) === r) - (Math.floor(a / 10) === r) || a - b
+          );
+        for (let i = 0; i < A.length; i++) A[i] = null;
+        keep.forEach((c, j) => (A[ord[j]] = c));
+      } else for (let i = 0; i < A.length; i++) A[i] = keep[i] || null;
     }
-    ZPICK = null;
     AU.play('ok');
   }
-  if (k === 'deposita' && ZCH) {
-    const C = L.c,
-      Z = L.z;
-    for (let i = 0; i < Z.length; i++) {
-      const s = Z[i];
-      if (!s || ITEMS[s.id].t === 'tool') continue;
-      const t = C.find(x => x && x.id === s.id);
-      if (t) {
-        t.n += s.n;
-        Z[i] = null;
-        continue;
-      }
-      const j = C.findIndex(x => !x);
-      if (j < 0) break;
-      C[j] = s;
-      Z[i] = null;
-    }
-    ZPICK = null;
-    AU.play('ok');
-  }
-  if (k === 'prendi' && ZCH) {
-    const C = L.c,
-      Z = L.z;
-    for (let i = 0; i < C.length; i++) {
-      const s = C[i];
-      if (!s) continue;
-      const t = Z.find(x => x && x.id === s.id && ITEMS[x.id].t !== 'tool');
-      if (t) {
-        t.n += s.n;
-        C[i] = null;
-        continue;
-      }
-      const j = Z.findIndex(x => !x);
-      if (j < 0) {
-        UI.toast('Lo zaino è pieno.');
+  if ((k === 'deposita' || k === 'prendi') && L.c) {
+    zRimetti();
+    const [A, B] = k === 'deposita' ? [L.z, L.c] : [L.c, L.z];
+    for (let i = 0; i < A.length; i++) {
+      const s = A[i];
+      if (!s || (k === 'deposita' && zTool(s.id))) continue;
+      A[i] = null;
+      if (zInfila(B, s)) {
+        A[i] = s;
+        UI.toast(k === 'deposita' ? 'La cassa è piena.' : 'Lo zaino è pieno.');
         break;
       }
-      Z[j] = s;
-      C[i] = null;
     }
-    ZPICK = null;
     AU.play('ok');
   }
-  if (k === 'butta' && ZPICK) {
-    const A = L[ZPICK.w],
-      s = A[ZPICK.i];
-    if (!s) return;
-    const it = ITEMS[s.id];
-    if (it.t === 'tool' && !confirm(`Buttare ${it.n}? Non torna più.`)) return;
-    A[ZPICK.i] = null;
-    ZPICK = null;
-    AU.play('pick');
-    UI.toast(`Hai buttato: ${it.n}${s.n > 1 ? ' ×' + s.n : ''}.`);
-  }
-  if (st.free) NET.save(myHome());
-  UI._mclose = null;
-  zaino(ZCH);
+  if (G.st.free) NET.save(myHome());
+  zRidisegna();
 }
-// trascinare (dito o mouse): un'icona segue il dito e si posa dove lo lasci
+// tocchi, doppi tocchi, pressioni lunghe e trascinamenti (dito o mouse)
 function zDrag(box) {
   let d = null;
-  box.querySelectorAll('.islot').forEach(el => {
+  const LUNGO = 420;
+  box.querySelectorAll('.islot[data-w]').forEach(el => {
+    const w = el.dataset.w,
+      i = +el.dataset.i;
     el.onpointerdown = e => {
-      const L = zLists(),
-        w = el.dataset.w,
-        i = +el.dataset.i;
-      if (!L[w][i]) {
-        if (ZPICK) zTap(w, i);
-        return;
-      }
-      d = { w, i, x: e.clientX, y: e.clientY, moved: false, el };
+      e.preventDefault();
+      d = { w, i, x: e.clientX, y: e.clientY, moved: false, el, lungo: false, shift: e.shiftKey };
+      d.timer = setTimeout(() => {
+        if (!d || d.moved) return;
+        d.lungo = true;
+        zTocca(w, i, true);
+        if (navigator.vibrate) navigator.vibrate(15);
+        zRidisegna();
+        d = null;
+      }, LUNGO);
       try {
         el.setPointerCapture(e.pointerId);
       } catch (_) {}
@@ -237,12 +334,16 @@ function zDrag(box) {
     el.onpointermove = e => {
       if (!d || d.el !== el) return;
       if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8) return;
+      const L = zLists();
       if (!d.moved) {
+        // si trascina solo una pila vera, a mani vuote
+        if (ZH.s || !L[w][i]) return;
+        clearTimeout(d.timer);
         d.moved = true;
         const g = document.createElement('canvas');
         g.width = g.height = 32;
         g.className = 'ighost';
-        const s = zLists()[d.w][d.i];
+        const s = L[w][i];
         if (ICON[s.id]) g.getContext('2d').drawImage(ICON[s.id], 0, 0);
         document.body.appendChild(g);
         d.g = g;
@@ -252,29 +353,61 @@ function zDrag(box) {
       d.g.style.top = e.clientY + 'px';
     };
     el.onpointerup = e => {
-      if (!d || d.el !== el) {
-        return;
-      }
+      if (!d || d.el !== el) return;
       const was = d;
       d = null;
+      clearTimeout(was.timer);
       if (was.g) was.g.remove();
       el.classList.remove('drag');
-      if (!was.moved) {
-        zTap(was.w, was.i);
+      if (was.moved) {
+        const t = document.elementFromPoint(e.clientX, e.clientY),
+          slot = t && t.closest && t.closest('.islot[data-w]'),
+          trash = t && t.closest && t.closest('[data-trash]');
+        zTocca(w, i, false);
+        if (slot) zTocca(slot.dataset.w, +slot.dataset.i, false);
+        else if (trash) zButta();
+        zRimetti();
+        ZLAST = null;
+        zRidisegna();
         return;
       }
-      const t = document.elementFromPoint(e.clientX, e.clientY),
-        slot = t && t.closest && t.closest('.islot');
-      if (slot && zMove({ w: was.w, i: was.i }, { w: slot.dataset.w, i: +slot.dataset.i })) ZPICK = null;
-      UI._mclose = null;
-      zaino(ZCH);
+      const now = performance.now();
+      if (was.shift) {
+        zVeloce(w, i);
+        ZLAST = null;
+      } else if (ZLAST && ZLAST.w === w && ZLAST.i === i && now - ZLAST.t < 330) {
+        // doppio tocco: il primo tocco l'aveva presa in mano; si rimette giù e si sposta veloce
+        if (ZH.s && ZH.da && ZH.da.w === w && ZH.da.i === i) zTocca(w, i, false);
+        zVeloce(w, i);
+        ZLAST = null;
+      } else {
+        zTocca(w, i, false);
+        ZLAST = { w, i, t: now };
+      }
+      zRidisegna();
     };
     el.onpointercancel = () => {
-      if (d && d.g) d.g.remove();
+      if (d) {
+        clearTimeout(d.timer);
+        if (d.g) d.g.remove();
+      }
       d = null;
     };
   });
+  const tr = box.querySelector('[data-trash]');
+  if (tr)
+    tr.onclick = () => {
+      zButta();
+      zRidisegna();
+    };
+  const hs = box.querySelector('.ihslot');
+  if (hs)
+    hs.onclick = () => {
+      zRimetti();
+      zRidisegna();
+    };
 }
+
 // la cassa: stessa schermata, due griglie
 
 // il pulsante 🎒 accanto alla barra, e il tasto I
@@ -313,16 +446,16 @@ addEventListener('keydown', e => {
 GUIDES.push({
   id: 'zaino',
   v: 16,
-  n: 'Lo zaino nuovo',
+  n: 'Lo zaino',
   steps: [
     {
-      t: 'Lo zaino adesso ha tre file. Il bottone 🎒 accanto alla barra (o il tasto I) apre la schermata completa.'
+      t: 'Lo zaino ha tre file. Il bottone 🎒 accanto alla barra (o il tasto I) apre la schermata completa: in basso, staccata, c’è la fila che usi come barra.'
     },
     {
-      t: 'Tocca un oggetto e poi il posto dove metterlo, oppure trascinalo col dito. Uguali si uniscono, diversi si scambiano. «Metà» divide una pila, «Ordina» mette tutto in ordine, il cestino butta.'
+      t: 'Funziona come in Minecraft: <b>tocca</b> una pila per prenderla in mano e tocca un posto per posarla (uguali si uniscono, diverse si scambiano). <b>Doppio tocco</b>: la sposti al volo tra barra e zaino, o tra zaino e cassa. <b>Tieni premuto</b>: prendi metà pila; con qualcosa in mano, tieni premuto per posarne uno solo. Puoi anche trascinare.'
     },
     {
-      t: 'La cassa funziona allo stesso modo, con «Metti tutto in cassa» e «Prendi tutto». E i ricordi della storia, come la chiave e il nastro, adesso puoi spostarli, metterli in cassa o buttarli.'
+      t: 'Per buttare qualcosa, prendilo in mano e tocca il cestino. «Ordina» unisce le pile e mette in ordine. Nella cassa ci sono anche «Metti tutto in cassa» e «Prendi tutto».'
     }
   ]
 });

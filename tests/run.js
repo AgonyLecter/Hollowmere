@@ -15,7 +15,8 @@ const SUITES = {
   gazzetta: require('./gazzetta'),
   suono: require('./suono'),
   macchine: require('./macchine'),
-  mira: require('./mira')
+  mira: require('./mira'),
+  zaino: require('./zaino')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
