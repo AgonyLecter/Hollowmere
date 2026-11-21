@@ -166,7 +166,7 @@ function ottavioSell() {
       (L.length
         ? L.map(
             ([s, i]) =>
-              `<div class="mrow"><canvas data-i="${s.id}" width="32" height="32"></canvas><span>${ITEMS[s.id].n} ×${s.n}</span><b class="price">${CZ(pr(s.id) * s.n)}</b><button class="btn" data-s="${i}">Vendi</button></div>`
+              `<div class="mrow"><canvas data-i="${s.id}" width="32" height="32"></canvas><span>${ITEMS[s.id].n} ×${s.n}</span><b class="price">${CZ(Mercato.stima(s.id, s.n, 1.2))}</b><button class="btn" data-s="${i}">Vendi</button></div>`
           ).join('')
         : '<p>Non hai niente che gli interessi: vuole raccolti, uova e latte.</p>')
   );
@@ -180,7 +180,7 @@ function ottavioSell() {
         (b.onclick = () => {
           const s = st.inv[+b.dataset.s];
           if (!s) return;
-          st.money += pr(s.id) * s.n;
+          st.money += Mercato.vendi(s.id, s.n, 1.2);
           st.inv[+b.dataset.s] = null;
           AU.play('coin');
           UI.hud();

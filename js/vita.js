@@ -395,6 +395,18 @@ const VCHAT_SEASON = [
 
 // ---------- ti salutano davvero ----------
 function saluto(n) {
+  // prima le battute personali (js/dialoghi_testi.js): il primo incontro del giorno è un saluto vero
+  if (n._sal !== G.st.day) {
+    const t = Dialoghi.battuta(n, 'saluto');
+    if (t) {
+      n._sal = G.st.day;
+      return t;
+    }
+  }
+  if (Math.random() < 0.65) {
+    const t = Dialoghi.battuta(n, 'passaggio');
+    if (t) return t;
+  }
   const st = G.st,
     t = st.time,
     h = hearts(n.id),

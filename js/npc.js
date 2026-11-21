@@ -134,9 +134,12 @@ const BARKS2 = {
   brom: ['Torna a casa presto.'],
   tobia: ['Hihi. Rosso!', 'Conta, conta!']
 };
-function bubble(n, t, life = 2.6) {
+// fumetto sopra un personaggio. opt.w = bisbiglio (grigio, tratteggiato). Le frasi lunghe restano più a lungo.
+function bubble(n, t, life = 2.6, opt = {}) {
+  const txt = fmt(t);
+  life = Math.max(life, Math.min(7, 1.6 + txt.length / 16));
   G.bubbles = G.bubbles.filter(b => b.n !== n);
-  G.bubbles.push({ n, t: fmt(t), life });
+  G.bubbles.push({ n, t: txt, life, max: life, w: !!opt.w });
 }
 function npcGo(n, tx, ty) {
   const m = G.maps[n.map];
@@ -398,7 +401,15 @@ function npcBarks(dt) {
             ? BARKS2
             : BARKS
     )[n.id];
-    if (L) bubble(n, L[(Math.random() * L.length) | 0]);
+    // il primo incontro del giorno è un saluto; poi frasi al volo, vecchie e nuove mescolate
+    let t = null;
+    if (n._sal !== G.st.day) {
+      t = Dialoghi.battuta(n, 'saluto');
+      if (t) n._sal = G.st.day;
+    }
+    if (!t && (!L || Math.random() < 0.6)) t = Dialoghi.battuta(n, 'passaggio');
+    if (!t && L) t = L[(Math.random() * L.length) | 0];
+    if (t) bubble(n, t);
   }
   for (const b of G.bubbles) b.life -= dt;
   G.bubbles = G.bubbles.filter(b => b.life > 0);

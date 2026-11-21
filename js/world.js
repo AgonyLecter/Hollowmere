@@ -1297,6 +1297,20 @@ function atmosphere(m) {
     ctx.globalCompositeOperation = 'source-over';
   }
 }
+// testo a capo entro una larghezza massima (in unità di gioco)
+function wrapText(t, maxW) {
+  const out = [];
+  let line = '';
+  for (const w of String(t).split(' ')) {
+    const tryL = line ? line + ' ' + w : w;
+    if (line && ctx.measureText(tryL).width > maxW) {
+      out.push(line);
+      line = w;
+    } else line = tryL;
+  }
+  if (line) out.push(line);
+  return out;
+}
 function drawBubbles(m) {
   if (!G.bubbles.length) return;
   ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
@@ -1304,19 +1318,37 @@ function drawBubbles(m) {
   for (const b of G.bubbles) {
     const n = b.n;
     if (n.hidden || n.map !== m.id) continue;
-    const tw = Math.ceil(ctx.measureText(b.t).width) + 8,
+    const L = wrapText(b.t, 132),
+      lh = 9,
+      tw = Math.ceil(Math.max(...L.map(l => ctx.measureText(l).width))) + 8,
+      th = L.length * lh + 2,
+      age = (b.max || 2.6) - b.life,
       X = Math.round(n.x),
       bx = Math.round(X - tw / 2),
-      by = Math.round(n.y - 46 + (b.life > 2.4 ? (b.life - 2.4) * 15 : 0));
-    ctx.fillStyle = '#3b1f0e';
-    ctx.fillRect(bx - 1, by - 1, tw + 2, 13);
-    ctx.fillRect(X - 2, by + 12, 5, 1);
-    ctx.fillRect(X - 1, by + 13, 3, 1);
-    ctx.fillStyle = '#fff4dc';
-    ctx.fillRect(bx, by, tw, 11);
-    ctx.fillRect(X - 1, by + 11, 3, 1);
-    ctx.fillStyle = '#3b1f0e';
-    ctx.fillText(b.t, X, by + 9);
+      by = Math.round(n.y - 42 - th + (age < 0.2 ? (0.2 - age) * 30 : 0));
+    const ink = b.w ? '#5a5048' : '#3b1f0e',
+      paper = b.w ? '#e8e2d6' : '#fff4dc';
+    ctx.globalAlpha = b.life < 0.4 ? b.life / 0.4 : 1;
+    ctx.fillStyle = ink;
+    if (b.w) {
+      // bordo tratteggiato: si bisbiglia
+      for (let x = bx - 1; x < bx + tw + 1; x += 2) {
+        ctx.fillRect(x, by - 1, 1, 1);
+        ctx.fillRect(x, by + th, 1, 1);
+      }
+      for (let y = by; y < by + th; y += 2) {
+        ctx.fillRect(bx - 1, y, 1, 1);
+        ctx.fillRect(bx + tw, y, 1, 1);
+      }
+    } else ctx.fillRect(bx - 1, by - 1, tw + 2, th + 2);
+    ctx.fillRect(X - 2, by + th + 1, 5, 1);
+    ctx.fillRect(X - 1, by + th + 2, 3, 1);
+    ctx.fillStyle = paper;
+    ctx.fillRect(bx, by, tw, th);
+    ctx.fillRect(X - 1, by + th, 3, 1);
+    ctx.fillStyle = ink;
+    L.forEach((l, i) => ctx.fillText(l, X, by + 8 + i * lh));
+    ctx.globalAlpha = 1;
   }
 }
 function cropImg(f) {

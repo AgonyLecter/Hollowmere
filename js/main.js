@@ -674,7 +674,7 @@ async function endDay(passed, faded) {
       if (!c && !f.f && Math.random() < 0.08) delete st.farm[k];
     }
     G.farmNews = news;
-    const pay = st.shipped.reduce((a, [id, n]) => a + sellPrice(id) * n, 0);
+    const pay = st.shipped.reduce((a, [id, n, v]) => a + (v ?? sellPrice(id) * n), 0);
     st.money += pay;
     st.shipped = [];
     const prevS = seasonOf(st);
