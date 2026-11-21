@@ -8,7 +8,14 @@ Con queste regole:
 - per continuare su **un altro dispositivo** servono il codice (HM-XXXXXX) e la **chiave di recupero** (XXXX-XXXX), che il giocatore trova nel menu → Salvataggio;
 - **missioni, eventi e novità della bacheca comune** li scrive solo chi è segnato come admin (login Google su `fusco.html`);
 - Registro, lapidi, eredi e chat si possono solo **aggiungere**, mai modificare o cancellare; testi con lunghezza massima;
-- le visite ricevute le legge e le cancella solo il proprietario del villaggio.
+- le visite ricevute le legge e le cancella solo il proprietario del villaggio;
+- **la Gazzetta della Valle** (il «social» col piccione): ognuno pubblica e toglie solo i propri biglietti (testo fino a 240 caratteri, fotografia JPEG piccola), dà o toglie solo le proprie piume, commenta a nome proprio.
+
+## Aggiornamento: la Gazzetta e le visite
+
+Se le regole sono già pubblicate, ripubblica il blocco `"hollowmere"`: contiene il ramo nuovo `"gazzetta"` e, in `"visite"`,
+l'elenco completo dei tipi di messaggio usati dal gioco (lavorare insieme nel villaggio di un amico, doni, scudi, lettere).
+Con l'elenco vecchio quelle azioni venivano rifiutate.
 
 ## Cosa fare nella console Firebase (una volta sola)
 
