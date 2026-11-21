@@ -191,6 +191,19 @@ const NOVITA = [
         t: 'E la cassetta delle spedizioni adesso ti dice chi ti ha mandato ogni regalo. Quelli che ricevi restano scritti nel taccuino degli abitanti, così non te li dimentichi. Le scintille della fucina, poi, si vedono solo quando Brom batte davvero il ferro.'
       }
     ]
+  },
+  {
+    id: 'macchine_timer',
+    v: 30,
+    n: 'Macchine con il cartellino',
+    steps: [
+      {
+        t: 'Fornace, barattolo e botte adesso hanno un <b>cartellino</b> che dice cosa stanno facendo e quando è pronto (per esempio «Lingotto · domani»). Le cose che metti dentro non spariscono: tornano il mattino dopo, trasformate.'
+      },
+      {
+        t: 'E puoi metterne dentro <b>più di un lotto</b> alla volta: con 10 ferro e 2 legna la fornace ti fa 2 lingotti. Anche il suono è più pulito: niente più gracchiare sotto la pioggia e i tuoni.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
