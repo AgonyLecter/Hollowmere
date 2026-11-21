@@ -323,7 +323,7 @@ function machineAct(k, b, o) {
       addXP('arti', 5);
     } else
       UI.toast(
-        `Ci vuole ancora ${b.job.ready - st.day === 1 ? 'un giorno' : b.job.ready - st.day + ' giorni'}.`
+        `${ITEMS[b.job.out].n}: pronto ${b.job.ready - st.day === 1 ? 'domani mattina' : 'tra ' + (b.job.ready - st.day) + ' giorni'}.`
       );
     return true;
   }
@@ -332,8 +332,8 @@ function machineAct(k, b, o) {
       M.aiuto
         ? M.aiuto
         : b.id === 'fornace'
-        ? 'Ci vogliono 5 minerali di ferro (e 1 legna).'
-        : `Tieni in mano ${b.id === 'botte' ? 'della frutta' : 'un raccolto'} e usalo sulla ${ITEMS[b.id].n.toLowerCase().includes('botte') ? 'botte' : ITEMS[b.id].n.toLowerCase()}.`
+          ? 'Ci vogliono 5 minerali di ferro (e 1 legna).'
+          : `Tieni in mano ${b.id === 'botte' ? 'della frutta' : 'un raccolto'} e usalo sulla ${ITEMS[b.id].n.toLowerCase().includes('botte') ? 'botte' : ITEMS[b.id].n.toLowerCase()}.`
     );
     return true;
   }
@@ -389,6 +389,24 @@ function drawMachines(m) {
     if (!b) continue;
     const rd =
       (b.job && st.day >= b.job.ready) || b.ready || (ITEMS[b.id] && ITEMS[b.id].tree && b.fruit > 0);
+    if (!rd && b.job) {
+      // al lavoro: un cartellino con cosa sta facendo e quanto manca (sennò sembra che le cose spariscano)
+      const g = b.job.ready - st.day,
+        txt =
+          (ITEMS[b.job.out] ? ITEMS[b.job.out].n.split(' ')[0] : '') +
+          ' · ' +
+          (g === 1 ? 'domani' : g + ' giorni');
+      ctx.font = '6px monospace';
+      const w = Math.ceil(ctx.measureText(txt).width) + 4,
+        X = o.tx * 16 + 8 - w / 2,
+        Y = o.dy - 12;
+      ctx.fillStyle = 'rgba(42,20,6,.85)';
+      ctx.fillRect(X, Y - 6, w, 8);
+      ctx.fillStyle = '#f6d98a';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(txt, X + 2, Y);
+      continue;
+    }
     if (!rd) continue;
     const X = o.tx * 16 + 8,
       Y = o.dy - 6 + bob;
