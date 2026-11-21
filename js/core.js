@@ -371,13 +371,28 @@ const AU = {
     if (!AC) return;
     let c;
     try {
-      c = this.c = new AC();
+      // 'playback': un buffer audio più grande. Con 'interactive' (il predefinito) sui telefoni
+      // il motore audio non fa in tempo quando ci sono tanti suoni insieme (pioggia, musica, tuoni)
+      // e si sente gracchiare
+      c = this.c = new AC({ latencyHint: 'playback' });
     } catch (e) {
-      return;
+      try {
+        c = this.c = new AC();
+      } catch (e2) {
+        return;
+      }
     }
+    // limitatore leggero in uscita: il compressore con le impostazioni predefinite (-24 dB, 12:1)
+    // schiacciava tutto e "pompava" sotto i tuoni, con distorsione
     this.out = c.createDynamicsCompressor();
+    this.out.threshold.value = -6;
+    this.out.knee.value = 6;
+    this.out.ratio.value = 8;
+    this.out.attack.value = 0.004;
+    this.out.release.value = 0.25;
     this.out.connect(c.destination);
     this.master = c.createGain();
+    this.master.gain.value = 0.8;
     this.master.connect(this.out);
     this.mus = c.createGain();
     this.mus.connect(this.master);
@@ -416,13 +431,19 @@ const AU = {
     const rs = c.createBufferSource();
     rs.buffer = b;
     rs.loop = true;
+    // pioggia: fruscio morbido (passa-alto + passa-basso), non più il rumore bianco acuto che graffiava
     const rf = c.createBiquadFilter();
     rf.type = 'highpass';
-    rf.frequency.value = 1800;
+    rf.frequency.value = 700;
+    const rl = c.createBiquadFilter();
+    rl.type = 'lowpass';
+    rl.frequency.value = 5200;
+    rl.Q.value = 0.5;
     this.rainG = c.createGain();
     this.rainG.gain.value = 0;
     rs.connect(rf);
-    rf.connect(this.rainG);
+    rf.connect(rl);
+    rl.connect(this.rainG);
     this.rainG.connect(this.master);
     rs.start(0, 0.7);
     this.next = c.currentTime + 0.1;
@@ -494,18 +515,32 @@ const AU = {
     const c = this.c,
       now = c.currentTime,
       Hh = G.horror || 0;
+    // vento e pioggia: si aggiornano 4 volte al secondo, non a ogni fotogramma (prima si accumulavano
+    // centinaia di automazioni al secondo sui parametri audio, e il motore audio rallentava)
+    if (now >= (this._ambT || 0)) {
+      this._ambT = now + 0.25;
+      this.ambiente(now, Hh);
+    }
+    // la colonna sonora e i suoni del mondo
+    if (typeof Musica !== 'undefined') Musica.tick(now, Hh);
+  },
+  _imposta(p, v, now, tc) {
+    if (p._v !== undefined && Math.abs(p._v - v) < 0.0005) return;
+    p._v = v;
+    p.cancelScheduledValues(now);
+    p.setTargetAtTime(v, now, tc);
+  },
+  ambiente(now, Hh) {
     const wind =
       (this.mode === 'titolo' ? 0.035 : 0.02) +
       G.night * 0.05 +
       Hh * 0.05 +
       (this.mode === 'inseguimento' ? 0.05 : 0);
-    this.windG.gain.setTargetAtTime(wind, now, 0.6);
+    this._imposta(this.windG.gain, wind, now, 0.6);
     const rain =
-      G.st && G.st.weather === 'pioggia' && G.mode === 'game' ? (G.map && !G.map.interior ? 0.09 : 0.03) : 0;
-    this.rainG.gain.setTargetAtTime(rain, now, 0.8);
-    this.windF.frequency.setTargetAtTime(380 + Math.sin(now * 0.27) * 220 + Hh * 300, now, 0.6);
-    // la colonna sonora e i suoni del mondo
-    if (typeof Musica !== 'undefined') Musica.tick(now, Hh);
+      G.st && G.st.weather === 'pioggia' && G.mode === 'game' ? (G.map && !G.map.interior ? 0.06 : 0.02) : 0;
+    this._imposta(this.rainG.gain, rain, now, 0.8);
+    this._imposta(this.windF.frequency, Math.round(380 + Math.sin(now * 0.27) * 220 + Hh * 300), now, 0.6);
   },
   chirp(t) {
     for (let i = 0; i < 3; i++) this.osc('sine', 4200 + Math.random() * 300, t + i * 0.06, 0.03, 0.015);
@@ -608,7 +643,8 @@ const SFX = {
     });
   },
   thunder: (a, t) => {
-    a.noise(t, 2.8, 0.7, 'lowpass', 260, 1, null, 0.01, 50);
+    // attacco più morbido e volume più basso: prima il colpo (0.7 in 10 ms) faceva saturare l'uscita
+    a.noise(t, 2.8, 0.35, 'lowpass', 220, 0.7, null, 0.08, 45);
   },
   scream: (a, t) => {
     const g = a.osc('sawtooth', 900, t, 1.1, 0.13, a.sfx, 0.01, 260);
