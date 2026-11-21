@@ -246,7 +246,7 @@ const FREE_SECRETS = {
     ],
     [
       6,
-      'Il primo forestiero che ho visto contare aveva la tua età. Si chiamava Josiah. Ho ancora il suo cappello.'
+      "Il primo forestiero che ho visto contare aveva la tua età. Il suo nome, nel Registro, l'ho grattato via io. Ho ancora il suo cappello."
     ],
     [
       8,
@@ -373,7 +373,7 @@ const FREE_SECRETS = {
     ],
     [
       6,
-      "Mia sorella si chiamava Mercy. Sulle lapidi del bosco c'è scritto MERCY HALE. Il cognome è il nostro."
+      "Mia sorella si chiamava Mercy. Firmava le foto col cognome di nostra madre: Hale. Sulle lapidi del bosco c'è scritto MERCY HALE, 1748. Non capisco la data. Non voglio capirla."
     ],
     [
       8,

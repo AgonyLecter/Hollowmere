@@ -654,7 +654,7 @@ const SECRETS = {
   agatha: [
     [
       3,
-      "Ho visto arrivare sette forestieri, tesoro. Tuo nonno è l'unico che si è fermato a ringraziarmi. Per questo sono ancora gentile."
+      "Ho visto arrivare tre forestieri, tesoro. Tuo nonno è l'unico che si è fermato a ringraziarmi. Per questo sono ancora gentile."
     ],
     [5, "Il rosso non è cattivo, sai. È solo… scomodo. Per chi vive sotto terra. Non te l'ho detto io."]
   ],
