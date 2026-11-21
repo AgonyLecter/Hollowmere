@@ -23,10 +23,24 @@ const Dialoghi = {
   recenti: {},
   // ---------- registrazione (usata da dialoghi_testi.js) ----------
   aggiungi(tipo, perChi) {
+    this.db[tipo] = this.db[tipo] || {};
     for (const chi in perChi) {
       const L = (this.db[tipo][chi] = this.db[tipo][chi] || []);
       for (const v of perChi[chi]) L.push(Array.isArray(v) ? { t: v[0], ...(v[1] || {}) } : { t: v });
     }
+  },
+  // tante battute con la stessa condizione: Dialoghi.gruppo('passaggio', { stagione: [1] }, { agatha: [...] })
+  gruppo(tipo, cond, perChi) {
+    const P = {};
+    for (const chi in perChi)
+      P[chi] = perChi[chi].map(v => (Array.isArray(v) ? [v[0], { ...cond, ...(v[1] || {}) }] : [v, cond]));
+    this.aggiungi(tipo, P);
+  },
+  conversazioniCon(tipo, cond, lista) {
+    this.conversazioni(
+      tipo,
+      lista.map(c => ({ ...cond, ...c }))
+    );
   },
   conversazioni(tipo, lista) {
     for (const c of lista) {
@@ -111,6 +125,7 @@ const Dialoghi = {
   // ---------- API usate dal gioco ----------
   // battuta singola di un abitante (saluto, passaggio, sfuggito); null se non c'è niente di adatto
   battuta(n, tipo) {
+    if (!this.db[tipo]) return null;
     const id = n.id || n,
       L = [...(this.db[tipo][id] || []), ...(this.db[tipo]['*'] || [])].filter(e => this.ok(e, id));
     const e = this.pesca(L, tipo + ':' + id);
@@ -124,6 +139,35 @@ const Dialoghi = {
   // conversazioni valide, nel formato di chatPool(): [a, b, righe]
   chiacchiere() {
     return this.db.chiacchiera.filter(c => this.ok(c, c.tra[0])).map(c => [c.tra[0], c.tra[1], c.righe]);
+  },
+  // ---------- reazioni a quello che fai ----------
+  // Dialoghi.evento('raccolto', { item: 'zucca', chi: 'agatha' }): un abitante vicino (non 'chi') commenta.
+  // Battute in db['reazione:raccolto'][id] o ['*']; {cosa} diventa il nome dell'oggetto.
+  _evT: 0,
+  evento(nome, ctx = {}) {
+    try {
+      if (!G.st || G.mode !== 'game' || G.cut || !G.map || performance.now() < this._evT) return;
+      const p = G.player,
+        L = G.npcs.filter(
+          n =>
+            !n.hidden &&
+            !n.script &&
+            n.map === G.map.id &&
+            n.id !== ctx.chi &&
+            Math.hypot(n.x - p.x, n.y - p.y) < 96
+        );
+      if (!L.length || Math.random() < 0.35) return;
+      const n = L[Math.floor(Math.random() * L.length)];
+      let t = this.battuta(n, 'reazione:' + nome);
+      if (!t) return;
+      const it = ctx.item && ITEMS[ctx.item];
+      t = t.replace('{cosa}', it ? it.n.toLowerCase() : 'quello');
+      bubble(n, t);
+      n.barkT = Math.max(n.barkT || 0, 15);
+      this._evT = performance.now() + 15000;
+    } catch (e) {
+      console.error(e);
+    }
   },
   // ---------- bisbigli e segreti sfuggiti, ogni fotogramma ----------
   T: 0,

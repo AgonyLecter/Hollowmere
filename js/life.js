@@ -611,6 +611,7 @@ async function favorDeliver(n) {
   if (c !== 0) return false;
   removeItem(f.item, f.n);
   f.done = 1;
+  Dialoghi.evento('consegna', { chi: n.id, item: f.item });
   f.told = 1;
   st.money += f.reward;
   Richieste.dopo = null;

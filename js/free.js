@@ -844,6 +844,7 @@ function freeActBase(fx, fy) {
     W2.built[k] = { id };
     removeItem(id, 1);
     addBigBuilt(m, k, W2.built[k]);
+    Dialoghi.evento('costruzione', { item: id });
     AU.play('slam');
     G.shake = 2;
     hitFx(fx, fy, '#8a6a3a');

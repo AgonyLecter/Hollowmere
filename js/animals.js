@@ -496,6 +496,7 @@ function animalAct(ax, ay) {
   if (A.mode !== 'ground' && a.prod) {
     if (!addItem(A.prod, 1)) return true;
     a.prod = false;
+    Dialoghi.evento(A.mode === 'shear' ? 'tosatura' : 'mungitura', { item: A.prod });
     AU.play('pick');
     floatText('+1 ' + ITEMS[A.prod].n, e.x, e.y - 24);
     if (A.mode === 'shear')

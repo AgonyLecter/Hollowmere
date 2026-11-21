@@ -824,6 +824,7 @@ async function talkTo(n) {
 async function gift(n, id) {
   const st = G.st;
   removeItem(id, 1);
+  Dialoghi.evento('regalo', { chi: n.id, item: id });
   st.gifted[n.id] = 1;
   if (id === 'bacche') {
     addFriend(n.id, -3);

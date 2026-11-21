@@ -478,6 +478,7 @@ function fishPull() {
     return;
   }
   const id = fishPick(f.where);
+  if (id) Dialoghi.evento('pesca', { item: id });
   if (!addItem(id, 1)) {
     UI.toast('Non hai spazio nello zaino.');
     return;

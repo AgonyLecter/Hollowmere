@@ -4624,6 +4624,7 @@ function playerSnowman() {
       if (ex.st === 2) {
         burst('spark', tx * 16 + 8, ty * 16 - 10, 8, '#ffffff');
         UI.toast('Un pupazzo di neve! Gli manca solo il nome.');
+        Dialoghi.evento('pupazzo', {});
       }
     }
     return;
