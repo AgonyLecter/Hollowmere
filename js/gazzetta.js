@@ -2,11 +2,12 @@
 // ================= LA GAZZETTA DELLA VALLE (multiplayer) =================
 // Il «social» della Valle, alla maniera dell'Ottocento: niente telefoni. Ognuno ha un TRESPOLO vicino a casa con
 // PENNINO, il piccione viaggiatore. Usando il trespolo si apre la Gazzetta: una bacheca di sughero con i biglietti e le
-// fotografie (dagherrotipi color seppia) di tutti i giocatori. Si regalano PIUME (al posto dei «mi piace»), si
+// fotografie (dagherrotipi color seppia, ridisegnati dal gioco) di tutti i giocatori. Si regalano PIUME (al posto dei «mi piace»), si
 // commenta, e ogni settimana la fotografia con più piume vince un nastro e un premio.
 // Quando mandi qualcosa, Pennino prende il biglietto e vola via; poi torna. Quando arriva posta degli altri,
 // atterra con una lettera nel becco.
-// Dati (Firebase, hollowmere/gazzetta): post/$id {pid,n,v,t,f,ts} · piume/$id/$pid: true · commenti/$id/$cid {pid,n,t,ts}
+// Le fotografie NON sono immagini: sono scene del gioco (s, JSON) che chi legge ridisegna. Nessuna immagine esterna.
+// Dati (Firebase, hollowmere/gazzetta): post/$id {pid,n,v,t,s,ts} · piume/$id/$pid: true · commenti/$id/$cid {pid,n,t,ts}
 // Le regole sono in firebase/regole.json. Senza collegamento la Gazzetta dice che il piccione non trova la strada.
 
 const GZ = {
@@ -105,6 +106,7 @@ function gzPostaNuova() {
 // st: posato · parte · via · torna. Ha la lettera nel becco quando porta posta.
 const PC = { st: 'posato', t: 0, lettera: 0, arriva: 0, carico: 0 };
 function pcTrespolo() {
+  if (G.fotoRender) return null; // mentre si ridisegna una fotografia il piccione resta posato
   const m = G.map;
   if (!m || m.id !== 'main' || G.visit) return null;
   return m.objs.find(o => o.kind === 'built' && o.bid === 'trespolo') || null;
@@ -292,42 +294,321 @@ const Foto = {
     removeEventListener('keydown', this._k, true);
     if (annulla) Gazzetta.apri('scrivi');
   },
-  // la fotografia: 256×144, color seppia, con la vignettatura; JPEG piccolo (sta nel database)
-  cattura() {
-    const src = $('#game');
-    const [c, x] = mk(256, 144);
-    x.filter = 'sepia(.9) contrast(1.08) brightness(1.02)';
-    x.drawImage(src, 0, 0, src.width, src.height, 0, 0, 256, 144);
-    x.filter = 'none';
-    const g = x.createRadialGradient(128, 72, 50, 128, 72, 150);
-    g.addColorStop(0, 'rgba(40,20,5,0)');
-    g.addColorStop(1, 'rgba(40,20,5,.55)');
-    x.fillStyle = g;
-    x.fillRect(0, 0, 256, 144);
-    for (let i = 0; i < 260; i++) {
-      x.fillStyle = `rgba(${Math.random() < 0.5 ? '255,240,210' : '40,25,10'},${(Math.random() * 0.12).toFixed(2)})`;
-      x.fillRect(Math.random() * 256, Math.random() * 144, 1, 1);
-    }
-    let q = 0.72,
-      u = c.toDataURL('image/jpeg', q);
-    while (u.length > 58000 && q > 0.3) u = c.toDataURL('image/jpeg', (q -= 0.1));
-    return u;
-  },
+  // la fotografia NON è un'immagine: è la descrizione della scena (vedi fotoScena). Si ridisegna con il gioco.
   scatta() {
     if (!this.on) return;
-    let u = null;
+    let sc = null;
     try {
-      u = this.cattura();
+      sc = fotoScena();
     } catch (e) {
       console.error(e);
+    }
+    if (!sc) {
+      UI.toast('Le fotografie si scattano all’aperto, nella Valle.');
+      this.chiudi(true);
+      return;
     }
     AU.play('door');
     G.flash = { a: 0.9, c: '#fffbe8' };
     this.chiudi();
-    GZ.foto = u;
+    GZ.foto = sc;
+    GZ.fotoN = (GZ.fotoN || 0) + 1;
     setTimeout(() => Gazzetta.apri('scrivi'), 350);
   }
 };
+
+// ---------- la fotografia: una scena del gioco, non un'immagine ----------
+// Nel database finisce solo questo (testo JSON, piccolo): dove guardava la macchina, ora, stagione, tempo, e cosa
+// c'era nell'inquadratura (costruzioni, campi, piante, persone col loro aspetto, abitanti). Chi guarda la Gazzetta
+// la vede ridisegnata dal gioco: non si può pubblicare nessuna immagine che non sia la Valle.
+const FOTO_W = 480,
+  FOTO_H = 270;
+function fotoScena() {
+  const st = G.st,
+    m = G.map;
+  if (!st || !isFree(st) || !m || m.id !== 'main') return null;
+  const cx = Math.round(G.cam.x + W / 2),
+    cy = Math.round(G.cam.y + H / 2),
+    x0 = Math.floor((cx - FOTO_W / 2) / 16) - 4,
+    x1 = Math.ceil((cx + FOTO_W / 2) / 16) + 4,
+    y0 = Math.floor((cy - FOTO_H / 2) / 16) - 2,
+    y1 = Math.ceil((cy + FOTO_H / 2) / 16) + 6;
+  const dentro = k => {
+    const [x, y] = k.split(',').map(Number);
+    return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+  };
+  const scegli = (o, f) => {
+    const r = {};
+    for (const k in o || {}) if (dentro(k)) r[k] = f ? f(o[k]) : o[k];
+    return r;
+  };
+  const F = st.free,
+    pdentro = (x, y) => Math.abs(x - cx) < FOTO_W / 2 + 20 && Math.abs(y - cy) < FOTO_H / 2 + 40;
+  const gente = [];
+  if (G.mode === 'game' && pdentro(G.player.x, G.player.y)) {
+    const me = (G.visit ? G.home : st) || st;
+    gente.push({
+      n: me.name,
+      g: me.g,
+      lk: typeof avCode === 'function' ? avCode() : '',
+      x: Math.round(G.player.x),
+      y: Math.round(G.player.y),
+      dir: G.player.dir | 0
+    });
+  }
+  for (const o of Object.values(G.others || {}))
+    if (o.map === 'main' && pdentro(o.x, o.y))
+      gente.push({
+        n: o.name,
+        g: o.g,
+        lk: o.lk || '',
+        x: Math.round(o.x),
+        y: Math.round(o.y),
+        dir: o.dir | 0
+      });
+  const sc = {
+    v: 1,
+    x: cx,
+    y: cy,
+    d: st.day,
+    t: Math.round(st.time),
+    m: st.weather || '',
+    r: myRank(st),
+    hl: F.house || 1,
+    lk: F.look || {},
+    ld: F.land || [],
+    b: scegli(F.built, b => {
+      const r = { id: b.id };
+      if (b.d != null) r.d = b.d;
+      if (b.fruit) r.fruit = b.fruit;
+      return r;
+    }),
+    f: scegli(st.farm, f => {
+      const r = {};
+      if (f.w) r.w = 1;
+      if (f.c) r.c = { t: f.c.t, a: f.c.a | 0, ...(f.c.dead ? { dead: 1 } : {}) };
+      return r;
+    }),
+    dz: scegli(F.debris),
+    tl: scegli(F.tiles),
+    gn: scegli(F.gone),
+    p: gente.slice(0, 8),
+    c: (G.npcs || [])
+      .filter(n => !n.hidden && n.map === 'main' && pdentro(n.x, n.y) && LOOKS[n.id])
+      .slice(0, 12)
+      .map(n => ({ id: n.id, x: Math.round(n.x), y: Math.round(n.y), dir: n.dir | 0 }))
+  };
+  // se l'inquadratura è troppo piena, via prima i campi lontani dal centro
+  let j = JSON.stringify(sc);
+  while (j.length > 19000 && Object.keys(sc.f).length) {
+    const k = Object.keys(sc.f).sort((a, b) => {
+      const d = q => {
+        const [x, y] = q.split(',').map(Number);
+        return Math.hypot(x * 16 - cx, y * 16 - cy);
+      };
+      return d(b) - d(a);
+    })[0];
+    delete sc.f[k];
+    j = JSON.stringify(sc);
+  }
+  return j.length <= 19500 ? sc : null;
+}
+// controllo di quello che arriva dal database: passa solo ciò che il gioco sa disegnare
+function fotoPulisci(raw) {
+  let s = raw;
+  try {
+    if (typeof s === 'string') s = JSON.parse(s);
+  } catch (e) {
+    return null;
+  }
+  if (!s || typeof s !== 'object' || s.v !== 1) return null;
+  const num = (v, a, b, d) => (typeof v === 'number' && isFinite(v) ? clamp(v, a, b) : d),
+    chiave = k => /^\d{1,3},\d{1,3}$/.test(k),
+    nome = v => (typeof v === 'string' ? v.slice(0, 20) : '?'),
+    tipo = v => typeof v === 'string' && /^[a-z_0-9]{1,24}$/.test(v);
+  const ogg = (o, f) => {
+    const r = {};
+    if (o && typeof o === 'object')
+      for (const k of Object.keys(o).slice(0, 600))
+        if (chiave(k)) {
+          const v = f(o[k]);
+          if (v != null) r[k] = v;
+        }
+    return r;
+  };
+  const lk = {};
+  if (s.lk && typeof s.lk === 'object' && typeof LOOKOPT !== 'undefined')
+    for (const k in LOOKOPT) if (tipo(s.lk[k]) && LOOKOPT[k].o[s.lk[k]]) lk[k] = s.lk[k];
+  return {
+    x: num(s.x, 0, 1600, 400),
+    y: num(s.y, 0, 800, 300),
+    d: num(s.d, 0, 1e6, 1),
+    t: num(s.t, 0, 1560, 720),
+    m: ['', 'sole', 'pioggia', 'neve', 'nebbia', 'vento'].includes(s.m) ? s.m : '',
+    r: num(s.r, 0, 20, 0) | 0,
+    hl: num(s.hl, 1, 5, 1) | 0,
+    lk,
+    ld: Array.isArray(s.ld) ? s.ld.filter(k => typeof PLOTS !== 'undefined' && PLOTS[k]).slice(0, 20) : [],
+    b: ogg(s.b, b =>
+      b && tipo(b.id) && ITEMS[b.id] && ['place', 'arredo'].includes(ITEMS[b.id].t)
+        ? { id: b.id, d: num(b.d, 0, 1e6, 0), fruit: num(b.fruit, 0, 3, 0) | 0 }
+        : null
+    ),
+    f: ogg(s.f, f => {
+      if (!f || typeof f !== 'object') return null;
+      const r = { w: !!f.w, c: null };
+      if (f.c && tipo(f.c.t) && CROPS[f.c.t])
+        r.c = { t: f.c.t, a: num(f.c.a, 0, 30, 0) | 0, dry: 0, ...(f.c.dead ? { dead: 1 } : {}) };
+      return r;
+    }),
+    dz: ogg(s.dz, t => (tipo(t) && FREEIMG[t] ? t : null)),
+    tl: ogg(s.tl, t => (tipo(t) || (typeof t === 'number' && isFinite(t)) ? t : null)),
+    gn: ogg(s.gn, () => 1),
+    p: (Array.isArray(s.p) ? s.p : []).slice(0, 8).map(o => ({
+      name: nome(o && o.n),
+      g: o && o.g === 'f' ? 'f' : 'm',
+      lk: o && typeof o.lk === 'string' && o.lk.length < 600 ? o.lk : '',
+      x: num(o && o.x, 0, 1600, 0),
+      y: num(o && o.y, 0, 800, 0),
+      dir: num(o && o.dir, 0, 3, 0) | 0
+    })),
+    c: (Array.isArray(s.c) ? s.c : [])
+      .slice(0, 12)
+      .filter(n => n && tipo(n.id) && LOOKS[n.id] && NAMES[n.id])
+      .map(n => ({ id: n.id, x: num(n.x, 0, 1600, 0), y: num(n.y, 0, 800, 0), dir: num(n.dir, 0, 3, 0) | 0 }))
+  };
+}
+// ridisegnare la scena: per un istante il gioco «guarda» il villaggio della foto, poi torna com'era
+const FOTO_CACHE = new Map();
+function fotoDisegna(raw, chiaveCache) {
+  if (chiaveCache && FOTO_CACHE.has(chiaveCache)) return FOTO_CACHE.get(chiaveCache);
+  const sc = fotoPulisci(raw);
+  if (!sc || !G.st || !G.st.free) return null;
+  const S = {
+    st: G.st,
+    map: G.map,
+    maps: G.maps,
+    cam: G.cam,
+    npcs: G.npcs,
+    others: G.others,
+    crit: G.critters,
+    fauna: G.fauna,
+    fan: G.fanimals,
+    amb: G.amb,
+    sh: G.shadows,
+    floats: G.floats,
+    mode: G.mode,
+    horse: G.horse && G.horse.on,
+    prey: G.prey,
+    coach: G.coach,
+    shake: G.shake,
+    tree: IMG.tree,
+    chatB: G.chatB,
+    flash: G.flash,
+    hits: G.hits
+  };
+  let url = null;
+  try {
+    const fs = Object.assign({}, S.st, {
+      day: sc.d,
+      time: sc.t,
+      weather: sc.m,
+      farm: sc.f,
+      free: Object.assign(JSON.parse(JSON.stringify(S.st.free)), {
+        built: sc.b,
+        debris: sc.dz,
+        tiles: sc.tl,
+        gone: sc.gn,
+        look: sc.lk,
+        house: sc.hl,
+        land: sc.ld,
+        fotoRango: sc.r
+      })
+    });
+    G.st = fs;
+    G.mode = 'foto';
+    G.fotoRender = 1;
+    if (typeof FREEIMG !== 'undefined' && FREEIMG.trees) IMG.tree = FREEIMG.trees[seasonOf(fs)] || IMG.tree;
+    const m = buildMain(fs);
+    applyFree(m, fs);
+    seasonDecor(m, fs);
+    buildGround(m);
+    seasonGround(m);
+    applyLook(m, fs);
+    G.maps = Object.assign({}, S.maps, { main: m });
+    G.map = m;
+    G.cam = { x: sc.x - W / 2, y: sc.y - H / 2 };
+    G.npcs = sc.c.map(n =>
+      Object.assign({ map: 'main', hidden: false, anim: 0, act: 'idle', name: NAMES[n.id] }, n)
+    );
+    G.others = {};
+    sc.p.forEach(
+      (o, i) => (G.others['foto' + i] = Object.assign({ map: 'main', anim: 0, moving: false }, o))
+    );
+    Object.assign(G, {
+      critters: null,
+      fauna: [],
+      fanimals: [],
+      amb: null,
+      shadows: [],
+      floats: [],
+      prey: null,
+      coach: null,
+      shake: 0,
+      chatB: null,
+      flash: { a: 0, c: '#fff' }
+    });
+    if (G.horse) G.horse.on = false;
+    render();
+    // ritaglio 16:9 al centro, color seppia, vignettatura e grana
+    const cw = Math.min(W, FOTO_W),
+      [c, x] = mk(384, 216);
+    x.filter = 'sepia(.85) contrast(1.06) brightness(1.03)';
+    x.drawImage(cv, ((W - cw) / 2) * RS, 0, cw * RS, H * RS, 0, 0, 384, 216);
+    x.filter = 'none';
+    const g = x.createRadialGradient(192, 108, 70, 192, 108, 230);
+    g.addColorStop(0, 'rgba(40,20,5,0)');
+    g.addColorStop(1, 'rgba(40,20,5,.55)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 384, 216);
+    let seme = (sc.x * 7 + sc.y * 13 + sc.d) >>> 0;
+    const rnd = () => (seme = (seme * 1103515245 + 12345) >>> 0) / 4294967296;
+    for (let i = 0; i < 420; i++) {
+      x.fillStyle = `rgba(${rnd() < 0.5 ? '255,240,210' : '40,25,10'},${(rnd() * 0.12).toFixed(2)})`;
+      x.fillRect(rnd() * 384, rnd() * 216, 1, 1);
+    }
+    url = c.toDataURL('image/jpeg', 0.85);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    G.st = S.st;
+    G.map = S.map;
+    G.maps = S.maps;
+    G.cam = S.cam;
+    G.npcs = S.npcs;
+    G.others = S.others;
+    Object.assign(G, {
+      critters: S.crit,
+      fauna: S.fauna,
+      fanimals: S.fan,
+      amb: S.amb,
+      shadows: S.sh,
+      floats: S.floats,
+      mode: S.mode,
+      prey: S.prey,
+      coach: S.coach,
+      shake: S.shake,
+      chatB: S.chatB,
+      flash: S.flash,
+      hits: S.hits
+    });
+    if (G.horse) G.horse.on = S.horse;
+    IMG.tree = S.tree;
+    G.fotoRender = 0;
+  }
+  if (url && chiaveCache) FOTO_CACHE.set(chiaveCache, url);
+  return url;
+}
 
 // ---------- la Gazzetta ----------
 const gzAperta = () => !!$('#gazzetta');
@@ -364,7 +645,7 @@ function gzBiglietto(p) {
     aperto = GZ.aperti[p.id];
   return `<div class="gz-post" style="transform:rotate(${gzRot(p.id) * 0.5}deg)"><i class="gz-pin"></i>
   <p class="gz-chi"><b>${esc(p.n || '?')}</b>${p.v ? ` · <span>${esc(p.v)}</span>` : ''} <span class="gz-q">${gzQuando(p.ts)}</span></p>
-  ${p.f ? `<div class="gz-foto"><img src="${esc(p.f)}" alt="Fotografia di ${esc(p.n || '')}"></div>` : ''}
+  ${p.s ? gzFotoTag(p.id, p.s, 'Fotografia di ' + (p.n || '')) : ''}
   ${p.t ? `<p class="gz-t">${esc(p.t).replace(/\n/g, '<br>')}</p>` : ''}
   <p class="gz-azioni"><button class="btn gz-piuma${mia ? ' on' : ''}" data-piuma="${p.id}" ${p.pid === me ? 'disabled title="Le tue piume vanno agli altri"' : ''}>🪶 ${n}</button>
   <button class="btn" data-com="${p.id}">💬 ${aperto ? 'Chiudi' : 'Commenti'}${com ? ' (' + Object.keys(com).length + ')' : ''}</button>
@@ -391,7 +672,7 @@ function gzBacheca() {
 }
 function gzGara() {
   const ora = gzSettimana(Date.now()),
-    foto = gzElenco().filter(p => p.f),
+    foto = gzElenco().filter(p => p.s),
     questa = foto.filter(p => gzSettimana(p.ts) === ora).sort((a, b) => gzN(b.id) - gzN(a.id) || a.ts - b.ts),
     scorsa = foto
       .filter(p => gzSettimana(p.ts) === ora - 1)
@@ -404,7 +685,7 @@ function gzGara() {
   const fine = new Date(GZ_SETT0 + (ora + 1) * 7 * 864e5);
   const medaglie = ['🥇', '🥈', '🥉'];
   return `<p class="gz-intro">Ogni settimana, la fotografia con più piume vince il <b>Nastro della Gazzetta</b> e 1500 scudi. Questa gara finisce ${fine.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}.</p>
-  ${vinc ? `<div class="gz-post gz-vinta"><i class="gz-pin"></i><p class="gz-chi">🎀 La più bella della settimana scorsa: <b>${esc(vinc.n)}</b> (🪶 ${gzN(vinc.id)})</p><div class="gz-foto"><img src="${esc(vinc.f)}" alt=""></div>${mio ? '<p class="gz-azioni"><button class="btn" data-premio="1">Ritira il premio</button></p>' : ''}</div>` : ''}
+  ${vinc ? `<div class="gz-post gz-vinta"><i class="gz-pin"></i><p class="gz-chi">🎀 La più bella della settimana scorsa: <b>${esc(vinc.n)}</b> (🪶 ${gzN(vinc.id)})</p>${gzFotoTag(vinc.id, vinc.s, 'La fotografia vincitrice')}${mio ? '<p class="gz-azioni"><button class="btn" data-premio="1">Ritira il premio</button></p>' : ''}</div>` : ''}
   <h3 class="gz-h">Questa settimana</h3>
   ${
     questa.length
@@ -424,7 +705,7 @@ function gzScrivi() {
     vola = PC.st !== 'posato' && pcTrespolo();
   return `<div class="gz-post gz-nuovo"><i class="gz-pin"></i>
   <p class="gz-chi">Un biglietto di <b>${esc(st.name || '')}</b></p>
-  ${GZ.foto ? `<div class="gz-foto"><img src="${GZ.foto}" alt="La tua fotografia"></div><p class="gz-azioni"><button class="btn" data-f="rifai">📷 Rifalla</button><button class="btn" data-f="via">Togli la foto</button></p>` : `<p class="gz-azioni"><button class="btn" data-f="scatta">📷 Scatta una fotografia</button></p>`}
+  ${GZ.foto ? `${gzFotoTag('nuova_' + GZ.fotoN, GZ.foto, 'La tua fotografia')}<p class="gz-azioni"><button class="btn" data-f="rifai">📷 Rifalla</button><button class="btn" data-f="via">Togli la foto</button></p>` : `<p class="gz-azioni"><button class="btn" data-f="scatta">📷 Scatta una fotografia</button></p>`}
   <textarea maxlength="240" rows="4" placeholder="Racconta qualcosa del tuo villaggio…" data-testo>${esc(GZ.testo)}</textarea>
   <p class="small"><label><input type="checkbox" data-racconta ${GZ.racconta ? 'checked' : ''}> Aggiungi due righe sul mio villaggio (rango, abitanti, animali)</label></p>
   <p class="gz-azioni"><button class="btn" data-manda ${vola ? 'disabled' : ''}>🕊 ${vola ? 'Pennino è in volo…' : 'Manda col piccione'}</button></p></div>`;
@@ -453,6 +734,28 @@ function gzDisegna() {
   const c2 = $('#gz-corpo');
   if (c2) c2.scrollTop = y;
   gzCollega(d);
+  gzFotoRiempi();
+}
+// le fotografie si ridisegnano una alla volta (ognuna è una piccola scena del gioco), poi restano in memoria
+const GZ_FRAW = {};
+function gzFotoTag(k, raw, alt) {
+  GZ_FRAW[k] = raw;
+  const u = FOTO_CACHE.get(k);
+  return `<div class="gz-foto"><img data-fk="${esc(k)}" ${u ? `src="${u}"` : ''} alt="${esc(alt)}"></div>`;
+}
+let GZ_CODA = false;
+function gzFotoRiempi() {
+  if (GZ_CODA) return;
+  const img = [...document.querySelectorAll('#gazzetta img[data-fk]')].find(i => !i.getAttribute('src'));
+  if (!img) return;
+  GZ_CODA = true;
+  setTimeout(() => {
+    GZ_CODA = false;
+    const k = img.dataset.fk,
+      u = fotoDisegna(GZ_FRAW[k], k) || 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+    document.querySelectorAll(`#gazzetta img[data-fk="${CSS.escape(k)}"]`).forEach(i => (i.src = u));
+    gzFotoRiempi();
+  }, 40);
 }
 function gzCollega(d) {
   const q = s => d.querySelectorAll(s),
@@ -571,7 +874,7 @@ async function gzManda() {
     ts: Date.now()
   };
   if (t) p.t = t;
-  if (GZ.foto) p.f = GZ.foto;
+  if (GZ.foto) p.s = JSON.stringify(GZ.foto);
   try {
     await GZ_DB.pubblica(p);
   } catch (e) {

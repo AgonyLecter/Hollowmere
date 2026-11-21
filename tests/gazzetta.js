@@ -96,9 +96,12 @@ module.exports = async function (t, { browser }) {
   );
   await page.keyboard.press('Space');
   await page.waitForTimeout(700);
-  const foto = await page.evaluate(() => (GZ.foto ? [GZ.foto.slice(0, 23), GZ.foto.length] : null));
-  t.eq('la fotografia è un JPEG', foto && foto[0], 'data:image/jpeg;base64,');
-  t.true('la fotografia sta nel limite del database', foto && foto[1] < 60000);
+  const foto = await page.evaluate(() => (GZ.foto ? JSON.stringify(GZ.foto) : ''));
+  t.true(
+    "la fotografia è una scena del gioco, non un'immagine",
+    !!foto && foto.startsWith('{') && !/data:|base64|http/.test(foto)
+  );
+  t.true('la scena sta nel limite del database', foto.length > 0 && foto.length <= 20000);
   t.true(
     'dopo lo scatto si torna al biglietto',
     await page.evaluate(() => gzAperta() && GZ.tab === 'scrivi' && !$('#mirino'))
@@ -110,7 +113,7 @@ module.exports = async function (t, { browser }) {
   const post = await page.evaluate(() => Object.values(__gz.post)[0]);
   t.true(
     'il biglietto arriva alla Gazzetta, con foto e testo',
-    !!(post && post.f && /zafferano/.test(post.t) && /🏡/.test(post.t))
+    !!(post && post.s && !post.f && /zafferano/.test(post.t) && /🏡/.test(post.t))
   );
   t.eq('Pennino parte con il biglietto', await page.evaluate(() => PC.st), 'parte');
   await page.waitForTimeout(1200);
@@ -163,6 +166,41 @@ module.exports = async function (t, { browser }) {
   );
   await page.click('[data-tab=gara]');
   await page.waitForTimeout(200);
+  await page.waitForTimeout(800);
+  t.true(
+    'la fotografia si ridisegna dal gioco',
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#gazzetta img[data-fk]')].some(i =>
+        (i.getAttribute('src') || '').startsWith('data:image/jpeg')
+      )
+    )
+  );
+  t.true(
+    'una scena con oggetti inventati non disegna niente di estraneo',
+    await page.evaluate(() => {
+      const s = fotoPulisci({
+        v: 1,
+        x: 300,
+        y: 300,
+        b: { '20,30': { id: 'xx<script>' }, abc: { id: 'banco' } },
+        dz: { '5,5': 'http://x' },
+        p: [{ n: 'A'.repeat(99), lk: 'x' }],
+        c: [{ id: 'nessuno' }]
+      });
+      return (
+        !!s &&
+        !Object.keys(s.b).length &&
+        !Object.keys(s.dz).length &&
+        s.p[0].name.length === 20 &&
+        !s.c.length &&
+        fotoPulisci('data:image/jpeg;base64,AAAA') === null
+      );
+    })
+  );
+  t.true(
+    "dopo una fotografia il gioco torna com'era",
+    await page.evaluate(() => G.map === G.maps.main && !!G.st.free && !G.fotoRender && G.mode === 'game')
+  );
   t.true(
     'la gara della settimana mostra la foto',
     await page.evaluate(
