@@ -1203,6 +1203,7 @@ async function boot() {
   genFestArt();
   genFarm2Art();
   genTradeArt();
+  Ext.run('arte'); // punto di estensione: grafica dei file aggiunti (natura_*.js)
   initEntities();
   UI.init();
   NET.init();

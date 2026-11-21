@@ -329,13 +329,15 @@ function machineAct(k, b, o) {
   }
   if (!id || !M.ok(id)) {
     UI.toast(
-      b.id === 'fornace'
+      M.aiuto
+        ? M.aiuto
+        : b.id === 'fornace'
         ? 'Ci vogliono 5 minerali di ferro (e 1 legna).'
         : `Tieni in mano ${b.id === 'botte' ? 'della frutta' : 'un raccolto'} e usalo sulla ${ITEMS[b.id].n.toLowerCase().includes('botte') ? 'botte' : ITEMS[b.id].n.toLowerCase()}.`
     );
     return true;
   }
-  const need = M.need || 1;
+  const need = typeof M.need === 'function' ? M.need(id) : M.need || 1;
   if (countItem(id) < need) {
     UI.toast(`Ne servono ${need}.`);
     return true;
@@ -349,7 +351,7 @@ function machineAct(k, b, o) {
   }
   removeItem(id, need);
   const fast = skLv('arti') >= 8 ? 1 : 0;
-  b.job = { out: M.out(id), ready: st.day + Math.max(1, M.days - fast), n: 1 };
+  b.job = { out: M.out(id), ready: st.day + Math.max(1, M.days - fast), n: M.n ? M.n(id) : 1, in: id };
   AU.play('plant');
   UI.toast(
     `Dentro! Sarà pronto ${b.job.ready - st.day === 1 ? 'domani' : 'tra ' + (b.job.ready - st.day) + ' giorni'}: ${ITEMS[b.job.out].n}.`

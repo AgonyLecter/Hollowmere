@@ -950,7 +950,12 @@ function updatePlayer(dt) {
   if (p.moving) {
     if (Math.abs(mx) > Math.abs(my)) p.dir = mx < 0 ? 1 : 2;
     else p.dir = my < 0 ? 3 : 0;
-    const sp = p.speed * (G.st.energy <= 0 ? 0.6 : 1) * (G.chase ? 1.1 : 1) * dt;
+    const sp =
+      p.speed *
+      (G.st.energy <= 0 ? 0.6 : 1) *
+      (G.chase ? 1.1 : 1) *
+      (typeof buffOn === 'function' && buffOn('passo') ? 1.2 : 1) *
+      dt;
     let hit = boxHit(m, p.x + mx * sp, p.y);
     if (!hit) p.x += mx * sp;
     else {
@@ -1664,9 +1669,12 @@ function render() {
           crit: c,
           sy: c.k === 'crow' && c.st !== 'perch' ? 9e9 : c.k === 'duck' ? 43 * 16 + 2 : c.y
         });
+  // punto di estensione: altri file aggiungono cose da disegnare in ordine ({ sy, draw() } o oggetti con disegna)
+  Ext.run('listaMondo', list, m, cx, cy);
   list.sort((a, b) => a.sy - b.sy);
   for (const e of list) {
-    if (e.crit) drawCritter(e.crit);
+    if (e.draw) e.draw(e);
+    else if (e.crit) drawCritter(e.crit);
     else if (e.pl) {
       if (G.erede) drawEredeHorse();
       else {
@@ -1699,7 +1707,8 @@ function render() {
         dImg(ctx, img, -22, Math.round(h.y - 38));
         ctx.restore();
       } else dImg(ctx, img, Math.round(h.x - 22), Math.round(h.y - 38));
-    } else if (e.img.canopyH) {
+    } else if (e.disegna) e.disegna(e);
+    else if (e.img.canopyH) {
       const im = e.img,
         ch = im.canopyH,
         S2 = im.s || 1,

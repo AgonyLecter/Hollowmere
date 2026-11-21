@@ -520,6 +520,7 @@ function eatSel() {
   floatText('+' + d.e + ' energia', p.x, p.y - 32, '#9be08a', 1.8);
   UI.toast('Mangi: ' + d.n + '.');
   UI.hud();
+  Ext.run('mangia', it.id); // punto di estensione: effetti dei piatti (natura_cucina.js)
   return true;
 }
 

@@ -27,6 +27,10 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `mpTick` | ogni fotogramma, cose della Valle e del multiplayer |
 | `drawWorldExtras` | disegno sopra gli oggetti del mondo |
 | `drawAmbTop` | disegno sopra il buio (luci, bagliori) |
+| `listaMondo` | aggiungere cose da disegnare in ordine di profondità (`{ sy, draw }`, oppure `disegna` su un oggetto) |
+| `arte` | alla fine del caricamento: disegnare la grafica dei file aggiunti |
+| `ottieni` | qualcosa è entrato nello zaino (`id`, `n`) |
+| `mangia` | il giocatore ha mangiato un piatto (`id`) |
 
 ## Mappa dei file (in ordine di caricamento)
 - **Motore**: `core.js` (stato, input, audio, Ext), `art.js` (pixel art generata), `world.js` (mappe, rendering),
@@ -38,9 +42,13 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   `aspetto.js`, `zaino.js`, `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
 - **Multiplayer**: `mp.js`, `missions.js`, `chat.js`, `coop.js`, `scambi.js`, `postino.js`, `coop_vivo.js`.
 - **Grafica rifatta**: `grafica.js` (personaggi, edifici, animali, attrezzi, cibi, atmosfera, strutture animate).
+- **Natura**: `natura_flora.js` (colture, alberi, selvatici), `natura_macchine.js` (frantoio, essiccatoio, zangola,
+  alambicco, seminatrice, compostiera, forno a legna: ognuna con la sua animazione), `natura_cucina.js` (ricette che si
+  imparano dagli abitanti, da soli o con l'esperienza; effetti dei piatti), `natura_fauna.js` (animali selvatici e
+  taccuino del naturalista). La grafica si fa nel punto `arte`; macchine e animali si disegnano con `listaMondo`.
 - **Wiki**: `wiki.js` (in fondo a tutto). Si costruisce dal vivo dai dati del gioco: un oggetto, una ricetta, una
-  coltura, un animale o un abitante nuovo compare da solo, con la sua icona. Si apre dal titolo e dalla scheda «Wiki»
-  del menu di pausa; «Salva PDF» la stampa. Per un easter egg nuovo basta aggiungere `dove: '…'` ai suoi dati.
+  coltura, un animale o un abitante nuovo compare da solo, con la sua icona. È privata (nessun pulsante): si apre con
+  `#wiki=CHIAVE` in fondo all'indirizzo; «Salva PDF» la stampa. Per un easter egg nuovo basta aggiungere `dove: '…'` ai suoi dati.
   I testi di racconto (lore, capitoli, finali) sono scritti in `wiki.js`: se cambia la storia, aggiornali lì.
 
 ## Strumenti di manutenzione (`tools/`)
