@@ -259,7 +259,7 @@ function buildMain(st) {
   m.add(OB('nameless', 58, 6, IMG.nameless, { act: 'nameless' }));
   // decorazioni
   [
-    [47, 22],
+    [50, 16],
     [52, 22],
     [39, 22],
     [22, 9],

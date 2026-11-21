@@ -336,6 +336,7 @@ function registroMenu() {
       'Il registro del villaggio',
       'Niente'
     ]);
+    if (c === 0) await Chiacchiera.parla(n);
     if (c === 1) landMenu();
     if (c === 2) registroMenu();
     return c === 0;
@@ -916,7 +917,7 @@ for (const R of RES_POOL)
             ? 'Mi sto abituando. La gente è strana, ma tu no.'
             : 'Sono ancora nuovo. Dammi tempo.'
       );
-      return true;
+      return Chiacchiera.parla(n);
     }
     if (c === 1) {
       if (done) return say(R.id, 'Per oggi a posto così. Torna domani.');

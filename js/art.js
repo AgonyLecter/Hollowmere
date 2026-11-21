@@ -1338,15 +1338,15 @@ function addDeco(m, st) {
   };
   // panchine
   [
-    [42, 22],
-    [45, 16],
+    [41, 22], // panchine sul lato sud della piazza, ai lati dell'ingresso (44-45)
+    [47, 22],
     [47, 40],
     [27, 21]
   ].forEach(([x, y]) => m.add(OB('bench', x, y, IMG.bench, { act: 'bench' })));
   // girasoli e ortensie vicino alle case
   [
     [6, 10],
-    [13, 10],
+    [15, 10], // non davanti alla cassetta (13,9): si vende da lì
     [32, 29],
     [38, 29],
     [56, 17],

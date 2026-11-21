@@ -338,6 +338,7 @@ function abitiMenu() {
       abitiMenu();
       return true;
     }
+    if (c === 2) await Chiacchiera.parla(n);
     if (c === 3) decorShop();
     if (c === 4) lookMenu();
     return c === 2;
