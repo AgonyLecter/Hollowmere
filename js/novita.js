@@ -252,6 +252,19 @@ const NOVITA = [
         t: 'La barra adesso è staccata in fondo, come in Minecraft. Per buttare qualcosa prendilo in mano e tocca il cestino. E niente si perde: se chiudi con qualcosa in mano, torna da solo nello zaino.'
       }
     ]
+  },
+  {
+    id: 'musica_gb',
+    v: 34,
+    n: 'Musica nuova',
+    steps: [
+      {
+        t: 'La Valle ha una colonna sonora nuova, con il suono dei vecchi giochi portatili: una ninna nanna per il menù, una musica per ogni stagione, il tramonto, la notte, la pioggia, la cappella, la festa e le corse nel buio.'
+      },
+      {
+        t: 'Sono melodie semplici e un po’ malinconiche. Sembra che vada tutto bene… ma ascolta bene: ogni tanto qualcosa stona. E a volte, per un attimo, la musica si spegne del tutto.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
