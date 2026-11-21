@@ -17,6 +17,12 @@ module.exports = async function (t, { browser }) {
     let cb = null,
       n = 0;
     window.__gz = db;
+    // se il gioco si era già collegato a Firebase vero (su GitHub succede), si stacca e riparte dal server finto
+    try {
+      if (typeof GZ.off === 'function') GZ.off();
+    } catch (e) {}
+    Object.assign(GZ, { off: null, posts: {}, piume: {}, commenti: {}, pronto: false });
+    G.st.flags.gzVisto = 0;
     window.__gzAvvisa = () => cb && cb(JSON.parse(JSON.stringify(db.post)));
     GZ_DB = {
       ok: () => true,
