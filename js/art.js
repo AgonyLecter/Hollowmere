@@ -3129,34 +3129,28 @@ const PROMPT = {
 };
 function promptInfo() {
   const st = G.st,
-    m = G.map,
-    p = G.player;
+    m = G.map;
   if (G.mode !== 'game' || G.cut || UI.busy()) return null;
-  const ax = p.x + DIRV[p.dir][0] * 14,
-    ay = p.y + DIRV[p.dir][1] * 14,
-    [fx, fy] = frontTile();
-  for (const n of G.npcs) {
-    if (n.hidden || n.map !== m.id) continue;
-    const [nx, ny] = ptile(n);
-    if ((nx === fx && ny === fy) || Math.hypot(n.x - ax, n.y - ay) < 14)
-      return { x: n.x, y: n.y - 31, t: st.flags.met[n.id] ? 'Parla' : 'Presentati' };
+  const [fx, fy] = frontTile();
+  // la stessa scelta del tasto azione (farm.js): il fumetto dice sempre quello che succede premendo
+  const sc = typeof aimScelta === 'function' ? aimScelta() : null;
+  if (sc && sc.k === 'npc') {
+    const n = sc.r;
+    return { x: n.x, y: n.y - 31, t: st.flags.met[n.id] ? 'Parla' : 'Presentati' };
   }
-  if (m.id === 'main' && G.fanimals && isFree(st))
-    for (const e of G.fanimals) {
-      if (Math.hypot(e.x - ax, e.y - ay) < 18) {
-        const a = e.a;
-        return {
-          x: e.x,
-          y: e.y - (a.kind === 'mucca' ? 30 : 18),
-          t: a.kind === 'mucca' && a.prod ? 'Mungi ' + a.name : a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
-        };
-      }
-    }
-  if (m.id === 'main' && G.critters)
-    for (const c of G.critters) {
-      if ((c.k === 'cat' || c.k === 'chicken') && Math.hypot(c.x - ax, c.y - ay) < 14)
-        return { x: c.x, y: c.y - 14, t: c.k === 'cat' ? 'Accarezza' : 'Gallina' };
-    }
+  if (sc && sc.k === 'animal') {
+    const e = sc.r,
+      a = e.a;
+    return {
+      x: e.x,
+      y: e.y - (a.kind === 'mucca' ? 30 : 18),
+      t: a.kind === 'mucca' && a.prod ? 'Mungi ' + a.name : a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
+    };
+  }
+  if (sc && sc.k === 'critter') {
+    const c = sc.r;
+    return { x: c.x, y: c.y - 14, t: c.k === 'cat' ? 'Accarezza' : 'Gallina' };
+  }
   if (m.id === 'main') {
     const f = st.farm[fx + ',' + fy];
     if (f && f.c && cropStage(f.c) === 3) return { x: fx * 16 + 8, y: fy * 16 - 8, t: 'Raccogli' };

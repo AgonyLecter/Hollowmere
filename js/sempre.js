@@ -289,7 +289,7 @@ function evTick() {
 }
 
 // ================= IL MUSEO DELLA VALLE =================
-const MUSEO_AT = [26, 9]; // impronta 4×3 (25-28, 7-9), porta in basso
+const MUSEO_AT = [26, 9]; // impronta 7×3 (22-28, 7-9), porta in basso al centro (25)
 PROTECT.push([24, 6, 29, 11]);
 const COLL = {
   colture: { n: 'Colture', l: () => Object.keys(CROPS).filter(c => ITEMS[c]) },
@@ -385,20 +385,22 @@ ACT.museo = () => {
     if (m.id !== 'main' || !isFree(st)) return;
     if (!IMG.museo) genSempreArt();
     const [x, y] = MUSEO_AT;
+    // il museo è largo 7 caselle (da x-4 a x+2), alto più di una casa; la porta è al centro, in x-1
     const T = [];
-    for (let j = y - 2; j <= y; j++) for (let i = x - 1; i <= x + 2; i++) T.push([i, j]);
+    for (let j = y - 2; j <= y; j++) for (let i = x - 4; i <= x + 2; i++) T.push([i, j]);
     m.objs
       .filter(
         o =>
           o.kind !== 'built' &&
           o.kind !== 'bld' &&
-          (T.some(([a, b]) => o.tx === a && o.ty === b) ||
-            (o.ty >= y + 1 && o.ty <= y + 4 && o.tx >= x - 2 && o.tx <= x + 3))
+          o.kind !== 'museo' &&
+          ((o.tx >= x - 5 && o.tx <= x + 3 && o.ty >= y - 5 && o.ty <= y) ||
+            (o.ty >= y + 1 && o.ty <= y + 4 && o.tx >= x - 3 && o.tx <= x + 1))
       )
       .forEach(o => mapRemove(m, o));
     for (const [a, b] of T) m.set(a, b, 1);
-    for (let i = x; i <= x + 1; i++) m.set(i, y + 1, 2);
-    m.add(OB('museo', x - 1, y, IMG.museo, { wt: 4, act: 'museo', solid: T, hits: T }));
+    for (let i = x - 2; i <= x; i++) m.set(i, y + 1, 2);
+    m.add(OB('museo', x - 4, y, IMG.museo, { wt: 7, act: 'museo', solid: T, hits: T }));
   });
 }
 

@@ -323,13 +323,18 @@ const MAC_MIN = {
 };
 const MAC_MAX = 99;
 const macAbs = (st = G.st) => st.day * 1440 + st.time;
-const macDur = b => MAC_MIN[b.id] || (MACH[b.id].days || 1) * 240;
+const macDur = b => {
+  const v = MAC_MIN[b.id];
+  return (typeof v === 'function' ? v(b) : v) || (MACH[b.id].days || 1) * 240;
+};
 const macNeed = (M, id) => (typeof M.need === 'function' ? M.need(id) : M.need || 1);
 const macOutN = (M, id) => (typeof M.n === 'function' ? M.n(id) : 1);
 // lo stato della macchina (e i lavori del vecchio sistema diventano prodotti pronti)
 function macStato(b) {
   if (!b.m) b.m = { i: null, in: 0, f: 0, o: null, on: 0, t0: null };
   if (b.job) {
+    // il mulino di prima teneva solo quanta farina: { n, ready, t }
+    if (b.id === 'mulino' && !b.job.out) b.job.out = 'farina';
     if (b.job.out && ITEMS[b.job.out] && (!b.m.o || b.m.o === b.job.out)) {
       b.m.o = b.job.out;
       b.m.on += b.job.n > 0 ? b.job.n : 1;
@@ -420,18 +425,8 @@ function machineAct(k, b, o) {
   const it = selItem(),
     id = it && it.id;
   if (b.id === 'apiario') {
-    if (b.ready) {
-      if (!addItem('miele', b.n || 1)) return true;
-      b.ready = 0;
-      AU.play('pick');
-      floatText(`+${b.n || 1} Miele`, o.tx * 16 + 8, o.ty * 16 - 10);
-      addXP('arti', 4);
-    } else
-      UI.toast(
-        seasonOf() === 1
-          ? "Le api dormono. D'inverno niente miele."
-          : 'Le api lavorano. Il miele arriva ogni tre giorni.'
-      );
+    if (id && id === PLACE_TOOL[b.id]) return false;
+    apiGui(k, b);
     return true;
   }
   if (!MACH[b.id]) return false;
@@ -490,7 +485,11 @@ function macGui(k, b) {
     slot = (w, cls = '') =>
       `<div class="islot mslot ${cls}" data-m="${w}"><canvas width="32" height="32"></canvas><i></i></div>`;
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}</h2>
+    `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}${
+      typeof FUNC !== 'undefined' && FUNC[b.id]
+        ? ` <span class="small">· livello ${b.lv || 1}/3</span> <button class="btn mac-liv" data-liv>Migliora…</button>`
+        : ''
+    }</h2>
     <div class="mac">
       <div class="mac-sx">${slot('in')}${M.fuel ? `<div class="mac-fuoco"><div class="mac-fiamma"><b></b></div></div>${slot('f')}` : ''}</div>
       <div class="mac-freccia"><div class="mac-barra"><b></b></div><span class="mac-t"></span></div>
@@ -518,6 +517,14 @@ function macGui(k, b) {
     el.onclick = () => macMetti(+el.dataset.i);
   });
   box.querySelectorAll('.mslot').forEach(el => (el.onclick = () => macTogli(el.dataset.m)));
+  const liv = box.querySelector('[data-liv]');
+  if (liv)
+    liv.onclick = () => {
+      AU.play('ui');
+      UI._mclose();
+      UI._mclose = null;
+      funcMenu(k);
+    };
   MACG.firma = '';
   macAggiorna();
   clearInterval(MACG.timer);
@@ -627,6 +634,7 @@ function macTogli(w) {
     AU.play('pick');
     addXP('arti', Math.min(40, 4 * n));
     UI.toast(`+${n} ${ITEMS[id].n}`);
+    if (M.preso) M.preso(id, n);
   } else if (w === 'in') {
     if (!m.in) return;
     if (!addItem(m.i, m.in)) return;
@@ -641,6 +649,56 @@ function macTogli(w) {
   }
   macSim(b);
   macRidisegna();
+}
+
+// ---------- l'apiario: non si mette niente, le api lavorano da sole ----------
+// a sinistra l'alveare e i fiori che aiutano, al centro i giorni che mancano, a destra il miele
+function apiGui(k, b) {
+  const st = G.st,
+    inverno = seasonOf() === 1,
+    fiori = Object.values(st.free.built).filter(x => x.id === 'aiuola').length,
+    giorni = 3 - Math.min(2, b.t || 0),
+    p = b.ready ? 1 : Math.min(1, (b.t || 0) / 3);
+  const testo = b.ready
+    ? `Il miele è pronto: <b>${b.n || 1}</b> ${(b.n || 1) > 1 ? 'vasetti' : 'vasetto'}. Toccalo per prenderlo.`
+    : inverno
+      ? "Le api dormono. D'inverno niente miele: tornano a lavorare in primavera."
+      : `Le api lavorano. Il prossimo miele ${giorni === 1 ? 'domani mattina' : `tra ${giorni} giorni`}.` +
+        (fiori >= 2
+          ? ' Con le aiuole fiorite qui intorno ne fanno 2 vasetti.'
+          : ` Con 2 aiuole fiorite ne farebbero 2 vasetti (ne hai ${fiori}).`);
+  UI.open(
+    `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}</h2>
+    <div class="mac">
+      <div class="mac-sx"><div class="islot mslot pieno mac-fisso" title="Alveare"><canvas width="32" height="32" data-ic="apiario"></canvas><i></i></div>
+      <div class="mac-api">${'<b></b>'.repeat(Math.min(3, fiori))}</div></div>
+      <div class="mac-freccia"><div class="mac-barra"><b style="width:${(p * 100).toFixed(0)}%"></b></div><span class="mac-t">${b.ready ? 'pronto' : inverno ? 'in letargo' : giorni === 1 ? 'domani' : giorni + ' giorni'}</span></div>
+      <div class="islot mslot mac-out${b.ready ? ' pronto pieno' : ''}" data-m="o" title="Miele"><canvas width="32" height="32" data-ic="miele"></canvas><i>${b.ready && (b.n || 1) > 1 ? b.n : ''}</i></div>
+    </div>
+    <div class="iinfo mac-info">${testo}</div>`,
+    () => {
+      UI.hotbar();
+      if (G.st && G.st.free) NET.save(myHome());
+    }
+  );
+  const box = $('#mbox');
+  box.querySelectorAll('canvas[data-ic]').forEach(c => {
+    const ic = ICON[c.dataset.ic],
+      x = c.getContext('2d');
+    if (!ic) return;
+    x.globalAlpha = c.dataset.ic === 'miele' && !b.ready ? 0.22 : 1;
+    x.drawImage(ic, 0, 0);
+  });
+  box.querySelector('.mac-out').onclick = () => {
+    if (!b.ready) return;
+    if (!addItem('miele', b.n || 1)) return;
+    UI.toast(`+${b.n || 1} Miele`);
+    b.ready = 0;
+    AU.play('pick');
+    addXP('arti', 4);
+    UI._mclose = null;
+    apiGui(k, b);
+  };
 }
 
 function machinesMorning(st) {

@@ -284,3 +284,7 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .mac-t{min-height:calc(7*var(--u));font-size:calc(6.5*var(--u));color:#4a1e08;white-space:nowrap}
 .mac-info{min-height:calc(18*var(--u));text-align:center;color:#3a1a08}
 .islot.mno{opacity:.38}
+.mac-fisso{cursor:default}
+.mac-api{display:flex;gap:calc(1.5*var(--u));min-height:calc(5*var(--u))}
+.mac-api b{width:calc(5*var(--u));height:calc(5*var(--u));background:#e8a0c8;box-shadow:0 0 0 calc(.5*var(--u)) #6a2a48;clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%)}
+#mbox h2 .mac-liv{font-family:inherit;font-size:calc(6.5*var(--u));padding:calc(1.5*var(--u)) calc(4*var(--u));vertical-align:middle;margin-left:calc(3*var(--u))}
