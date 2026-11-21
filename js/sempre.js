@@ -772,8 +772,8 @@ FREE_ASK.nove = async n => {
     'Un indovinello',
     'Niente'
   ]);
-  if (c === 0)
-    return say(
+  if (c === 0) {
+    await say(
       'nove',
       h >= 6
         ? 'Sei la prima persona che mi conta. Lo sai? Uno, due… nove. Grazie.'
@@ -781,6 +781,8 @@ FREE_ASK.nove = async n => {
           ? 'Mi piace quando passi. Il cimitero è più caldo.'
           : 'Shh. Se parli forte i morti si girano.'
     );
+    return Chiacchiera.parla(n);
+  }
   if (c === 1) {
     UI.open(
       `<button class="btn mclose" data-close>✕</button><h2>Le cose di Nove</h2><p class="small">«Le trovo di notte. Le do a chi mi conta.» — Hai <b>${CZ(st.money)}</b></p>` +

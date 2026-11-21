@@ -129,6 +129,80 @@ module.exports = async function (t, { browser }) {
     return r;
   });
   t.true('nella storia una promessa mancata costa amicizia', s.scaduta && s.meno);
+  // «Chiacchiera»: una conversazione vera con ogni abitante, mai vuota
+  const ch = await page.evaluate(async () => {
+    const ids = G.npcs.filter(n => !n.script).map(n => n.id);
+    const male = [];
+    for (const id of ids)
+      for (const f of ['umore', 'novita', 'dime'])
+        for (let i = 0; i < 4; i++) {
+          const t = Chiacchiera[f](id);
+          if (!t || typeof t !== 'string' || /undefined|null|NaN|\[object/.test(t))
+            male.push(id + '.' + f + ': ' + t);
+        }
+    // la conversazione completa: tre argomenti e poi «A presto»
+    const _ask = UI.say;
+    const scelte = [0, 1, 2, 3],
+      dette = [];
+    UI.say = async (id, t, mood, opts) => {
+      dette.push(t);
+      return opts ? scelte.shift() : undefined;
+    };
+    const a = G.st.friends.brom || 0;
+    let fine;
+    try {
+      fine = await Chiacchiera.parla(NPC('brom'));
+    } finally {
+      UI.say = _ask;
+    }
+    return { ids: ids.length, male, fine, dette: dette.length, amico: (G.st.friends.brom || 0) > a };
+  });
+  t.eq('«Chiacchiera» ha sempre qualcosa da dire, per tutti', ch.male.slice(0, 3).join(' | '), '');
+  t.true(
+    '«Chiacchiera» apre una conversazione con argomenti e fa amicizia',
+    ch.fine === true && ch.dette >= 7 && ch.amico
+  );
+  // disposizione: niente davanti alla cassetta, piazza in ordine e raggiungibile
+  const pz = await page.evaluate(() => {
+    const m = G.maps.main,
+      bin = m.objs.find(o => o.act === 'bin');
+    const vicini = ([x, y]) =>
+      [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0]
+      ].some(([a, b]) => !m.solid(x + a, y + b));
+    const piazza = m.objs.filter(
+      o => o.tx >= 38 && o.tx <= 51 && o.ty >= 15 && o.ty <= 23 && o.act && o.act !== 'lamp'
+    );
+    return {
+      bin: !!bin && !m.solid(bin.tx, bin.ty + 1),
+      chiusi: piazza.filter(o => !(o.hits || o.solid || [[o.tx, o.ty]]).some(vicini)).map(o => o.act),
+      centro: [
+        [43, 18],
+        [44, 18],
+        [45, 18],
+        [43, 19],
+        [44, 19],
+        [45, 19],
+        [43, 20],
+        [44, 20],
+        [45, 20]
+      ].every(([x, y]) => !m.solid(x, y)),
+      ingressi: [
+        [43, 15],
+        [44, 23],
+        [45, 23],
+        [38, 19],
+        [51, 18]
+      ].every(([x, y]) => !m.solid(x, y))
+    };
+  });
+  t.true("davanti alla cassetta di vendita non c'è niente", pz.bin);
+  t.eq('in piazza ogni oggetto si raggiunge', pz.chiusi.join(','), '');
+  t.true('il centro della piazza resta libero (feste, falò)', pz.centro);
+  t.true('gli ingressi della piazza sono liberi', pz.ingressi);
   t.eq('economia: nessun errore', errors.join('\n'), '');
   await page.close();
 };

@@ -8,6 +8,7 @@
 
 const homeSt = () => (G.visit ? G.home : G.st);
 const ALBO_T = [
+  [45, 16],
   [43, 17],
   [41, 19],
   [44, 21],

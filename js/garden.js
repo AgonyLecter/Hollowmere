@@ -601,6 +601,7 @@ function genDishArt() {
 const FREE_ASK = {
   ezekiel: async n => {
     const c = await ask('ezekiel', freeTalkLine('ezekiel'), ['Chiacchiera', 'Le terre in vendita', 'Niente']);
+    if (c === 0) await Chiacchiera.parla(n);
     if (c === 1) landMenu();
     return c < 2;
   },
@@ -611,6 +612,7 @@ const FREE_ASK = {
       'Migliorare gli attrezzi',
       'Niente'
     ]);
+    if (c === 0) await Chiacchiera.parla(n);
     if (c === 1) await houseUpMenu();
     if (c === 2) await forgeMenu();
     return c < 3;
@@ -627,6 +629,7 @@ const FREE_ASK = {
       await UI.shop();
       return true;
     }
+    if (c === 1) await Chiacchiera.parla(n);
     if (c === 2) decorShop();
     if (c === 3) lookMenu();
     return c === 1;

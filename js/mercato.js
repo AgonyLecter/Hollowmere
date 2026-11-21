@@ -96,6 +96,7 @@ const Mercato = {
 
 // ---------------- DISPENSA ----------------
 const DISP_T = [
+  [50, 19], // fra il pozzo e la bancarella, si apre da sotto
   [47, 20],
   [39, 21],
   [48, 18],
