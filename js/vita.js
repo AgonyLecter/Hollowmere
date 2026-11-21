@@ -305,7 +305,7 @@ const VCHAT = [
     'ezekiel',
     'agatha',
     [
-      ['agatha', 'Il nipote di Elias ha la mano buona.'],
+      ['agatha', '{Il nipote|La nipote} di Elias ha la mano buona.'],
       ['ezekiel', 'Ha la testa dura. Come lui.']
     ]
   ],

@@ -654,7 +654,7 @@ const SECRETS = {
   agatha: [
     [
       3,
-      "Ho visto arrivare sette forestieri, tesoro. Tuo nonno è l'unico che si è fermato a ringraziarmi. Per questo sono ancora gentile."
+      "Ho visto arrivare tre forestieri, tesoro. Tuo nonno è l'unico che si è fermato a ringraziarmi. Per questo sono ancora gentile."
     ],
     [5, "Il rosso non è cattivo, sai. È solo… scomodo. Per chi vive sotto terra. Non te l'ho detto io."]
   ],
@@ -694,6 +694,7 @@ async function secretTell(n) {
   for (const [h, t] of SECRETS[n.id] || []) {
     const k = 'sec_' + n.id + h;
     if (F[k] || hearts(n.id) < h) continue;
+    if (!isFree(st) && st.chapter < 2 && /Albero/.test(t)) continue; // niente spoiler prima del Capitolo II
     F[k] = 1;
     await say(n.id, 'Posso dirti una cosa, {n}? A te sì.');
     await say(n.id, t, 'dark');

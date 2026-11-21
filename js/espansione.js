@@ -55,10 +55,10 @@ function rankNext(r) {
   return r < RANKS.length - 1 ? RANKS[r + 1][1] : RANKS[RANKS.length - 1][1] + (r - RANKS.length + 2) * 2500;
 }
 const myRank = st => rankOf(villageScore(st));
-const resCap = r => Math.min(RES_POOL.length, r); // Borgo 1 abitante, Paese 2, … fino a 8
+const resCap = r => Math.min(RES_POOL.length, r); // Borgo 1 abitante, Paese 2, Cittadina 3, Città 4, poi uno per stella: fino a 10
 const RANK_GIFTS = {
   1: 'La Collina a est si apre: legna, pietre e terre nuove. E puoi costruire una casetta per un nuovo abitante.',
-  2: 'Il Lago si apre: si pesca, e le sue rive si possono comprare.',
+  2: 'Il Lago si apre: si pesca, e le sue rive si possono comprare. E un posto in più per un nuovo abitante.',
   3: 'Un posto in più per un nuovo abitante.',
   4: 'Sei una Città. Da qui ogni 2500 punti di prestigio guadagni una stella.'
 };
@@ -611,7 +611,7 @@ const RES_POOL = [
     req: ['mais', 'patata', 'cavolo'],
     L: [
       'Farina, pane, polenta. La gente mangia, io macino.',
-      "Il grano non c'è, qui. Mi arrangio col mais, che è più onesto.",
+      "Prima qui c'era solo mais. Adesso c'è il grano, e il pane sa di pane.",
       'Le mani bianche non si lavano mai del tutto.'
     ]
   },
@@ -666,7 +666,7 @@ const RES_POOL = [
     ],
     req: ['legna', 'pane', 'arrosto'],
     L: [
-      "Sotto la Collina c'è una miniera vecchia. Chiusa. Per ora.",
+      "Sotto la Collina c'è una miniera vecchia. Nessuno ci scendeva da anni. Io sì.",
       'Le pietre di ogni villaggio sono diverse. Le tue hanno un odore strano.',
       'Porta il piccone sempre affilato. E una lanterna.'
     ]
@@ -687,10 +687,10 @@ const RES_POOL = [
     },
     shop: [
       ['tisana', 55],
-      ['camomilla', 28],
+      ['camomilla', 65],
       ['concime', 10]
     ],
-    req: ['funghi', 'radice', 'more', 'camomilla'],
+    req: ['funghi', 'radice', 'more'],
     L: [
       "Per ogni male c'è un'erba. Per la Valle ce ne vogliono parecchie.",
       "Raccogli all'alba: le erbe hanno ancora la rugiada e la memoria.",
@@ -717,7 +717,7 @@ const RES_POOL = [
       ['panchina', 160],
       ['tavolino', 220]
     ],
-    req: ['pietra', 'ferro', 'legna'],
+    req: ['pietra', 'ferro'],
     L: [
       "Il legno buono si sente con l'orecchio, non con l'occhio.",
       'Fammi vedere le tue costruzioni. Mh. Si può fare di meglio. Sempre.',
@@ -769,7 +769,7 @@ const RES_POOL = [
     },
     shop: [
       ['apiario', 380],
-      ['miele', 55]
+      ['miele', 250]
     ],
     req: ['camomilla', 'tarassaco', 'ciliegie'],
     L: [
@@ -801,7 +801,7 @@ const RES_POOL = [
       ['s_grano', 30],
       ['ovile', 650]
     ],
-    req: ['lana', 'latte_capra', 'formaggio', 'fieno', 'grano'],
+    req: ['lana', 'latte_capra', 'formaggio', 'grano'],
     L: [
       "Le pecore non sono stupide. Sono prudenti. C'è differenza.",
       "D'estate le porto in alto. D'inverno le tengo vicine. Come la gente.",
@@ -886,15 +886,40 @@ for (const R of RES_POOL)
     return null;
   };
 // la richiesta del giorno: un oggetto della stagione, un premio
+// quanto vale un oggetto per chi lo chiede: prezzo di vendita, o di bottega, o la somma degli ingredienti
+const RES_VAL = { legna: 5, pietra: 7, fibra: 3, fieno: 15, ferro: 35, lingotto: 85, farina: 60 };
+function reqVal(id, depth = 0) {
+  const it = ITEMS[id] || {};
+  if (it.v) return it.v;
+  if (RES_VAL[id]) return RES_VAL[id];
+  const r = depth < 3 && COOK.find(c => c.id === id);
+  if (r)
+    return Math.round(Object.entries(r.need).reduce((a, [k, q]) => a + reqVal(k, depth + 1) * q, 0) * 1.2);
+  return it.p || 20;
+}
+// si trova in questa stagione? (le colture, i selvatici e la frutta hanno una stagione; il resto c'è sempre)
+function inSeasonItem(id, s) {
+  if (CROPS[id]) return !CROPS[id].s || CROPS[id].s.includes(s);
+  if (typeof FRUIT !== 'undefined' && FRUIT[id]) return FRUIT[id].s.includes(s);
+  if (typeof WILD !== 'undefined' && Object.values(WILD).some(l => l.includes(id)))
+    return (WILD[s] || []).includes(id);
+  return true;
+}
 function resReq(id, st) {
   const R = RES[id],
-    L = R.req.filter(x => ITEMS[x]);
+    s = seasonOf(st),
+    all = R.req.filter(x => ITEMS[x]),
+    ora = all.filter(x => inSeasonItem(x, s)),
+    L = ora.length ? ora : all;
   const k = (st.day * 7 + id.length * 13) % L.length,
     item = L[k],
     n = 1 + ((st.day + id.charCodeAt(0)) % 3),
-    pay = Math.round((ITEMS[item].v || ITEMS[item].p || 20) * n * 1.6) + 40;
+    pay = Math.round(reqVal(item) * n * 1.6) + 40;
   return { item, n, pay };
 }
+// le abitanti parlano al femminile
+const RES_F = new Set(['nora', 'lia', 'mirta', 'ada', 'rina']);
+const resG = (id, m, f) => (RES_F.has(id) ? f : m);
 for (const R of RES_POOL)
   FREE_ASK[R.id] = async n => {
     const st = G.st,
@@ -912,10 +937,10 @@ for (const R of RES_POOL)
       await say(
         R.id,
         h >= 6
-          ? 'Sono contento di essere venuto qui. Davvero. Grazie per la casa.'
+          ? `Sono ${resG(R.id, 'contento', 'contenta')} di essere ${resG(R.id, 'venuto', 'venuta')} qui. Davvero. Grazie per la casa.`
           : h >= 3
             ? 'Mi sto abituando. La gente è strana, ma tu no.'
-            : 'Sono ancora nuovo. Dammi tempo.'
+            : `Sono ancora ${resG(R.id, 'nuovo', 'nuova')}. Dammi tempo.`
       );
       return Chiacchiera.parla(n);
     }

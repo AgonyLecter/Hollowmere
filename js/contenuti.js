@@ -311,6 +311,10 @@ if (typeof RES_POOL !== 'undefined') {
   addReq('ada', ['albicocca', 'prugna']);
   addReq('silvio', ['noce']);
   addReq('nora', ['uovo_anatra']);
+  // d'autunno e d'inverno i fiori non ci sono: chiedono quello che la stagione dà
+  addReq('lia', ['agrifoglio', 'zucca']); // ghirlande d'inverno, zucche ornamentali d'autunno
+  addReq('gaspare', ['castagne', 'agrifoglio']); // miele di castagno; l'agrifoglio per coprire le arnie
+  addReq('ada', ['agrifoglio', 'cavolfiore']); // rosso e bianco per i quadri d'inverno
 }
 
 // ---------- animali: sistema generalizzato (galline, anatre, mucche, capre, pecore) ----------

@@ -149,8 +149,8 @@
     t(
       'agatha tobia',
       'tobia: Agatha, fa caldo! Hihi.',
-      'agatha: Vieni dentro, ho la limonata.',
-      "tobia: Cos'è la limonata? Hihi.",
+      "agatha: Vieni dentro, ho l'acqua col miele.",
+      "tobia: Cos'è l'acqua col miele? Hihi.",
       'agatha: Acqua che sorride, tesoro.'
     )
   ]);

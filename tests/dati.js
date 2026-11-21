@@ -128,6 +128,23 @@ module.exports = async function (t, { browser }) {
           .map(k => c + ':' + k)
       )
     );
+    // economia: niente si compra in bottega per rivenderlo con guadagno (cassetta +25% e Ottavio +20%)
+    bad(
+      'botteghe che vendono sotto il prezzo di rivendita',
+      RES_POOL.flatMap(r =>
+        r.shop
+          .filter(([x, p]) => ITEMS[x] && ITEMS[x].t === 'crop' && ITEMS[x].v * 1.25 * 1.2 >= p * 0.85)
+          .map(([x]) => r.id + ':' + x)
+      )
+    );
+    bad(
+      'abitanti che chiedono ciò che vendono',
+      RES_POOL.flatMap(r => r.req.filter(x => r.shop.some(([y]) => y === x)).map(x => r.id + ':' + x))
+    );
+    bad(
+      'ricette che usano un ingrediente detestato da chi le insegna',
+      COOK.filter(r => r.da && (DISLIKES[r.da] || []).some(x => r.need[x])).map(r => r.da + ':' + r.id)
+    );
     // dialoghi: chi parla esiste, condizioni scritte bene, nessuno svela la storia prima del tempo
     const KEYS = new Set([
       't',
