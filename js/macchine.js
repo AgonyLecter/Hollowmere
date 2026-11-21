@@ -402,22 +402,43 @@ function drawMachines(m) {
     const rd =
       (b.job && st.day >= b.job.ready) || b.ready || (ITEMS[b.id] && ITEMS[b.id].tree && b.fruit > 0);
     if (!rd && b.job) {
-      // al lavoro: un cartellino con cosa sta facendo e quanto manca (sennò sembra che le cose spariscano)
+      // al lavoro: un fumetto come quello di «pronto», ma fermo e più scuro: icona del prodotto,
+      // quanti ne escono e quando (una lunetta = domani mattina, altrimenti i giorni che mancano)
       const g = b.job.ready - st.day,
-        txt =
-          (b.job.n > 1 ? b.job.n + ' ' : '') +
-          (ITEMS[b.job.out] ? ITEMS[b.job.out].n.split(' ')[0] : '') +
-          ' · ' +
-          (g === 1 ? 'domani' : g + ' giorni');
-      ctx.font = '6px monospace';
-      const w = Math.ceil(ctx.measureText(txt).width) + 4,
-        X = o.tx * 16 + 8 - w / 2,
-        Y = o.dy - 12;
-      ctx.fillStyle = 'rgba(42,20,6,.85)';
-      ctx.fillRect(X, Y - 6, w, 8);
-      ctx.fillStyle = '#f6d98a';
+        ic = ICON[b.job.out],
+        dopo = g <= 1 ? '' : g + 'g',
+        num = b.job.n > 1 ? '×' + b.job.n : '';
+      ctx.save();
+      ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(txt, X + 2, Y);
+      const wn = num ? Math.ceil(ctx.measureText(num).width) + 1 : 0,
+        wd = dopo ? Math.ceil(ctx.measureText(dopo).width) + 1 : 6,
+        w = 3 + 8 + (num ? 1 + wn : 0) + 2 + wd + 2,
+        X = Math.round(o.tx * 16 + 8 - w / 2),
+        Y = Math.round(o.dy - 13);
+      ctx.fillStyle = '#2a1406';
+      ctx.fillRect(X, Y, w, 11);
+      ctx.fillRect(X + ((w / 2) | 0) - 1, Y + 11, 3, 2);
+      ctx.fillStyle = '#e8c87a';
+      ctx.fillRect(X + 1, Y + 1, w - 2, 9);
+      if (ic) ctx.drawImage(ic, X + 2, Y + 1.5, 8, 8);
+      let cx = X + 11;
+      ctx.fillStyle = '#2a1406';
+      if (num) {
+        ctx.fillText(num, cx + 1, Y + 9);
+        cx += 1 + wn;
+      }
+      cx += 2;
+      if (dopo) ctx.fillText(dopo, cx, Y + 9);
+      else {
+        // lunetta: pronto domani mattina
+        ctx.fillStyle = '#4a5a8a';
+        ['..###', '.##..', '##...', '##...', '##...', '.##..', '..###'].forEach((r, j) => {
+          for (let i = 0; i < 5; i++) if (r[i] === '#') ctx.fillRect(cx + i, Y + 2 + j, 1, 1);
+        });
+      }
+      ctx.restore();
       continue;
     }
     if (!rd) continue;
