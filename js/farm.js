@@ -467,6 +467,9 @@ function doAction() {
   if (eggAt(fx, fy)) return;
   if (G.map.id === 'main' && hogAt(p.x + DIRV[p.dir][0] * 14, p.y + DIRV[p.dir][1] * 14)) return;
   if (G.visit) {
+    // in visita si può mangiare (tranne davanti alla cassetta e al ponte, che hanno le loro azioni)
+    const ov = G.map.objAt(fx, fy);
+    if (!(ov && (ov.act === 'bin' || ov.act === 'bridge')) && eatSel()) return;
     visitAct(fx, fy);
     return;
   }

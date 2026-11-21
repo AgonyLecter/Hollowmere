@@ -49,9 +49,19 @@ let GZ_DB = {
     const D = NET.api;
     return (await D.get(D.query(NET.r('gazzetta/commenti/' + id), D.limitToLast(30)))).val() || {};
   },
+  // il biglietto e «l'ultimo biglietto di oggi» si scrivono insieme: le regole permettono un biglietto ogni 20 ore
   async pubblica(p) {
     await this.proprio();
-    return NET.api.push(NET.r('gazzetta/post'), p);
+    const D = NET.api,
+      id = D.push(NET.r('gazzetta/post')).key;
+    return D.update(NET.r('gazzetta'), { ['post/' + id]: p, ['ultimo/' + p.pid]: p.ts });
+  },
+  async ultimo(pid) {
+    return (await NET.api.get(NET.r('gazzetta/ultimo/' + pid))).val() || 0;
+  },
+  async modifica(id, p) {
+    await this.proprio();
+    return NET.api.set(NET.r('gazzetta/post/' + id), p);
   },
   async togli(id) {
     await this.proprio();
@@ -537,7 +547,10 @@ function fotoDisegna(raw, chiaveCache) {
     applyLook(m, fs);
     G.maps = Object.assign({}, S.maps, { main: m });
     G.map = m;
-    G.cam = { x: sc.x - W / 2, y: sc.y - H / 2 };
+    G.cam = {
+      x: clamp(sc.x - W / 2, 0, Math.max(0, m.w * 16 - W)),
+      y: clamp(sc.y - H / 2, 0, Math.max(0, m.h * 16 - H))
+    };
     G.npcs = sc.c.map(n =>
       Object.assign({ map: 'main', hidden: false, anim: 0, act: 'idle', name: NAMES[n.id] }, n)
     );
@@ -646,10 +659,16 @@ function gzBiglietto(p) {
   return `<div class="gz-post" style="transform:rotate(${gzRot(p.id) * 0.5}deg)"><i class="gz-pin"></i>
   <p class="gz-chi"><b>${esc(p.n || '?')}</b>${p.v ? ` · <span>${esc(p.v)}</span>` : ''} <span class="gz-q">${gzQuando(p.ts)}</span></p>
   ${p.s ? gzFotoTag(p.id, p.s, 'Fotografia di ' + (p.n || '')) : ''}
-  ${p.t ? `<p class="gz-t">${esc(p.t).replace(/\n/g, '<br>')}</p>` : ''}
+  ${
+    GZ.modifica === p.id
+      ? `<textarea maxlength="240" rows="3" data-mtesto="${p.id}">${esc(p.t || '')}</textarea><p class="gz-azioni"><button class="btn" data-msalva="${p.id}">Salva</button><button class="btn" data-mannulla="1">Annulla</button></p>`
+      : p.t
+        ? `<p class="gz-t">${esc(p.t).replace(/\n/g, '<br>')}${p.ed ? ' <span class="gz-mod">(modificato)</span>' : ''}</p>`
+        : ''
+  }
   <p class="gz-azioni"><button class="btn gz-piuma${mia ? ' on' : ''}" data-piuma="${p.id}" ${p.pid === me ? 'disabled title="Le tue piume vanno agli altri"' : ''}>🪶 ${n}</button>
   <button class="btn" data-com="${p.id}">💬 ${aperto ? 'Chiudi' : 'Commenti'}${com ? ' (' + Object.keys(com).length + ')' : ''}</button>
-  ${p.pid === me ? `<button class="btn" data-togli="${p.id}">Togli</button>` : ''}</p>
+  ${p.pid === me && GZ.modifica !== p.id ? `<button class="btn" data-mod="${p.id}">✏️ Modifica</button><button class="btn" data-togli="${p.id}">🗑 Togli</button>` : ''}</p>
   ${
     aperto
       ? `<div class="gz-com">${
@@ -700,15 +719,33 @@ function gzGara() {
       : '<p class="gz-vuoto">Nessuna fotografia, per ora. Scattane una: potrebbe vincere.</p>'
   }`;
 }
+const GZ_GIORNO = 20 * 3600 * 1000; // un biglietto «al giorno»: ogni 20 ore
+// quando parte il prossimo biglietto (0 = adesso)
+function gzProssimo() {
+  const st = gzMe(),
+    mie = Object.values(GZ.posts)
+      .filter(p => p.pid === st.pid)
+      .map(p => p.ts),
+    u = Math.max(0, (st.flags && st.flags.gzUltimo) || 0, GZ.ultimo || 0, ...mie);
+  return Math.max(0, u + GZ_GIORNO - Date.now());
+}
 function gzScrivi() {
   const st = gzMe(),
-    vola = PC.st !== 'posato' && pcTrespolo();
+    vola = PC.st !== 'posato' && pcTrespolo(),
+    resta = gzProssimo();
+  if (resta > 0) {
+    const h = Math.floor(resta / 3600000),
+      m = Math.ceil((resta % 3600000) / 60000),
+      mio = gzElenco().find(p => p.pid === st.pid);
+    return `<p class="gz-vuoto">Pennino porta un biglietto al giorno: il prossimo parte tra <b>${h ? h + ' or' + (h === 1 ? 'a' : 'e') + ' e ' : ''}${m} minut${m === 1 ? 'o' : 'i'}</b>.<br>Il biglietto di oggi puoi modificarlo o toglierlo.</p>${mio ? `<div class="gz-muro gz-uno">${gzBiglietto(mio)}</div>` : ''}`;
+  }
   return `<div class="gz-post gz-nuovo"><i class="gz-pin"></i>
   <p class="gz-chi">Un biglietto di <b>${esc(st.name || '')}</b></p>
   ${GZ.foto ? `${gzFotoTag('nuova_' + GZ.fotoN, GZ.foto, 'La tua fotografia')}<p class="gz-azioni"><button class="btn" data-f="rifai">📷 Rifalla</button><button class="btn" data-f="via">Togli la foto</button></p>` : `<p class="gz-azioni"><button class="btn" data-f="scatta">📷 Scatta una fotografia</button></p>`}
   <textarea maxlength="240" rows="4" placeholder="Racconta qualcosa del tuo villaggio…" data-testo>${esc(GZ.testo)}</textarea>
   <p class="small"><label><input type="checkbox" data-racconta ${GZ.racconta ? 'checked' : ''}> Aggiungi due righe sul mio villaggio (rango, abitanti, animali)</label></p>
-  <p class="gz-azioni"><button class="btn" data-manda ${vola ? 'disabled' : ''}>🕊 ${vola ? 'Pennino è in volo…' : 'Manda col piccione'}</button></p></div>`;
+  <p class="small">Un biglietto al giorno: dopo potrai modificarlo o toglierlo.</p>
+  <p class="gz-azioni"><button class="btn" data-manda ${vola || GZ.invio ? 'disabled' : ''}>🕊 ${GZ.invio ? 'Pennino sta partendo…' : vola ? 'Pennino è in volo…' : 'Manda col piccione'}</button></p></div>`;
 }
 function gzRiassunto() {
   const st = gzMe();
@@ -751,9 +788,19 @@ function gzFotoRiempi() {
   GZ_CODA = true;
   setTimeout(() => {
     GZ_CODA = false;
-    const k = img.dataset.fk,
-      u = fotoDisegna(GZ_FRAW[k], k) || 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
-    document.querySelectorAll(`#gazzetta img[data-fk="${CSS.escape(k)}"]`).forEach(i => (i.src = u));
+    const k = img.dataset.fk;
+    let u = null;
+    try {
+      u = fotoDisegna(GZ_FRAW[k], k);
+    } catch (e) {
+      console.error(e);
+    }
+    document.querySelectorAll(`#gazzetta img[data-fk="${CSS.escape(k)}"]`).forEach(i => {
+      if (u) i.src = u;
+      else
+        i.parentElement.outerHTML =
+          '<div class="gz-foto gz-sbiadita">📷 Questa fotografia si è sbiadita.</div>';
+    });
     gzFotoRiempi();
   }, 40);
 }
@@ -828,6 +875,32 @@ function gzCollega(d) {
         } catch (e) {}
       })
   );
+  q('[data-mod]').forEach(b => (b.onclick = () => ((GZ.modifica = b.dataset.mod), gzDisegna())));
+  q('[data-mannulla]').forEach(b => (b.onclick = () => ((GZ.modifica = null), gzDisegna())));
+  q('[data-msalva]').forEach(
+    b =>
+      (b.onclick = async () => {
+        const id = b.dataset.msalva,
+          p = GZ.posts[id],
+          t = (d.querySelector(`[data-mtesto="${id}"]`).value || '').trim().slice(0, 240);
+        if (!p) return;
+        if (!t && !p.s) return UI.toast('Un biglietto senza fotografia ha bisogno di qualche parola.');
+        const n = Object.assign({}, p, { ed: Date.now() });
+        if (t) n.t = t;
+        else delete n.t;
+        b.disabled = true;
+        try {
+          await GZ_DB.modifica(id, n);
+          GZ.posts[id] = n;
+          GZ.modifica = null;
+          AU.play('ok');
+          gzDisegna();
+        } catch (e) {
+          b.disabled = false;
+          UI.toast('Pennino non è riuscito a correggere il biglietto.', 'bad');
+        }
+      })
+  );
   const ta = d.querySelector('[data-testo]');
   if (ta) ta.oninput = () => (GZ.testo = ta.value);
   const rc = d.querySelector('[data-racconta]');
@@ -861,7 +934,10 @@ function gzCollega(d) {
   q('.gz-foto img').forEach(img => (img.onclick = () => img.parentElement.classList.toggle('grande')));
 }
 async function gzManda() {
+  if (GZ.invio) return;
   const st = gzMe();
+  if (gzProssimo() > 0)
+    return UI.toast('Pennino porta un biglietto al giorno. Il tuo di oggi è già partito.');
   let t = (GZ.testo || '').trim();
   if (GZ.racconta) t = (t ? t + '\n' : '') + gzRiassunto();
   t = t.slice(0, 240);
@@ -875,12 +951,27 @@ async function gzManda() {
   };
   if (t) p.t = t;
   if (GZ.foto) p.s = JSON.stringify(GZ.foto);
+  GZ.invio = true;
+  gzDisegna();
   try {
     await GZ_DB.pubblica(p);
   } catch (e) {
     console.error(e);
-    return UI.toast('Pennino non è riuscito a partire. Riprova tra poco.', 'bad');
+    GZ.invio = false;
+    gzDisegna();
+    // forse ne era già partito uno oggi (da un altro dispositivo): lo chiede al server
+    try {
+      GZ.ultimo = await GZ_DB.ultimo(st.pid);
+    } catch (e2) {}
+    return UI.toast(
+      gzProssimo() > 0
+        ? 'Pennino porta un biglietto al giorno. Il tuo di oggi è già partito.'
+        : 'Pennino non è riuscito a partire. Riprova tra poco.',
+      'bad'
+    );
   }
+  GZ.invio = false;
+  st.flags.gzUltimo = p.ts;
   GZ.testo = '';
   GZ.foto = null;
   GZ.racconta = false;
@@ -911,10 +1002,18 @@ const Gazzetta = {
     addEventListener('keydown', this._k, true);
     AU.play('ui');
     gzDisegna();
-    if (GZ_DB.ok())
+    if (GZ_DB.ok()) {
       gzCaricaPiume().then(() => {
         if (gzAperta()) gzDisegna();
       });
+      if (GZ_DB.ultimo)
+        GZ_DB.ultimo(st.pid)
+          .then(v => {
+            GZ.ultimo = v || 0;
+            if (gzAperta()) gzDisegna();
+          })
+          .catch(() => {});
+    }
   },
   chiudi() {
     const d = $('#gazzetta');

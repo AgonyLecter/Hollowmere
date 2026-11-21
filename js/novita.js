@@ -159,6 +159,22 @@ const NOVITA = [
         t: 'Ai biglietti degli altri si regalano piume e si scrivono commenti. Ogni settimana la fotografia con più piume vince il <b>Nastro della Gazzetta</b> e 1500 scudi. Quando arriva posta, Pennino torna con una lettera nel becco.'
       }
     ]
+  },
+  {
+    id: 'ritocchi1',
+    v: 28,
+    n: 'Piccole cose sistemate',
+    steps: [
+      {
+        t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: avvicinati e cerca lo spiffero d’aria fredda che sale dalle crepe. Al primo colpo di piccone, quella pietra suona vuota.'
+      },
+      {
+        t: 'Adesso si può mangiare anche quando sei ospite nel villaggio di un amico. E gli avvisi uguali non si accumulano più sullo schermo.'
+      },
+      {
+        t: 'Nella Gazzetta Pennino porta un biglietto al giorno: il tuo puoi correggerlo (✏️ Modifica) o toglierlo (🗑 Togli) quando vuoi.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -156,13 +156,21 @@ const UI = {
     if (r) r(v);
   },
   toast(t, cls) {
+    const box = $('#toasts'),
+      txt = fmt(t);
+    // lo stesso avviso già sullo schermo non si ripete: si allunga solo la sua durata
+    const gia = [...box.children].find(x => x.textContent === txt);
+    if (gia) {
+      clearTimeout(gia._t);
+      gia._t = setTimeout(() => gia.remove(), 2800);
+      return;
+    }
     const d = document.createElement('div');
     d.className = 'toast' + (cls ? ' ' + cls : '');
-    d.textContent = fmt(t);
-    const box = $('#toasts');
+    d.textContent = txt;
     box.appendChild(d);
-    while (box.children.length > 4) box.firstChild.remove();
-    setTimeout(() => d.remove(), 2800);
+    while (box.children.length > 3) box.firstChild.remove();
+    d._t = setTimeout(() => d.remove(), 2800);
   },
   // ---------- HUD ----------
   buildHotbar() {

@@ -13,7 +13,7 @@ module.exports = async function (t, { browser }) {
   await page.waitForTimeout(800);
   // server finto
   await page.evaluate(() => {
-    const db = { post: {}, piume: {}, commenti: {} };
+    const db = { post: {}, piume: {}, commenti: {}, ultimo: {} };
     let cb = null,
       n = 0;
     window.__gz = db;
@@ -39,7 +39,17 @@ module.exports = async function (t, { browser }) {
         return db.commenti[id] || {};
       },
       async pubblica(p) {
+        // come le regole: un biglietto ogni 20 ore
+        if (db.ultimo[p.pid] && p.ts < db.ultimo[p.pid] + 72000000) throw new Error('PERMISSION_DENIED');
+        db.ultimo[p.pid] = p.ts;
         db.post['p' + ++n] = p;
+        window.__gzAvvisa();
+      },
+      async ultimo(pid) {
+        return db.ultimo[pid] || 0;
+      },
+      async modifica(id, p) {
+        db.post[id] = p;
         window.__gzAvvisa();
       },
       async togli(id) {
@@ -108,8 +118,18 @@ module.exports = async function (t, { browser }) {
   );
   await page.fill('[data-testo]', 'Il mio primo raccolto di zafferano!');
   await page.click('[data-racconta]');
-  await page.click('[data-manda]');
+  // doppio tocco: deve partire un solo biglietto
+  await page.evaluate(() => {
+    const b = document.querySelector('[data-manda]');
+    b.click();
+    b.click();
+  });
   await page.waitForTimeout(300);
+  t.eq(
+    'un doppio tocco manda un solo biglietto',
+    await page.evaluate(() => Object.keys(__gz.post).length),
+    1
+  );
   const post = await page.evaluate(() => Object.values(__gz.post)[0]);
   t.true(
     'il biglietto arriva alla Gazzetta, con foto e testo',
@@ -118,6 +138,56 @@ module.exports = async function (t, { browser }) {
   t.eq('Pennino parte con il biglietto', await page.evaluate(() => PC.st), 'parte');
   await page.waitForTimeout(1200);
   if (process.env.GZ_FOTO) await page.screenshot({ path: process.env.GZ_FOTO + '/volo.png' });
+  // un biglietto al giorno
+  const secondo = await page.evaluate(async () => {
+    Gazzetta.apri('scrivi');
+    const txt = $('#gazzetta').textContent;
+    Gazzetta.chiudi();
+    GZ.testo = 'ancora';
+    await gzManda();
+    return [/un biglietto al giorno/i.test(txt), Object.keys(__gz.post).length];
+  });
+  t.true('il secondo biglietto del giorno non parte (e lo dice)', secondo[0] && secondo[1] === 1);
+  // modificare il proprio biglietto
+  await page.evaluate(() => {
+    PC.st = 'posato';
+    Gazzetta.apri('bacheca');
+  });
+  await page.waitForTimeout(300);
+  await page.click('[data-mod="p1"]');
+  await page.fill('[data-mtesto="p1"]', 'Il mio primo zafferano (corretto)');
+  await page.click('[data-msalva="p1"]');
+  await page.waitForTimeout(300);
+  t.true(
+    'il proprio biglietto si corregge',
+    await page.evaluate(
+      () => /corretto/.test(__gz.post.p1.t) && !!__gz.post.p1.ed && __gz.post.p1.ts && __gz.post.p1.s
+    )
+  );
+  t.true(
+    '…e in bacheca si vede «modificato»',
+    await page.evaluate(() => /modificato/.test($('#gazzetta').textContent))
+  );
+  await page.evaluate(() => Gazzetta.chiudi());
+  // fotografie più complicate (casette, persone con l'aspetto, abitanti) si ridisegnano senza errori
+  t.true(
+    'una foto con casetta, persone e abitanti si ridisegna',
+    await page.evaluate(() => {
+      const u = fotoDisegna({
+        v: 1,
+        x: 500,
+        y: 300,
+        d: 5,
+        t: 600,
+        m: 'pioggia',
+        r: 4,
+        b: { '30,18': { id: 'casetta' }, '28,20': { id: 'trespolo' }, '26,20': { id: 'frantoio' } },
+        p: [{ n: 'Bea', g: 'f', lk: '', x: 480, y: 300, dir: 0 }],
+        c: [{ id: 'clara', x: 520, y: 310, dir: 1 }]
+      });
+      return !!u && u.startsWith('data:image/jpeg') && G.map === G.maps.main && !G.fotoRender;
+    })
+  );
   // un altro giocatore pubblica: Pennino torna con una lettera
   await page.evaluate(() => {
     __gz.post.altro = {
@@ -222,6 +292,22 @@ module.exports = async function (t, { browser }) {
     await page.evaluate(() => /non trova la strada/.test($('#gazzetta').textContent))
   );
   await page.evaluate(() => Gazzetta.chiudi());
+  // in visita da un amico si può mangiare (il pane di Clara regalato non restava in tasca per sempre)
+  t.true(
+    'in visita si mangia',
+    await page.evaluate(() => {
+      const st = G.st;
+      G.home = st;
+      G.visit = { name: 'Bea', pid: 'HM-BBBBBB', watered: 0, gifts: 0 };
+      st.energy = 40;
+      addItem('pane', 1);
+      st.sel = st.inv.findIndex(x => x && x.id === 'pane');
+      doAction();
+      const ok = st.energy > 40;
+      G.visit = null;
+      return ok;
+    })
+  );
   t.eq('gazzetta: nessun errore', errors.join('\n'), '');
   await page.close();
 };

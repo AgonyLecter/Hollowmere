@@ -259,3 +259,8 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #mirino .tl{left:6%;top:8%;border-right:0;border-bottom:0}#mirino .tr{right:6%;top:8%;border-left:0;border-bottom:0}
 #mirino .bl{left:6%;bottom:14%;border-right:0;border-top:0}#mirino .br{right:6%;bottom:14%;border-left:0;border-top:0}
 #mirino .mr-bar{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;pointer-events:auto;background:rgba(30,16,8,.75);color:#ffe8b8;padding:6px 10px;font:14px Georgia,serif;border-radius:4px}
+
+.gz-sbiadita{cursor:default;padding:26px 12px;text-align:center;font-style:italic;color:#7a5a3a;background:#efe4c8}
+.gz-mod{font:italic 12px Georgia,serif;color:#8a6a4a}
+.gz-post textarea{width:100%;box-sizing:border-box;font:15px 'Segoe Script','Bradley Hand','Comic Sans MS',cursive;padding:6px;border:1px solid #b89a6a;background:#fffaf0;resize:vertical}
+.gz-uno{grid-template-columns:minmax(260px,520px);justify-content:center}
