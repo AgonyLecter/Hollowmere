@@ -10,7 +10,8 @@ const SUITES = {
   impronta: require('./impronta'),
   fumo: require('./fumo'),
   toppe: require('./toppe'),
-  economia: require('./economia')
+  economia: require('./economia'),
+  aggiornamento: require('./aggiornamento')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
