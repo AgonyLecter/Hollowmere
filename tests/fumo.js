@@ -7,7 +7,9 @@ module.exports = async function (t, { browser }) {
     const { page, errors } = await openGame(browser);
     t.true('nuova partita: si arriva ai comandi dopo il prologo', await newGame(page, 'Ugo', 'm'));
     const s = await page.evaluate(() => ({ map: G.map.id, day: G.st.day, name: G.st.name }));
-    t.eq('si comincia in casa, il primo giorno', s.map + '/' + s.day, 'house/1');
+    // nel Capitolo I (chapter 0) le battute del Capitolo I devono essere disponibili
+  t.true('le battute del Capitolo I sono attive all\'inizio della storia', await page.evaluate(() => Dialoghi.quante('ezekiel', 'passaggio') > 0 && Dialoghi.db.passaggio.ezekiel.some(e => e.cap && e.cap[0] === 1 && Dialoghi.ok(e, 'ezekiel'))));
+  t.eq('si comincia in casa, il primo giorno', s.map + '/' + s.day, 'house/1');
     await page.evaluate(() => goMap('main', 44, 20, 0, true));
     await page.waitForTimeout(1500);
     await skipScenes(page);
