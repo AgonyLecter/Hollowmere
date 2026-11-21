@@ -149,7 +149,7 @@ module.exports = async function (t, { browser }) {
       'copertura'
     ]);
     const tutte = [];
-    for (const tipo of ['saluto', 'passaggio', 'sfuggito'])
+    for (const tipo of Object.keys(Dialoghi.db).filter(k => !Array.isArray(Dialoghi.db[k])))
       for (const [chi, L] of Object.entries(Dialoghi.db[tipo]))
         for (const e of L) tutte.push({ tipo, chi, e, testi: [e.t] });
     for (const tipo of ['chiacchiera', 'bisbiglio'])

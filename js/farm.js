@@ -211,6 +211,7 @@ function cropStage(c) {
   return c.a >= d / 2 ? 2 : 1;
 }
 function harvest(tx, ty, f) {
+  Dialoghi.evento('raccolto', { item: f.c && f.c.t });
   const st = G.st,
     c = f.c,
     t = c.t,
