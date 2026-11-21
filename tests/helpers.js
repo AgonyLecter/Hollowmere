@@ -3,7 +3,41 @@
 // e la raccolta di ogni errore della pagina.
 const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
-const URL = 'file://' + path.join(ROOT, 'index.html');
+const fs = require('fs');
+// il gioco si apre da un indirizzo http finto servito da Playwright: con file:// Chromium a volte
+// azzera la memoria (localStorage) quando si ricarica la pagina
+const HOST = 'http://hollowmere.test/';
+const URL = HOST + 'index.html';
+const TIPI = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.png': 'image/png',
+  '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+  '.svg': 'image/svg+xml',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg'
+};
+async function servi(page) {
+  await page.route(HOST + '**', route => {
+    const rel =
+      decodeURIComponent(new globalThis.URL(route.request().url()).pathname).replace(/^\/+/, '') ||
+      'index.html';
+    const file = path.join(ROOT, rel);
+    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory())
+      return route.fulfill({ status: 404, body: '' });
+    route.fulfill({
+      status: 200,
+      body: fs.readFileSync(file),
+      headers: {
+        'content-type': TIPI[path.extname(file)] || 'application/octet-stream',
+        'cache-control': 'no-store'
+      }
+    });
+  });
+}
 let chromium;
 try {
   ({ chromium } = require('playwright'));
@@ -22,6 +56,7 @@ const NOISE = [
 
 async function openGame(browser, opts = {}) {
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+  await servi(page);
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + (e.stack || e.message)));
   page.on('console', m => {
@@ -47,7 +82,12 @@ async function openGame(browser, opts = {}) {
     // gli errori catturati dal gioco (console.error(e)) con la traccia completa
     const ce = console.error.bind(console);
     console.error = (...a) => ce(...a.map(x => (x && x.stack ? x.stack : x)));
-    if (location.hash !== '#keep') {
+    // «#keep» o il segno nella sessione (sopravvive al ricaricamento): non cancellare i salvataggi
+    let keep = location.hash === '#keep';
+    try {
+      keep = keep || sessionStorage.getItem('__keep') === '1';
+    } catch (e) {}
+    if (!keep) {
       try {
         localStorage.clear();
       } catch (e) {}

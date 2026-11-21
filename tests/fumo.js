@@ -8,8 +8,15 @@ module.exports = async function (t, { browser }) {
     t.true('nuova partita: si arriva ai comandi dopo il prologo', await newGame(page, 'Ugo', 'm'));
     const s = await page.evaluate(() => ({ map: G.map.id, day: G.st.day, name: G.st.name }));
     // nel Capitolo I (chapter 0) le battute del Capitolo I devono essere disponibili
-  t.true('le battute del Capitolo I sono attive all\'inizio della storia', await page.evaluate(() => Dialoghi.quante('ezekiel', 'passaggio') > 0 && Dialoghi.db.passaggio.ezekiel.some(e => e.cap && e.cap[0] === 1 && Dialoghi.ok(e, 'ezekiel'))));
-  t.eq('si comincia in casa, il primo giorno', s.map + '/' + s.day, 'house/1');
+    t.true(
+      "le battute del Capitolo I sono attive all'inizio della storia",
+      await page.evaluate(
+        () =>
+          Dialoghi.quante('ezekiel', 'passaggio') > 0 &&
+          Dialoghi.db.passaggio.ezekiel.some(e => e.cap && e.cap[0] === 1 && Dialoghi.ok(e, 'ezekiel'))
+      )
+    );
+    t.eq('si comincia in casa, il primo giorno', s.map + '/' + s.day, 'house/1');
     await page.evaluate(() => goMap('main', 44, 20, 0, true));
     await page.waitForTimeout(1500);
     await skipScenes(page);
@@ -45,7 +52,7 @@ module.exports = async function (t, { browser }) {
       return LS.get('hm_save');
     });
     t.true('il salvataggio finisce nel dispositivo', !!saved && JSON.parse(saved).name === 'Ugo');
-    await page.goto(page.url().split('#')[0] + '#keep');
+    await page.evaluate(() => sessionStorage.setItem('__keep', '1'));
     await page.reload();
     await page.waitForFunction(() => typeof G !== 'undefined' && G.mode === 'title', null, {
       timeout: 20000
@@ -146,7 +153,10 @@ module.exports = async function (t, { browser }) {
       }, tm);
       await page.waitForTimeout(400);
     }
-    const sc = await page.evaluate(() => [villageScore(G.st), scoreParts(G.st).reduce((a, p) => a + p[1], 0)]);
+    const sc = await page.evaluate(() => [
+      villageScore(G.st),
+      scoreParts(G.st).reduce((a, p) => a + p[1], 0)
+    ]);
     t.eq('il prestigio è la somma delle voci del registro', sc[0], sc[1]);
     t.eq('Valle: nessun errore', errors.join('\n'), '');
     await page.close();
