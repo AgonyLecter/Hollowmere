@@ -1049,7 +1049,7 @@ GUIDES.push({
       t: "Adesso tutti hanno giornate vere: Tobia, i nuovi abitanti (Nora pesca all'alba, Teo scava, Ada dipinge in giro, Silvio viene a vedere le tue costruzioni…) e anche io, col giro della posta la mattina."
     },
     {
-      t: 'Gli abitanti si accorgono di te: se sei stanco, se le piante hanno sete, se hai roba matura, posta nella cassetta o un incarico pronto.'
+      t: 'Gli abitanti si accorgono di te: se sei stanc{o|a}, se le piante hanno sete, se hai roba matura, posta nella cassetta o un incarico pronto.'
     },
     {
       t: 'E sussurrano. Quando passi vicino a due che parlano piano, ascolta: si lasciano scappare indizi su quello che non hai ancora trovato. Li ritrovi in ☰ → Traguardi → Sussurri sentiti.'
