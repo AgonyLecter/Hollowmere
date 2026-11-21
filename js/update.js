@@ -98,7 +98,8 @@ document.addEventListener('visibilitychange', () => {
   } catch (e) {}
   LS.del('hm_resume');
   if (!r || Date.now() - r.ts > 120000) return;
-  for (let i = 0; i < 100 && G.mode !== 'title'; i++) await sleep(100);
+  // su un telefono lento il titolo può arrivare dopo parecchi secondi: si aspetta fino a un minuto
+  for (let i = 0; i < 600 && G.mode !== 'title'; i++) await sleep(100);
   if (G.mode !== 'title') return;
   for (let i = 0; i < 40 && !NET.ok && !NET.netErr; i++) await sleep(100); // un attimo per la connessione, senza farla aspettare troppo
   let st = null;
