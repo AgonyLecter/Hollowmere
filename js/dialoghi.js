@@ -43,7 +43,7 @@ const Dialoghi = {
     const st = G.st;
     if (!st) return false;
     const valle = isFree(st),
-      cap = valle ? 5 : st.chapter || 0,
+      cap = valle ? 5 : Math.max(1, st.chapter || 0), // il Capitolo I nel codice è chapter 0
       F = st.flags || {};
     if (e.fase && (e.fase === 'valle') !== valle) return false;
     if (e.cap && (cap < e.cap[0] || cap > (e.cap[1] ?? 99))) return false;
