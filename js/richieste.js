@@ -168,7 +168,12 @@ const Richieste = {
       const fe = festOf(st),
         d = fe.day - seasonDay(st),
         key = 'festa-' + festKey(st);
-      if (d > 0 && d <= 7 && !st.favors.some(f => f.evento === key)) {
+      if (
+        d > 0 &&
+        d <= 7 &&
+        !st.favors.some(f => f.evento === key) &&
+        this.aperte(st).length < this.tetto(st)
+      ) {
         const org = cand().includes(fe.org) ? fe.org : cand()[0];
         if (org) {
           const pool = this.pool(st, org).filter(k => ITEMS[k].t === 'crop'),
