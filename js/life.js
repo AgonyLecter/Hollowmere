@@ -20,6 +20,7 @@ const sellPrice = id =>
     ITEMS[id].v *
       (typeof evMult === 'function' ? evMult(id) : 1) *
       (G.st && G.st.demand === id ? 1.4 : 1) *
+      (typeof Mercato !== 'undefined' ? Mercato.domanda(id) : 1) *
       (isFree() ? (skLv('agri') >= 8 ? 1.25 : skLv('agri') >= 2 ? 1.1 : 1) : 1)
   );
 
@@ -594,50 +595,11 @@ const FAV_THX = {
   ],
   brom: ['Mh. Buono.', '…Grazie. Davvero.']
 };
+// le richieste degli abitanti: le genera il taccuino (js/richieste.js)
 function genFavors() {
-  const st = G.st,
-    F = st.flags;
-  st.favors = (st.favors || []).filter(f => !f.done && f.until >= st.day);
-  if (st.day < 3) return;
-  const maxN = st.day >= 5 ? 3 : 2;
-  for (let tries = 0; tries < 5 && st.favors.length < maxN; tries++) {
-    const cand = FAV_NPC.filter(id => F.met[id] && !st.favors.some(f => f.id === id));
-    if (!cand.length) break;
-    const id = cand[Math.floor(Math.random() * cand.length)];
-    let pool = ['rapa'];
-    if (isFree(st)) {
-      const s = seasonOf(st);
-      pool = [
-        ...Object.keys(CROPS).filter(c => cropInSeason(c, s)),
-        ...(WILD[s] || []),
-        ...COOK.filter(r => knows(st, r.id))
-          .map(r => r.id)
-          .slice(0, 6)
-      ];
-    } else if (st.day >= 4) pool.push('patata', 'zucca');
-    if (st.day >= 5) pool.push('cavolo', 'fagioli');
-    if (F.cooked) pool.push('zuppa', 'arrosto', 'torta');
-    if (id !== 'clara') pool.push('pane');
-    const lk = LIKES[id] || {},
-      w = [];
-    pool.forEach(k => {
-      for (let j = 0; j < (lk[k] >= 2 ? 3 : 1); j++) w.push(k);
-    });
-    if (st.day >= 6 && !isFree(st)) w.push('zucca', 'zucca', 'zucca');
-    const item = w[Math.floor(Math.random() * w.length)],
-      q = ITEMS[item].t === 'crop' ? 1 + (st.day >= 5 ? 1 : 0) + (Math.random() < 0.4 ? 1 : 0) : 1;
-    st.favors.push({
-      id,
-      item,
-      n: q,
-      reward: Math.round(((FAV_VAL[item] || ITEMS[item].v || ITEMS[item].e || 50) * q * 1.2) / 5) * 5,
-      until: st.day + 2,
-      told: 0,
-      done: 0
-    });
-  }
+  Richieste.mattina();
 }
-const favorOf = id => (G.st.favors || []).find(f => f.id === id && !f.done);
+const favorOf = id => (G.st.favors || []).find(f => f.id === id && !f.done && !f.esito);
 async function favorDeliver(n) {
   const st = G.st,
     f = favorOf(n.id);
@@ -651,14 +613,16 @@ async function favorDeliver(n) {
   f.done = 1;
   f.told = 1;
   st.money += f.reward;
+  Richieste.dopo = null;
+  Richieste.consegnata(f, n);
   st.flags.favorsDone = (st.flags.favorsDone || 0) + 1;
   addFriend(n.id, 2 + (((LIKES[n.id] || {})[f.item] || 0) >= 2 ? 1 : 0));
   addQuiete(2);
   AU.play('coin');
   UI.hud();
   floatText('♥', n.x, n.y - 30, '#ff7a6a');
-  const L = FAV_THX[n.id];
-  await say(n.id, L[Math.floor(Math.random() * L.length)]);
+  const L = FAV_THX[n.id] || ['Grazie, {n}.'];
+  await say(n.id, Richieste.dopo || L[Math.floor(Math.random() * L.length)]);
   UI.toast(`Favore completato: +${SC(f.reward)}`);
   UI.quest();
   return true;
@@ -668,6 +632,10 @@ async function favorTell(n) {
     f = favorOf(n.id);
   if (!f || f.told || !st.flags.met[n.id]) return;
   f.told = 1;
+  if (f.catena && CATENE[f.id]) {
+    await say(n.id, CATENE[f.id].righe[f.catena.passo] + ` Mi servono ${fmtItems(f.item, f.n)}.`);
+    return;
+  }
   const L = (isFree(st) && FAV_ASK_FREE[n.id]) || FAV_ASK[n.id];
   await say(
     n.id,

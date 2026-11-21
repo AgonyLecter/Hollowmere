@@ -9,7 +9,8 @@ const SUITES = {
   dati: require('./dati'),
   impronta: require('./impronta'),
   fumo: require('./fumo'),
-  toppe: require('./toppe')
+  toppe: require('./toppe'),
+  economia: require('./economia')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

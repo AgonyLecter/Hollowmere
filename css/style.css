@@ -205,3 +205,13 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
  #mbox h2{font-size:calc(16*var(--u))}
  .tabs .btn{font-size:calc(7.5*var(--u));padding:calc(1.5*var(--u)) calc(4*var(--u))}
 }
+
+/* taccuino delle richieste */
+#mbox .ric{align-items:center}
+#mbox .ric.ok{background:rgba(120,170,80,.14)}
+#mbox .ric.urg{background:rgba(200,80,40,.10)}
+#mbox .ric.fatta{opacity:.6}
+#mbox .tag{font-size:.8em;color:#7a3a10;border:1px solid #c9a06a;padding:0 3px;border-radius:2px;white-space:nowrap}
+#mbox canvas.mini{width:calc(10*var(--u));height:calc(10*var(--u));vertical-align:middle;image-rendering:pixelated;margin-right:2px}
+#bRich.pronta{box-shadow:0 0 0 2px #8ad04a inset;animation:richPulse 1.6s ease-in-out infinite}
+@keyframes richPulse{50%{filter:brightness(1.25)}}

@@ -50,6 +50,13 @@ function scoreParts(st) {
   P.push(['Museo', mus * 3, '+3 per ogni pezzo donato']);
   P.push(['Traguardi', tr * 5, '+5 per ogni traguardo']);
   if (st.flags.nove) P.push(['Nove', 50, 'chi non è stato contato']);
+  const don = (W2.dispensa && W2.dispensa.donato) || 0;
+  if (don >= 100)
+    P.push([
+      'Dispensa',
+      Math.min(300, Math.floor(don / 100)),
+      '+1 ogni 100 scudi donati alla dispensa (fino a 300)'
+    ]);
   return P;
 }
 // da qui in poi il prestigio è esattamente la somma delle voci (quello che si vede è quello che conta)
