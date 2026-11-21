@@ -31,9 +31,12 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `arte` | alla fine del caricamento: disegnare la grafica dei file aggiunti |
 | `ottieni` | qualcosa è entrato nello zaino (`id`, `n`) |
 | `mangia` | il giocatore ha mangiato un piatto (`id`) |
+| `porta:intercetta` | il giocatore usa la porta di un edificio del paese (`o`); chi restituisce qualcosa la gestisce |
 
 ## Mappa dei file (in ordine di caricamento)
-- **Motore**: `core.js` (stato, input, audio, Ext), `art.js` (pixel art generata), `world.js` (mappe, rendering),
+- **Motore**: `core.js` (stato, input, effetti sonori, Ext), `musica.js` (la colonna sonora: brani scritti come dati —
+  temi in gradi della scala, accordi in numeri romani — strumenti sintetizzati, l'«ombra» che mette angoscia anche nei
+  brani allegri; il brano lo sceglie `chooseMusic` in `main.js`), `art.js` (pixel art generata), `world.js` (mappe, rendering),
   `ui.js`, `net.js` (Firebase), `main.js` (avvio, ciclo, giorni), `update.js` (aggiornamenti automatici).
 - **Storia**: `farm.js`, `npc.js`, `life.js`, `story.js`, `cine.js`, `ambient.js`, `relations.js`, `feste.js`.
 - **La Valle (gioco libero)**: `free.js`, `animals.js`, `build.js`, `garden.js`, `macchine.js` (abilità, macchine,
@@ -46,6 +49,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   alambicco, seminatrice, compostiera, forno a legna: ognuna con la sua animazione), `natura_cucina.js` (ricette che si
   imparano dagli abitanti, da soli o con l'esperienza; effetti dei piatti), `natura_fauna.js` (animali selvatici e
   taccuino del naturalista). La grafica si fa nel punto `arte`; macchine e animali si disegnano con `listaMondo`.
+- **Porte**: `porte.js` — bussare a chi è in casa (esce e parla, o risponde da dietro la porta; di notte, nella storia,
+  vale la Regola III), il biglietto sulla porta se non c'è, e `Porte.dove(id)` per il taccuino. Battute in `BUSSA_TESTI`.
 - **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,
   piume, commenti, gara della settimana. Dati in `hollowmere/gazzetta` (regole in `firebase/regole.json`).
 - **Novità**: `novita.js` — ogni aggiornamento ha una voce che Ottavio il postino annuncia ai giocatori (tranne la wiki).

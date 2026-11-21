@@ -1102,7 +1102,7 @@ function spawnHorse(tx, ty, speed) {
   h.speed = speed || 60;
   AU.play('sting');
   G.chase = true;
-  AU.setMode('tense');
+  AU.setMode('inseguimento');
 }
 // ---------- camera ----------
 function updateCam(dt) {

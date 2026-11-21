@@ -4877,6 +4877,20 @@ addEventListener('keydown', e => {
 // Solo aspetto: legge lo stato del gioco, non lo cambia.
 window.MULINO_ANIM = true;
 
+// Brom batte il ferro solo se è lì, fermo davanti alla fucina, e il suo orario dice «forge»
+function bromAlLavoro() {
+  const n = G.npcs && G.npcs.find(x => x.id === 'brom');
+  return (
+    !!n &&
+    !n.hidden &&
+    n.map === 'main' &&
+    G.map &&
+    G.map.id === 'main' &&
+    !n.moving &&
+    n.act === 'forge' &&
+    Math.hypot(n.x - (36 * 16 + 8), n.y - (14 * 16 + 14)) < 20
+  );
+}
 // ---------- chi è in casa ----------
 const BEDTIME = {
   elder: 22 * 60,
@@ -5003,9 +5017,9 @@ function svTick(dt) {
         life: 2.6
       });
   }
-  // fucina: scintille quando Brom lavora (di giorno)
+  // fucina: scintille solo quando Brom è davvero all'incudine (non a orario: in visita o a pranzo niente scintille)
   const forge = m.objs.find(o => o.kind === 'bld' && o.key === 'forge');
-  if (forge && t >= 7 * 60 && t < 19 * 60) {
+  if (forge && bromAlLavoro()) {
     SV.spark -= dt;
     if (SV.spark <= 0) {
       SV.spark = 0.8 + Math.random() * 1.6;
@@ -5228,8 +5242,10 @@ function svTick(dt) {
           }
         }
         if (o.kind === 'bld' && o.key === 'forge') {
-          const f = 0.7 + 0.3 * Math.sin(T * 9) * Math.sin(T * 3.1);
-          glow(o.dx + 65, o.dy + 42, 22 * f, 0.35 * k, '255,120,40');
+          // il fuoco ravvivato quando Brom lavora; altrimenti solo la brace
+          const vivo = bromAlLavoro(),
+            f = vivo ? 0.7 + 0.3 * Math.sin(T * 9) * Math.sin(T * 3.1) : 0.55 + 0.05 * Math.sin(T * 1.3);
+          glow(o.dx + 65, o.dy + 42, 22 * f, (vivo ? 0.35 : 0.16) * k, '255,120,40');
         }
         if (o.kind === 'built') {
           if (o.bid === 'fornace')

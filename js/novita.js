@@ -175,6 +175,22 @@ const NOVITA = [
         t: 'Nella Gazzetta Pennino porta un biglietto al giorno: il tuo puoi correggerlo (✏️ Modifica) o toglierlo (🗑 Togli) quando vuoi.'
       }
     ]
+  },
+  {
+    id: 'suono_porte',
+    v: 29,
+    n: 'Musica nuova e porte a cui bussare',
+    steps: [
+      {
+        t: 'Senti? La Valle ha una musica nuova: una per ogni stagione, una per il tramonto, una per la notte, per la pioggia, la cappella, la miniera e la festa. In casa la stessa musica arriva attutita, come da dietro un muro. E anche nei giorni più allegri, ascolta bene: c’è sempre qualcosa che non torna.'
+      },
+      {
+        t: 'Se un abitante è in casa, <b>bussa alla sua porta</b>. Se ha voglia esce a fare due chiacchiere, se no te lo dice da dietro la porta. Se non c’è, spesso trovi un biglietto con scritto dove è andato. Nel taccuino degli abitanti (☰ → Abitanti) c’è sempre scritto dove si trova ognuno.'
+      },
+      {
+        t: 'E la cassetta delle spedizioni adesso ti dice chi ti ha mandato ogni regalo. Quelli che ricevi restano scritti nel taccuino degli abitanti, così non te li dimentichi. Le scintille della fucina, poi, si vedono solo quando Brom batte davvero il ferro.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

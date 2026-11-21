@@ -765,6 +765,9 @@ const ACT = {
     const st = G.st,
       F = st.flags,
       t = st.time;
+    // punto di estensione: bussare a chi è in casa (porte.js)
+    const ix = Ext.intercetta('porta:intercetta', o);
+    if (ix) return ix;
     switch (o.key) {
       case 'house':
         return goMap('house', 6, houseSize(st).h - 2, 3);

@@ -358,75 +358,7 @@ async function goFull(auto) {
   setTimeout(fit, 300);
 }
 // ================= AUDIO (tutto sintetizzato) =================
-const MEL = [
-  76,
-  79,
-  84,
-  79,
-  76,
-  74,
-  72,
-  null,
-  76,
-  72,
-  69,
-  72,
-  76,
-  77,
-  76,
-  null,
-  77,
-  81,
-  84,
-  81,
-  77,
-  76,
-  74,
-  72,
-  74,
-  79,
-  83,
-  79,
-  77,
-  74,
-  71,
-  null
-];
-const BASS = [48, 45, 41, 43];
-const NIGHTM = [
-  69,
-  null,
-  72,
-  null,
-  76,
-  null,
-  74,
-  72,
-  null,
-  null,
-  69,
-  null,
-  67,
-  null,
-  null,
-  null,
-  64,
-  null,
-  65,
-  null,
-  64,
-  null,
-  null,
-  null,
-  62,
-  null,
-  64,
-  null,
-  57,
-  null,
-  null,
-  null
-];
+// Gli effetti sono qui; la musica (i brani, gli strumenti, l'ombra) è in musica.js.
 const AU = {
   c: null,
   vol: { m: 0.6, s: 0.8 },
@@ -563,33 +495,17 @@ const AU = {
       now = c.currentTime,
       Hh = G.horror || 0;
     const wind =
-      (this.mode === 'title' ? 0.035 : 0.02) +
+      (this.mode === 'titolo' ? 0.035 : 0.02) +
       G.night * 0.05 +
       Hh * 0.05 +
-      (this.mode === 'tense' ? 0.05 : 0);
+      (this.mode === 'inseguimento' ? 0.05 : 0);
     this.windG.gain.setTargetAtTime(wind, now, 0.6);
     const rain =
       G.st && G.st.weather === 'pioggia' && G.mode === 'game' ? (G.map && !G.map.interior ? 0.09 : 0.03) : 0;
     this.rainG.gain.setTargetAtTime(rain, now, 0.8);
     this.windF.frequency.setTargetAtTime(380 + Math.sin(now * 0.27) * 220 + Hh * 300, now, 0.6);
-    if (this.next < now - 0.5) this.next = now + 0.05;
-    if (this.mode === 'none' || this.mode === 'silent') {
-      this.next = now + 0.1;
-    } else {
-      const m = this.mode;
-      const bpm = m === 'tense' ? 152 : m === 'night' ? 70 : m === 'indoor' ? 80 : 96 - Hh * 30;
-      const sp = 60 / bpm / 2;
-      while (this.next < now + 0.25) {
-        this.sched(this.next, this.step, m, Hh);
-        this.next += sp * (1 + (Hh > 0.45 ? (Math.random() - 0.5) * 0.3 * Hh : 0));
-        this.step++;
-      }
-    }
-    // ambience
-    if (G.mode === 'game' && G.map && !G.map.interior) {
-      if (G.night > 0.5 && Math.random() < 0.04) this.chirp(now);
-      if (G.night < 0.2 && Hh < 0.5 && Math.random() < 0.006) this.bird(now);
-    }
+    // la colonna sonora e i suoni del mondo
+    if (typeof Musica !== 'undefined') Musica.tick(now, Hh);
   },
   chirp(t) {
     for (let i = 0; i < 3; i++) this.osc('sine', 4200 + Math.random() * 300, t + i * 0.06, 0.03, 0.015);
@@ -598,68 +514,6 @@ const AU = {
     const f = 1800 + Math.random() * 1200;
     this.osc('sine', f, t, 0.08, 0.03, null, 0.005, f * 1.4);
     this.osc('sine', f * 1.2, t + 0.12, 0.08, 0.025, null, 0.005, f * 0.9);
-  },
-  sched(t, s, m, Hh) {
-    const st = s % 32,
-      bar = (s >> 3) % 4;
-    if (m === 'day' || m === 'title') {
-      let n = MEL[st];
-      if (n != null && Hh > 0.3 && Math.random() < Hh * 0.35) n -= 1;
-      if (n != null && Hh > 0.6 && Math.random() < 0.25) n = null;
-      if (m === 'title' && (s >> 5) % 2 === 1 && Math.random() < 0.15 && n != null) n -= 1;
-      if (n != null) this.box(t, n, 0.16, Hh);
-      if (st % 4 === 0)
-        this.osc('triangle', this.mtof(BASS[bar] - (Hh > 0.7 ? 1 : 0)), t, 0.55, 0.16, this.mus, 0.01);
-    } else if (m === 'indoor') {
-      const n = MEL[st];
-      if (s % 2 === 0 && n != null) this.box(t, n - 12, 0.09, Hh);
-      if (st % 8 === 0) this.osc('triangle', this.mtof(BASS[bar]), t, 0.9, 0.1, this.mus, 0.02);
-    } else if (m === 'night') {
-      const n = NIGHTM[st];
-      if (n != null) this.box(t, n, 0.1, Hh + 0.25);
-      if (st === 0) this.pad(t, bar % 2 ? [41, 48, 53, 57] : [45, 52, 57, 60], 7);
-    } else if (m === 'tense') {
-      if (s % 4 === 0) {
-        this.osc('sine', 58, t, 0.16, 0.8, this.mus);
-        this.noise(t, 0.08, 0.35, 'lowpass', 160, 1, this.mus);
-      }
-      if (s % 4 === 1) this.osc('sine', 52, t, 0.12, 0.5, this.mus);
-      if (s % 16 === 0)
-        [110, 116.5, 164.8].forEach(f => this.osc('sawtooth', f, t, 1.6, 0.035, this.mus, 0.25));
-      if (s % 2 === 1) this.noise(t, 0.03, 0.12, 'highpass', 7000, 1, this.mus);
-    }
-  },
-  box(t, m, v, Hh) {
-    const f = this.mtof(m) * Math.pow(2, ((Math.random() - 0.5) * Hh * 70) / 1200);
-    const g = this.osc('sine', f, t, 1.3, v, this.mus, 0.003);
-    g.connect(this.rev);
-    this.osc('triangle', f * 2, t, 0.35, v * 0.22, this.mus, 0.002);
-  },
-  pad(t, ms, d) {
-    const c = this.c;
-    ms.forEach(m => {
-      const o = c.createOscillator(),
-        o2 = c.createOscillator(),
-        f = c.createBiquadFilter(),
-        g = c.createGain();
-      o.type = o2.type = 'sawtooth';
-      o.frequency.value = this.mtof(m);
-      o2.frequency.value = this.mtof(m) * 1.006;
-      f.type = 'lowpass';
-      f.frequency.value = 480;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.022, t + d * 0.4);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-      o.connect(f);
-      o2.connect(f);
-      f.connect(g);
-      g.connect(this.mus);
-      g.connect(this.rev);
-      o.start(t);
-      o2.start(t);
-      o.stop(t + d + 0.1);
-      o2.stop(t + d + 0.1);
-    });
   }
 };
 const SFX = {
