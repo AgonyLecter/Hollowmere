@@ -492,7 +492,9 @@ const UI = {
                   ? 'Ora: ' +
                     ({ chapel: 'in cappella', barn: 'nel fienile' }[n.lastIn] || 'dentro') +
                     (ACTD[n.act] ? ' · ' + ACTD[n.act] : '')
-                  : 'In casa'
+                  : id === 'tobia'
+                    ? 'Chissà dove'
+                    : 'In casa · puoi bussare alla sua porta'
                 : 'Ora: ' + placeNameAt(n) + (ACTD[n.act] ? ' · ' + ACTD[n.act] : '');
           return `<div class="mrow"><canvas data-p="${id}" width="64" height="64" style="width:calc(26*var(--u));height:calc(26*var(--u))"></canvas><span><b>${NAMES[id]}</b><br><span class="small">${where}${f && f.told ? `<br>Cerca: ${fmtItems(f.item, f.n)}` : ''}</span></span><span class="hearts">${'♥'.repeat(hearts(id))}${'♡'.repeat(Math.max(0, 5 - hearts(id)))}</span></div>`;
         })

@@ -11,6 +11,12 @@ const HOMES = {
 };
 function homeDoor(id) {
   const k = HOMES[id];
+  // i nuovi abitanti della Valle rientrano nella loro casetta, non oltre il ponte
+  if (k === 'ponte' && typeof resOf === 'function' && isFree()) {
+    const r = resOf(id),
+      d = r && resDoor(r);
+    if (d) return d;
+  }
   return k === 'varco' ? [30, 3] : k === 'ponte' ? [44, 46] : bdoor(k);
 }
 const at = (x, y, d = 0, act = '', wr = 0, o = {}) => Object.assign({ m: 'main', x, y, d, act, wr }, o);

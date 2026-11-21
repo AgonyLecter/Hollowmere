@@ -586,20 +586,77 @@ function inboxApply(a) {
     UI.toast(`${a.from || 'Qualcuno'} ti ha lasciato un regalo nella cassetta delle spedizioni.`);
   }
 }
+// la cassetta: si prende tutto, e un foglio dice chi ha mandato cosa (e resta nel registro dei doni)
+const DONO_BIGLIETTI = {
+  clara: ["«L'ho sfornato stamattina. Mangialo caldo, se fai in tempo.»", '«Per te. Non dirlo ad Agatha.»'],
+  agatha: ['«Un pensierino. Gratis, per una volta: non abituarti, tesoro.»'],
+  brom: ['«Ti servirà. — B.» (scritto col carbone)'],
+  tobia: ['«TROVATO NEL BOSCO!!! non dirlo a nessuno»'],
+  lucius: ['«Per le notti lunghe. — L.»'],
+  ezekiel: ["«Non chiedere dove l'ho trovato. — E.»"]
+};
+function donatore(nome) {
+  return Object.keys(NAMES).find(id => NAMES[id] === nome) || null;
+}
 function mailboxTake() {
   const st = G.st;
   if (G.visit || !st.mailbox || !st.mailbox.length) return false;
-  const left = [];
+  const left = [],
+    presi = [];
   for (const m of st.mailbox) {
+    if (!ITEMS[m.item]) continue;
     if (!addItem(m.item, m.n)) {
       left.push(m);
       continue;
     }
-    UI.toast(`Dalla cassetta: ${ITEMS[m.item].n} — da ${m.from}.`);
+    presi.push(m);
   }
   st.mailbox = left;
-  AU.play('ok');
+  st.doni = (st.doni || [])
+    .concat(presi.map(m => ({ item: m.item, n: m.n, from: m.from, day: st.day })))
+    .slice(-30);
+  AU.play(presi.length ? 'ok' : 'err');
+  cassettaFoglio(presi, left);
   return true;
+}
+function cassettaFoglio(presi, left) {
+  const st = G.st,
+    riga = m => {
+      const id = donatore(m.from),
+        L = id && DONO_BIGLIETTI[id],
+        i = st.inv.findIndex(s => s && s.id === m.item),
+        dove = i >= 10 ? ' <span class="small">· nello zaino, fila 2 (⇅)</span>' : '';
+      return `<div class="mrow"><canvas data-i="${m.item}" width="32" height="32"></canvas><span><b>${esc(ITEMS[m.item].n)}</b>${m.n > 1 ? ' ×' + m.n : ''} — da <b>${esc(m.from)}</b>${dove}${L ? `<br><span class="small">${esc(L[Math.floor(Math.random() * L.length)])}</span>` : id ? '' : `<br><span class="small">Dal villaggio di ${esc(m.from)}.</span>`}</span></div>`;
+    };
+  UI.open(
+    `<button class="btn mclose" data-close>✕</button><h2>La cassetta</h2>` +
+      (presi.length ? presi.map(riga).join('') : '') +
+      (left.length
+        ? `<p class="small">Lo zaino è pieno: ${left.length === 1 ? 'un dono resta' : left.length + ' doni restano'} nella cassetta. Fai posto e torna.</p>`
+        : '') +
+      '<p class="small">I doni che ricevi restano scritti nel taccuino degli abitanti (☰ → Abitanti).</p>'
+  );
+  $('#mbox')
+    .querySelectorAll('canvas[data-i]')
+    .forEach(c => {
+      if (ICON[c.dataset.i]) c.getContext('2d').drawImage(ICON[c.dataset.i], 0, 0);
+    });
+}
+// il registro dei doni, per il taccuino
+function doniHTML(st) {
+  const L = (st.doni || []).slice(-12).reverse();
+  if (!L.length) return '';
+  return (
+    '<h3>Doni ricevuti</h3>' +
+    L.map(
+      d =>
+        `<p class="small">${esc(dateLabelDi(st, d.day))}: <b>${esc(ITEMS[d.item] ? ITEMS[d.item].n : d.item)}</b>${d.n > 1 ? ' ×' + d.n : ''} da <b>${esc(d.from)}</b></p>`
+    ).join('')
+  );
+}
+function dateLabelDi(st, day) {
+  const d = st.day - day;
+  return d <= 0 ? 'Oggi' : d === 1 ? 'Ieri' : `${d} giorni fa`;
 }
 // pulsante e tasto per scrivere
 {

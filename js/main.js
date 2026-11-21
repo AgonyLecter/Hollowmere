@@ -1101,17 +1101,39 @@ function onMinute() {
   }
   if (t >= 26 * 60) passOut();
 }
+// il brano giusto per il momento (i brani sono in musica.js). «|casa» e «|nebbia» cambiano solo il colore del suono
+const MUS_STAGIONE = ['autunno', 'inverno', 'primavera', 'estate'];
 function chooseMusic() {
-  if (G.mode === 'title') return 'title';
-  if (G.cutMusic) return G.cutMusic;
-  if (G.chase) return 'tense';
-  const m = G.map;
-  if (!m) return 'none';
-  if (m.id === 'barn' || m.id === 'wood') return 'silent';
-  if (m.interior) return 'indoor';
-  const t = G.st.time;
-  if (t >= 20 * 60 || t < 6 * 60 || G.horror > 0.7) return 'night';
-  return 'day';
+  if (G.mode === 'title') return 'titolo';
+  if (G.cutMusic) return { title: 'titolo', tense: 'inseguimento' }[G.cutMusic] || G.cutMusic;
+  if (G.chase) return 'inseguimento';
+  const m = G.map,
+    st = G.st;
+  if (!m || !st) return 'none';
+  if (m.id === 'barn') return 'fienile';
+  if (m.id === 'wood') return 'bosco';
+  if (m.id === 'miniera') return 'miniera';
+  if (m.id === 'chapel') return 'cappella';
+  const t = st.time,
+    F = st.flags || {};
+  // la Festa del Raccolto, nella storia
+  if (
+    !isFree(st) &&
+    st.chapter >= 4 &&
+    F.ch4day === st.day &&
+    !F.festaDone &&
+    t >= 18 * 60 + 30 &&
+    !m.interior
+  )
+    return 'raccolto';
+  if (m.id === 'main' && typeof festLive === 'function' && festLive(st)) return 'festa';
+  const notte = t >= 20 * 60 || t < 5 * 60 + 30 || G.horror > 0.7;
+  const stag = MUS_STAGIONE[seasonOf(st)] || 'autunno';
+  if (m.interior) return (notte ? 'notte' : st.weather === 'pioggia' ? 'pioggia' : stag) + '|casa';
+  if (notte) return 'notte';
+  if (t >= 18 * 60) return 'vespro';
+  if (st.weather === 'pioggia') return 'pioggia';
+  return st.weather === 'nebbia' ? stag + '|nebbia' : stag;
 }
 function updHorror(dt) {
   const st = G.st;
