@@ -5206,6 +5206,115 @@ function genAll() {
   genIconsHD();
   genCropsHD();
   makeParch();
+  makeCornici();
+}
+// ---------- cornici dell'interfaccia (immagini a 9 fette per border-image, 1 px = 1 unità di gioco) ----------
+// --cornice: legno con venature, spigolo chiaro in alto a sinistra e scuro in basso a destra, borchie d'ottone;
+// --pozzo/--pozzoSel: la casella incavata (ombra dentro in alto, bordo chiaro in basso);
+// --tasto/--tastoSu/--tastoGiu: il bottone in rilievo, acceso e premuto.
+function makeCornici() {
+  const set = (k, c) => document.documentElement.style.setProperty(k, 'url(' + c.toDataURL() + ')');
+  const P = (x, col, X, Y, w = 1, h = 1) => {
+    x.fillStyle = col;
+    x.fillRect(X, Y, w, h);
+  };
+  // cornice 32×32, fetta 11: legno (8 px) con venature, filo d'ottone, angolari di ferro con borchia
+  {
+    const N = 32,
+      F = 11,
+      [c, x] = mk(N, N);
+    srand(77);
+    P(x, '#140a06', 0, 0, N, N);
+    P(x, '#6e4626', 1, 1, N - 2, N - 2);
+    // venature lungo il legno: orizzontali sopra e sotto, verticali ai lati
+    for (let i = 0; i < 140; i++) {
+      const v = ri(1, N - 2),
+        t = ri(2, 7),
+        col = ['#5a381c', '#80542e', '#63401f', '#8a5e34'][ri(0, 3)];
+      if (rnd() < 0.5) P(x, col, v, rnd() < 0.5 ? t : N - 1 - t, ri(2, 5), 1);
+      else P(x, col, rnd() < 0.5 ? t : N - 1 - t, v, 1, ri(2, 5));
+    }
+    // rilievo: luce in alto a sinistra, ombra in basso a destra
+    P(x, '#b8844a', 1, 1, N - 2, 1);
+    P(x, '#b8844a', 1, 1, 1, N - 2);
+    P(x, '#94663a', 2, 2, N - 4, 1);
+    P(x, '#94663a', 2, 2, 1, N - 4);
+    P(x, '#2e1a0a', 1, N - 2, N - 2, 1);
+    P(x, '#2e1a0a', N - 2, 1, 1, N - 2);
+    P(x, '#46290f', 2, N - 3, N - 4, 1);
+    P(x, '#46290f', N - 3, 2, 1, N - 4);
+    // il bordo interno: solco scuro, filo d'ottone, poi la pergamena
+    const ring = (o, col) => {
+      P(x, col, o, o, N - 2 * o, 1);
+      P(x, col, o, N - 1 - o, N - 2 * o, 1);
+      P(x, col, o, o, 1, N - 2 * o);
+      P(x, col, N - 1 - o, o, 1, N - 2 * o);
+    };
+    ring(8, '#1e1006');
+    ring(9, '#d9a646');
+    P(x, '#f6d98a', 9, 9, N - 18, 1);
+    P(x, '#f6d98a', 9, 9, 1, N - 18);
+    ring(10, '#5a3a1a');
+    P(x, '#ead8ae', F, F, N - 2 * F, N - 2 * F);
+    // angolari di ferro con la borchia
+    for (const [sx, sy] of [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1]
+    ]) {
+      const X = sx ? N - 9 : 1,
+        Y = sy ? N - 9 : 1,
+        Q = (a, b, w, h, col) => P(x, col, sx ? X + 8 - a - w : X + a, sy ? Y + 8 - b - h : Y + b, w, h);
+      Q(0, 0, 8, 3, '#1a1414');
+      Q(0, 0, 3, 8, '#1a1414');
+      Q(0, 0, 7, 2, '#4a4650');
+      Q(0, 0, 2, 7, '#4a4650');
+      Q(0, 0, 7, 1, '#7a7680');
+      Q(0, 0, 1, 7, '#7a7680');
+      Q(2, 2, 3, 3, '#1a1414');
+      Q(2, 2, 2, 2, '#d9a646');
+      Q(2, 2, 1, 1, '#fff0b8');
+    }
+    set('--cornice', c);
+  }
+  // casella incavata 8×8, fetta 2 (bordo sottile: l'icona dentro resta grande)
+  const pozzo = (fondo, fondo2, lume) => {
+    const [c, x] = mk(8, 8);
+    P(x, '#07040a', 0, 0, 8, 8);
+    const g = x.createLinearGradient(0, 1, 0, 7);
+    g.addColorStop(0, fondo2);
+    g.addColorStop(1, fondo);
+    x.fillStyle = g;
+    x.fillRect(1, 1, 6, 6);
+    P(x, 'rgba(0,0,0,.5)', 1, 1, 6, 1);
+    P(x, 'rgba(0,0,0,.3)', 1, 2, 1, 5);
+    P(x, lume, 1, 6, 6, 1);
+    P(x, lume, 6, 2, 1, 4);
+    return c;
+  };
+  set('--pozzo', pozzo('#3a2618', '#24160e', 'rgba(255,220,160,.16)'));
+  set('--pozzoSel', pozzo('#7a5430', '#4a2e18', 'rgba(255,236,170,.55)'));
+  // bottone 12×12, fetta 4: la tavoletta ha uno spessore sotto (2 px) che sparisce quando la premi
+  const tasto = (alto, basso, luce, bordo, premuto) => {
+    const [c, x] = mk(12, 12);
+    P(x, bordo, 0, premuto ? 2 : 0, 12, premuto ? 10 : 12);
+    const g = x.createLinearGradient(0, 1, 0, 9);
+    g.addColorStop(0, alto);
+    g.addColorStop(1, basso);
+    x.fillStyle = g;
+    x.fillRect(1, premuto ? 3 : 1, 10, premuto ? 8 : 8);
+    P(x, luce, 1, premuto ? 3 : 1, 10, 1);
+    P(x, 'rgba(255,255,255,.08)', 1, premuto ? 3 : 1, 1, 6);
+    if (!premuto) {
+      P(x, '#2a1608', 1, 9, 10, 2);
+      P(x, 'rgba(0,0,0,.35)', 1, 9, 10, 1);
+    }
+    return c;
+  };
+  set('--tasto', tasto('#6e4628', '#4a2e1a', '#a8743e', '#140a06'));
+  set('--tastoSu', tasto('#8a5a32', '#5a381e', '#e8c07a', '#d9a646'));
+  set('--tastoGiu', tasto('#4a2e1a', '#3a2414', '#6a4424', '#140a06', true));
 }
 function makeParch() {
   const [c, x] = mk(64, 64);
