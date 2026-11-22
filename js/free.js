@@ -503,7 +503,8 @@ function mapRemove(m, o) {
   // un oggetto rimosso può aver coperto il blocco di un altro: rimetti i blocchi degli altri
   for (const q of m.objs) for (const [x, y] of q.solid || []) m.block(x, y);
 }
-const REGROW = { tree: 10, rock: 14, log: 20 };
+// giorni per ricrescere: alberi, rocce, tronchi e l'erba alta falciata
+const REGROW = { tree: 10, rock: 14, log: 20, tuft: 3 };
 function applyFreeBase(m, st) {
   if (m.id !== 'main' || !isFree(st)) return;
   const W2 = st.free;
@@ -801,8 +802,8 @@ function freeActBase(fx, fy) {
       UI.toast(ITEMS[b.id].n + ' raccolto.');
       return true;
     }
-    if (b.id === 'banco') {
-      craftMenu();
+    if (b.id === 'banco' || b.id === 'incudine') {
+      craftMenu(null, b.id);
       return true;
     }
     if (b.id === 'pollaio' || b.id === 'stalla') {
@@ -826,6 +827,7 @@ function freeActBase(fx, fy) {
     return true;
   }
   if (id === 'pala') return shovelAct(fx, fy);
+  if (id === 'falce') return falciaAct(fx, fy);
   if (id === 'lastre') {
     const g = m.get(fx, fy);
     if (!ownedAt(fx, fy)) {
@@ -915,7 +917,42 @@ ACT.debris = () => {};
 ACT.ceppo = () => UI.toast("Un ceppo. Con l'accetta lo togli.");
 ACT.built = () => {};
 Object.assign(PROMPT, { debris: 'Raccogli', ceppo: 'Ceppo' });
+// ---------- la falce: l'erba alta diventa fibra (e ricresce in qualche giorno, vedi REGROW) ----------
+const ciuffiIn = (m, x, y) => m.objs.filter(o => o.kind === 'tuft' && o.tx === x && o.ty === y);
+function falciaAct(fx, fy) {
+  const st = G.st,
+    m = G.map,
+    L = ciuffiIn(m, fx, fy);
+  if (!L.length) {
+    UI.toast("Qui non c'è erba alta da falciare.");
+    return true;
+  }
+  if (!useEnergy(1)) return true;
+  let n = 0;
+  for (const o of L) {
+    mapRemove(m, o);
+    n += 1 + (Math.random() < 0.35 ? 1 : 0);
+    for (let i = 0; i < 6; i++)
+      G.parts.push({
+        k: 'leaf',
+        x: o.dx + iw(o.img) / 2,
+        y: o.dy + ih(o.img) - 4,
+        vx: (Math.random() - 0.5) * 30,
+        vy: -12 - Math.random() * 14,
+        t: 0,
+        life: 0.7,
+        c: ['#5e8035', '#86aa4a', '#a3c262'][i % 3]
+      });
+  }
+  st.free.gone[fkey(fx, fy)] = { day: st.day };
+  if (!addItem('fibra', n)) return true;
+  AU.play('falce');
+  floatText(`+${n} Fibra`, fx * 16 + 8, fy * 16 - 6);
+  addXP('racc', 2);
+  return true;
+}
 Object.assign(SFX, {
+  falce: (a, t) => a.noise(t, 0.16, 0.14, 'bandpass', 2400, 1.5, null, 0.01, 5600),
   chop: (a, t) => {
     a.noise(t, 0.08, 0.35, 'bandpass', 900, 3);
     a.osc('triangle', 180, t, 0.08, 0.08, null, 0.002, 120);
@@ -925,50 +962,6 @@ Object.assign(SFX, {
     a.osc('square', 1400, t, 0.04, 0.03, null, 0.001, 900);
   }
 });
-
-// ---------- banco da lavoro ----------
-function craftMenu() {
-  const draw = () => {
-    const has = c => Object.entries(c).every(([k, n]) => countItem(k) >= n);
-    UI.open(
-      `<button class="btn mclose" data-close>✕</button><h2>Banco da lavoro</h2><p class="small">Legna ${countItem('legna')} · Pietra ${countItem('pietra')} · Fibra ${countItem('fibra')}</p>` +
-        CRAFTS.map(
-          (r, i) =>
-            `<div class="mrow"><canvas data-i="${r.id}" width="32" height="32"></canvas><span>${ITEMS[r.id].n}${r.q > 1 ? ' ×' + r.q : ''}<br><span class="small">${Object.entries(
-              r.c
-            )
-              .map(
-                ([k, n]) =>
-                  `<span style="color:${countItem(k) >= n ? 'inherit' : '#a8301a'}">${n} ${ITEMS[k].n}</span>`
-              )
-              .join(
-                ' · '
-              )} — ${ITEMS[r.id].d || ''}</span></span><button class="btn" data-r="${i}" ${has(r.c) ? '' : 'disabled'}>Crea</button></div>`
-        ).join('') +
-        '<p class="small">Gli oggetti creati finiscono nello zaino. Per piazzarli: tienili in mano e usali su un punto libero.</p>'
-    );
-    $('#mbox')
-      .querySelectorAll('canvas[data-i]')
-      .forEach(c => c.getContext('2d').drawImage(ICON[c.dataset.i], 0, 0));
-    $('#mbox')
-      .querySelectorAll('[data-r]')
-      .forEach(
-        b =>
-          (b.onclick = () => {
-            const r = CRAFTS[+b.dataset.r];
-            if (!has(r.c)) return;
-            if (!addItem(r.id, r.q)) return;
-            for (const [k, n] of Object.entries(r.c)) removeItem(k, n);
-            AU.play('ok');
-            G.st.flags.crafted = (G.st.flags.crafted || 0) + 1;
-            UI.toast(`Creato: ${ITEMS[r.id].n}${r.q > 1 ? ' ×' + r.q : ''}`);
-            UI._mclose = null;
-            draw();
-          })
-      );
-  };
-  draw();
-}
 
 // ---------- cassa ----------
 function chestMenu(bk) {
@@ -1206,6 +1199,7 @@ function freeAimOk(it, tx, ty) {
         (o.kind === 'built' && PLACE_TOOL[o.bid] === 'piccone'))
     );
   if (id === 'pala') return shovelAimOk(tx, ty);
+  if (id === 'falce') return ciuffiIn(m, tx, ty).length > 0;
   if (id === 'lastre') {
     const g = m.get(tx, ty);
     return !!ownedAt(tx, ty) && !o && !st.farm[fkey(tx, ty)] && (g === 1 || g === 12 || g === 2);

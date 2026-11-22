@@ -2681,6 +2681,22 @@ const icon32 = fn => {
 
 // ---------- attrezzi: sagome ben distinte ----------
 const TOOLS = {
+  // falce: manico lungo con l'impugnatura a metà, lama lunga a mezzaluna che gira in alto a sinistra
+  falce: () =>
+    icon32(P => {
+      handle(P, 4, 30, 24, R6b('#a87a48'));
+      paint2(P, mkM(P).rect(11, 20, 5, 2), R6b('#6a4428'), { thin: 1 });
+      paint2(
+        P,
+        mkM(P)
+          .ell(17, 11, 13, 8)
+          .sub(mkM(P).ell(19, 13, 12, 7))
+          .sub(mkM(P).rect(17, 0, 16, 32)),
+        R6b('#a8b0b8'),
+        { thin: 1, mod: (X, Y, t) => (Y < 6 ? t + 1 : t) }
+      );
+      paint2(P, mkM(P).rect(25, 4, 3, 3), R6b('#5a5a64'), { thin: 1 });
+    }),
   // zappa: manico lungo, lama piatta che scende ad angolo retto
   hoe: () =>
     icon32(P => {

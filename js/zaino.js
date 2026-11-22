@@ -76,8 +76,35 @@ function zInfo() {
   if (ZINFO) return zDesc(ZINFO);
   return '<span class="small">Tocca per prendere e posare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b>: metà pila (o posane uno) · trascina per spostare.</span>';
 }
+// cosa c'è nella cassa aperta (conteggio per oggetto): a ogni cambiamento si annuncia la differenza
+// (Ext 'contenitore'), così in cooperativo al padrone arrivano operazioni («+5 legna») e non fotografie
+let ZSNAP = null;
+const zConta = A => A.reduce((o, s) => (s && (o[s.id] = (o[s.id] || 0) + s.n), o), {});
+function zCassaNota() {
+  if (!ZCH) {
+    ZSNAP = null;
+    return;
+  }
+  const ora = zConta(G.st.free.built[ZCH].inv);
+  if (ZSNAP && ZSNAP.k === ZCH) {
+    const ops = [];
+    for (const id of new Set([...Object.keys(ora), ...Object.keys(ZSNAP.c)])) {
+      const d = (ora[id] || 0) - (ZSNAP.c[id] || 0);
+      if (d) ops.push({ id, n: d });
+    }
+    if (ops.length) Ext.run('contenitore', ZCH, 'cassa', ops);
+  }
+  ZSNAP = { k: ZCH, c: ora };
+}
+// la cassa è cambiata da fuori (l'amico padrone): si riprende il conteggio e si ridisegna, senza annunciare niente
+function zCassaDaFuori(k) {
+  if (!ZCH || ZCH !== k || !UI.modalOpen) return;
+  ZSNAP = { k, c: zConta(G.st.free.built[k].inv) };
+  zRidisegna();
+}
 function zaino(chestKey) {
   ZCH = chestKey || null;
+  zCassaNota();
   const L = zLists();
   const tools = `<div class="itools"><button class="btn" data-z="ordina" title="Riordina e unisce le pile uguali">Ordina</button>${ZCH ? ' <button class="btn" data-z="deposita">Metti tutto in cassa</button> <button class="btn" data-z="prendi">Prendi tutto</button>' : ''}<div class="islot itrash${ZH.s ? ' on' : ''}" data-trash="1" title="Butta">🗑</div></div>`;
   UI.open(
@@ -88,7 +115,9 @@ function zaino(chestKey) {
       zGrid('z', L.z, ''),
     () => {
       zRimetti();
+      zCassaNota();
       ZCH = null;
+      ZSNAP = null;
       ZINFO = null;
       ZLAST = null;
       UI.hotbar();

@@ -4,7 +4,7 @@
 // ---------- animazioni degli attrezzi ----------
 // il colpo: l'attrezzo disegnato in mano al personaggio fa un arco davanti a lui
 const SWING_T = 0.36,
-  SWING_TOOLS = { hoe: 1, can: 1, accetta: 1, piccone: 1, pala: 1 };
+  SWING_TOOLS = { hoe: 1, can: 1, accetta: 1, piccone: 1, pala: 1, falce: 1 };
 function toolSwing() {
   const it = selItem();
   if (!it || !SWING_TOOLS[it.id] || G.cut || UI.busy()) return;

@@ -98,7 +98,6 @@ async function coopToggle(pid) {
       const s = await NET.api.get(NET.r('villaggi/' + pid + '/trust/' + me));
       if (s.val() === true) {
         G.visit.coop = true;
-        G.visit.snap = coopSnap();
         UI.toast(
           `${G.visit.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto (o premi B), zappa e semina con le tue cose.`
         );
@@ -107,12 +106,6 @@ async function coopToggle(pid) {
     UI.hud();
   };
 }
-const coopSnap = () => ({
-  b: JSON.parse(JSON.stringify(G.st.free.built || {})),
-  t: JSON.parse(JSON.stringify(G.st.free.tiles || {}))
-});
-// confronta il villaggio prima e dopo un'azione e manda al padrone quello che è cambiato
-function coopSync() {}
 // la modalità costruzione si apre anche in visita, se hai il permesso (solo all'aperto)
 {
   const _bo = bmOpen;
@@ -126,7 +119,6 @@ function coopSync() {}
         G.visit = v;
       }
       if (G.bm) {
-        v.snap = coopSnap();
         UI.toast(`Costruisci nel villaggio di ${v.name}. Puoi togliere solo quello che hai messo tu.`);
       }
       return;
@@ -152,14 +144,6 @@ function coopSync() {}
     _ba();
     if (!wasCarry && !b.carry)
       for (const k in G.st.free.built) if (!keys.has(k) && !G.st.free.built[k].by) G.st.free.built[k].by = me;
-    coopSync();
-  };
-}
-{
-  const _bc = bmClose;
-  bmClose = function () {
-    _bc();
-    if (G.visit && G.visit.coop) coopSync();
   };
 }
 // le regole di bmHome guardano G.visit: in visita con permesso, la modalità resta aperta
@@ -322,7 +306,6 @@ async function coopCheck() {
     if (!G.visit || G.visit !== v) return;
     if (ok && !v.coop) {
       v.coop = true;
-      v.snap = coopSnap();
       UI.toast(`${v.name} ti ha dato il permesso: adesso puoi costruire qui. Tocca 🔨 in alto.`);
     } else if (!ok && v.coop) {
       if (G.bm) bmClose();
@@ -402,7 +385,6 @@ startVisit = (_ =>
     const v = G.visit;
     if (!v.coop && (await coopHas(pid))) {
       v.coop = true;
-      v.snap = coopSnap();
       UI.toast(`${v.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto.`);
     }
     if (!v.coop) v.why = await coopWhy(pid, v.name);
@@ -416,7 +398,6 @@ coopCheck = async function () {
   if (ok && !v.coop) {
     v.coop = true;
     v.why = '';
-    v.snap = coopSnap();
     UI.toast(`${v.name} ti ha dato il permesso: adesso puoi costruire qui. Tocca 🔨 in alto.`);
   } else if (!ok && v.coop) {
     if (G.bm) bmClose();

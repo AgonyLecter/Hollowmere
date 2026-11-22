@@ -218,7 +218,15 @@ const NET = {
     }
   },
   async save(st) {
-    if (G.visit) return;
+    // in visita si salva la propria partita (con zaino, scudi ed energia di adesso), mai il villaggio dell'amico:
+    // così chi chiude il gioco durante una visita non perde quello che ha fatto
+    // (G.home esiste per tutta la visita, anche nei momenti in cui G.visit è azzerato per usare le azioni di casa)
+    if (G.home) {
+      const h = G.home;
+      if (G.st !== h)
+        Object.assign(h, { inv: G.st.inv, sel: G.st.sel, money: G.st.money, energy: G.st.energy });
+      st = h;
+    }
     st.ts = Date.now();
     LS.set(isFree(st) ? 'hm_free' : 'hm_save', JSON.stringify(st));
     if (st.pid) LS.set('hm_pid', st.pid);

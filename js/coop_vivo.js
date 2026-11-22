@@ -8,12 +8,21 @@
 // 4) Stesso orario: nel villaggio di un amico l'ora è la sua; quando dorme, scegli se restare nel nuovo giorno o tornare.
 
 // ---------- fotografie del villaggio e differenze ----------
+// Le fotografie non portano il contenuto di casse (inv) e macchine (m): quello viaggia come operazioni (più sotto).
 const W_OBJ = ['built', 'tiles', 'debris', 'gone'];
+const CONT = ['inv', 'm'];
+function senzaCont(b) {
+  const r = Object.assign({}, b);
+  for (const c of CONT) delete r[c];
+  return r;
+}
 function snapW(st) {
-  const F = st.free;
+  const F = st.free,
+    built = {};
+  for (const k in F.built || {}) built[k] = senzaCont(F.built[k]);
   return JSON.parse(
     JSON.stringify({
-      built: F.built || {},
+      built,
       tiles: F.tiles || {},
       debris: F.debris || {},
       gone: F.gone || {},
@@ -45,12 +54,27 @@ function diffW(A, B) {
 }
 function applyW(st, P, snap) {
   const F = st.free;
+  // il contenuto resta dov'è: anche quando una cassa o una macchina viene spostata (tolta da una casella e
+  // messa in un'altra), il suo contenuto la segue
+  const spostati = [];
+  if (P.built)
+    for (const x in P.built) {
+      const prev = F.built && F.built[x];
+      if (P.built[x] === null && prev && CONT.some(c => prev[c] !== undefined))
+        spostati.push({ id: prev.id, inv: prev.inv, m: prev.m });
+    }
   for (const k of W_OBJ) {
     if (!P[k]) continue;
     F[k] = F[k] || {};
     for (const x in P[k]) {
       if (P[k][x] === null) delete F[k][x];
-      else F[k][x] = P[k][x];
+      else if (k === 'built') {
+        const prev = F.built[x],
+          b = senzaCont(P.built[x]),
+          da = prev || spostati.splice(spostati.findIndex(c => c.id === b.id) >>> 0, 1)[0];
+        if (da && (!prev || prev.id === b.id)) for (const c of CONT) if (da[c] !== undefined) b[c] = da[c];
+        F.built[x] = b;
+      } else F[k][x] = P[k][x];
     }
   }
   if (P.farm)
@@ -65,7 +89,7 @@ function applyW(st, P, snap) {
       snap[k] = snap[k] || {};
       for (const x in P[k]) {
         if (P[k][x] === null) delete snap[k][x];
-        else snap[k][x] = JSON.parse(JSON.stringify(P[k][x]));
+        else snap[k][x] = JSON.parse(JSON.stringify(k === 'built' ? senzaCont(P[k][x]) : P[k][x]));
       }
     }
     if (P.animals) snap.animals = JSON.parse(JSON.stringify(P.animals));
@@ -76,6 +100,106 @@ function rebuildKeep() {
   const id = G.map && G.map.id;
   rebuildMaps();
   if (id && G.maps[id]) G.map = G.maps[id];
+}
+
+// ---------- casse e macchine: il contenuto viaggia come operazioni ----------
+// Con le fotografie, quando l'ospite e il padrone mettevano e prendevano insieme, l'ultima arrivata cancellava
+// le mosse dell'altro: oggetti spariti (depositati e mai arrivati) o doppi. Adesso l'ospite manda operazioni
+// («+5 legna», «−1 piccone»), il padrone le applica e le conferma (free.coopAck); quelle non ancora confermate
+// restano salvate nella partita dell'ospite (free.coopPend) e si riapplicano sopra quello che arriva dal padrone.
+function contApplica(st, b, tipo, ops, da) {
+  const posta = (id, n) => (st.mailbox = st.mailbox || []).push({ item: id, n, from: da || 'Un amico' });
+  if (tipo === 'cassa') {
+    b.inv = b.inv || Array(20).fill(null);
+    for (const { id, n } of ops) {
+      if (!ITEMS[id] || !n) continue;
+      if (n > 0) {
+        const resto = zInfila(b.inv, { id, n });
+        if (resto) posta(id, resto);
+        continue;
+      }
+      let q = -n;
+      for (let i = 0; i < b.inv.length && q > 0; i++) {
+        const x = b.inv[i];
+        if (!x || x.id !== id) continue;
+        const k = Math.min(q, x.n);
+        x.n -= k;
+        q -= k;
+        if (x.n <= 0) b.inv[i] = null;
+      }
+    }
+  } else if (tipo === 'macchina' && MACH[b.id]) {
+    // il tempo delle macchine è quello del villaggio che hai davanti: se il padrone è in visita altrove, si
+    // aggiorna solo il contenuto (il lavoro riprende quando torna a casa)
+    const qui = st === G.st,
+      m = qui ? macSim(b) : macStato(b);
+    for (const { s: dove, id, n } of ops) {
+      if (!ITEMS[id] || !n) continue;
+      if (dove === 'f') m.f = Math.max(0, (m.f || 0) + n);
+      else if (dove === 'o') {
+        if (m.o === id) {
+          m.on = Math.max(0, m.on + n);
+          if (!m.on) m.o = null;
+        }
+      } else if (n > 0) {
+        if (!m.i || !m.in || m.i === id) {
+          m.i = id;
+          m.in += n;
+        } else posta(id, n);
+      } else if (m.i === id) {
+        m.in = Math.max(0, m.in + n);
+        if (!m.in) m.i = null;
+      }
+    }
+    if (qui) macSim(b);
+  }
+}
+// le operazioni dell'ospite non ancora confermate dal padrone (tolte quelle già confermate)
+function coopPend(pid, ack) {
+  const F = G.home.free,
+    P = (F.coopPend = F.coopPend || {}),
+    L = (P[pid] || []).filter(o => o.seq > (ack || 0));
+  if (L.length) P[pid] = L;
+  else delete P[pid];
+  return L;
+}
+// arriva il contenuto dal padrone: si prende il suo e ci si rimettono sopra le proprie mosse non ancora confermate
+function contDaPadrone(c, ack) {
+  const v = G.visit,
+    st = G.st,
+    L = coopPend(v.pid, ack[G.home.pid]);
+  for (const k in c) {
+    const b = st.free.built[k];
+    if (!b) continue;
+    const x = c[k] || {};
+    for (const f of CONT) {
+      if (x[f]) b[f] = JSON.parse(JSON.stringify(x[f]));
+      else delete b[f];
+    }
+    for (const o of L) if (o.k === k) contApplica(st, b, o.tipo, o.ops);
+    zCassaDaFuori(k);
+    if (MACG.k === k) MACG.firma = '';
+  }
+}
+// l'ospite cambia una cassa o una macchina: l'operazione parte per il padrone e resta salvata finché non è confermata
+Ext.on('contenitore', (k, tipo, ops) => {
+  const v = G.visit;
+  if (!v || !v.coop || !G.home) return;
+  const F = G.home.free;
+  F.coopSeq = (F.coopSeq || 0) + 1;
+  const o = { seq: F.coopSeq, k, tipo, ops };
+  F.coopPend = F.coopPend || {};
+  (F.coopPend[v.pid] = F.coopPend[v.pid] || []).push(o);
+  MP.act(v.pid, Object.assign({ t: 'cop', from: G.home.pid, name: G.home.name }, o));
+  NET.save(G.home);
+});
+function contFoto(st) {
+  const C = {};
+  for (const k in st.free.built || {}) {
+    const b = st.free.built[k];
+    if (b.inv || b.m) C[k] = JSON.stringify({ inv: b.inv || null, m: b.m || null });
+  }
+  return C;
 }
 
 // ---------- l'ospite col permesso: le azioni normali, sul villaggio dell'amico ----------
@@ -137,6 +261,12 @@ const VIETATI = {
   startVisit = async function (pid) {
     await _sv2(pid);
     if (G.visit) {
+      // quello che avevi fatto nelle casse e nelle macchine e il padrone non ha ancora ricevuto
+      const ack = (G.st.free.coopAck || {})[G.home.pid] || 0;
+      for (const o of coopPend(pid, ack)) {
+        const b = G.st.free.built[o.k];
+        if (b) contApplica(G.st, b, o.tipo, o.ops);
+      }
       G.visit.wsnap = snapW(G.st);
       G.visit.t0 = G.st.day;
     }
@@ -173,10 +303,35 @@ let OWN_LAST = null,
     if (!a) return;
     if (a.t === 'osync') {
       const v = G.visit;
-      if (v && v.pid === a.from && a.p) {
-        applyW(G.st, a.p, v.wsnap);
-        if (needRebuild(a.p)) rebuildKeep();
+      if (v && v.pid === a.from) {
+        if (a.p) {
+          applyW(G.st, a.p, v.wsnap);
+          if (needRebuild(a.p)) rebuildKeep();
+        }
+        if (a.c || a.ack) contDaPadrone(a.c || {}, a.ack || {});
       }
+      return;
+    }
+    if (a.t === 'cop') {
+      const st = myHome();
+      if (!st || !isFree(st) || !a.k || !Array.isArray(a.ops)) return;
+      const f = (st.mpFriends || []).find(x => x.pid === a.from);
+      if (!f || !f.coop || (f.uid && a.uid && f.uid !== a.uid)) return;
+      const ack = (st.free.coopAck = st.free.coopAck || {});
+      if (!(a.seq > (ack[a.from] || 0))) return;
+      ack[a.from] = a.seq;
+      const b = st.free.built[a.k];
+      if (b) contApplica(st, b, a.tipo, a.ops, f.name);
+      // la cassa o la macchina non c'è più: quello che ci voleva mettere finisce nella cassetta delle spedizioni
+      else
+        for (const o of a.ops)
+          if (o.n > 0 && ITEMS[o.id])
+            (st.mailbox = st.mailbox || []).push({ item: o.id, n: o.n, from: f.name });
+      if (!G.visit) {
+        zCassaDaFuori(a.k);
+        if (MACG.k === a.k) MACG.firma = '';
+      }
+      NET.save(st);
       return;
     }
     if (a.t === 'cpatch') {
@@ -202,10 +357,11 @@ let OWN_LAST = null,
       }
       return;
     }
-    if ((a.t === 'dono' || a.t === 'scudi') && a.diretto && G.others && G.others[a.from]) {
+    // dato al volo: arriva anche se chi l'ha dato si è già allontanato (prima andava perso)
+    if ((a.t === 'dono' || a.t === 'scudi') && a.diretto) {
       const st = myHome();
       if (!st) return;
-      const nm = a.name || G.others[a.from].name || 'Qualcuno';
+      const nm = a.name || (G.others && G.others[a.from] && G.others[a.from].name) || 'Qualcuno';
       if (a.t === 'scudi') {
         const n = Math.max(1, Math.min(1000000, a.n | 0));
         (G.visit ? G.st : st).money += n;
@@ -230,30 +386,58 @@ let OWN_LAST = null,
     return _ia(a);
   };
 }
-// ogni secondo, se ci sono ospiti online nel tuo villaggio, il villaggio cambiato parte verso di loro
+// ogni secondo, se ci sono ospiti online nel tuo villaggio, il villaggio cambiato parte verso di loro: le
+// differenze di costruzioni e campi, il contenuto cambiato di casse e macchine e le operazioni confermate.
+// Chi è appena arrivato riceve il contenuto di tutte le casse e le macchine.
+let OWN_C = null,
+  OWN_ACK = '',
+  OWN_IDS = new Set();
 function ownerBroadcast(dt) {
-  const st = G.st;
-  if (G.visit || !isFree(st) || typeof PRES_V === 'undefined' || PRES_V !== st.pid) {
+  const st = G.st,
+    ids = Object.keys(G.others || {});
+  if (G.visit || !isFree(st) || typeof PRES_V === 'undefined' || PRES_V !== st.pid || !ids.length) {
     OWN_LAST = null;
-    return;
-  }
-  const ids = Object.keys(G.others || {});
-  if (!ids.length) {
-    OWN_LAST = null;
+    OWN_C = null;
+    OWN_IDS = new Set();
     return;
   }
   OWN_T -= dt;
   if (OWN_T > 0) return;
   OWN_T = 1;
-  const B = snapW(st);
+  const B = snapW(st),
+    C = contFoto(st),
+    ack = st.free.coopAck || {},
+    ackJ = JSON.stringify(ack),
+    nuovi = ids.filter(p => !OWN_IDS.has(p));
+  OWN_IDS = new Set(ids);
+  if (nuovi.length) {
+    const tutto = {};
+    for (const k in C) tutto[k] = JSON.parse(C[k]);
+    for (const pid of nuovi) MP.act(pid, { t: 'osync', c: tutto, ack, from: st.pid });
+  }
   if (!OWN_LAST) {
     OWN_LAST = B;
+    OWN_C = C;
+    OWN_ACK = ackJ;
     return;
   }
-  const P = diffW(OWN_LAST, B);
+  const P = diffW(OWN_LAST, B),
+    c = {};
+  let nc = 0;
+  for (const k of new Set([...Object.keys(C), ...Object.keys(OWN_C)]))
+    if (C[k] !== OWN_C[k]) {
+      c[k] = C[k] ? JSON.parse(C[k]) : null;
+      nc++;
+    }
+  const ackNuovo = ackJ !== OWN_ACK;
   OWN_LAST = B;
-  if (!P) return;
-  for (const pid of ids) MP.act(pid, { t: 'osync', p: P, from: st.pid });
+  OWN_C = C;
+  OWN_ACK = ackJ;
+  if (!P && !nc && !ackNuovo) return;
+  const msg = { t: 'osync', from: st.pid, ack };
+  if (P) msg.p = P;
+  if (nc) msg.c = c;
+  for (const pid of ids) MP.act(pid, msg);
 }
 
 // ---------- stesso orario, e quando il padrone dorme ----------

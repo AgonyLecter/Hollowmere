@@ -164,6 +164,48 @@ module.exports = async function (t, { browser, shot }) {
   t.true('l’apiario ha la sua schermata', api.apre);
   t.eq('toccando il miele si prende', api.miele, 2);
   t.true('e la schermata dice quando arriva il prossimo', /prossimo miele/.test(api.testo));
+  // l'incudine: si forgiano gli attrezzi; la falce falcia l'erba alta, che ricresce
+  const inc = await page.evaluate(() => {
+    const st = G.st,
+      R = {};
+    st.free.built['36,40'] = { id: 'incudine' };
+    rebuildMaps();
+    G.map = G.maps.main;
+    addItem('lingotto', 3);
+    addItem('legna', 10);
+    freeAct(36, 40);
+    R.titolo = document.querySelector('#mbox h2').textContent;
+    const i = CRAFTS.findIndex(r => r.id === 'falce');
+    document.querySelector(`#mbox [data-r="${i}"]`).click();
+    R.falce = countItem('falce');
+    UI.close();
+    // un ciuffo d'erba alta: ci si mette davanti con la falce
+    const m = G.map,
+      o = m.objs.find(o => o.kind === 'tuft');
+    setPos(G.player, o.tx, o.ty + 1, 3);
+    G.player.dir = DIRV.findIndex(v => v[0] === 0 && v[1] === -1);
+    st.sel = st.inv.findIndex(s => s && s.id === 'falce');
+    const [fx, fy] = frontTile();
+    R.mira = freeAimOk(selItem(), fx, fy);
+    const f0 = countItem('fibra');
+    freeAct(fx, fy);
+    R.fibra = countItem('fibra') - f0;
+    R.tagliato = !m.objs.some(q => q.kind === 'tuft' && q.tx === fx && q.ty === fy);
+    rebuildMaps();
+    R.restaTagliato = !G.maps.main.objs.some(q => q.kind === 'tuft' && q.tx === fx && q.ty === fy);
+    st.day += 3;
+    rebuildMaps();
+    R.ricresce = G.maps.main.objs.some(q => q.kind === 'tuft' && q.tx === fx && q.ty === fy);
+    st.day -= 3;
+    return R;
+  });
+  t.eq('l’incudine apre la sua schermata', inc.titolo, 'Incudine');
+  t.eq('all’incudine si forgia la falce', inc.falce, 1);
+  t.true('con la falce si mira all’erba alta', !!inc.mira);
+  t.true('falciando si prende fibra', inc.fibra >= 1);
+  t.true('l’erba alta sparisce', inc.tagliato);
+  t.true('e non ricompare subito', inc.restaTagliato);
+  t.true('dopo tre giorni ricresce', inc.ricresce);
   t.eq('macchine: nessun errore', errors.join('\n'), '');
   await page.close();
 };
