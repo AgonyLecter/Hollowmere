@@ -435,9 +435,9 @@ const AU = {
     const rf = c.createBiquadFilter();
     rf.type = 'highpass';
     rf.frequency.value = 700;
-    const rl = c.createBiquadFilter();
+    const rl = (this.rainF = c.createBiquadFilter());
     rl.type = 'lowpass';
-    rl.frequency.value = 5200;
+    rl.frequency.value = 4200;
     rl.Q.value = 0.5;
     this.rainG = c.createGain();
     this.rainG.gain.value = 0;
@@ -531,15 +531,22 @@ const AU = {
     p.setTargetAtTime(v, now, tc);
   },
   ambiente(now, Hh) {
+    // dove sei: all'aperto si sentono vento e pioggia; in casa arrivano attutiti, come attraverso il tetto;
+    // sottoterra (la miniera) niente: né pioggia né vento
+    const m = G.mode === 'game' && G.map,
+      sotto = m && m.id === 'miniera',
+      dentro = m && m.interior && !sotto,
+      quanto = sotto ? 0 : dentro ? 0.35 : 1;
     const wind =
-      (this.mode === 'titolo' ? 0.035 : 0.02) +
-      G.night * 0.05 +
-      Hh * 0.05 +
-      (this.mode === 'inseguimento' ? 0.05 : 0);
+      ((this.mode === 'titolo' ? 0.035 : 0.02) +
+        G.night * 0.05 +
+        Hh * 0.05 +
+        (this.mode === 'inseguimento' ? 0.05 : 0)) *
+      (G.mode === 'game' ? quanto : 1);
     this._imposta(this.windG.gain, wind, now, 0.6);
-    const rain =
-      G.st && G.st.weather === 'pioggia' && G.mode === 'game' ? (G.map && !G.map.interior ? 0.06 : 0.02) : 0;
-    this._imposta(this.rainG.gain, rain, now, 0.8);
+    const piove = G.st && G.st.weather === 'pioggia' && G.mode === 'game';
+    this._imposta(this.rainG.gain, piove ? 0.035 * quanto * (dentro ? 0.6 : 1) : 0, now, 0.8);
+    this._imposta(this.rainF.frequency, dentro ? 900 : 4200, now, 0.4);
     this._imposta(this.windF.frequency, Math.round(380 + Math.sin(now * 0.27) * 220 + Hh * 300), now, 0.6);
   },
   chirp(t) {
