@@ -254,19 +254,6 @@ const NOVITA = [
     ]
   },
   {
-    id: 'musica_gb',
-    v: 34,
-    n: 'Musica nuova',
-    steps: [
-      {
-        t: 'La Valle ha una colonna sonora nuova, con il suono dei vecchi giochi portatili: una ninna nanna per il menù, una musica per ogni stagione, il tramonto, la notte, la pioggia, la cappella, la festa e le corse nel buio.'
-      },
-      {
-        t: 'Sono melodie semplici e un po’ malinconiche. Sembra che vada tutto bene… ma ascolta bene: ogni tanto qualcosa stona. E a volte, per un attimo, la musica si spegne del tutto.'
-      }
-    ]
-  },
-  {
     id: 'valle_inverno',
     v: 35,
     n: 'Orto, bosco e prato nuovi',

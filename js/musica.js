@@ -4,11 +4,8 @@
 // gradi della scala, accordi in numeri romani), una forma e i suoi strumenti. main.js (chooseMusic) sceglie il
 // brano dalla situazione; core.js (AU.tick) chiama Musica.tick a ogni fotogramma.
 //
-// Il suono è folk acustico e caldo, un po' lo-fi (vedi «gli strumenti caldi»): chitarra di nylon, pianoforte
-// felpato, carillon, arpa, mandolino, un tappeto morbido, il nastro che ondeggia appena. Temi, controvoci, ponti.
-// La regola della Valle: sembra che vada tutto bene, e da un momento all'altro è tutto nero. È l'«ombra» di ogni
-// brano: una nota storta, un respiro, un bordone che stona, qualcuno che conta fino a otto (e a volte a nove), e
-// di rado il buio: la musica si spegne di colpo per una battuta, resta una nota bassa che scende, poi riprende.
+// La regola della Valle: anche il brano più allegro ha qualcosa che non torna. È l'«ombra» di ogni brano: una
+// campana lontana, una nota che stona, un respiro, un carillon che conta fino a otto (e a volte a nove).
 // Con l'orrore (G.horror) l'ombra cresce, il tempo rallenta e le note scivolano di un semitono.
 //
 // Come si scrive un tema (un passo = un ottavo; «passi» per battuta, di solito 8):
@@ -29,239 +26,219 @@ const SCALA = {
 };
 
 const BRANI = {
-  // il menù: una ninna nanna in tre, carillon sopra il pianoforte. Consola, ma il ponte scende su una nota sbagliata
+  // il titolo: una ninna nanna da carillon, in tre, che non finisce mai di consolare
   titolo: {
     n: 'Ninna nanna di Hollowmere',
-    root: 50,
+    root: 62,
     scala: 'eolio',
-    bpm: 80,
+    bpm: 66,
     passi: 6,
     temi: {
-      A: { m: "5 - 1' - 7 6  5 - - 3 4 5  6 - 5 - 4 3  2 - - - . .", a: ['i', 'VIM7', 'iv', 'V'] },
-      B: {
-        m: '3 - 4 - 5 -  6 - 5 - 3 -  4 - 3 - 2 #7,  1 - - - . .',
-        c: '1 - - - - -  1 - - - - -  6, - - - #7, -  5, - - - . .',
-        a: ['III', 'VI', 'iv/V', 'i']
-      },
-      C: { m: "1' - - 7 6 5  b5 - - - 4 3  2 - 3 - 4 -  #7, - - - . .", a: ['VI', 'iv', 'ii°', 'V'] }
+      A: { m: "5 - 3 - 1 -  2 - 3 4 3 -  5 - 1' - 7 -  6 - - - 5 .", a: ['i', 'iv', 'i', 'VI'] },
+      B: { m: "3' - 2' - 1' -  7 - 6 - 5 -  4 - 3 - 2 -  #7, - - - . .", a: ['III', 'VII', 'iv', 'V'] }
     },
-    forma: ['A', 'B', 'A~', 'C', 'A', 'B', '·', 'A_'],
+    forma: ['A', 'A~', 'B', 'A', '·', 'B~', 'A_', '·'],
     mel: 'carillon',
-    alt: 'piano',
-    contro: 'piano',
-    eco: { s: 'carillon', d: 3, v: 0.22 },
-    arp: { s: 'piano', p: '0 . 1 . 2 .', v: 0.42 },
-    basso: { s: 'basso', p: 'R . . . . .', v: 0.7 },
-    pad: { s: 'pad', v: 0.55 },
-    ombra: 0.45,
-    rev: 0.6
+    alt: 'celesta',
+    pad: { s: 'archi', v: 0.5 },
+    basso: { s: 'basso', p: 'R . . . . .', v: 0.6 },
+    ombra: 0.5,
+    rev: 0.7
   },
-  // l'autunno: una passeggiata in dorico, calda e un po' triste, con la controvoce nel secondo tema
+  // l'autunno: chitarra, celesta e violoncello. Il dorico è malinconico anche quando sorride
   autunno: {
     n: 'Foglie sul recinto',
     root: 50,
     scala: 'dorico',
-    bpm: 100,
-    passi: 8,
-    temi: {
-      A: {
-        m: '1 . 3 5 4 . 3 2  3 - 1 - 5, - - .  6, . 1 2 3 . 2 1  2 - - - - - . .',
-        a: ['i', 'IV', 'VII', 'v']
-      },
-      B: {
-        m: '5 . 5 6 7 . 6 5  4 - 3 - 4 5 6 .  5 . 4 3 2 . 1 7,  1 - - - - - . .',
-        c: '3 - - - 3 - - -  2 - - - 2 - - -  1 - - - 7, - - -  5, - - - - - . .',
-        a: ['III', 'IV', 'v', 'i']
-      },
-      C: {
-        m: "3' . 2' 1' 7 . 6 .  5 - - - b5 - - .  4 . 3 . 2 . 1 .  #7, - - - . . . .",
-        a: ['VII', 'v', 'IV', 'V']
-      }
-    },
-    forma: ['A', 'B', 'A~', 'B', 'C', 'A', '·', 'B~'],
-    mel: 'piano',
-    alt: 'carillon',
-    contro: 'arpa',
-    arp: { s: 'chitarra', p: '0 2 1 2 0 2 1 3', v: 0.6 },
-    basso: { s: 'basso', p: 'R . . . 5 . . .', v: 0.8 },
-    pad: { s: 'pad', v: 0.35 },
-    perc: { spazzola: '. . x . . . x .' },
-    ombra: 0.4,
-    rev: 0.45
-  },
-  // l'inverno: lento e vuoto; poche note lunghe, il basso che non si muove
-  inverno: {
-    n: 'Neve sui pali gialli',
-    root: 45,
-    scala: 'eolio',
-    bpm: 76,
-    passi: 8,
-    temi: {
-      A: {
-        m: '5 - - - 4 - 3 -  2 - - - - - . .  3 - - - 2 - 1 -  #7, - - - - - . .',
-        a: ['i', 'VI', 'iv', 'V']
-      },
-      B: {
-        m: "1' - - - 7 - 6 -  5 - - - - - . .  6 - 5 - 4 - 3 -  2 - - - - - . .",
-        a: ['VI', 'III', 'iv', 'V']
-      }
-    },
-    forma: ['A', '·', 'B', 'A~', '·', 'B_'],
-    mel: 'piano',
-    alt: 'carillon',
-    eco: { s: 'carillon', d: 2, v: 0.2 },
-    arp: { s: 'arpa', p: '0 . . 1 . . 2 .', v: 0.45 },
-    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.6 },
-    pad: { s: 'pad', v: 0.5 },
-    ombra: 0.45,
-    rev: 0.6
-  },
-  // la primavera: luminosa e saltellante… e poi quel quarto grado minore che richiude la finestra
-  primavera: {
-    n: 'Seme sotto la neve',
-    root: 53,
-    scala: 'ionio',
-    bpm: 116,
-    passi: 8,
-    temi: {
-      A: {
-        m: "1 . 3 . 5 . 6 5  4 . 3 . 2 - - .  3 . 4 . 5 . 1' .  7 - 6 - 5 - - .",
-        a: ['I', 'IV', 'I', 'V']
-      },
-      B: {
-        m: '6 . 6 . 5 . 4 .  b6 - - - 5 - - .  4 . 3 . 2 . 3 .  1 - - - - - . .',
-        c: '4 - - - 3 - - -  1 - - - 2 - - -  6, - - - 7, - - -  5, - - - - - . .',
-        a: ['IV', 'iv', 'vi', 'I']
-      }
-    },
-    forma: ['A', 'A~', 'B', 'A', 'B~', '·'],
-    mel: 'piano',
-    alt: 'flauto',
-    contro: 'arpa',
-    arp: { s: 'chitarra', p: '0 2 1 2 0 2 1 2', v: 0.55 },
-    basso: { s: 'basso', p: 'R . . . 5 . . .', v: 0.8 },
-    pad: { s: 'pad', v: 0.3 },
-    perc: { shaker: '. x . x . x . x' },
-    ombra: 0.35,
-    rev: 0.4
-  },
-  // l'estate: pigra, con lo swing; il quinto grado minore è il sole che cala
-  estate: {
-    n: 'Polvere e cicale',
-    root: 48,
-    scala: 'misolidio',
-    bpm: 108,
-    passi: 8,
-    swing: 0.2,
-    temi: {
-      A: {
-        m: '5 . 3 . 5 6 5 .  4 . 2 . 4 5 4 .  3 . 1 . 3 4 3 .  2 - 7, - 1 - - .',
-        a: ['I', 'VII', 'IV', 'v/I']
-      },
-      B: {
-        m: "1' . 7 . 6 . 5 .  6 . 5 . 4 . 3 .  4 . 3 . 2 . 6, .  7, - - - 5, - - .",
-        a: ['IV', 'ii', 'v', 'VII']
-      }
-    },
-    forma: ['A', 'B', 'A~', '·', 'B', 'A'],
-    mel: 'mandolino',
-    alt: 'piano',
-    arp: { s: 'chitarra', p: '0 . 1 2 . 1 2 .', v: 0.55 },
-    basso: { s: 'basso', p: 'R . . 5 . . 8 .', v: 0.8 },
-    pad: { s: 'pad', v: 0.25 },
-    perc: { spazzola: '. . . . x . . .', shaker: '. x . x . x . x' },
-    ombra: 0.35,
-    rev: 0.35
-  },
-  // il tramonto: l'ora del Vespro. La stessa calma, ma ogni frase cade sulla sensibile
-  vespro: {
-    n: 'Vespro',
-    root: 52,
-    scala: 'eolio',
     bpm: 84,
     passi: 8,
     temi: {
       A: {
-        m: "1' - 7 - 6 - 5 -  6 - - 5 4 - - .  3 - 4 - 5 - 1 -  2 - - - #7, - - .",
-        a: ['i', 'VI', 'iv', 'V']
+        m: "1' . 7 6 5 - 3 -  4 - 5 6 5 - - .  3 . 4 5 6 - 5 4  3 - 2 - 1 - - .",
+        a: ['i', 'IV', 'i', 'VII/i']
       },
       B: {
-        m: '3 - 2 - 1 - 7, -  1 - 2 - 3 - - .  4 - 3 - 2 - 1 -  #7, - - - - - . .',
-        c: '5, - - - 5, - - -  6, - - - 5, - - -  6, - - - 4, - - -  #2, - - - - - . .',
-        a: ['III', 'VII', 'iv', 'V']
+        m: "5 - 6 - 7 - 1' -  2' - 1' 7 6 - - .  5 . 6 5 4 - 3 -  2 - - 1 1, - - .",
+        a: ['III', 'VII', 'IV', 'v/i']
       }
     },
-    forma: ['A', 'B', '·', 'A~', 'B_'],
-    mel: 'piano',
-    alt: 'carillon',
-    contro: 'arpa',
-    arp: { s: 'arpa', p: '0 . 2 . 3 . 2 .', v: 0.45 },
-    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.7 },
-    pad: { s: 'pad', v: 0.45 },
-    ombra: 0.5,
-    rev: 0.6
+    forma: ['A', 'B', 'A~', '·', 'B~', 'A', '·', 'A_'],
+    mel: 'celesta',
+    alt: 'flauto',
+    arp: { s: 'pizzico', p: '0 2 3 2 1 2 3 2', v: 0.5 },
+    basso: { s: 'basso', p: 'R . . . 5 . . .', v: 0.8 },
+    pad: { s: 'archi', v: 0.45 },
+    ombra: 0.35,
+    rev: 0.5
   },
-  // la notte: il carillon lontano, il coro senza bocca. E qualcuno che conta
-  notte: {
-    n: 'Alla campana delle nove',
-    root: 45,
+  // l'inverno: lento, a vuoto, il carillon e un violino che non ha nessuno a cui suonare
+  inverno: {
+    n: 'Neve sui pali gialli',
+    root: 57,
     scala: 'eolio',
-    bpm: 66,
+    bpm: 62,
     passi: 8,
     temi: {
       A: {
-        m: '5 . . . 3 . . .  4 . . . 2 . . .  3 . . . 1 . . .  #7, . . . . . . .',
-        a: ['i', 'iv', 'VI', 'V']
+        m: '5 - - 4 3 - - .  2 - 3 - 1 - - .  5 - - 6 5 - 3 -  2 - - - - - . .',
+        a: ['i', 'VI', 'iv', 'V']
       },
       B: {
-        m: "1' . . . 7 . . .  6 . . . 5 . . .  4 . . . 3 . 2 .  1 . . . . . . .",
-        a: ['VI', 'III', 'iv', 'i']
+        m: "1' - 7 - 6 - 5 -  6 - - 5 4 - - .  3 - 4 - 5 - 1 -  #7, - - - 1 - - .",
+        a: ['VI', 'iv', 'i', 'V/i']
       }
     },
-    forma: ['A', '·', 'B', '·'],
+    forma: ['A', '·', 'B~', 'A', '·', 'A~', 'B', '·'],
     mel: 'carillon',
-    alt: 'carillon',
-    eco: { s: 'carillon', d: 3, v: 0.25 },
-    arp: { s: 'piano', p: '0 . . . 2 . . .', v: 0.3 },
-    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.5 },
-    pad: { s: 'pad', v: 0.6 },
+    alt: 'violino',
+    arp: { s: 'arpa', p: '0 . . 2 . 3 . .', v: 0.45 },
+    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.6 },
+    pad: { s: 'archi', v: 0.55 },
     coro: 0.25,
+    ombra: 0.55,
+    rev: 0.8
+  },
+  // la primavera: il flauto, il lidio che apre le finestre… e il quarto grado minore che le richiude
+  primavera: {
+    n: 'Seme sotto la neve',
+    root: 53,
+    scala: 'ionio',
+    bpm: 96,
+    passi: 8,
+    temi: {
+      A: {
+        m: "3 - 5 - 1' - 7 6  5 - - . 3 4 5 -  6 - 5 - #4 - 5 -  3 - - - 2 - - .",
+        a: ['I', 'vi7', 'II', 'V']
+      },
+      B: {
+        m: '6 - 5 - 4 - 3 -  4 - 5 - 6 - - .  b6 - 5 - 4 - 3 -  2 - - - 1 - - .',
+        a: ['vi', 'IV', 'iv', 'V/I']
+      }
+    },
+    forma: ['A', 'A~', 'B', '·', 'A', 'B~', '·', 'A_'],
+    mel: 'flauto',
+    alt: 'celesta',
+    arp: { s: 'pizzico', p: '0 1 2 3 2 1 2 1', v: 0.4 },
+    basso: { s: 'basso', p: 'R . . 5 . . R .', v: 0.7 },
+    pad: { s: 'archi', v: 0.35 },
+    perc: { legno: '. . x . . . x .' },
+    ombra: 0.3,
+    rev: 0.45
+  },
+  // l'estate: pigra, swing, mandolino e fisarmonica. Il quinto grado minore è il sole che cala
+  estate: {
+    n: 'Polvere e cicale',
+    root: 55,
+    scala: 'misolidio',
+    bpm: 92,
+    passi: 8,
+    swing: 0.18,
+    temi: {
+      A: {
+        m: '5 . 5 6 5 - 3 -  4 - 3 - 2 - - .  1 . 1 2 3 - 5 -  7 - - 6 5 - - .',
+        a: ['I', 'IV', 'I', 'VII']
+      },
+      B: {
+        m: "3' - 2' - 1' - 7 -  6 - 5 - 4 - - .  3 - 4 - 5 - 6 -  5 - - - - - . .",
+        a: ['v', 'ii', 'IV', 'I']
+      }
+    },
+    forma: ['A', 'B', '·', 'A~', 'B~', 'A', '·', 'A_'],
+    mel: 'fisarmonica',
+    alt: 'flauto',
+    arp: { s: 'pizzico', p: '0 . 2 1 . 2 3 .', v: 0.45 },
+    basso: { s: 'basso', p: 'R . . . 5 . 8 .', v: 0.75 },
+    pad: { s: 'archi', v: 0.25 },
+    perc: { shaker: '. x . x . x . x' },
+    ombra: 0.35,
+    rev: 0.4
+  },
+  // il tramonto: l'ora del Vespro. Organo lontano, il violino, le campane
+  vespro: {
+    n: 'Vespro',
+    root: 52,
+    scala: 'eolio',
+    bpm: 68,
+    passi: 8,
+    temi: {
+      A: {
+        m: '5 - - 6 5 - 4 -  3 - - 2 1 - - .  6 - - 5 4 - 3 -  2 - - - #7, - - .',
+        a: ['i', 'VI', 'iv', 'V']
+      },
+      B: {
+        m: "3 - 4 - 5 - 1' -  7 - 6 - 5 - - .  4 - 3 - 2 - 6, -  #7, - - - 1 - - .",
+        a: ['III', 'VII', 'iv', 'V/i']
+      }
+    },
+    forma: ['A', '·', 'B', 'A~', '·', 'B~'],
+    mel: 'violino',
+    alt: 'organo',
+    arp: { s: 'arpa', p: '0 . 2 . 3 . 2 .', v: 0.35 },
+    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.6 },
+    pad: { s: 'organo', v: 0.25 },
+    ombra: 0.5,
+    rev: 0.7,
+    campane: 1
+  },
+  // la notte: il carillon da lontano, il coro senza bocca, e qualcuno che conta
+  notte: {
+    n: 'Alla campana delle nove',
+    root: 57,
+    scala: 'eolio',
+    bpm: 58,
+    passi: 8,
+    temi: {
+      A: {
+        m: '5 . . 6 5 . . .  3 . . . 2 . 1 .  6, . . . 7, . 1 .  2 . . . . . . .',
+        a: ['i', 'VI', 'iv', 'V']
+      },
+      B: {
+        m: "1' . . . 7 . 6 .  5 . . . 4 . . .  3 . 4 . 5 . 3 .  #7, . . . . . . .",
+        a: ['VI', 'iv', 'i', 'V']
+      }
+    },
+    forma: ['A', '·', 'B', '·', 'A~', '·'],
+    mel: 'carillon',
+    alt: 'violino',
+    basso: { s: 'basso', p: 'R . . . . . . .', v: 0.5 },
+    pad: { s: 'archi', v: 0.6 },
+    coro: 0.4,
     ombra: 0.75,
-    rev: 0.75,
+    rev: 0.9,
     notte: 1
   },
-  // la pioggia: piano, in dorico, gocce di arpeggio sotto
+  // la pioggia: pianoforte di celesta, poche note, il violoncello sotto
   pioggia: {
     n: 'Gocce sul tetto del nonno',
     root: 48,
     scala: 'dorico',
-    bpm: 88,
+    bpm: 72,
     passi: 8,
     temi: {
       A: {
-        m: '3 . 2 . 1 . 5, .  6, . 1 . 2 - - .  3 . 4 . 5 . 4 3  2 - - - - - . .',
+        m: '3 - 2 - 1 - 5, -  6, - - 7, 1 - - .  3 - 4 - 5 - 3 -  2 - - - - - . .',
         a: ['i', 'IV', 'i', 'v']
       },
       B: {
-        m: '5 . 4 . 3 . 4 .  5 - 6 - 5 - - .  4 . 3 . 2 . 1 .  7, - 1 - - - . .',
-        a: ['VII', 'IV', 'v', 'i']
+        m: '5 - 6 - 7 - 5 -  4 - - 3 2 - - .  3 - 2 - 1 - 7, -  1 - - - - - . .',
+        a: ['v', 'VII', 'i', 'i']
       }
     },
-    forma: ['A', 'B', 'A~', '·', 'B_'],
-    mel: 'piano',
-    alt: 'carillon',
-    arp: { s: 'chitarra', p: '0 1 2 3 2 1 0 1', v: 0.45 },
-    basso: { s: 'basso', p: 'R . . . 5 . . .', v: 0.7 },
-    pad: { s: 'pad', v: 0.4 },
+    forma: ['A', '·', 'B', 'A_', '·', 'B~'],
+    mel: 'celesta',
+    alt: 'violino',
+    arp: { s: 'arpa', p: '0 . 1 . 2 . 3 .', v: 0.35 },
+    basso: { s: 'basso', p: 'R . . . . . 5 .', v: 0.6 },
+    pad: { s: 'archi', v: 0.5 },
     ombra: 0.45,
-    rev: 0.55
+    rev: 0.75
   },
-  // la cappella: corale d'organo e voci, lento; gli accordi risolvono sempre un po' tardi
+  // la cappella: corale d'organo e voci
   cappella: {
     n: 'Corale dei Contati',
     root: 50,
     scala: 'eolio',
-    bpm: 60,
+    bpm: 52,
     passi: 8,
     temi: {
       A: {
@@ -276,39 +253,38 @@ const BRANI = {
     forma: ['A', 'B', '·', 'A~', 'B'],
     mel: 'organo',
     alt: 'coro',
-    pad: { s: 'organo', v: 0.3 },
-    basso: { s: 'organo', p: 'R . . . . . . .', v: 0.45 },
-    coro: 0.45,
+    basso: { s: 'organo', p: 'R . . . . . . .', v: 0.5 },
+    pad: { s: 'organo', v: 0.35 },
+    coro: 0.5,
     ombra: 0.6,
-    vol: 0.7,
-    rev: 0.9
+    rev: 0.95
   },
   // la Festa della Valle: una tarantella in minore. Si balla, ma con un occhio al bosco
   festa: {
     n: 'Tarantella del Raccolto',
     root: 57,
     scala: 'eolio',
-    bpm: 150,
+    bpm: 140,
     passi: 6,
     temi: {
       A: { m: '5 . 5 6 5 4  3 . 3 4 3 2  1 2 3 4 5 6  #7, . #7, 1 . .', a: ['i', 'VII', 'iv', 'V/i'] },
       B: { m: "1' . 1' 7 6 5  6 . 6 5 4 3  4 . 4 3 2 1  2 . #7, 1 . .", a: ['VI', 'iv', 'VII', 'V/i'] }
     },
     forma: ['A', 'A', 'B', 'B~', 'A~', '·', 'B', 'A'],
-    mel: 'mandolino',
-    alt: 'fisarmonica',
-    arp: { s: 'chitarra', p: '0 . 2 1 . 2', v: 0.5 },
-    basso: { s: 'basso', p: 'R . . 5 . .', v: 0.85 },
+    mel: 'fisarmonica',
+    alt: 'flauto',
+    arp: { s: 'pizzico', p: '0 . 2 3 . 2', v: 0.4 },
+    basso: { s: 'basso', p: 'R . . 5 . .', v: 0.8 },
     perc: { cassa: 'x . . x . .', tamb: '. x x . x x' },
     ombra: 0.4,
-    rev: 0.3
+    rev: 0.35
   },
-  // l'inseguimento: il pianoforte martellato in basso, la cassa che corre, il cuore. Niente melodia: correre
+  // l'inseguimento: archi a scatti, cuore, ottoni. Niente melodia: solo correre
   inseguimento: {
     n: 'Zoccoli',
     root: 45,
     scala: 'frigio',
-    bpm: 160,
+    bpm: 152,
     passi: 8,
     temi: {
       A: {
@@ -321,10 +297,10 @@ const BRANI = {
       }
     },
     forma: ['A', 'B'],
-    ostinato: { s: 'pianoStacc', p: [0, 1, 0, 1, 0, 1, 0, 7] },
-    basso: { s: 'basso', p: 'R . R . R . R R', v: 1 },
-    pad: { s: 'pad', v: 0.9 },
+    ostinato: { s: 'stacc', p: [0, 1, 0, 1, 0, 1, 0, 7] },
+    basso: { s: 'basso', p: 'R . R . R . R R', v: 0.9 },
     perc: { cassa: 'x . . . x . . .', battito: '. . x . . . x .', tamb: '. x . x . x . x' },
+    ottoni: 1,
     ombra: 0,
     rev: 0.3
   },
@@ -336,8 +312,8 @@ const BRANI = {
     bpm: 60,
     passi: 8,
     gen: 'miniera',
-    rev: 0.6,
-    vol: 2
+    rev: 0.9,
+    vol: 2.2
   },
   bosco: {
     n: 'Oltre il Varco',
@@ -346,7 +322,7 @@ const BRANI = {
     bpm: 50,
     passi: 8,
     gen: 'bosco',
-    rev: 0.6,
+    rev: 1,
     vol: 2.2
   },
   fienile: {
@@ -356,7 +332,7 @@ const BRANI = {
     bpm: 50,
     passi: 8,
     gen: 'fienile',
-    rev: 0.5,
+    rev: 0.8,
     vol: 2.6
   }
 };
@@ -400,7 +376,6 @@ for (const k in BRANI) {
   if (!br.temi) continue;
   for (const t of Object.values(br.temi)) {
     t.ev = musLeggiTema(br, t.m);
-    if (t.c) t.evc = musLeggiTema(br, t.c);
     t.acc = t.a.map(b => b.split('/').map(x => musLeggiAccordo(br, x)));
   }
 }
@@ -592,241 +567,6 @@ const PERCUSSIONI = {
   }
 };
 
-// ---------- gli strumenti caldi ----------
-// Folk acustico, un po' lo-fi: chitarra di nylon, arpa e mandolino con un modello fisico di corda (Karplus-Strong),
-// un pianoforte felpato a parziali (corde un po' stonate fra loro, martelletto), un carillon, un tappeto morbido.
-// I suoni pizzicati e percossi si calcolano una volta sola, ogni tre semitoni, e si accordano cambiando la velocità
-// di lettura (come un campionatore): così pesano poco e non affaticano il telefono.
-const CAMP = {},
-  CAMP_SR = 32000;
-function campione(tipo, m) {
-  const base = Math.round(m / 3) * 3,
-    key = tipo + base;
-  if (!CAMP[key]) CAMP[key] = CAMP_GEN[tipo](AU.mtof(base));
-  return { b: CAMP[key].b, rate: CAMP[key].rate * Math.pow(2, (m - base) / 12) };
-}
-const CAMP_GEN = {
-  // corda pizzicata: rumore filtrato in un anello che si smorza (chiaro = metallo, scuro = nylon)
-  corda(f, chiaro, t60, dur) {
-    const sr = CAMP_SR,
-      L = Math.floor(sr * dur),
-      N = Math.max(2, Math.floor(sr / f - 0.5)),
-      b = AU.c.createBuffer(1, L, sr),
-      y = b.getChannelData(0),
-      S = Math.pow(10, -3 / (f * t60));
-    let lp = 0;
-    for (let i = 0; i < N; i++) {
-      lp += (Math.random() * 2 - 1 - lp) * chiaro;
-      y[i] = lp;
-    }
-    // il punto in cui si pizzica: toglie un po' di armoniche (suono più rotondo)
-    const p = Math.max(1, Math.floor(N * 0.18));
-    for (let i = N - 1; i >= p; i--) y[i] -= y[i - p] * 0.6;
-    if (N < L) y[N] = S * y[0];
-    for (let i = N + 1; i < L; i++) y[i] = S * 0.5 * (y[i - N] + y[i - N - 1]);
-    let mx = 1e-6,
-      dc = 0;
-    for (let i = 0; i < L; i++) dc += y[i];
-    dc /= L;
-    for (let i = 0; i < L; i++) mx = Math.max(mx, Math.abs((y[i] -= dc)));
-    for (let i = 0; i < L; i++) y[i] /= mx;
-    for (let i = 0; i < 64 && i < L; i++) y[L - 1 - i] *= i / 64;
-    return { b, rate: f / (sr / (N + 0.5)) };
-  },
-  chitarra: f => CAMP_GEN.corda(f, 0.32, 2.4 + 120 / f, 2.4),
-  arpa: f => CAMP_GEN.corda(f, 0.5, 3 + 160 / f, 2.8),
-  mandolino: f => CAMP_GEN.corda(f, 0.85, 0.9 + 60 / f, 1.2),
-  basso: f => CAMP_GEN.corda(f, 0.16, 2.2, 2.2),
-  // pianoforte felpato: parziali un po' «stirate», due corde per nota che battono piano, martelletto morbido
-  piano(f) {
-    const sr = CAMP_SR,
-      dur = Math.min(3.2, 2 + 160 / f),
-      L = Math.floor(sr * dur),
-      b = AU.c.createBuffer(1, L, sr),
-      y = b.getChannelData(0),
-      Bk = 0.00032;
-    for (let k = 1; k <= 9; k++) {
-      const fk = k * f * Math.sqrt(1 + Bk * k * k);
-      if (fk > sr / 2.3) break;
-      const amp = Math.pow(k, -1.7) * (k === 2 ? 1.25 : 1),
-        t1 = 0.05 + 0.4 / k,
-        t2 = (1.4 + 220 / f) / (1 + 0.45 * (k - 1));
-      for (const [mul, a2] of k <= 3
-        ? [
-            [1, 1],
-            [1.0009, 0.55]
-          ]
-        : [[1, 1]]) {
-        const w = (2 * Math.PI * fk * mul) / sr,
-          ph = Math.random() * 6.28;
-        for (let i = 0; i < L; i++)
-          y[i] +=
-            amp *
-            a2 *
-            (0.35 * Math.exp(-i / (sr * t1)) + 0.65 * Math.exp(-i / (sr * t2))) *
-            Math.sin(w * i + ph);
-      }
-    }
-    let lp = 0;
-    for (let i = 0; i < sr * 0.012; i++) {
-      lp += (Math.random() * 2 - 1 - lp) * 0.3;
-      y[i] += lp * 0.25 * (1 - i / (sr * 0.012));
-    }
-    let mx = 1e-6;
-    for (let i = 0; i < L; i++) mx = Math.max(mx, Math.abs(y[i]));
-    for (let i = 0; i < L; i++) y[i] /= mx;
-    for (let i = 0; i < 48; i++) y[i] *= i / 48;
-    for (let i = 0; i < 256; i++) y[L - 1 - i] *= i / 256;
-    return { b, rate: 1 };
-  },
-  // carillon: la lamella d'acciaio, parziali non armoniche che muoiono presto, la fondamentale che resta
-  carillon(f) {
-    const sr = CAMP_SR,
-      L = Math.floor(sr * 2.2),
-      b = AU.c.createBuffer(1, L, sr),
-      y = b.getChannelData(0);
-    for (const [r, a, t] of [
-      [1, 1, 1.4],
-      [2.0, 0.08, 0.5],
-      [5.4, 0.22, 0.12],
-      [8.9, 0.08, 0.05]
-    ]) {
-      if (f * r > sr / 2.2) continue;
-      const w = (2 * Math.PI * f * r) / sr;
-      for (let i = 0; i < L; i++) y[i] += a * Math.exp(-i / (sr * t)) * Math.sin(w * i);
-    }
-    let mx = 1e-6;
-    for (let i = 0; i < L; i++) mx = Math.max(mx, Math.abs(y[i]));
-    for (let i = 0; i < L; i++) y[i] /= mx;
-    for (let i = 0; i < 24; i++) y[i] *= i / 24;
-    return { b, rate: 1 };
-  }
-};
-// suona un campione: (M, tipo, nota, inizio, volume, opzioni: dur = si smorza dopo, rev = quanto riverbero)
-function suonaCamp(M, tipo, m, t, v, o = {}) {
-  const c = AU.c,
-    cp = campione(tipo, m),
-    s = c.createBufferSource(),
-    g = c.createGain();
-  s.buffer = cp.b;
-  s.playbackRate.value = cp.rate * Math.pow(2, M.storto(t) / 1200);
-  let fine = t + cp.b.duration / s.playbackRate.value;
-  g.gain.setValueAtTime(v, t);
-  if (o.dur && t + o.dur < fine) {
-    g.gain.setValueAtTime(v, t + o.dur);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur + (o.rel || 0.25));
-    fine = t + o.dur + (o.rel || 0.25);
-  }
-  let ult = g;
-  if (o.lp) {
-    const fl = c.createBiquadFilter();
-    fl.type = 'lowpass';
-    fl.frequency.value = o.lp;
-    g.connect(fl);
-    ult = fl;
-  }
-  s.connect(g);
-  M.esci(ult, o.rev ?? 1);
-  s.start(t);
-  s.stop(fine + 0.02);
-}
-// prepara in sottofondo i campioni di un brano (un po' alla volta, per non fare scatti)
-function campPrepara(tipi) {
-  const lista = [];
-  for (const tp of tipi)
-    if (CAMP_GEN[tp]) for (let m = 33; m <= 96; m += 3) if (!CAMP[tp + m]) lista.push([tp, m]);
-  const passo = () => {
-    const x = lista.shift();
-    if (!x || !AU.c) return;
-    campione(x[0], x[1]);
-    setTimeout(passo, 25);
-  };
-  setTimeout(passo, 50);
-}
-Object.assign(STRUMENTI, {
-  piano(M, t, m, d, v) {
-    suonaCamp(M, 'piano', m, t, v * 0.2, { dur: Math.max(0.25, d * 1.1), rel: 0.5, lp: 3800 });
-  },
-  pianoStacc(M, t, m, d, v) {
-    suonaCamp(M, 'piano', m, t, v * 0.2, { dur: 0.12, rel: 0.08, lp: 2600, rev: 0.3 });
-  },
-  chitarra(M, t, m, d, v) {
-    suonaCamp(M, 'chitarra', m, t, v * 0.16, { lp: 4200 });
-  },
-  arpa(M, t, m, d, v) {
-    suonaCamp(M, 'arpa', m, t, v * 0.15);
-  },
-  mandolino(M, t, m, d, v) {
-    // il tremolo del mandolino sulle note lunghe
-    const n = d > 0.45 ? Math.floor(d / 0.11) : 1;
-    for (let i = 0; i < n; i++)
-      suonaCamp(M, 'mandolino', m, t + i * 0.11, v * 0.13 * (i ? 0.7 : 1), { lp: 5000 });
-  },
-  carillon(M, t, m, d, v) {
-    suonaCamp(M, 'carillon', m + 12, t, v * 0.14);
-  },
-  basso(M, t, m, d, v) {
-    suonaCamp(M, 'basso', m, t, v * 0.42, { dur: Math.max(0.3, d), rel: 0.25, lp: 900, rev: 0 });
-  },
-  // il tappeto: tre seghe un po' scordate, filtrate scure, che entrano e se ne vanno piano
-  pad(M, t, m, d, v) {
-    const c = AU.c,
-      f = M.f(m),
-      fl = c.createBiquadFilter(),
-      g = c.createGain(),
-      a = Math.min(1.4, d * 0.4);
-    fl.type = 'lowpass';
-    fl.frequency.value = 380 + f * 0.7;
-    fl.Q.value = 0.4;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(v * 0.022, t + a);
-    g.gain.setValueAtTime(v * 0.022, t + Math.max(a, d - 0.3));
-    g.gain.linearRampToValueAtTime(0.0001, t + d + 1.4);
-    for (const det of [-9, 0, 8]) {
-      const o = c.createOscillator();
-      o.type = 'sawtooth';
-      o.frequency.value = f;
-      o.detune.value = det + M.storto(t);
-      o.connect(fl);
-      o.start(t);
-      o.stop(t + d + 1.5);
-    }
-    fl.connect(g);
-    M.esci(g, 1);
-  }
-});
-// il coro: più morbido (triangoli al posto delle seghe)
-STRUMENTI.coro = function (M, t, m, d, v) {
-  const c = AU.c,
-    f = M.f(m);
-  for (const det of [1, 1.005]) {
-    const o = c.createOscillator(),
-      g = c.createGain();
-    o.type = 'triangle';
-    o.frequency.value = f * det;
-    for (const fr of [650, 1100]) {
-      const b = c.createBiquadFilter();
-      b.type = 'bandpass';
-      b.frequency.value = fr;
-      b.Q.value = 4;
-      o.connect(b);
-      b.connect(g);
-    }
-    const a = Math.min(1.4, d * 0.4);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(v * 0.6, t + a);
-    g.gain.setValueAtTime(v * 0.6, t + Math.max(a, d - 0.8));
-    g.gain.linearRampToValueAtTime(0.0001, t + d + 0.8);
-    M.esci(g, 1);
-    o.start(t);
-    o.stop(t + d + 1);
-  }
-};
-// i brani generati e l'ombra usavano gli archi: diventano il tappeto
-STRUMENTI.archi = (M, t, m, d, v) => STRUMENTI.pad(M, t, m, d, v * 1.6);
-STRUMENTI.campana = (M, t, m, d, v) => suonaCamp(M, 'carillon', m, t, v * 1.3);
-PERCUSSIONI.spazzola = (M, t, v) => AU.noise(t, 0.09, v * 0.035, 'bandpass', 3200, 0.8, M.B.g, 0.012);
-
 // ---------- i brani senza temi ----------
 const MUS_GEN = {
   // la miniera: un bordone che si scurisce con la profondità, gocce, colpi di piccone di qualcun altro
@@ -863,7 +603,7 @@ const MUS_GEN = {
       let k = 0;
       for (let i = 0; i < 12 && k < 5; i++)
         if (tema[i]) {
-          STRUMENTI.carillon(M, t + k * 0.62, tema[i].m - 1 + (k === 4 ? -1 : 0), 1, 0.5);
+          STRUMENTI.carillon(M, t + k * 0.62, tema[i].m - 1 + (k === 4 ? -1 : 0), 1, 0.05);
           k++;
         }
     }
@@ -899,8 +639,7 @@ const Musica = {
     const br = this.br,
       om = (br && br.ombra) || 0,
       Hh = G.horror || 0;
-    // un nastro vecchio: ondeggia appena (e con la paura si storce davvero)
-    return Math.sin(t * 0.37) * (1.8 + om * 3 + Hh * 22) + (Math.random() - 0.5) * (1 + Hh * 18);
+    return Math.sin(t * 0.37) * (3 + om * 6 + Hh * 22) + (Math.random() - 0.5) * (2 + Hh * 18);
   },
   // nota con attacco e decadimento (pizzicati, campane)
   o(type, f, t, a, dec, peak, rev, slide) {
@@ -973,7 +712,7 @@ const Musica = {
     f.type = 'lowpass';
     f.frequency.value = 12000;
     g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime((br.vol || 1) * 1.5, now + fade);
+    g.gain.exponentialRampToValueAtTime(br.vol || 1, now + fade);
     r.gain.value = (br.rev ?? 0.5) * 0.9;
     g.connect(f);
     f.connect(AU.mus);
@@ -1019,19 +758,6 @@ const Musica = {
     this.mod = mod;
     if (!br) return;
     this.B = this.bus(br, now, fade);
-    campPrepara(
-      [
-        br.mel,
-        br.alt,
-        br.contro,
-        br.eco && br.eco.s,
-        br.arp && br.arp.s,
-        br.basso && br.basso.s,
-        br.ostinato && br.ostinato.s
-      ]
-        .filter(Boolean)
-        .map(x => (x === 'pianoStacc' ? 'piano' : x))
-    );
     this.colora(now);
     this.step = 0;
     this.ultimo = 'A';
@@ -1080,8 +806,6 @@ const Musica = {
       bar = Math.floor(s / P),
       pos = s % P;
     this.tNota = t;
-    // il buio: per una battuta o due la musica sparisce; resta solo una nota bassa che scende
-    if (t < (this.buioFino || 0)) return;
     if (br.gen) return MUS_GEN[br.gen](this, t, s, sp, Hh);
     const iSez = Math.floor(bar / 4) % br.forma.length,
       sez = br.forma[iSez],
@@ -1154,11 +878,6 @@ const Musica = {
         STRUMENTI[br.alt || br.mel](this, t, ev.m + 12, ev.len * sp, 0.35 * vol);
       return;
     }
-    // la controvoce (nei temi che ce l'hanno)
-    if (tema.evc && br.contro) {
-      const ec = tema.evc[b4 * P + pos];
-      if (ec) STRUMENTI[br.contro](this, t, ec.m - (dentro ? 12 : 0), ec.len * sp, 0.55 * vol);
-    }
     if (!ev) return;
     let m = ev.m,
       v = 1,
@@ -1185,10 +904,13 @@ const Musica = {
       if (Math.random() < q * 0.2) return;
     }
     const lung = ev.len * sp * (strum === 'carillon' || strum === 'celesta' ? 1 : 0.95);
-    STRUMENTI[strum](this, t, m, lung, v * vol * (0.9 + Math.random() * 0.15));
-    // l'eco della melodia, un passo (o due) dopo
-    if (br.eco && !sez.includes('_'))
-      STRUMENTI[br.eco.s](this, t + br.eco.d * sp, m, lung, v * vol * br.eco.v);
+    STRUMENTI[strum](
+      this,
+      t + (Math.random() - 0.5) * 0.012,
+      m,
+      lung,
+      v * vol * (0.85 + Math.random() * 0.25)
+    );
   },
   // le note di un accordo vicino a un centro (voice leading semplice)
   voci(ac, centro) {
@@ -1199,7 +921,7 @@ const Musica = {
       return m;
     });
   },
-  // l'angoscia sotto la gioia: sembra che vada tutto bene, e da un momento all'altro è tutto nero
+  // l'angoscia sotto la gioia
   ombra(t, sp, Hh, ac) {
     const br = this.br,
       om = br.ombra || 0;
@@ -1207,82 +929,45 @@ const Musica = {
     const p = om * 0.09 + Hh * 0.22 + (br.notte ? 0.04 : 0);
     if (Math.random() > p) return;
     const r = Math.random(),
-      root = ac ? ac.r : br.root,
-      bar = sp * br.passi;
-    if (r < 0.22 && t > (this.buioFino || 0) + bar * 16) {
-      this.buio(t, root, bar, Hh);
+      root = ac ? ac.r : br.root;
+    if (r < 0.28) {
+      // una campana lontana, un po' calante
+      STRUMENTI.campana(this, t, root - 12 - (Math.random() < 0.5 ? 1 : 0), 4, 0.06 + om * 0.04);
     } else if (r < 0.5) {
-      // una nota storta, lassù, mezzo tono sotto dove dovrebbe stare
-      STRUMENTI.carillon(this, t + sp * 3, root + 23, 1, 0.5);
+      // un bordone un semitono sopra la tonica, che sale piano e se ne va
+      STRUMENTI.archi(this, t, root - 12 + 1, sp * 16, 0.25 + Hh * 0.5);
     } else if (r < 0.7) {
-      // un respiro di rumore che sale e svanisce
+      // un respiro (rumore che si gonfia)
       const c = AU.c,
-        s2 = c.createBufferSource(),
+        s = c.createBufferSource(),
         f = c.createBiquadFilter(),
         g = c.createGain();
-      s2.buffer = AU.nb;
+      s.buffer = AU.nb;
       f.type = 'bandpass';
-      f.frequency.setValueAtTime(400, t);
-      f.frequency.exponentialRampToValueAtTime(1200, t + 2.2);
-      f.Q.value = 1.5;
+      f.frequency.setValueAtTime(300, t);
+      f.frequency.exponentialRampToValueAtTime(900, t + 2.2);
+      f.Q.value = 2;
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.012 + Hh * 0.02, t + 2);
+      g.gain.exponentialRampToValueAtTime(0.05 + Hh * 0.05, t + 2);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
-      s2.connect(f);
+      s.connect(f);
       f.connect(g);
       this.esci(g, 1);
-      s2.start(t, Math.random() * 0.4);
-      s2.stop(t + 2.7);
+      s.start(t, Math.random());
+      s.stop(t + 2.7);
     } else if (r < 0.88 || !(br.notte || Hh > 0.3)) {
-      // il bordone un semitono sopra la tonica, che entra piano e se ne va
-      STRUMENTI.pad(this, t, root + 1, bar * 2, 0.8 + Hh);
+      // una nota di carillon che stona, sopra tutto
+      STRUMENTI.carillon(this, t + sp * 3, root + 25, 1, 0.05);
     } else {
-      this.conta(t, root + 12);
+      this.conta(t, root + 24);
     }
-  },
-  // il buio: una battuta (due, con la paura) di silenzio; sotto, una nota bassa che scivola giù
-  buio(t, root, bar, Hh = 0) {
-    const n = Hh > 0.4 ? 2 : 1,
-      fine = t + bar * n,
-      B = this.B,
-      vol = ((this.br && this.br.vol) || 1) * 1.5;
-    this.buioFino = fine - 0.01;
-    if (B) {
-      // tutto si spegne di colpo (anche le code delle note già partite), e torna come se niente fosse
-      B.g.gain.setTargetAtTime(0.0001, t, 0.02);
-      B.g.gain.setTargetAtTime(vol, fine, 0.04);
-    }
-    // sotto il nero: una sola nota bassa che scivola giù di un semitono, fuori dal brano
-    const c = AU.c,
-      g = c.createGain();
-    g.gain.value = 1;
-    g.connect(AU.mus);
-    {
-      const o = c.createOscillator(),
-        og = c.createGain(),
-        T = bar * n;
-      o.type = 'triangle';
-      o.frequency.setValueAtTime(this.f(root - 12), t + 0.03);
-      o.frequency.exponentialRampToValueAtTime(this.f(root - 13), t + T);
-      og.gain.setValueAtTime(0.0001, t);
-      og.gain.linearRampToValueAtTime(0.16, t + 0.08);
-      og.gain.setValueAtTime(0.16, t + T * 0.7);
-      og.gain.linearRampToValueAtTime(0.0001, t + T);
-      o.connect(og);
-      og.connect(g);
-      og.connect(AU.rev);
-      o.start(t);
-      o.stop(t + T + 0.05);
-    }
-    setTimeout(() => g.disconnect(), (fine - c.currentTime + 2) * 1000);
-    if (Hh > 0.3) PERCUSSIONI.battito({ esci: x => x.connect(g) }, t + bar * 0.5, 0.5 + Hh * 0.4);
   },
   // qualcuno conta fino a otto. A volte arriva a nove
   conta(t, m) {
     if (t < this.contaFino) return;
     const nove = Math.random() < 0.3 + (G.horror || 0) * 0.3;
     for (let i = 0; i < (nove ? 9 : 8); i++)
-      STRUMENTI.carillon(this, t + i * 0.55, i === 8 ? m - 1 : m, 1, i === 8 ? 0.8 : 0.45);
+      STRUMENTI.carillon(this, t + i * 0.55, i === 8 ? m - 1 : m, 1, i === 8 ? 0.08 : 0.04);
     this.contaFino = t + 7;
   },
   // i suoni del mondo: uccelli per stagione, cicale d'estate, grilli, gufo, cornacchie d'autunno
