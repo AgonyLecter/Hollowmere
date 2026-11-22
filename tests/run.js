@@ -17,7 +17,9 @@ const SUITES = {
   macchine: require('./macchine'),
   mira: require('./mira'),
   zaino: require('./zaino'),
-  coop: require('./coop')
+  coop: require('./coop'),
+  scimmia: require('./scimmia'),
+  storia: require('./storia')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
