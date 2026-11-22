@@ -20,55 +20,110 @@ function swingK() {
   }
   return k;
 }
-// tre tempi: la carica (l'attrezzo sale indietro, piano), il colpo (scende veloce, con la scia, e arriva sul
-// bersaglio a metà del gesto: è l'istante dell'impatto, IMPATTO in gesti.js), il ritorno. La falce spazza di lato.
-function toolAng(id, k) {
-  if (id === 'can') return -0.2 + Math.min(1, k / 0.5) * 1.1 - Math.max(0, (k - 0.5) / 0.5) * 0.9;
+// tre tempi: la carica (le braccia salgono indietro, piano, il polso piegato), il colpo (scendono veloci e il
+// polso si apre: arriva sul bersaglio a metà del gesto, l'istante dell'impatto, IMPATTO in gesti.js), il ritorno.
+// a = angolo del braccio visto di lato (0 avanti, π/2 giù, −π/2 su), w = quanto il manico gira rispetto al braccio.
+const RIPOSO = 1.15;
+function moto(id, k) {
+  const L = (x, y, t) => x + (y - x) * t;
+  if (id === 'can') {
+    const su = Math.min(1, k / 0.3),
+      versa = clamp((k - 0.25) / 0.35, 0, 1) - clamp((k - 0.8) / 0.2, 0, 1);
+    return { a: L(RIPOSO, 0.35, su) + (k > 0.8 ? (k - 0.8) * 4 : 0), w: L(-0.2, 1.1, versa) };
+  }
   if (id === 'falce') {
-    // spazzata: da un lato all'altro, veloce nel mezzo
-    const e = k < 0.25 ? (k / 0.25) * 0.15 : k < 0.55 ? 0.15 + ((k - 0.25) / 0.3) * 0.85 : 1;
-    return -1.9 + e * 3.4 - Math.max(0, (k - 0.6) / 0.4) * 0.5;
+    // spazzata bassa: la lama parte da dietro e passa davanti, veloce nel mezzo
+    const t = k < 0.25 ? (k / 0.25) * 0.12 : k < 0.55 ? 0.12 + ((k - 0.25) / 0.3) * 0.88 : 1;
+    return { a: L(2.5, 0.45, t) + Math.max(0, (k - 0.6) / 0.4) * 0.6, w: L(0.2, 1.3, t) };
   }
-  if (k < 0.3) return -2.2 - (k / 0.3) * 0.5; // carica
+  if (k < 0.3) {
+    const t = 1 - (1 - k / 0.3) * (1 - k / 0.3);
+    return { a: L(RIPOSO, -1.85, t), w: L(0.2, -1.5, t) };
+  }
   if (k < 0.5) {
-    const e = (k - 0.3) / 0.2;
-    return -2.7 + e * e * 3.1; // colpo, sempre più veloce
+    const t = (k - 0.3) / 0.2,
+      e = t * t;
+    return { a: L(-1.85, 0.7, e), w: L(-1.5, 0.35, e) };
   }
-  return 0.4 - ((k - 0.5) / 0.5) * 0.6; // ritorno
+  const t = (k - 0.5) / 0.5;
+  return { a: L(0.7, RIPOSO, t), w: L(0.35, 0.2, t) };
 }
-function drawToolAnim() {
-  const k = swingK();
-  if (k < 0) return;
-  const a = G.toolA,
+// il personaggio col colpo in corso: corpo e braccia in posa (framePresa) e l'attrezzo nelle mani
+function disegnaPresa() {
+  const k = swingK(),
+    a = G.toolA,
     p = G.player,
-    ic = ICON[a.id];
-  if (!ic) return;
-  const dir = a.dir,
-    can = a.id === 'can',
-    falce = a.id === 'falce',
-    hx = p.x + (dir === 2 ? 4 : dir === 1 ? -4 : dir === 0 ? 3 : -3),
-    hy = p.y - 13 + (dir === 3 ? -2 : 0),
-    // dall'alto o dal basso l'arco è un po' più corto
-    verso = (dir === 0 || dir === 3) && !can && !falce ? 0.85 : 1,
-    disegna = (kk, alpha) => {
-      const ang = toolAng(a.id, kk) * verso;
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(Math.round(hx), Math.round(hy));
-      if (dir === 1) ctx.scale(-1, 1);
-      ctx.rotate(dir === 3 ? -ang : ang);
-      ctx.drawImage(ic, -2, -12, falce ? 15 : 13, falce ? 15 : 13);
-      ctx.restore();
-    };
-  // la scia del colpo: due copie sbiadite un attimo indietro
-  const colpo = falce ? k > 0.28 && k < 0.6 : !can && k > 0.32 && k < 0.55;
-  if (colpo) {
-    disegna(k - 0.06, 0.18);
-    disegna(k - 0.03, 0.32);
+    ic = ICON[a.id],
+    L = LOOKS.player,
+    dir = a.dir,
+    lato = dir === 1 || dir === 2,
+    { a: ang, w } = moto(a.id, k),
+    aq = presaQ(ang),
+    fr = framePresa(L, dir, aq),
+    X = Math.round(p.x),
+    Y = Math.round(p.y),
+    q = posaPresa(dir, aq, 22, 7 + (L.wide ? 1 : 0)),
+    s = dir === 1 ? -1 : 1,
+    // la mano nel mondo (il fotogramma è 2× e centrato sui piedi)
+    hx = X + s * (q.mano[0] / 2 - 9),
+    hy = Y - 27 + q.mano[1] / 2;
+  // il manico: di lato gira nel piano dello schermo; di fronte e di spalle si vede di scorcio
+  // di fronte e di spalle il polso piega meno, così l'attrezzo alzato resta visibile sopra la testa
+  const h = ang + (lato ? w : w * 0.35);
+  let rot,
+    lungo = 1;
+  if (lato) rot = h;
+  else {
+    const vx = (dir === 0 ? 1 : -1) * (0.3 * Math.cos(h) + 0.25),
+      vy = Math.sin(h);
+    rot = Math.atan2(vy, vx);
+    lungo = clamp(Math.hypot(vx, vy), 0.65, 1);
   }
-  disegna(k, 1);
+  // il manico che punta indietro passa dietro al corpo (di spalle: quello che punta avanti)
+  const dietro = dir === 3 ? Math.cos(h) > 0.2 : Math.cos(h) < -0.3;
+  const attrezzo = (r, alpha) => {
+    if (!ic) return;
+    const sz = (a.id === 'falce' ? 15 : 13) * lungo;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(hx, hy);
+    if (dir === 1) ctx.scale(-1, 1);
+    if (a.id === 'can') {
+      // l'annaffiatoio pende dal manico e si inclina in avanti per versare
+      ctx.rotate(lato ? w * 0.9 : 0);
+      ctx.drawImage(ic, -3, -1, 9, 9);
+      ctx.restore();
+      return;
+    }
+    // l'icona è disegnata in diagonale (impugnatura in basso a sinistra): +π/4 la allinea al manico
+    ctx.rotate(r + Math.PI / 4);
+    ctx.drawImage(ic, -2, -sz + 1, sz, sz);
+    ctx.restore();
+  };
+  const colpo = a.id === 'falce' ? k > 0.28 && k < 0.6 : a.id !== 'can' && k > 0.32 && k < 0.52;
+  const scia = () => {
+    if (!colpo || !lato) return;
+    for (const [dk, al] of [
+      [0.06, 0.16],
+      [0.03, 0.3]
+    ]) {
+      const m = moto(a.id, k - dk);
+      attrezzo(m.a + m.w, al);
+    }
+  };
+  if (dietro) attrezzo(rot, 1);
+  ctx.drawImage(SHADOW, X - 7, Y - 3);
+  ctx.save();
+  ctx.translate(X, Y);
+  if (dir === 1) ctx.scale(-1, 1);
+  dImg(ctx, fr, -9, -27);
+  ctx.restore();
+  if (!dietro) {
+    scia();
+    attrezzo(rot, 1);
+  }
   // la falce lascia nell'aria l'arco della lama
-  if (falce && k > 0.35 && k < 0.7) {
+  if (a.id === 'falce' && k > 0.35 && k < 0.7) {
     const u = (k - 0.35) / 0.35,
       [dx, dy] = DIRV[dir];
     ctx.save();

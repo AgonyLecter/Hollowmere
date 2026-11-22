@@ -1866,10 +1866,10 @@ function render() {
         const [ox, oy] = swingOffset();
         G.player.x += ox;
         G.player.y += oy;
-        drawSprite('player', G.player);
+        if (swingK() >= 0 && ICON[G.toolA.id]) disegnaPresa();
+        else drawSprite('player', G.player);
         G.player.x -= ox;
         G.player.y -= oy;
-        drawToolAnim();
       }
     } else if (e.prey) drawSprite('prey', G.prey);
     else if (e.coach) drawCoach();

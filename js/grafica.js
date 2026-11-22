@@ -158,7 +158,7 @@ const GX = (() => {
   const FR = [0, 1, 2, 1, 0, 1, 2, 2, 1, 0, 1, 1],
     fr = X => FR[(((X | 0) % 12) + 12) % 12];
 
-  function frame(L, dir, ph, br, blink) {
+  function frame(L, dir, ph, br, blink, presa) {
     const P = new PX(W, H),
       R = ramps(L);
     const walk = ph != null,
@@ -486,7 +486,17 @@ const GX = (() => {
       const RA = far ? dk(top, 0.78) : top,
         RS = far ? dk(R.sk, 0.82) : R.sk;
       let sx, sy, hx, hy;
-      if (side) {
+      if (presa != null) {
+        // l'attrezzo in mano: le due mani sul manico (posaPresa); il braccio passa davanti al busto, che
+        // ha lo stesso colore: un contorno scuro lo stacca
+        const Q = posaPresa(dir, presa, tTop, hw);
+        [sx, sy] = Q.spalle[side ? (far ? 1 : 0) : q < 0 ? 0 : 1];
+        hx = Q.mano[0] + (side ? (far ? -0.8 : 0) : q * 1.2);
+        hy = Q.mano[1] - 1.6 + (side && far ? 0.4 : 0);
+        const B = dk(RA, 0.45);
+        paint(P, new MK().cap(sx, sy, hx, hy, 3.1, 2.8), B, { flat: 1, base: 0, nc: 1 });
+        paint(P, new MK().ell(hx, hy + 1.6, 2.6, 2.5), B, { flat: 1, base: 0, nc: 1 });
+      } else if (side) {
         const sw = (far ? 1 : -1) * s * 3.4;
         sx = cx + (far ? -1 : 0);
         sy = tTop + 2.4;
@@ -829,20 +839,31 @@ const GX = (() => {
       dress();
       apron();
       neck();
-      arm(0, false);
+      // con le braccia alzate il braccio vicino passa davanti alla testa
+      const alzato = presa != null && Math.sin(presa) < -0.35;
+      if (!alzato) arm(0, false);
       head();
       face();
       beard();
       hair();
       ears();
       hat();
+      if (alzato) arm(0, false);
     } else if (back) {
+      // di spalle, quando le mani scendono davanti al corpo il corpo le copre
+      const maniDavanti = presa != null && Math.sin(presa) > 0.2;
+      if (maniDavanti) {
+        arm(-1);
+        arm(1);
+      }
       legs();
       robe();
       torso();
       dress();
-      arm(-1);
-      arm(1);
+      if (!maniDavanti) {
+        arm(-1);
+        arm(1);
+      }
       neck();
       head();
       ears();
@@ -876,6 +897,47 @@ const GX = (() => {
   return { MK, paint, frame, dk };
 })();
 heroFrame = GX.frame;
+// ---------- la presa dell'attrezzo ----------
+// a = angolo del braccio nella vista di lato (0 avanti, π/2 giù, −π/2 su), in coordinate del fotogramma
+// (36×54, 2 px per unità). Di fronte e di spalle lo stesso gesto si vede solo in altezza.
+const BRACCIO = 10.5;
+function posaPresa(dir, a, tTop, hw) {
+  const cx = 18,
+    sy = tTop + 2.4;
+  if (dir === 2 || dir === 1)
+    return {
+      spalle: [
+        [cx, sy],
+        [cx - 1, sy]
+      ],
+      mano: [cx + BRACCIO * Math.cos(a), sy + BRACCIO * Math.sin(a)]
+    };
+  return {
+    spalle: [
+      [cx - (hw - 0.8), sy],
+      [cx + (hw - 0.8), sy]
+    ],
+    mano: [cx + (dir === 0 ? 1 : -1), sy + 11 * Math.sin(a)]
+  };
+}
+// fotogrammi in posa, fatti la prima volta che servono, con l'angolo a gradini di PRESA_PASSO
+const PRESA_MIN = -2.4,
+  PRESA_MAX = 2.8,
+  PRESA_PASSO = 0.2;
+const presaQ = a =>
+  PRESA_MIN + Math.round((clamp(a, PRESA_MIN, PRESA_MAX) - PRESA_MIN) / PRESA_PASSO) * PRESA_PASSO;
+function framePresa(L, dir, a) {
+  const d = dir === 1 ? 2 : dir,
+    C = L._presa || (L._presa = {}),
+    k = d + '|' + a.toFixed(1);
+  if (!C[k]) {
+    const [c, x] = mk(CW, CHH);
+    c.s = 2;
+    heroFrame(L, d, null, 0, false, a).put(x, 0, 0);
+    C[k] = c;
+  }
+  return C[k];
+}
 
 // =====================================================================
 // EDIFICI — kit di pittura in pixel art (coordinate in pixel reali, 2× le unità di gioco)
