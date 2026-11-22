@@ -309,6 +309,22 @@ const NOVITA = [
         t: 'E due cose sistemate: un regalo o un piatto ricevuti a zaino pieno non prendono più il posto di niente (aspettano nella cassetta), e nelle macchine un tocco mette un lotto, il doppio tocco tutta la pila.'
       }
     ]
+  },
+  {
+    id: 'gesti',
+    v: 38,
+    n: 'Colpi che si sentono',
+    steps: [
+      {
+        t: 'Gli attrezzi adesso si caricano e colpiscono davvero: il colpo arriva quando la lama tocca, e solo allora volano schegge, scintille, zolle o gocce, con il loro suono.'
+      },
+      {
+        t: 'L’albero abbattuto <b>scricchiola e cade</b> dalla parte opposta alla tua, con un tonfo che fa tremare la terra; poi resta il ceppo. Le rocce si spaccano in pezzi, la falce spazza l’erba in un arco.'
+      },
+      {
+        t: 'Anche i passi cambiano con il terreno: erba, ghiaia, legno, pietra e neve hanno ognuno il suo rumore.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

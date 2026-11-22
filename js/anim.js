@@ -20,6 +20,22 @@ function swingK() {
   }
   return k;
 }
+// tre tempi: la carica (l'attrezzo sale indietro, piano), il colpo (scende veloce, con la scia, e arriva sul
+// bersaglio a metà del gesto: è l'istante dell'impatto, IMPATTO in gesti.js), il ritorno. La falce spazza di lato.
+function toolAng(id, k) {
+  if (id === 'can') return -0.2 + Math.min(1, k / 0.5) * 1.1 - Math.max(0, (k - 0.5) / 0.5) * 0.9;
+  if (id === 'falce') {
+    // spazzata: da un lato all'altro, veloce nel mezzo
+    const e = k < 0.25 ? (k / 0.25) * 0.15 : k < 0.55 ? 0.15 + ((k - 0.25) / 0.3) * 0.85 : 1;
+    return -1.9 + e * 3.4 - Math.max(0, (k - 0.6) / 0.4) * 0.5;
+  }
+  if (k < 0.3) return -2.2 - (k / 0.3) * 0.5; // carica
+  if (k < 0.5) {
+    const e = (k - 0.3) / 0.2;
+    return -2.7 + e * e * 3.1; // colpo, sempre più veloce
+  }
+  return 0.4 - ((k - 0.5) / 0.5) * 0.6; // ritorno
+}
 function drawToolAnim() {
   const k = swingK();
   if (k < 0) return;
@@ -27,33 +43,45 @@ function drawToolAnim() {
     p = G.player,
     ic = ICON[a.id];
   if (!ic) return;
-  const e = k < 0.55 ? k / 0.55 : 1,
-    back = k >= 0.55 ? (k - 0.55) / 0.45 : 0,
-    dir = a.dir,
-    can = a.id === 'can';
-  // angolo dell'arco: da alto-dietro a basso-avanti (l'annaffiatoio invece si inclina)
-  let ang = can ? -0.2 + e * 1.1 - back * 0.9 : -2.2 + e * 2.6 - back * 0.4;
-  const hx = p.x + (dir === 2 ? 4 : dir === 1 ? -4 : dir === 0 ? 3 : -3),
-    hy = p.y - 13 + (dir === 3 ? -2 : 0);
-  ctx.save();
-  ctx.translate(Math.round(hx), Math.round(hy));
-  if (dir === 1) ctx.scale(-1, 1);
-  if (dir === 0 || dir === 3) ang = can ? ang : -1.7 + e * 2.2 - back * 0.3;
-  ctx.rotate(dir === 3 ? -ang : ang);
-  ctx.drawImage(ic, -2, -12, 13, 13);
-  ctx.restore();
-  if (!can && k > 0.5 && k < 0.62) {
-    const [dx, dy] = DIRV[dir];
-    for (let i = 0; i < 3; i++)
-      G.parts.push({
-        k: 'dust',
-        x: p.x + dx * 13,
-        y: p.y + dy * 10 - 2,
-        vx: (Math.random() - 0.5) * 40,
-        vy: -20 - Math.random() * 20,
-        t: 0,
-        life: 0.35
-      });
+  const dir = a.dir,
+    can = a.id === 'can',
+    falce = a.id === 'falce',
+    hx = p.x + (dir === 2 ? 4 : dir === 1 ? -4 : dir === 0 ? 3 : -3),
+    hy = p.y - 13 + (dir === 3 ? -2 : 0),
+    // dall'alto o dal basso l'arco è un po' più corto
+    verso = (dir === 0 || dir === 3) && !can && !falce ? 0.85 : 1,
+    disegna = (kk, alpha) => {
+      const ang = toolAng(a.id, kk) * verso;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(Math.round(hx), Math.round(hy));
+      if (dir === 1) ctx.scale(-1, 1);
+      ctx.rotate(dir === 3 ? -ang : ang);
+      ctx.drawImage(ic, -2, -12, falce ? 15 : 13, falce ? 15 : 13);
+      ctx.restore();
+    };
+  // la scia del colpo: due copie sbiadite un attimo indietro
+  const colpo = falce ? k > 0.28 && k < 0.6 : !can && k > 0.32 && k < 0.55;
+  if (colpo) {
+    disegna(k - 0.06, 0.18);
+    disegna(k - 0.03, 0.32);
+  }
+  disegna(k, 1);
+  // la falce lascia nell'aria l'arco della lama
+  if (falce && k > 0.35 && k < 0.7) {
+    const u = (k - 0.35) / 0.35,
+      [dx, dy] = DIRV[dir];
+    ctx.save();
+    ctx.globalAlpha = 0.45 * (1 - u);
+    ctx.strokeStyle = '#eef4f8';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    const cx = p.x + dx * 8,
+      cy = p.y - 6 + dy * 6,
+      base = Math.atan2(dy, dx);
+    ctx.ellipse(cx, cy, 13, 7, 0, base - 1.4, base - 1.4 + 2.8 * Math.min(1, u * 2));
+    ctx.stroke();
+    ctx.restore();
   }
 }
 // il corpo segue il colpo: un piccolo slancio in avanti

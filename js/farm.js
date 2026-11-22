@@ -298,8 +298,7 @@ function farmAct(tx, ty) {
     if (!useEnergy(1)) return;
     f.c = null;
     f.w = false;
-    AU.play('hoe');
-    burst('dust', tx * 16 + 8, ty * 16 + 10, 8);
+    allImpatto(() => GESTO.terra(tx * 16 + 8, ty * 16 + 12));
     UI.toast('Hai tolto la pianta appassita. Puoi seminare di nuovo.');
     return;
   }
@@ -338,9 +337,7 @@ function farmAct(tx, ty) {
     if (!useEnergy(st.up && st.up.hoe ? 1 : 2)) return;
     st.farm[k] = { w: false, c: null };
     eggDig(tx, ty);
-    AU.play('hoe');
-    burst('dust', tx * 16 + 8, ty * 16 + 10, 8);
-    G.shake = 0.6;
+    allImpatto(() => GESTO.terra(tx * 16 + 8, ty * 16 + 12));
     tip('tutHoe', 'Terra dissodata. Ora scegli i semi nella barra (slot 3) e usali qui.');
     return;
   }
@@ -357,8 +354,10 @@ function farmAct(tx, ty) {
     if (!useEnergy(1)) return;
     f.w = true;
     waterWide(tx, ty);
-    AU.play('water');
-    burst('water', tx * 16 + 8, ty * 16 + 4, 10);
+    allImpatto(() => {
+      AU.play('water');
+      GESTO.acqua(tx * 16 + 8, ty * 16 + 10);
+    });
     if (f.c) {
       Ext.run('fatto', 'annaffia', 1);
       st.flags.watered = (st.flags.watered || 0) + 1;
@@ -389,7 +388,7 @@ function farmAct(tx, ty) {
     removeItem(id, 1);
     AU.play('plant');
     st.flags.planted++;
-    burst('dust', tx * 16 + 8, ty * 16 + 10, 5);
+    GESTO.semi(tx * 16 + 8, ty * 16 + 10);
     floatText('Seminato: ' + CROPS[def.crop].n, tx * 16 + 8, ty * 16 - 4, '#f6e6c0');
     tip('tutSeed', "Seminato! Ora prendi l'annaffiatoio (slot 2) e bagna la terra.");
     return;

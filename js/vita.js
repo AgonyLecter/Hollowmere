@@ -185,7 +185,7 @@ function drawVita(m) {
       if (k < 0.08 && !n._chop) {
         n._chop = 1;
         burst('dust', X + 8, Y - 4, 5, '#b08a5a');
-        if (Math.hypot(X - G.player.x, Y - G.player.y) < 200) AU.play('chop', 0.4);
+        if (Math.hypot(X - G.player.x, Y - G.player.y) < 200) AU.play('legno', 0.4);
       }
       if (k > 0.5) n._chop = 0;
     }

@@ -443,21 +443,28 @@ function mineAct(fx, fy) {
       floatText('Toc… suona vuota', fx * 16 + 8, fy * 16 - 8, '#bfe3ff');
     }
     o.hp -= goldTools() ? 2 : 1;
-    markHit(o);
-    AU.play('mine');
-    hitFx(fx, fy, '#a8a59a');
+    const rx = fx * 16 + 8,
+      ry = fy * 16 + 12;
+    allImpatto(() => {
+      markHit(o);
+      GESTO.pietra(rx, ry);
+    });
     if (o.hp > 0) return true;
+    // l'ultimo colpo: la roccia si spacca
     mapRemove(m, o);
+    restaFinoAllImpatto(o);
+    allImpatto(() => GESTO.roccia(rx, ry));
     const n =
       o.ore === 'pietra'
         ? 2 + Math.floor(Math.random() * 3)
         : o.ore === 'diamante'
           ? 1
           : 1 + (Math.random() < 0.35 ? 1 : 0);
-    if (addItem(o.ore, n)) {
-      flyPop(o.ore, fx * 16 + 8, fy * 16 - 4);
-      floatText(`+${n} ${ITEMS[o.ore].n}`, fx * 16 + 8, fy * 16 - 6, ORE_COL[o.ore] || '#fff4c0');
-    }
+    if (addItem(o.ore, n))
+      allImpatto(() => {
+        flyPop(o.ore, fx * 16 + 8, fy * 16 - 4);
+        floatText(`+${n} ${ITEMS[o.ore].n}`, fx * 16 + 8, fy * 16 - 6, ORE_COL[o.ore] || '#fff4c0');
+      });
     addXP('racc', o.ore === 'pietra' ? 3 : 8);
     if (o.ladder) {
       m.add(OB('scalagiu', fx, fy, IMG.scalaGiu, { act: 'scalagiu', solid: [], hits: [[fx, fy]] }));

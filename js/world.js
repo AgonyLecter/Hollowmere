@@ -1142,10 +1142,10 @@ function updatePlayer(dt) {
     p.stepT -= dt;
     if (p.stepT <= 0) {
       p.stepT = 0.28;
-      AU.play('step');
-      addPrint(p);
       const [ux, uy] = ptile(p),
         ug = m.get(ux, uy);
+      AU.play(suonoPasso(m, ug));
+      addPrint(p);
       if (ug === 2 || ug === 11 || ug === 10)
         for (let i = 0; i < 2; i++)
           G.parts.push({

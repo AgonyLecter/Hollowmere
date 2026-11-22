@@ -214,8 +214,7 @@ const INS_PUO = [
   ]
 ];
 function insiemeMenu() {
-  const st = G.st,
-    casa = myHome(),
+  const casa = myHome(),
     padrone = insPadrone(),
     fr = casa.mpFriends || [],
     ids = insPresenti(),
