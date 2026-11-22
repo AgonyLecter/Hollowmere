@@ -886,6 +886,33 @@ function buildGround(m) {
         }
       }
     }
+  // gli angoli dei sentieri che sporgono nel prato sono arrotondati
+  const RA = 3.5;
+  for (let ty = 0; ty < m.h; ty++)
+    for (let tx = 0; tx < m.w; tx++) {
+      const g = m.get(tx, ty);
+      if (g !== 2 && g !== 11) continue;
+      for (const [sx, sy] of [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1]
+      ]) {
+        if (!isG(tx + sx, ty) || !isG(tx, ty + sy) || !isG(tx + sx, ty + sy)) continue;
+        // centro del quarto di cerchio, dentro la piastrella
+        const cx = tx * 16 + (sx < 0 ? RA : 16 - RA),
+          cy = ty * 16 + (sy < 0 ? RA : 16 - RA);
+        for (let j = 0; j < RA; j += 0.5)
+          for (let i = 0; i < RA; i += 0.5) {
+            const px = sx < 0 ? tx * 16 + i : tx * 16 + 16 - 0.5 - i,
+              py = sy < 0 ? ty * 16 + j : ty * 16 + 16 - 0.5 - j,
+              r = Math.hypot(px + 0.25 - cx, py + 0.25 - cy);
+            if (r <= RA - 0.6) continue;
+            x.fillStyle = r > RA ? GR[2 + (hsh(px * 2, py * 2) % 2)] : 'rgba(40,25,10,.28)';
+            x.fillRect(px, py, 0.5, 0.5);
+          }
+      }
+    }
   if (m.water)
     for (let ty = 0; ty < m.h; ty++)
       for (let tx = 0; tx < m.w; tx++) {
@@ -1765,26 +1792,15 @@ function render() {
       const [x, y] = k.split(',').map(Number);
       if (x < tx0 - 1 || x > tx1 + 1 || y < ty0 - 1 || y > ty1 + 1) continue;
       const f = fm[k];
-      const arr = f.w ? T.tilledW : T.tilled;
-      ctx.drawImage(arr[hsh(x, y) % 3], x * 16, y * 16, 16, 16);
+      const vicina = (dx, dy) => (fm[x + dx + ',' + (y + dy)] ? 1 : 0),
+        bordi = vicina(0, -1) | (vicina(1, 0) << 1) | (vicina(0, 1) << 2) | (vicina(-1, 0) << 3);
+      ctx.drawImage(T.zolla[f.w ? 1 : 0][hsh(x, y) % 3][bordi], x * 16, y * 16, 16, 16);
       if (f.f)
         for (let i = 0; i < 7; i++) {
           const h = hsh(x * 7 + i, y * 13 + i);
           ctx.fillStyle = i % 3 ? 'rgba(24,14,6,.6)' : 'rgba(214,176,90,.75)';
-          ctx.fillRect(x * 16 + 1 + (h % 14), y * 16 + 1 + ((h >> 5) % 14), 1, 1);
+          ctx.fillRect(x * 16 + 3 + (h % 10), y * 16 + 3 + ((h >> 5) % 10), 1, 1);
         }
-      for (let d = 0; d < 4; d++) {
-        const [dx, dy] = DIRV[d];
-        if (fm[x + dx + ',' + (y + dy)]) continue;
-        ctx.fillStyle = 'rgba(30,16,8,.55)';
-        if (dy === 1) ctx.fillRect(x * 16, y * 16 + 15, 16, 1);
-        else if (dy === -1) {
-          ctx.fillRect(x * 16, y * 16, 16, 1);
-          ctx.fillStyle = 'rgba(30,16,8,.25)';
-          ctx.fillRect(x * 16, y * 16 + 1, 16, 1);
-        } else if (dx === 1) ctx.fillRect(x * 16 + 15, y * 16, 1, 16);
-        else ctx.fillRect(x * 16, y * 16, 1, 16);
-      }
     }
   }
   disegnaOmbreVive(m, cx, cy);

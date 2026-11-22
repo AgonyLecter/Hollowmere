@@ -323,6 +323,9 @@ const NOVITA = [
       },
       {
         t: 'Anche i passi cambiano con il terreno: erba, ghiaia, legno, pietra e neve hanno ognuno il suo rumore.'
+      },
+      {
+        t: 'E la Valle si vede più da vicino: tutto è più grande e dettagliato, i campi arati hanno i bordi tondi e sembrano un orto vero, i sentieri curvano nel prato.'
       }
     ]
   }
