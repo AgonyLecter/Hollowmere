@@ -560,8 +560,8 @@ Object.assign(ITEMS, {
   casetta: {
     n: 'Casetta',
     t: 'place',
-    size: [3, 3],
-    d: 'Una casa per un nuovo abitante. Dal rango Borgo. Va messa su una tua terra libera, 3×3.'
+    size: [5, 4],
+    d: 'Una casa per un nuovo abitante, piccola come quelle del paese. Dal rango Borgo. Va messa su una tua terra libera, 5×4.'
   }
 });
 CRAFTS.push({ id: 'casetta', q: 1, c: { legna: 140, pietra: 70, lingotto: 3 }, cat: 'edi' });
@@ -1110,12 +1110,13 @@ function genEspArt() {
     P.ellipse(20, 30, 4, 3, rp('#c8a03a'), { spec: 0.9 });
     P.line(14, 22, 26, 40, C('#6a6a72'));
   });
-  IMG.torre = SP(32, 52, P => {
+  // la torre di guardia: due caselle di base, più alta dei tetti del paese (32×104)
+  IMG.torre = SP(32, 104, P => {
     P.body(
-      14,
-      102,
+      34,
+      206,
       () => 32,
-      Y => 14 + (Y - 14) * 0.03,
+      Y => 13 + (Y - 34) * 0.025,
       stone,
       {
         nyF: () => 0.1,
@@ -1128,14 +1129,16 @@ function genEspArt() {
     );
     P.body(
       0,
-      16,
+      36,
       () => 32,
-      Y => 6 + Y * 0.7,
+      Y => 4 + Y * 0.5,
       roof,
       { nyF: () => -0.6 }
     );
-    P.rect(28, 40, 8, 12, rp('#1a1418'));
-    P.rect(26, 84, 12, 18, rp('#3a2414'));
+    // la loggia di guardia sotto il tetto, poi le feritoie e la porta
+    P.rect(24, 46, 16, 14, rp('#1a1418'));
+    for (const y of [92, 132]) P.rect(30, y, 4, 14, rp('#1a1418'));
+    P.rect(24, 172, 16, 34, rp('#3a2414'));
   });
   IMG.canne = SP(12, 18, P => {
     for (const [x, h] of [
@@ -1153,21 +1156,6 @@ function genEspArt() {
     for (let x = 0; x < 64; x += 8) P.line(x, 4, x, 14, C('#4a2a14'));
     P.capsule(4, 14, 4, 20, 1.5, woodD);
     P.capsule(60, 14, 60, 20, 1.5, woodD);
-  });
-  AIMG.casetta = SP(48, 52, P => {
-    P.rect(6, 40, 84, 60, rp('#e8d8b8'), { mod: (X, Y, v) => v + ((X * 3 + Y * 7) % 11 === 0 ? -0.1 : 0) });
-    P.body(
-      4,
-      44,
-      () => 48,
-      Y => 16 + Y * 0.85,
-      roof,
-      { nyF: () => -0.5, mod: (X, Y, v) => (Y % 5 === 0 ? v - 0.25 : v) }
-    );
-    P.rect(40, 70, 16, 30, rp('#6a3a1e'));
-    P.ellipse(53, 86, 1.4, 1.4, rp('#e8c23a'), { spec: 1 });
-    for (const x of [14, 66]) P.rect(x, 58, 14, 14, rp('#ffd86a'), { spec: 0.8 });
-    P.rect(70, 8, 8, 16, rp('#7a7a7a'));
   });
   const I = (id, fn) => {
     const P = new PX(32, 32);

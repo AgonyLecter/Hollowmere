@@ -282,6 +282,9 @@ const NOVITA = [
       },
       {
         t: 'E guarda per terra: il prato adesso è un prato vero, che cambia con le stagioni. L’erba alta ondeggia col vento e si piega quando ci passi in mezzo.'
+      },
+      {
+        t: 'E le misure tornano: la <b>casetta</b> dei nuovi abitanti è una casa vera, grande come quelle del paese (5×4), il <b>mulino</b> è una torre alta come il fienile e la <b>torre di guardia</b> sulla Collina svetta sopra i tetti.'
       }
     ]
   }

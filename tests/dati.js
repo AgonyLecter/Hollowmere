@@ -314,6 +314,61 @@ module.exports = async function (t, { browser }) {
         )
       );
     }
+    // proporzioni coerenti fra gli edifici (misure in pixel di gioco; un personaggio è alto 32, una casella 16)
+    {
+      const dim = c => (c ? [iw(c), ih(c)] : [0, 0]),
+        V = k => dim(IMG[k]),
+        piccole = { cottage: V('cottage'), forge: V('forge'), casetta: dim(AIMG.casetta) },
+        grandi = { house: V('house'), store: V('store'), elder: V('elder') },
+        torri = { mulino: dim(AIMG.mulino), torre: dim(IMG.torre), fienile: V('barn') },
+        annessi = {
+          pollaio: dim(AIMG.pollaio),
+          ovile: dim(AIMG.ovile),
+          stalla: dim(AIMG.stalla),
+          serra: dim(AIMG.serra),
+          silos: dim(AIMG.silos),
+          pozzo: dim(AIMG.pozzogrande)
+        },
+        maxW = o => Math.max(...Object.values(o).map(d => d[0])),
+        maxH = o => Math.max(...Object.values(o).map(d => d[1])),
+        minH = o => Math.min(...Object.values(o).map(d => d[1])),
+        fuori = (o, f) =>
+          Object.entries(o)
+            .filter(([, d]) => !f(d))
+            .map(([k, d]) => k + ' ' + d.join('×'));
+      const P0 = piccole.cottage;
+      bad(
+        'case piccole di misure diverse (cottage, fucina, casetta)',
+        fuori(piccole, d => Math.abs(d[0] - P0[0]) <= 2 && Math.abs(d[1] - P0[1]) <= 2)
+      );
+      bad(
+        'case grandi non più grandi delle piccole',
+        fuori(grandi, d => d[0] > maxW(piccole) && d[1] > maxH(piccole))
+      );
+      bad(
+        'museo più piccolo delle case grandi',
+        fuori({ museo: dim(IMG.museo) }, d => d[0] >= maxW(grandi) && d[1] >= maxH(grandi))
+      );
+      bad(
+        'la chiesa non è l’edificio più alto',
+        fuori({ chiesa: V('chapel') }, d => d[1] > Math.max(maxH(torri), maxH(grandi), dim(IMG.museo)[1]))
+      );
+      bad(
+        'torri e mulino più bassi delle case grandi',
+        fuori(torri, d => d[1] >= minH(grandi))
+      );
+      bad(
+        'annessi agricoli alti come una casa',
+        fuori(annessi, d => d[1] < minH(piccole))
+      );
+      // un edificio del giocatore non deve debordare dalla sua impronta più di mezza casella per lato
+      bad(
+        'costruzioni più larghe della loro impronta',
+        Object.keys(ITEMS)
+          .filter(k => ITEMS[k].size && AIMG[k] && iw(AIMG[k]) > ITEMS[k].size[0] * 16 + 16)
+          .map(k => k + ' ' + iw(AIMG[k]) + ' su ' + ITEMS[k].size[0] * 16)
+      );
+    }
     // ogni aspetto produce i suoi fotogrammi senza errori
     const sheetErr = [];
     for (const k of Object.keys(LOOKS)) {

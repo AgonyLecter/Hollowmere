@@ -1375,6 +1375,23 @@ const VB = {
     chimney: 1,
     forge: 1
   },
+  // la casetta dei nuovi abitanti: una casa piccola come il cottage e la fucina (stesse misure)
+  casetta: {
+    w: 5,
+    h: 4,
+    roofH: 30,
+    wall: 'plaster',
+    wc: '#e8d8b8',
+    roof: '#8a5a3a',
+    win: [
+      [8, 38],
+      [58, 38]
+    ],
+    door: 2,
+    chimney: 1,
+    shutter: '#5a7a8a',
+    curtain: '#e8dcc0'
+  },
   chapel: {
     w: 7,
     h: 7,
@@ -1839,81 +1856,87 @@ const ART2 = {
       B.F(P, 2, 38, 124, 3, B.tc(FR, 3));
       B.F(P, 2, 38, 124, 1, B.tc(FR, 5));
     }),
+  // il mulino a vento: una torre di pietra alta come il fienile del paese (64×96), tetto conico, porta ad arco.
+  // Le pale girano: le disegna PALE a ogni fotogramma, alla stessa scala (MULINO_PALE dice dove stanno)
   mulino: () =>
-    GB(48, 56, (P, B) => {
+    GB(64, 96, (P, B) => {
       const ST = B.R6('#9a968a'),
         RF = B.R6('#6a3a2a'),
         WD = B.R6('#8a5a32'),
-        CL = B.R6('#e8e0d0');
-      const hwT = Y => 16 + (Y - 30) * 0.12,
-        clip = clipBand(48, hwT);
-      B.stones(P, 20, 30, 56, 80, ST, {
-        rh: 7,
-        bw: 10,
-        clip,
+        CX = 64,
+        hwT = Y => 22 + (Y - 70) * 0.12;
+      B.stones(P, CX - 38, 70, 76, 116, ST, {
+        rh: 8,
+        bw: 12,
+        clip: clipBand(CX, hwT),
         shadeX: X => {
-          const n = (X + 0.5 - 48) / 16;
+          const n = (X + 0.5 - CX) / 30;
           return n < -0.6 ? 1 : n > 0.75 ? -2 : n > 0.35 ? -1 : 0;
         },
         moss: 1
       });
-      // finestrella e porta
-      B.F(P, 44, 52, 8, 12, B.tc(WD, 1));
-      B.F(P, 45, 53, 6, 10, C('#1e1410'));
-      B.F(P, 47, 53, 2, 10, B.tc(WD, 3));
-      for (let yy = 0; yy < 24; yy++) {
-        const hw = yy < 5 ? Math.round(Math.sqrt(25 - (5 - yy) * (5 - yy)) * 1.6) : 8;
-        B.F(P, 48 - hw - 1, 86 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
+      B.F(P, CX - 38, 184, 76, 4, B.tc(ST, 1));
+      // due finestrelle una sopra l'altra
+      for (const y of [96, 126]) {
+        B.F(P, CX - 5, y, 10, 14, B.tc(WD, 1));
+        B.F(P, CX - 4, y + 1, 8, 12, C('#1e1410'));
+        B.F(P, CX - 1, y + 1, 2, 12, B.tc(WD, 3));
+      }
+      // porta ad arco, alta come quelle delle case del paese
+      for (let yy = 0; yy < 36; yy++) {
+        const hw = yy < 6 ? Math.round(Math.sqrt(36 - (6 - yy) * (6 - yy)) * 1.4) : 9;
+        B.F(P, CX - hw - 1, 150 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
         if (yy > 0)
           for (let xx = -hw + 1; xx < hw - 1; xx++)
-            B.S(P, 48 + xx, 86 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
+            B.S(P, CX + xx, 150 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
       }
       // tetto conico
-      for (let Y = 10; Y < 34; Y++) {
-        const h2 = 4 + (Y - 10) * 0.85;
-        for (let X = Math.round(48 - h2); X < Math.round(48 + h2); X++) {
-          const n = (X + 0.5 - 48) / h2;
-          let t = (Y - 10) % 4 === 3 ? 1 : 3;
+      for (let Y = 30; Y < 74; Y++) {
+        const h2 = 5 + (Y - 30) * 0.8;
+        for (let X = Math.round(CX - h2); X < Math.round(CX + h2); X++) {
+          const n = (X + 0.5 - CX) / h2;
+          let t = (Y - 30) % 5 === 4 ? 1 : 3;
           if (n < -0.4) t++;
           if (n > 0.4) t--;
           if (n > 0.8) t--;
           B.S(P, X, Y, B.tc(RF, t));
         }
       }
-      B.F(P, 26, 32, 44, 3, B.tc(RF, 1));
-      // pale (girano: le disegna MULINO_PALE a ogni fotogramma, qui solo se la grafica animata manca)
-      if (typeof window.MULINO_ANIM === 'undefined') mulinoPale(P, B, Math.PI / 4);
+      B.F(P, CX - 40, 72, 80, 4, B.tc(RF, 1));
     }),
   _x: () => null
 };
-function mulinoPale(P, B, off, hy = 26) {
+const MULINO_PALE = { cx: 64, hy: 62, L: 58 };
+function mulinoPale(P, B, off, { cx, hy, L } = MULINO_PALE) {
   const WD = B.R6('#8a5a32'),
-    CL = B.R6('#e8e0d0');
+    CL = B.R6('#e8e0d0'),
+    tela0 = L * 0.28,
+    tela1 = L * 0.94,
+    larga = L * 0.25;
   for (const a of [0, 1, 2, 3]) {
     const t = (a * Math.PI) / 2 + off,
       ca = Math.cos(t),
-      sa = Math.sin(t),
-      ca2 = -sa,
-      sa2 = ca;
-    for (let Y = 0; Y < hy + 44; Y++)
-      for (let X = 0; X < 96; X++) {
-        const dx = X + 0.5 - 48,
+      sa = Math.sin(t);
+    for (let Y = Math.max(0, Math.floor(hy - L)); Y < Math.min(P.h, hy + L); Y++)
+      for (let X = Math.max(0, Math.floor(cx - L)); X < Math.min(P.w, cx + L); X++) {
+        const dx = X + 0.5 - cx,
           dy = Y + 0.5 - hy,
           r = dx * ca + dy * sa,
-          q = dx * ca2 + dy * sa2;
-        if (r >= 0 && r < 36 && Math.abs(q) < 1.3) {
+          q = -dx * sa + dy * ca;
+        if (r >= 0 && r < L && Math.abs(q) < 1.3) {
           B.S(P, X, Y, B.tc(WD, q < 0 ? 4 : 2));
           continue;
         }
-        if (r < 10 || r >= 34 || q < 1.3 || q >= 9) continue;
-        const lat = Math.floor(r) % 5 === 0 || q >= 8;
-        B.S(P, X, Y, lat ? B.tc(WD, 2) : B.tc(CL, q < 4 ? 4 : 3));
+        if (r < tela0 || r >= tela1 || q < 1.3 || q >= larga) continue;
+        const lat = Math.floor(r) % 5 === 0 || q >= larga - 1;
+        B.S(P, X, Y, lat ? B.tc(WD, 2) : B.tc(CL, q < larga * 0.45 ? 4 : 3));
       }
   }
-  for (let yy = -4; yy <= 4; yy++)
-    for (let xx = -4; xx <= 4; xx++)
-      if (xx * xx + yy * yy <= 16) B.S(P, 48 + xx, hy + yy, B.tc(WD, xx + yy < 0 ? 4 : 2));
-  B.S(P, 48, hy, C('#2e2e34'));
+  const hr = Math.round(L * 0.11);
+  for (let yy = -hr; yy <= hr; yy++)
+    for (let xx = -hr; xx <= hr; xx++)
+      if (xx * xx + yy * yy <= hr * hr) B.S(P, cx + xx, hy + yy, B.tc(WD, xx + yy < 0 ? 4 : 2));
+  B.S(P, cx, hy, C('#2e2e34'));
 }
 Object.assign(ART2, {
   silos: () =>
@@ -2020,39 +2043,8 @@ Object.assign(ART2, {
         noRidge: 1
       });
     }),
-  casetta: () =>
-    GB(48, 52, (P, B) => {
-      const WL = B.R6('#e8d8b8'),
-        RF = B.R6('#a8402a'),
-        TB = B.R6('#5a3a22');
-      B.plaster(P, 6, 40, 84, 54, WL, { shadeX: X => (X > 72 ? -1 : 0) });
-      B.timber(P, 6, 42, 84, 52, TB);
-      for (let i = 0; i < 18; i++) B.dark(P, 72 + i, 40, 1, 54, 1 - i * 0.012);
-      B.plinth(P, 4, 94, 88, 10);
-      B.windowPX(P, 12, 58, { glass: '#5a3a18', curtain: '#e8dcc0', w: 16, h: 14 });
-      B.windowPX(P, 68, 58, { glass: '#5a3a18', curtain: '#e8dcc0', w: 16, h: 14 });
-      // le finestre di chi ci abita: luce calda
-      for (const X of [12, 68])
-        for (let Y = 58; Y < 72; Y++)
-          for (let xx = 0; xx < 16; xx++) if (P.has(X + xx, Y)) P.set(X + xx, Y, C('#ffc860'), 70);
-      B.doorPX(P, 38, 70, { w: 20, h: 24, col: '#6a3a1e' });
-      B.ao(P, 6, 42, 84, 7);
-      B.shingles(P, 0, 4, 96, 38, RF, {
-        rowH: 6,
-        sw: 8,
-        ins: 0,
-        clip: clipBand(48, Y => 16 + (Y - 4) * 0.85),
-        noRidge: 1
-      });
-      for (let Y = 4; Y < 42; Y++) {
-        const h2 = Math.round(16 + (Y - 4) * 0.85);
-        B.S(P, 48 - h2, Y, B.tc(RF, 1));
-        B.S(P, 47 + h2, Y, B.tc(RF, 1));
-      }
-      B.F(P, 32, 3, 32, 3, B.tc(RF, 4));
-      B.eave(P, 2, 40, 92, RF);
-      B.chimney(P, 66, 12, 14);
-    }),
+  // la casetta è una casa del paese: si disegna una volta sola, con le altre (IMG), e si riusa
+  casetta: () => IMG.casetta || (IMG.casetta = genVillage('casetta')),
   // il museo: un tempietto neoclassico più grande delle case (112×84), sei colonne, frontone con lo stemma
   museo: () =>
     GB(112, 84, (P, B) => {
@@ -2191,19 +2183,6 @@ Object.assign(ART2, {
       }
     })
 });
-// alcune costruzioni erano più piccole delle case del paese: si ingrandiscono (il mulino è una torre, non una casetta)
-const ART2_SCALA = { mulino: 1.5 };
-function artScala(c, f) {
-  const o = document.createElement('canvas');
-  o.width = Math.round(c.width * f);
-  o.height = Math.round(c.height * f);
-  const x = o.getContext('2d');
-  x.imageSmoothingEnabled = false;
-  x.drawImage(c, 0, 0, o.width, o.height);
-  for (const k of Object.keys(c)) o[k] = c[k];
-  o.s = c.s || 1;
-  return o;
-}
 {
   const W = (name, keys, tgt) => {
     const f = window[name];
@@ -2212,7 +2191,7 @@ function artScala(c, f) {
       const r = f.apply(this, arguments);
       for (const k of keys) {
         try {
-          tgt()[k] = ART2_SCALA[k] ? artScala(ART2[k](), ART2_SCALA[k]) : ART2[k]();
+          tgt()[k] = ART2[k]();
         } catch (e) {
           console.error(e);
         }
@@ -4958,8 +4937,6 @@ addEventListener('keydown', e => {
 // Finestre che si accendono quando qualcuno è in casa, comignoli che fumano (di più d'inverno e la sera),
 // fucina e fornaci che pulsano, mulino che gira, api, campana che oscilla, pozzo che luccica.
 // Solo aspetto: legge lo stato del gioco, non lo cambia.
-window.MULINO_ANIM = true;
-
 // Brom batte il ferro solo se è lì, fermo davanti alla fucina, e il suo orario dice «forge»
 function bromAlLavoro() {
   const n = G.npcs && G.npcs.find(x => x.id === 'brom');
@@ -5013,8 +4990,8 @@ let OCC = new Set(),
 
 // ---------- pale del mulino: 8 fotogrammi per un quarto di giro ----------
 const PALE = Array.from({ length: 8 }, (_, i) => {
-  const P = new PX(96, 124);
-  mulinoPale(P, BK, Math.PI / 4 + (i * (Math.PI / 2)) / 8, 38);
+  const P = new PX(128, 192);
+  mulinoPale(P, BK, Math.PI / 4 + (i * (Math.PI / 2)) / 8);
   P.outline();
   return pxCanvas(P);
 });
@@ -5079,11 +5056,11 @@ function svTick(dt) {
   // casette costruite: comignolo
   for (const o of m.objs) {
     if (o.kind !== 'built' || !o.img) continue;
-    if (o.bid === 'casetta' && Math.random() < dt * (1.6 + dense * 2))
+    if (o.bid === 'casetta' && o.img.chim && Math.random() < dt * (1.6 + dense * 2))
       G.parts.push({
         k: 'smoke',
-        x: o.dx + 37 + Math.random() * 2,
-        y: o.dy + 5,
+        x: o.dx + o.img.chim[0] + Math.random() * 2,
+        y: o.dy + o.img.chim[1],
         vx: 4 + Math.random() * 3,
         vy: -8 - Math.random() * 4,
         t: 0,
@@ -5218,7 +5195,7 @@ function svTick(dt) {
         if (o.bid === 'mulino') {
           const sp = (job ? 1.6 : 0.6) * (st.weather === 'pioggia' || st.weather === 'neve' ? 1.6 : 1),
             fr = Math.floor(T * sp * 8) % 8;
-          ctx.drawImage(PALE[fr], Math.round(o.dx), Math.round(o.dy) - 6, iw(o.img), ih(o.img) + 6);
+          dImg(ctx, PALE[fr], Math.round(o.dx), Math.round(o.dy));
         }
         // fornace: la bocca pulsa
         if (o.bid === 'fornace') {
@@ -5306,7 +5283,7 @@ function svTick(dt) {
           o.dy + ih(o.img) < cy - 40
         )
           continue;
-        if (o.kind === 'bld' && o.img.lights && winLit(o.key)) {
+        if (o.img.lights && ((o.kind === 'bld' && winLit(o.key)) || o.bid === 'casetta')) {
           for (const w of o.img.lights) {
             const X = o.dx + 1 + w[0] + 5,
               Y = o.dy + w[1] + 5,
@@ -5336,18 +5313,11 @@ function svTick(dt) {
         if (o.kind === 'built') {
           if (o.bid === 'fornace')
             glow(o.dx + 8, o.dy + 18, 18 * (0.85 + 0.15 * Math.sin(T * 8)), 0.35 * k, '255,120,40');
-          if (o.bid === 'casetta')
-            for (const [wx, wy] of [
-              [10, 32],
-              [38, 32]
-            ])
-              glow(o.dx + wx, o.dy + wy, 14 * (1 + 0.05 * Math.sin(T * 6 + wx)), 0.3 * k, '255,190,100');
           if (o.bid === 'serra') glow(o.dx + 32, o.dy + 30, 30, 0.18 * k, '255,210,130');
-          if (o.bid === 'museo' || o.kind === 'museo')
-            for (const wx of [13, 51]) glow(o.dx + wx, o.dy + 32, 12, 0.25 * k, '255,220,120');
         }
+        // le due finestre ad arco del museo
         if (o.kind === 'museo')
-          for (const wx of [13, 51]) glow(o.dx + wx, o.dy + 32, 12, 0.25 * k, '255,220,120');
+          for (const wx of [16, 96]) glow(o.dx + wx, o.dy + 60, 13, 0.25 * k, '255,220,120');
       }
       ctx.globalCompositeOperation = 'source-over';
     } catch (e) {
