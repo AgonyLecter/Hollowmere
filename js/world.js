@@ -637,6 +637,163 @@ const SHADOWK = {
   stilts: [7, 2, 1],
   ledger: [8, 2, 1]
 };
+// le ombre di ciò che si può abbattere o togliere non si stampano nel terreno: si disegnano dal vivo,
+// così quando l'albero cade se ne va anche la sua ombra
+const OMBRA_VIVA = new Set(['tree', 'pine', 'stump', 'bush', 'bushR']);
+function disegnaOmbreVive(m, cx, cy) {
+  if (m.interior) return;
+  // d'inverno la neve copre (e schiarisce) le ombre stampate: queste fanno lo stesso
+  ctx.fillStyle = pratoStagione() === 1 && m.id === 'main' ? 'rgba(12,18,8,.13)' : 'rgba(12,18,8,.3)';
+  for (const o of m.objs) {
+    if (!o.img || o.deco || !OMBRA_VIVA.has(o.kind)) continue;
+    const s = SHADOWK[o.kind],
+      X = o.dx + iw(o.img) / 2 + s[2];
+    if (X < cx - 30 || X > cx + W + 30 || o.sy < cy - 10 || o.sy > cy + H + 10) continue;
+    ctx.beginPath();
+    ctx.ellipse(X, o.sy - 1, s[0], s[1], 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+// ---------- il prato vivo ----------
+// Sopra le piastrelle d'erba (tutte uguali) si dipinge un prato vero: macchie ampie più fitte e più asciutte,
+// fili d'erba piegati dal vento, trifoglio e fiorellini di stagione. Tutto deterministico (stesso posto, stesso
+// prato) e calcolato una volta sola quando si costruisce il terreno.
+const pratoStagione = () => (G.st && typeof isFree === 'function' && isFree(G.st) ? seasonOf(G.st) : 0);
+function pratoRumore(x, y, sc, seme) {
+  const X = x / sc,
+    Y = y / sc,
+    x0 = Math.floor(X),
+    y0 = Math.floor(Y),
+    fx = X - x0,
+    fy = Y - y0,
+    u = fx * fx * (3 - 2 * fx),
+    v = fy * fy * (3 - 2 * fy),
+    r = (a, b) => (hsh(a * 7 + seme * 101, b * 13 + seme * 57) % 1000) / 1000,
+    a0 = r(x0, y0) + (r(x0 + 1, y0) - r(x0, y0)) * u,
+    a1 = r(x0, y0 + 1) + (r(x0 + 1, y0 + 1) - r(x0, y0 + 1)) * u;
+  return a0 + (a1 - a0) * v;
+}
+function pratoVivo(m, x) {
+  const s = pratoStagione(),
+    // colori delle zone asciutte e di quelle fitte, per stagione (autunno, inverno, primavera, estate)
+    secco = ['#b0a04a', '#a8a890', '#9ec25a', '#c2bc5a'][s],
+    fitto = ['#3a5426', '#3a4e36', '#3a6a26', '#3e5e24'][s],
+    punta = ['#c8c070', '#c8d0c0', '#c8e888', '#e0d880'][s],
+    fiori = [
+      ['#f0e0a0', '#d8a04a'],
+      ['#f4f4f8'],
+      ['#f8f4f0', '#f4d040', '#c8a0e8', '#f0a0c0'],
+      ['#f4d040', '#f8f4f0', '#e8a040']
+    ][s],
+    pFiori = [0.05, 0, 0.22, 0.1][s],
+    pr = (a, b, k) => (hsh(a * 31 + k * 977, b * 17 + k * 389) % 10000) / 10000,
+    NC = new Float32Array((m.w + 2) * (m.h + 2)).fill(-1),
+    nAt = (a, b) => {
+      const k = b * (m.w + 2) + a;
+      if (NC[k] < 0)
+        NC[k] = pratoRumore(a * 16, b * 16, 72, 1) * 0.65 + pratoRumore(a * 16, b * 16, 21, 2) * 0.35;
+      return NC[k];
+    },
+    // i pezzi dello stesso colore (e trasparenza) si raccolgono e si dipingono in un colpo solo
+    B = new Map(),
+    R = (col, a, X, Y, w, h) => {
+      const k = col + '|' + a;
+      let p = B.get(k);
+      if (!p) B.set(k, (p = new Path2D()));
+      p.rect(X, Y, w, h);
+    };
+  for (let ty = 0; ty < m.h; ty++)
+    for (let tx = 0; tx < m.w; tx++) {
+      const g = m.g[ty * m.w + tx];
+      if (g !== 1 && g !== 12) continue;
+      const X0 = tx * 16,
+        Y0 = ty * 16;
+      // macchie: a blocchetti di 2×2, solo dove il prato si discosta dalla media
+      // (il rumore si calcola agli angoli della piastrella e si interpola: le macchie sono molto più grandi)
+      const n00 = nAt(tx, ty),
+        n10 = nAt(tx + 1, ty),
+        n01 = nAt(tx, ty + 1),
+        n11 = nAt(tx + 1, ty + 1);
+      for (let by = 0; by < 16; by += 2)
+        for (let bx = 0; bx < 16; bx += 2) {
+          const px = X0 + bx,
+            py = Y0 + by,
+            u = (bx + 1) / 16,
+            v = (by + 1) / 16,
+            n = (n00 * (1 - u) + n10 * u) * (1 - v) + (n01 * (1 - u) + n11 * u) * v;
+          // trasparenza a gradini (1..5), così i colori si raggruppano
+          if (n > 0.58) R(secco, Math.min(5, Math.ceil((n - 0.58) * 20)) * 0.068, px, py, 2, 2);
+          else if (n < 0.42) R(fitto, Math.min(5, Math.ceil((0.42 - n) * 19)) * 0.08, px, py, 2, 2);
+        }
+      // fili d'erba: più alti dove il prato è fitto, tutti piegati un po' dal vento
+      const lush = 1 - pratoRumore(X0 + 8, Y0 + 8, 72, 1),
+        nf = 10 + Math.round(lush * 10),
+        vento = (pratoRumore(X0 + 8, Y0 + 8, 40, 3) - 0.35) * 1.6;
+      for (let i = 0; i < nf; i++) {
+        const bx = X0 + pr(tx, ty, i) * 16,
+          by = Y0 + 2 + pr(tx, ty, i + 50) * 14,
+          h = 1 + lush * 1.5 + pr(tx, ty, i + 99) * 1.5,
+          lean = vento + (pr(tx, ty, i + 140) - 0.5) * 0.6;
+        R('#1e2c10', 0.45, bx, by, 0.5, 0.5);
+        R(GR[i % 3 ? 2 : 3], 1, bx, by - h * 0.55, 0.5, h * 0.55);
+        R(i % 4 ? GR[4] : punta, 1, bx + lean * 0.5, by - h, 0.5, h * 0.5);
+      }
+      // trifoglio nei punti più fitti
+      if (lush > 0.6 && pr(tx, ty, 7) < 0.3) {
+        const cx = X0 + 3 + pr(tx, ty, 8) * 10,
+          cy = Y0 + 3 + pr(tx, ty, 9) * 10;
+        R('#4a7a2a', 1, cx - 1, cy, 1, 1);
+        R('#4a7a2a', 1, cx + 0.5, cy, 1, 1);
+        R('#4a7a2a', 1, cx - 0.25, cy - 1, 1, 1);
+        R('#7ab048', 1, cx - 1, cy, 0.5, 0.5);
+        R('#7ab048', 1, cx + 0.5, cy, 0.5, 0.5);
+        R('#7ab048', 1, cx - 0.25, cy - 1, 0.5, 0.5);
+      }
+      // fiorellini di stagione, sparsi
+      if (pr(tx, ty, 11) < pFiori) {
+        const fx = X0 + 2 + pr(tx, ty, 12) * 12,
+          fy = Y0 + 3 + pr(tx, ty, 13) * 11,
+          col = fiori[hsh(tx, ty * 3) % fiori.length];
+        R('#3f6a26', 1, fx, fy, 0.5, 1.5);
+        R(col, 1, fx - 0.5, fy - 0.5, 1.5, 1);
+        R('#f8e070', 1, fx, fy - 0.5, 0.5, 0.5);
+      }
+    }
+  // prima le macchie (trasparenti), poi i fili e i fiori
+  const ord = [...B.keys()].sort((a, b) => +a.split('|')[1] - +b.split('|')[1]);
+  for (const k of ord) {
+    const [col, a] = k.split('|');
+    x.globalAlpha = +a;
+    x.fillStyle = col;
+    x.fill(B.get(k));
+  }
+  x.globalAlpha = 1;
+}
+// i ciuffi d'erba alta ondeggiano col vento (ognuno col suo tempo) e si piegano quando ci passi in mezzo
+function disegnaCiuffo(e) {
+  const im = e.img,
+    w = iw(im),
+    h = ih(im),
+    bx = e.dx + w / 2,
+    by = e.dy + h,
+    p = G.player;
+  let k = Math.sin(G.t * 1.7 + e.tx * 0.9 + e.ty * 0.4) * 0.07 + Math.sin(G.t * 0.45 + e.tx * 0.13) * 0.05;
+  if (p) {
+    const dx = bx - p.x,
+      dy = by - p.y;
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 7) k += Math.sign(dx || 1) * 0.35 * (1 - Math.abs(dx) / 10);
+  }
+  ctx.save();
+  // d'inverno l'erba alta è secca e mezza sepolta dalla neve
+  if (pratoStagione() === 1) ctx.globalAlpha = 0.5;
+  ctx.translate(Math.round(bx), Math.round(by));
+  ctx.transform(1, 0, -k, 1, 0, 0);
+  dImg(ctx, im, -w / 2, -h);
+  ctx.restore();
+}
+Ext.on('listaMondo', list => {
+  for (const e of list) if (e.kind === 'tuft' && !e.disegna) e.disegna = disegnaCiuffo;
+});
 function buildGround(m) {
   const gw = m.w * 16,
     gh = m.h * 16;
@@ -652,8 +809,13 @@ function buildGround(m) {
         continue;
       }
       const arr = T[GT[g]];
-      if (arr) x.drawImage(arr[hsh(tx, ty) % arr.length], tx * 16, ty * 16, 16, 16);
+      if (!arr) continue;
+      let v = hsh(tx, ty) % arr.length;
+      // le foglie cadute (varianti 4 e 5 del prato) solo in autunno
+      if (g === 1 && v >= 4 && pratoStagione() !== 0) v -= 4;
+      x.drawImage(arr[v], tx * 16, ty * 16, 16, 16);
     }
+  if (!m.interior) pratoVivo(m, x);
   const isG = (tx, ty) => {
     const g = m.get(tx, ty);
     return g === 1 || g === 12;
@@ -794,7 +956,7 @@ function buildGround(m) {
       continue;
     }
     const s = SHADOWK[o.kind];
-    if (!s) continue;
+    if (!s || OMBRA_VIVA.has(o.kind)) continue;
     x.beginPath();
     x.ellipse(o.dx + iw(o.img) / 2 + s[2], o.sy - 1, s[0], s[1], 0, 0, Math.PI * 2);
     x.fill();
@@ -1625,6 +1787,7 @@ function render() {
       }
     }
   }
+  disegnaOmbreVive(m, cx, cy);
   drawPrints(m);
   drawFlowers(m, cx, cy);
   drawAim();

@@ -259,6 +259,61 @@ module.exports = async function (t, { browser }) {
         .filter(x => prima(x, 3) && x.testi.some(t => /radici rosse|\bteste\b|catene/i.test(t)))
         .map(x => x.chi + ': ' + x.testi[0].slice(0, 40))
     );
+    // si può ottenere tutto: partendo dalle fonti (botteghe, orto, raccolta, animali, pesca, miniera) e da ciò
+    // che si trasforma (macchine, mulino, cucina, banco), ogni oggetto e ogni ingrediente deve essere raggiungibile
+    {
+      const ok = new Set(['legna', 'pietra', 'fibra', 'uovo', 'ferro', 'essenza', 'concime', 'pane']),
+        add = k => !ok.has(k) && (ok.add(k), true);
+      for (const [k, v] of Object.entries(ITEMS)) if (v.t === 'seed') ok.add(k);
+      for (const k of MERC_STOCK) ok.add(k);
+      for (const r of RES_POOL) for (const [x] of r.shop) ok.add(x);
+      for (const [x] of DECOR_SHOP) ok.add(x);
+      for (const f of Object.values(FESTE)) for (const [x] of f.shop || []) ok.add(x);
+      for (const [x] of NOVE_SHOP) ok.add(x);
+      for (const [x] of BOTTEGA) ok.add(x);
+      for (const l of Object.values(WILD)) for (const x of l) ok.add(x);
+      for (const l of Object.values(FISH)) for (const x of l) ok.add(x[0]);
+      for (const f of [5, 15, 30, 45, 80]) for (const [x] of oreTable(f)) ok.add(x);
+      const impara = r => BASE_RECIPES.includes(r.id) || r.da || r.scopri || r.abil;
+      const coppie = Object.entries(MACH).flatMap(([, M]) =>
+        Object.keys(ITEMS)
+          .filter(k => {
+            try {
+              return M.ok(k);
+            } catch (e) {
+              return false;
+            }
+          })
+          .map(k => [k, M.out(k)])
+      );
+      for (let giro = true; giro; ) {
+        giro = false;
+        for (const [c] of Object.entries(CROPS))
+          if (Object.keys(ITEMS).some(x => ITEMS[x].t === 'seed' && ITEMS[x].crop === c && ok.has(x)))
+            giro = add(c) || giro;
+        for (const [k, v] of Object.entries(ITEMS)) if (v.tree && ok.has(k)) giro = add(v.tree) || giro;
+        for (const [a, b] of coppie) if (ok.has(a)) giro = add(b) || giro;
+        if (Object.keys(MILL).some(k => ok.has(k))) giro = add('farina') || giro;
+        for (const r of COOK)
+          if (impara(r) && Object.keys(r.need).every(k => ok.has(k))) giro = add(r.id) || giro;
+        for (const c of CRAFTS) if (Object.keys(c.c).every(k => ok.has(k))) giro = add(c.id) || giro;
+        for (const a of Object.values(ANIMALS)) if (ok.has(a.home)) giro = add(a.prod) || giro;
+      }
+      bad(
+        'oggetti che non si possono ottenere in nessun modo',
+        Object.keys(ITEMS).filter(k => !ok.has(k) && !['tool', 'key', 'bad'].includes(ITEMS[k].t))
+      );
+      bad(
+        'ricette con ingredienti che non si possono ottenere',
+        COOK.filter(r => Object.keys(r.need).some(k => !ok.has(k))).map(r => r.id)
+      );
+      bad(
+        'colture senza un seme che si possa comprare',
+        Object.keys(CROPS).filter(
+          c => !Object.keys(ITEMS).some(x => ITEMS[x].t === 'seed' && ITEMS[x].crop === c)
+        )
+      );
+    }
     // ogni aspetto produce i suoi fotogrammi senza errori
     const sheetErr = [];
     for (const k of Object.keys(LOOKS)) {
