@@ -285,8 +285,7 @@ async function festContest(n, f, s) {
   return true;
 }
 async function festDance(n, f, s) {
-  const st = G.st,
-    ok = FRIENDS.filter(id => id !== n.id && hearts(id) >= 4 && NPC(id) && !NPC(id).hidden);
+  const ok = FRIENDS.filter(id => id !== n.id && hearts(id) >= 4 && NPC(id) && !NPC(id).hidden);
   if (!ok.length) {
     await say(
       n.id,

@@ -397,7 +397,6 @@ const CART = (() => {
   const SOIL = R6b('#6a4428'),
     LF = R6b('#5a9a2a'),
     LF2 = R6b('#3f7a2a'),
-    LFL = R6b('#86c048'),
     STEM = R6b('#4a7a24'),
     WOOD = R6b('#8a5a30');
   const S = fn => {

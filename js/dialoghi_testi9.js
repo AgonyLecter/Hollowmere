@@ -1,8 +1,7 @@
 'use strict';
 // ================= LE BATTUTE DEGLI ABITANTI (9): la grande raccolta di conversazioni =================
 {
-  const S = 'storia',
-    V = 'valle';
+  const V = 'valle';
   const C = (cond, L) => Dialoghi.conversazioniCon('chiacchiera', cond, L);
   const B = (cond, L) => Dialoghi.conversazioniCon('bisbiglio', cond, L);
   const t = (tra, ...righe) => ({ tra, righe });

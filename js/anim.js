@@ -33,7 +33,6 @@ function drawToolAnim() {
     can = a.id === 'can';
   // angolo dell'arco: da alto-dietro a basso-avanti (l'annaffiatoio invece si inclina)
   let ang = can ? -0.2 + e * 1.1 - back * 0.9 : -2.2 + e * 2.6 - back * 0.4;
-  const side = dir === 1 ? -1 : 1;
   const hx = p.x + (dir === 2 ? 4 : dir === 1 ? -4 : dir === 0 ? 3 : -3),
     hy = p.y - 13 + (dir === 3 ? -2 : 0);
   ctx.save();

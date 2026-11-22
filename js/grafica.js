@@ -2183,27 +2183,6 @@ Object.assign(ART2, {
       }
     })
 });
-{
-  const W = (name, keys, tgt) => {
-    const f = window[name];
-    if (typeof f !== 'function') return;
-    window[name] = function () {
-      const r = f.apply(this, arguments);
-      for (const k of keys) {
-        try {
-          tgt()[k] = ART2[k]();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      return r;
-    };
-  };
-  W('genAnimalArt', ['pollaio', 'stalla'], () => AIMG);
-  W('genCostrArt', ['serra', 'mulino', 'silos', 'pozzogrande'], () => AIMG);
-  W('genEspArt', ['casetta'], () => AIMG);
-  W('genSempreArt', ['museo'], () => IMG);
-}
 
 // ---------- oggetti costruibili piccoli ----------
 const ART3 = {
@@ -2309,8 +2288,7 @@ const ART3 = {
       for (let Y = 2; Y < 34; Y++) {
         const hw = 10 + Math.sin(((Y - 2) / 32) * Math.PI) * 3;
         for (let X = Math.round(14 - hw); X < Math.round(14 + hw); X++) {
-          const n = (X + 0.5 - 14) / hw,
-            st = Math.floor((n + 1) * 4);
+          const n = (X + 0.5 - 14) / hw;
           let t = 3;
           if (n < -0.5) t = 4;
           if (n > 0.4) t = 2;
@@ -2984,8 +2962,6 @@ const TOOLS = {
         }
         ctx.stroke();
         ctx.restore();
-        const cx = G.cam.x,
-          cy = G.cam.y;
         ctx.save();
         ctx.lineWidth = 0.5;
         for (let i = 0; i < 26; i++) {
@@ -4989,20 +4965,6 @@ function occupied() {
 }
 let OCC = new Set(),
   occT = 0;
-{
-  const _wl = winLit;
-  winLit = function (k) {
-    try {
-      const t = G.st.time;
-      if (k === 'house') return false;
-      if (!OCC.has(k)) return false;
-      if (t >= (BEDTIME[k] || 22 * 60) || t < 5 * 60 + 30) return false;
-      return true;
-    } catch (e) {
-      return _wl(k);
-    }
-  };
-}
 
 // ---------- pale del mulino: 8 fotogrammi per un quarto di giro ----------
 const PALE = Array.from({ length: 8 }, (_, i) => {

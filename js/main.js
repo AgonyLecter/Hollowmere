@@ -742,7 +742,6 @@ async function rest(min, outside) {
   }
 }
 async function passOut() {
-  const st = G.st;
   if (G.cut) return;
   G.cut++;
   await narr('Sono le due di notte. Crolli dal sonno dove ti trovi.');

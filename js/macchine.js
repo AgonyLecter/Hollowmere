@@ -508,7 +508,6 @@ function macGui(k, b) {
   G.macGui = k;
   macSim(b);
   const M = MACH[b.id],
-    m = b.m,
     Z = G.st.inv,
     slot = (w, cls = '') =>
       `<div class="islot mslot ${cls}" data-m="${w}"><canvas width="32" height="32"></canvas><i></i></div>`;

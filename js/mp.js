@@ -251,52 +251,6 @@ function drawOther(o) {
   ctx.fillStyle = '#bfe3ff';
   ctx.fillText(t, X, Y);
 }
-function drawChatBubbles() {
-  if (!G.chatB) return;
-  const me = (G.visit ? G.home : G.st).name;
-  ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
-  ctx.textAlign = 'center';
-  for (const b of G.chatB) {
-    const o = b.who === me ? G.player : Object.values(G.others).find(o => o.name === b.who);
-    if (!o) continue;
-    const t = b.t.slice(0, 40),
-      w = Math.ceil(ctx.measureText(t).width) + 8,
-      X = Math.round(o.x),
-      Y = Math.round(o.y - 50);
-    ctx.fillStyle = '#3b1f0e';
-    ctx.fillRect(X - w / 2 - 1, Y - 10, w + 2, 13);
-    ctx.fillStyle = '#eaf6ff';
-    ctx.fillRect(X - w / 2, Y - 9, w, 11);
-    ctx.fillStyle = '#1a2a3a';
-    ctx.fillText(t, X, Y);
-  }
-}
-async function chatSay() {
-  if (!PRES_V) {
-    UI.toast("Non c'è nessuno con cui parlare: serve la connessione.");
-    return;
-  }
-  const t = await new Promise(res => {
-    UI.open(
-      `<h2>Scrivi</h2><input class="tx" id="chatIn" maxlength="60" placeholder="Un saluto, una domanda…" autocomplete="off"><p style="text-align:right;margin-top:6px"><button class="btn" data-close>Annulla</button> <button class="btn" id="chatOk">Invia</button></p>`,
-      () => res(null)
-    );
-    const go = () => {
-      const v = $('#chatIn').value.trim().replace(/[<>]/g, '').slice(0, 60);
-      UI._mclose = null;
-      UI.close();
-      res(v || null);
-    };
-    $('#chatOk').onclick = go;
-    UI.onEnter = go;
-    setTimeout(() => $('#chatIn') && $('#chatIn').focus(), 50);
-  });
-  if (!t) return;
-  const me = (G.visit ? G.home : G.st).name;
-  MP.say(PRES_V, { n: me, t, ts: Date.now() });
-  G.chatB = G.chatB || [];
-  G.chatB.push({ who: me, t, life: 5 });
-}
 
 // ---------- viaggi ----------
 async function travelMenu() {

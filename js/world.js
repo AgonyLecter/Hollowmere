@@ -1735,7 +1735,6 @@ function render() {
     ty0 = Math.max(0, Math.floor(cy / 16)),
     tx1 = Math.min(m.w - 1, Math.floor((cx + W) / 16)),
     ty1 = Math.min(m.h - 1, Math.floor((cy + H) / 16));
-  const wf = Math.floor(G.t * 1.5) % 3;
   if (m.water) drawWater(m, tx0, ty0, tx1, ty1, cx);
   {
     const gw = m.ground.width,
@@ -2037,12 +2036,12 @@ function render() {
   drawGuide();
   postFX();
 }
+// una finestra del paese è accesa se in casa c'è qualcuno (OCC, aggiornato in grafica.js) e non è ancora ora
+// di dormire; la casa del giocatore no (le sue luci le gestisce la casa stessa)
 function winLit(k) {
+  if (k === 'house' || !OCC.has(k)) return false;
   const t = G.st.time;
-  if (k === 'house') return G.map.id !== 'house' && false;
-  const own = { store: 'agatha', elder: 'ezekiel', cottage: 'clara', forge: 'brom', chapel: 'lucius' }[k];
-  if (k === 'chapel') return t < 1290;
-  return t < 1290;
+  return t < (BEDTIME[k] || 22 * 60) && t >= 5 * 60 + 30;
 }
 function postFX() {
   const Hh = G.horror;

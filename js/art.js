@@ -1206,11 +1206,8 @@ function genCritters() {
     rd = ramp6('#c8402a'),
     yl = ramp6('#e8a83a'),
     bk = ramp6('#2a2630'),
-    gy = ramp6('#8a8070'),
-    or = ramp6('#c8803a'),
     br = ramp6('#8a6a48'),
-    gr = ramp6('#4a7a3a'),
-    dk = ramp6('#3a5a2a');
+    gr = ramp6('#4a7a3a');
   // gallina: 0-1 cammina, 2 becca
   CRIT.chicken = critFrames(24, 22, 3, (P, f) => {
     const peck = f === 2,
@@ -1329,12 +1326,6 @@ function addDeco(m, st) {
   const free = (x, y) => {
     const g = m.get(x, y);
     return (g === 1 || g === 12) && !m.hit[x + ',' + y] && !inFarm(x, y);
-  };
-  const near = (x, y, k) => {
-    for (let j = -1; j <= 1; j++)
-      for (let i = -1; i <= 1; i++)
-        if (m.hit[x + i + ',' + (y + j)] && m.hit[x + i + ',' + (y + j)].kind === k) return true;
-    return false;
   };
   // panchine
   [
@@ -1966,8 +1957,7 @@ function genPropsHD() {
   // il banco di Agatha: la merce cambia con la stagione (0 autunno, 1 inverno, 2 primavera, 3 estate)
   const stallS = season =>
     SP(50, 32, P => {
-      const st = rp('#e8c23a'),
-        wh = rp('#f4ecd8');
+      const st = rp('#e8c23a');
       P.capsule(6, 8, 6, 62, 1.8, woodD);
       P.capsule(94, 8, 94, 62, 1.8, woodD);
       P.rect(4, 30, 92, 30, wood, { mod: (X, Y, v) => ((Y - 30) % 8 === 0 ? v - 0.3 : woodMod(X, Y, v)) });
@@ -1978,8 +1968,7 @@ function genPropsHD() {
         98,
         24,
         (X, Y) => {
-          const k = Math.floor((X - 2) / 8),
-            sc = Y > 18 + ((X - 2) % 8 < 4 ? (X - 2) % 8 : 8 - ((X - 2) % 8)) * 0.6;
+          const sc = Y > 18 + ((X - 2) % 8 < 4 ? (X - 2) % 8 : 8 - ((X - 2) % 8)) * 0.6;
           if (sc) return null;
           return [0, -0.3 + (Y - 2) / 40, 1];
         },
@@ -2390,8 +2379,7 @@ function genIconsHD() {
     ICON[id] = c;
   };
   const iron = rp('#9a9aa2'),
-    wood = rp('#8a5a30'),
-    bag = rp('#c9a66b');
+    wood = rp('#8a5a30');
   I('hoe', P => {
     P.capsule(6, 28, 24, 8, 1.6, wood);
     P.rect(18, 3, 11, 6, iron, { spec: 0.8 });
@@ -2410,25 +2398,6 @@ function genIconsHD() {
     P.ellipse(29, 9, 2.4, 1.6, rp('#6a7a88'));
     P.capsule(8, 10, 20, 10, 1.2, rp('#6a7a88'), { clip: (X, Y) => Y < 11 });
   });
-  const seed = (id, col) =>
-    I(id, P => {
-      P.body(
-        9,
-        29,
-        () => 16,
-        Y => 8 + (Y - 9) * 0.12,
-        bag,
-        { nyF: () => 0.1, mod: (X, Y, v) => ((X + Y) % 7 === 0 ? v - 0.15 : v) }
-      );
-      P.rect(11, 5, 10, 5, rp('#8a6a3a'), { n: [0, -0.6, 0.8] });
-      for (const [a, b] of [
-        [12, 16],
-        [19, 19],
-        [14, 23],
-        [20, 24]
-      ])
-        P.ellipse(a, b, 1.8, 1.4, rp(col), { edge: false, spec: 0.5 });
-    });
   I('rapa', P => {
     P.ellipse(16, 21, 8, 7, rp('#efe6f2'), { spec: 0.4, mod: (X, Y, v) => (Y < 19 ? v - 0.35 : v) });
     P.capsule(16, 27, 17, 31, 1, rp('#efe6f2'));
@@ -2691,7 +2660,6 @@ function genCropsHD() {
   };
   const lf = rp('#5a9a2a'),
     lf2 = rp('#3f7424'),
-    lfL = rp('#7aba3a'),
     stem = rp('#4a7a24'),
     soil = rp('#6a4428'),
     wood = rp('#8a5a30');
@@ -3075,10 +3043,6 @@ function drawAim() {
   ctx.fillStyle = a.ok ? `rgba(246,217,138,${(0.1 + p * 0.08).toFixed(2)})` : 'rgba(230,80,60,.1)';
   ctx.fillRect(X, Y, 16, 16);
   ctx.fillStyle = 'rgba(20,10,5,.55)';
-  const br = (x0, y0, sx, sy) => {
-    ctx.fillRect(x0, y0, 4 * sx || 1, 1);
-    ctx.fillRect(x0, y0, 1, 4 * sy || 1);
-  };
   ctx.fillStyle = c;
   for (const [x0, y0, sx, sy] of [
     [X, Y, 1, 1],
@@ -4192,7 +4156,6 @@ function heroFrame(L, dir, ph, br, blink) {
   const tc = L.robe ? R.robe : R.sh;
   // ---------- pezzi ----------
   const legs = () => {
-    if (L.robe && !walk && false) return;
     if (side) {
       for (const k of [-1, 1]) {
         const fx = cx + (k > 0 ? s : -s) * 4.2,

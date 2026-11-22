@@ -212,8 +212,7 @@ const VIETATI = {
 {
   const _da = doAction;
   doAction = function () {
-    const v = G.visit,
-      p = G.player;
+    const v = G.visit;
     // davanti a un altro giocatore: dai qualcosa (ovunque, anche a casa tua)
     const o = altroDavanti();
     if (o && !G.bm && !G.cut && !UI.busy()) {

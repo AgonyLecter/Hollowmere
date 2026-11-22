@@ -80,9 +80,7 @@ function bmBar() {
     el.classList.add('hide');
     return;
   }
-  const it = selItem(),
-    st = G.st,
-    W2 = st.free;
+  const it = selItem();
   const what = b.carry
     ? `Stai spostando: <b>${ITEMS[b.carry.data.id].n}</b>`
     : b.mode === 'piazza'
@@ -815,109 +813,15 @@ COOK.push(
 );
 // grafica
 function genCostrArt() {
-  const wood = rp('#8a5a32'),
-    dk = rp('#5a3a1e'),
+  const dk = rp('#5a3a1e'),
     stone = rp('#8a877d'),
     roof = rp('#6a3a2a'),
     glass = rp('#b8e0e8');
-  AIMG.serra = SP(64, 44, P => {
-    P.rect(4, 28, 120, 58, rp('#d8e8e0'), {
-      mod: (X, Y, v) => (X % 16 === 0 || Y % 14 === 0 ? v - 0.35 : v + 0.05),
-      spec: 0.7
-    });
-    P.body(
-      2,
-      30,
-      () => 64,
-      Y => 14 + Y * 1.6,
-      glass,
-      { nyF: () => -0.6, spec: 1, mod: (X, Y, v) => (X % 12 === 0 ? v - 0.3 : v) }
-    );
-    for (const x of [16, 40, 80, 104]) P.ellipse(x, 76, 6, 5, rp('#5a9a2a'));
-    P.rect(56, 60, 16, 26, rp('#c8d8d0'));
-    P.rect(4, 84, 120, 4, dk);
-  });
-  AIMG.mulino = SP(48, 56, P => {
-    P.body(
-      30,
-      110,
-      () => 48,
-      Y => 16 + (Y - 30) * 0.12,
-      stone,
-      {
-        nyF: () => 0.1,
-        mod: (X, Y, v) => {
-          const r = Math.floor(Y / 6),
-            off = r % 2 ? 5 : 0;
-          return Y % 6 === 0 || (X + off) % 10 === 0 ? v - 0.25 : v;
-        }
-      }
-    );
-    P.body(
-      12,
-      32,
-      () => 48,
-      Y => 6 + (Y - 12) * 0.75,
-      roof,
-      { nyF: () => -0.6 }
-    );
-    P.rect(40, 88, 16, 22, rp('#5a3a1e'));
-    for (const a of [0, 1, 2, 3]) {
-      const t = (a * Math.PI) / 2 + 0.4;
-      P.capsule(48, 26, 48 + Math.cos(t) * 34, 26 + Math.sin(t) * 34, 2, wood);
-      P.capsule(
-        48 + Math.cos(t) * 14,
-        26 + Math.sin(t) * 14,
-        48 + Math.cos(t + 0.25) * 32,
-        26 + Math.sin(t + 0.25) * 32,
-        3,
-        rp('#e8e0d0')
-      );
-    }
-    P.ellipse(48, 26, 4, 4, dk);
-  });
-  AIMG.silos = SP(32, 56, P => {
-    P.body(
-      14,
-      108,
-      () => 32,
-      () => 24,
-      rp('#b8483a'),
-      { nyF: () => 0, mod: (X, Y, v) => (Y % 10 === 0 ? v - 0.3 : v), spec: 0.3 }
-    );
-    P.body(
-      0,
-      16,
-      () => 32,
-      Y => 6 + Y * 1.2,
-      rp('#9a9aa2'),
-      { nyF: () => -0.6, spec: 0.8 }
-    );
-    P.rect(26, 80, 12, 28, rp('#3a2414'));
-  });
-  AIMG.pozzogrande = SP(32, 36, P => {
-    P.body(
-      36,
-      70,
-      () => 32,
-      () => 28,
-      stone,
-      { nyF: () => 0.1, mod: (X, Y, v) => (Y % 7 === 0 || (X + (Y >> 3) * 5) % 11 === 0 ? v - 0.28 : v) }
-    );
-    P.ellipse(32, 38, 28, 7, stone);
-    P.ellipse(32, 38, 22, 5, rp('#3a6a9a'), { spec: 0.9 });
-    P.capsule(8, 40, 8, 6, 2.2, dk);
-    P.capsule(56, 40, 56, 6, 2.2, dk);
-    P.capsule(8, 8, 56, 8, 2, wood);
-    P.body(
-      0,
-      10,
-      () => 32,
-      Y => 10 + Y * 2.2,
-      roof,
-      { nyF: () => -0.6 }
-    );
-  });
+  // serra, mulino, silos e pozzo: i disegni sono in grafica.js (ART2)
+  AIMG.serra = ART2.serra();
+  AIMG.mulino = ART2.mulino();
+  AIMG.silos = ART2.silos();
+  AIMG.pozzogrande = ART2.pozzogrande();
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);

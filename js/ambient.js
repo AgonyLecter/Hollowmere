@@ -15,8 +15,7 @@ Object.assign(SFX, {
 
 // ---------- creature ----------
 function spawnAmbient() {
-  const st = G.st,
-    R = Math.random,
+  const R = Math.random,
     A = { fly: [], bugs: [], owl: null, deer: null, hog: null };
   const homes = [
     [6, 10],

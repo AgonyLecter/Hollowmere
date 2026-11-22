@@ -23,8 +23,7 @@ function scoreParts(st) {
     (a, id) => a + Math.max(0, Math.floor((st.friends[id] || 0) / 2)),
     0
   );
-  const F = W2.inc ? W2 : null,
-    mus = Object.keys(W2.museo || {}).length,
+  const mus = Object.keys(W2.museo || {}).length,
     tr = Object.keys(W2.trag || {}).length;
   P.push(['Piccole costruzioni', small, '+1 ciascuna (lampioni, recinti, aiuole, alberi…)']);
   P.push(['Edifici grandi', big, 'pollaio 30, stalla 40, casetta 45, serra 40, mulino 35…']);
