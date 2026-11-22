@@ -10,6 +10,12 @@ const H = 270,
   TS = 16,
   MAXW = 640;
 const RS = 2;
+// inquadratura del mondo: ZOOM pixel di schermo per pixel di mondo (l'interfaccia resta in W×H);
+// il mondo visibile è VW×VH. Tutto ciò che sta in coordinate di mondo (camera, cosa disegnare, tocchi)
+// usa VW/VH; ciò che sta sullo schermo (vignetta, lampi, cinematiche) usa W/H.
+const ZOOM = 1.5;
+let VW = W / ZOOM;
+const VH = H / ZOOM;
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 cv.width = W * RS;
@@ -54,6 +60,7 @@ function fit() {
   const nw = clamp(Math.round((H * vw) / vh / 2) * 2, 480, MAXW);
   if (nw !== W || cv.height !== H * RS) {
     W = nw;
+    VW = W / ZOOM;
     cv.width = W * RS;
     cv.height = H * RS;
     ctx.imageSmoothingEnabled = false;
@@ -322,8 +329,8 @@ if (matchMedia('(pointer:coarse)').matches) {
     }
     if (e.pointerType !== 'mouse' || G.mode !== 'game' || G.cut || UI.modalOpen) return;
     const r = cv.getBoundingClientRect();
-    const wx = ((e.clientX - r.left) / r.width) * W + G.cam.x,
-      wy = ((e.clientY - r.top) / r.height) * H + G.cam.y;
+    const wx = ((e.clientX - r.left) / r.width) * VW + G.cam.x,
+      wy = ((e.clientY - r.top) / r.height) * VH + G.cam.y;
     const p = G.player;
     const dx = wx - p.x,
       dy = wy - (p.y - 8);

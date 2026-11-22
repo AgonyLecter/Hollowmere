@@ -333,11 +333,11 @@ function bmAction() {
     const m = G.map,
       mw = m.w * 16,
       mh = m.h * 16;
-    let cx = b.x * 16 + 8 - W / 2,
-      cy = b.y * 16 + 8 - H / 2;
+    let cx = b.x * 16 + 8 - VW / 2,
+      cy = b.y * 16 + 8 - VH / 2;
     const k = dt ? Math.min(1, dt * 10) : 1;
-    cx = mw <= W ? (mw - W) / 2 : clamp(cx, 0, mw - W);
-    cy = mh <= H ? (mh - H) / 2 : clamp(cy, 0, mh - H);
+    cx = mw <= VW ? (mw - VW) / 2 : clamp(cx, 0, mw - VW);
+    cy = mh <= VH ? (mh - VH) / 2 : clamp(cy, 0, mh - VH);
     G.cam.x += (cx - G.cam.x) * k;
     G.cam.y += (cy - G.cam.y) * k;
   };
@@ -354,8 +354,8 @@ function bmAction() {
   const tile = e => {
     const r = cvs.getBoundingClientRect();
     return [
-      Math.floor((((e.clientX - r.left) / r.width) * W + G.cam.x) / 16),
-      Math.floor((((e.clientY - r.top) / r.height) * H + G.cam.y) / 16)
+      Math.floor((((e.clientX - r.left) / r.width) * VW + G.cam.x) / 16),
+      Math.floor((((e.clientY - r.top) / r.height) * VH + G.cam.y) / 16)
     ];
   };
   if (cvs) {
@@ -418,8 +418,8 @@ function drawBM() {
   ctx.fillStyle = 'rgba(246,217,138,.35)';
   const x0 = Math.max(0, Math.floor(cx / 16)),
     y0 = Math.max(0, Math.floor(cy / 16)),
-    x1 = Math.min(m.w - 1, x0 + Math.ceil(W / 16) + 1),
-    y1 = Math.min(m.h - 1, y0 + Math.ceil(H / 16) + 1);
+    x1 = Math.min(m.w - 1, x0 + Math.ceil(VW / 16) + 1),
+    y1 = Math.min(m.h - 1, y0 + Math.ceil(VH / 16) + 1);
   if (m.id === 'main')
     for (let y = y0; y <= y1; y++)
       for (let x = x0; x <= x1; x++)

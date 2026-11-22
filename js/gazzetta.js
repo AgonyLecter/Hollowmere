@@ -337,8 +337,8 @@ function fotoScena() {
   const st = G.st,
     m = G.map;
   if (!st || !isFree(st) || !m || m.id !== 'main') return null;
-  const cx = Math.round(G.cam.x + W / 2),
-    cy = Math.round(G.cam.y + H / 2),
+  const cx = Math.round(G.cam.x + VW / 2),
+    cy = Math.round(G.cam.y + VH / 2),
     x0 = Math.floor((cx - FOTO_W / 2) / 16) - 4,
     x1 = Math.ceil((cx + FOTO_W / 2) / 16) + 4,
     y0 = Math.floor((cy - FOTO_H / 2) / 16) - 2,
@@ -548,8 +548,8 @@ function fotoDisegna(raw, chiaveCache) {
     G.maps = Object.assign({}, S.maps, { main: m });
     G.map = m;
     G.cam = {
-      x: clamp(sc.x - W / 2, 0, Math.max(0, m.w * 16 - W)),
-      y: clamp(sc.y - H / 2, 0, Math.max(0, m.h * 16 - H))
+      x: clamp(sc.x - VW / 2, 0, Math.max(0, m.w * 16 - VW)),
+      y: clamp(sc.y - VH / 2, 0, Math.max(0, m.h * 16 - VH))
     };
     G.npcs = sc.c.map(n =>
       Object.assign({ map: 'main', hidden: false, anim: 0, act: 'idle', name: NAMES[n.id] }, n)

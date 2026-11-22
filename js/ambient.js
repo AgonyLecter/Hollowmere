@@ -187,8 +187,8 @@ function drawAmbTopBase(m) {
   if (G.st.weather === 'neve') {
     ctx.fillStyle = 'rgba(255,255,255,.85)';
     for (let i = 0; i < 90; i++) {
-      const sx = G.cam.x + ((i * 97 + T * (8 + (i % 5)) * 3 + Math.sin(T + i) * 10) % (W + 20)) - 10,
-        sy = G.cam.y + ((i * 53 + T * (18 + (i % 7)) * 2) % (H + 10)) - 5;
+      const sx = G.cam.x + ((i * 97 + T * (8 + (i % 5)) * 3 + Math.sin(T + i) * 10) % (VW + 20)) - 10,
+        sy = G.cam.y + ((i * 53 + T * (18 + (i % 7)) * 2) % (VH + 10)) - 5;
       ctx.fillRect(Math.round(sx), Math.round(sy), i % 3 ? 1 : 2, i % 3 ? 1 : 2);
     }
   }

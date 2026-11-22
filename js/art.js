@@ -1518,7 +1518,7 @@ function updCritters(dt) {
         c.y += c.vy * dt;
         c.vy += 6 * dt;
         c.f += dt * 10;
-        if (c.y < G.cam.y - 60 || c.x < G.cam.x - 80 || c.x > G.cam.x + W + 80) {
+        if (c.y < G.cam.y - 60 || c.x < G.cam.x - 80 || c.x > G.cam.x + VW + 80) {
           if (c.t < -12) {
             const h = c.home;
             c.x = h[0] * 16 + 8;
@@ -1601,9 +1601,9 @@ function updCritters(dt) {
   // rane di notte e pesci che saltano
   if (night && Math.random() < dt * 0.25 && p.y > 36 * 16) AU.play('croak');
   if (!night && Math.random() < dt * 0.08) {
-    const x = G.cam.x + Math.random() * W,
+    const x = G.cam.x + Math.random() * VW,
       y = 43 * 16 + 6 + Math.random() * 16;
-    if (y > G.cam.y && y < G.cam.y + H && m.get(Math.floor(x / 16), Math.floor(y / 16)) === 3) {
+    if (y > G.cam.y && y < G.cam.y + VH && m.get(Math.floor(x / 16), Math.floor(y / 16)) === 3) {
       for (let i = 0; i < 6; i++)
         G.parts.push({
           k: 'water',

@@ -600,7 +600,7 @@ function drawFlowers(m, cx, cy) {
     if (o.kind !== 'flower') continue;
     const X = o.dx + o.ox,
       Y = o.dy + o.oy;
-    if (X < cx - 4 || X > cx + W + 4 || Y < cy - 4 || Y > cy + H + 4) continue;
+    if (X < cx - 4 || X > cx + VW + 4 || Y < cy - 4 || Y > cy + VH + 4) continue;
     ctx.fillStyle = '#3a6a2a';
     ctx.fillRect(X, Y + 1, 1, 2);
     ctx.fillStyle = o.col;

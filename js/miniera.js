@@ -591,9 +591,9 @@ function mineTick(dt) {
     ctx.textAlign = 'center';
     const t = `MINIERA · PIANO ${G.map.f}`;
     ctx.fillStyle = 'rgba(18,11,16,.75)';
-    ctx.fillRect(W / 2 - 46, 4, 92, 12);
+    ctx.fillRect(VW / 2 - 46, 4, 92, 12);
     ctx.fillStyle = '#f6d98a';
-    ctx.fillText(t, W / 2, 13);
+    ctx.fillText(t, VW / 2, 13);
     ctx.restore();
   };
 }
