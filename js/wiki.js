@@ -58,6 +58,7 @@ const Wiki = {
       NOVE_L,
       ZONES,
       CRAFT_CAT,
+      STAZIONI,
       SEASON_LEN,
       CHORES,
       JUICY,
@@ -189,7 +190,7 @@ const Wiki = {
     F('lingotto', 'fornace (5 ferro)');
     F('farina', 'mulino');
     F('miele', 'apiario');
-    for (const c of D.CRAFTS) F(c.id, 'banco da lavoro');
+    for (const c of D.CRAFTS) F(c.id, D.STAZIONI.incudine.cats[c.cat] ? 'incudine' : 'banco da lavoro');
     for (const c of COOK) F(c.id, 'cucina');
     F('legna', 'alberi, rami');
     F('pietra', 'rocce, sassi');
@@ -614,8 +615,11 @@ const Wiki = {
       'crafting',
       'Costruire: banco, macchine, casa',
       `
-    <p>Al <b>banco da lavoro</b> (20 legna + 5 pietra) si costruisce tutto. Alcune ricette si sbloccano con l'abilità <b>Artigianato</b>. Gli edifici grandi danno prestigio al villaggio.</p>
-    ${Object.entries(D.CRAFT_CAT)
+    <p>Al <b>banco da lavoro</b> (20 legna + 5 pietra) si costruisce tutto; all'<b>incudine</b> si forgiano gli attrezzi. Alcune ricette si sbloccano con l'abilità <b>Artigianato</b>. Gli edifici grandi danno prestigio al villaggio.</p>
+    ${Object.entries(D.STAZIONI)
+      .flatMap(([sk, S]) =>
+        Object.entries(S.cats).map(([cat, cn]) => [cat, sk === 'banco' ? cn : S.n + ': ' + cn])
+      )
       .map(
         ([
           cat,

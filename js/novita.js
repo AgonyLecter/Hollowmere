@@ -274,6 +274,22 @@ const NOVITA = [
         t: 'E le misure tornano: la <b>casetta</b> dei nuovi abitanti è una casa vera, grande come quelle del paese (5×4), il <b>mulino</b> è una torre alta come il fienile e la <b>torre di guardia</b> sulla Collina svetta sopra i tetti.'
       }
     ]
+  },
+  {
+    id: 'incudine_falce',
+    v: 36,
+    n: 'Incudine, falce e casse condivise',
+    steps: [
+      {
+        t: 'Al banco da lavoro puoi costruire l’<b>incudine</b>: con lingotti e un po’ di legna ci forgi gli attrezzi. Zappa, annaffiatoio, accetta, piccone, pala… anche per rifarti quelli che hai perso.'
+      },
+      {
+        t: 'All’incudine c’è anche un attrezzo nuovo, la <b>falce</b>: falcia l’erba alta e ti dà la fibra, senza andarla a cercare. Dopo tre giorni l’erba ricresce.'
+      },
+      {
+        t: 'Nel villaggio di un amico le <b>casse</b> e le <b>macchine</b> adesso funzionano davvero insieme: quello che mettete e prendete arriva sempre, anche se lo fate nello stesso momento. E se chiudi il gioco mentre sei in visita, quello che hai fatto resta salvato.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

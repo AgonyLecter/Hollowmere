@@ -79,7 +79,21 @@ function skillsHTML() {
 // ---------- minerale, fornace, lingotti ----------
 Object.assign(ITEMS, {
   ferro: { n: 'Minerale di ferro', t: 'res', d: 'Dalle rocce, a volte. Nella fornace diventa lingotto.' },
-  lingotto: { n: 'Lingotto di ferro', t: 'res', d: "Serve per le macchine e l'irrigatore grande." },
+  lingotto: {
+    n: 'Lingotto di ferro',
+    t: 'res',
+    d: "Serve per le macchine, l'irrigatore grande e, all'incudine, per forgiare gli attrezzi."
+  },
+  incudine: {
+    n: 'Incudine',
+    t: 'place',
+    d: 'Su un ceppo, accanto alla fornace: con i lingotti e un po’ di legna ci forgi gli attrezzi.'
+  },
+  falce: {
+    n: 'Falce',
+    t: 'tool',
+    d: "Falcia l'erba alta: fibra senza andarla a cercare. Dopo qualche giorno l'erba ricresce."
+  },
   lastre: {
     n: 'Lastre di pietra',
     t: 'place',
@@ -155,6 +169,7 @@ Object.assign(SG, {
 });
 Object.assign(PLACE_TOOL, {
   fornace: 'piccone',
+  incudine: 'piccone',
   barattolo: 'accetta',
   botte: 'accetta',
   apiario: 'accetta',
@@ -220,6 +235,14 @@ CRAFTS.forEach(
 CRAFTS.push(
   { id: 'lastre', q: 4, c: { pietra: 3 }, cat: 'est' },
   { id: 'fornace', q: 1, c: { pietra: 25, legna: 10 }, cat: 'mac' },
+  { id: 'incudine', q: 1, c: { pietra: 10, lingotto: 2, legna: 5 }, cat: 'mac' },
+  // all'incudine: gli attrezzi (anche per rifarsi quelli persi)
+  { id: 'hoe', q: 1, c: { lingotto: 1, legna: 4 }, cat: 'att' },
+  { id: 'can', q: 1, c: { lingotto: 2 }, cat: 'att' },
+  { id: 'accetta', q: 1, c: { lingotto: 1, legna: 4 }, cat: 'att' },
+  { id: 'piccone', q: 1, c: { lingotto: 2, legna: 4 }, cat: 'att' },
+  { id: 'pala', q: 1, c: { lingotto: 1, legna: 4 }, cat: 'att' },
+  { id: 'falce', q: 1, c: { lingotto: 1, legna: 3 }, cat: 'att' },
   { id: 'barattolo', q: 1, c: { legna: 15, lingotto: 1 }, cat: 'mac', lv: 3 },
   { id: 'botte', q: 1, c: { legna: 30, lingotto: 1 }, cat: 'mac', lv: 4 },
   { id: 'apiario', q: 1, c: { legna: 25, fibra: 10 }, cat: 'mac', lv: 4 },
@@ -228,16 +251,21 @@ CRAFTS.push(
   { id: 'muretto', q: 2, c: { pietra: 6 }, cat: 'est', lv: 6 }
 );
 const CRAFT_CAT = { agr: 'Campi', mac: 'Macchine', edi: 'Edifici', est: 'Esterni', cas: 'Casa' };
-function craftMenu(cat) {
-  cat = cat || G.craftCat || 'agr';
-  G.craftCat = cat;
+// le stazioni di lavoro: ognuna con il suo nome e le sue schede (le ricette stanno tutte in CRAFTS)
+const STAZIONI = {
+  banco: { n: 'Banco da lavoro', cats: CRAFT_CAT },
+  incudine: { n: 'Incudine', cats: { att: 'Attrezzi' } }
+};
+function craftMenu(cat, staz = 'banco') {
+  const S = STAZIONI[staz];
+  G.craftCat = G.craftCat || {};
+  cat = cat && S.cats[cat] ? cat : G.craftCat[staz] || Object.keys(S.cats)[0];
+  G.craftCat[staz] = cat;
   const st = G.st,
     has = c => Object.entries(c).every(([k, n]) => countItem(k) >= n);
   const L = CRAFTS.filter(r => r.cat === cat);
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>Banco da lavoro</h2><div class="tabs">${Object.entries(
-      CRAFT_CAT
-    )
+    `<button class="btn mclose" data-close>✕</button><h2>${S.n}</h2><div class="tabs">${Object.entries(S.cats)
       .map(([k, n]) => `<button class="btn ${k === cat ? 'on' : ''}" data-cat="${k}">${n}</button>`)
       .join(
         ''
@@ -269,7 +297,7 @@ function craftMenu(cat) {
       b =>
         (b.onclick = () => {
           UI._mclose = null;
-          craftMenu(b.dataset.cat);
+          craftMenu(b.dataset.cat, staz);
         })
     );
   $('#mbox')
@@ -286,7 +314,7 @@ function craftMenu(cat) {
           addXP('arti', 8);
           UI.toast(`Creato: ${ITEMS[r.id].n}${r.q > 1 ? ' ×' + r.q : ''}`);
           UI._mclose = null;
-          craftMenu(cat);
+          craftMenu(cat, staz);
         })
     );
 }
@@ -921,6 +949,27 @@ function genFarm2Art() {
     ])
       P.rect(a, b, 9, 8, rp('#a8a090'), { spec: 0.3 });
   });
+  I('incudine', P => {
+    P.body(
+      20,
+      30,
+      () => 16,
+      () => 8,
+      rp('#7a5032'),
+      { nyF: () => 0.1 }
+    );
+    const a = rp('#4a4a54');
+    P.rect(11, 12, 10, 8, a, { spec: 0.5 });
+    P.body(
+      5,
+      13,
+      () => 16,
+      Y => (Y < 9 ? 13 : 9),
+      a,
+      { nyF: Y => (Y < 9 ? -0.8 : 0.1), spec: 0.9 }
+    );
+    P.ellipse(3, 8, 3.5, 2.4, a, { spec: 0.8 });
+  });
   I('fornace', P => {
     P.body(
       6,
@@ -1066,6 +1115,32 @@ function genFarm2Art() {
     ICON[id] = c;
   }
   const S = (w, h, fn) => SP(w, h, fn);
+  // l'incudine su un ceppo
+  FREEIMG.incudine = S(16, 18, P => {
+    P.body(
+      18,
+      36,
+      () => 16,
+      () => 9,
+      rp('#7a5032'),
+      {
+        nyF: () => 0.1,
+        mod: (X, Y, v) => ((X + Y * 3) % 7 === 0 ? v - 0.15 : v)
+      }
+    );
+    P.ellipse(16, 18, 9, 3, rp('#b08a5a'), { edge: false });
+    const a = rp('#4a4a54');
+    P.rect(11, 9, 10, 7, a, { spec: 0.5 });
+    P.body(
+      3,
+      10,
+      () => 16,
+      Y => (Y < 7 ? 12 : 9),
+      a,
+      { nyF: Y => (Y < 7 ? -0.8 : 0.1), spec: 0.9 }
+    );
+    P.ellipse(3, 5, 3.5, 2.2, a, { spec: 0.8 });
+  });
   FREEIMG.fornace = S(16, 22, P => {
     P.body(
       4,
