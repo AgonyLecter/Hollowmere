@@ -922,11 +922,11 @@ function drawGuide() {
   if (!T) return;
   const sx = T.x - G.cam.x,
     sy = T.y - G.cam.y,
-    M = 14,
-    RM = 34,
-    TOP = 40,
-    BOT = 38,
-    inside = sx > M && sx < W - RM && sy > TOP && sy < H - BOT;
+    M = 14 / ZOOM,
+    RM = 34 / ZOOM,
+    TOP = 40 / ZOOM,
+    BOT = 38 / ZOOM,
+    inside = sx > M && sx < VW - RM && sy > TOP && sy < VH - BOT;
   ctx.save();
   ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
   ctx.textAlign = 'center';
@@ -956,14 +956,14 @@ function drawGuide() {
     Y = sy - 14 + Math.sin(G.t * 4) * 2;
     tri(X, Y, 0);
   } else {
-    X = clamp(sx, M, W - RM);
-    Y = clamp(sy, TOP, H - BOT);
-    tri(X, Y, Math.atan2(sy - H / 2, sx - W / 2) - Math.PI / 2);
+    X = clamp(sx, M, VW - RM);
+    Y = clamp(sy, TOP, VH - BOT);
+    tri(X, Y, Math.atan2(sy - VH / 2, sx - VW / 2) - Math.PI / 2);
   }
   const d = Math.round(Math.hypot(T.x - G.player.x, T.y - G.player.y) / 16),
     lab = (T.l || '') + (d > 6 ? ` · ${d}` : '');
   if (lab) {
-    const ty = inside ? Y - 8 : Y < H / 2 ? Y + 18 : Y - 12;
+    const ty = inside ? Y - 8 : Y < VH / 2 ? Y + 18 : Y - 12;
     ctx.fillStyle = '#2b1a10';
     ctx.fillText(lab, X + 1, ty + 1);
     ctx.fillStyle = '#f6d98a';

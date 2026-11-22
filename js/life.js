@@ -797,9 +797,9 @@ function drawWorldExtrasBase(m) {
         y1 = LAMPS[b][1] * 16 - 14;
       if (
         Math.max(x0, x1) < cx - 10 ||
-        Math.min(x0, x1) > cx + W + 10 ||
+        Math.min(x0, x1) > cx + VW + 10 ||
         Math.max(y0, y1) < cy - 20 ||
-        Math.min(y0, y1) > cy + H + 20
+        Math.min(y0, y1) > cy + VH + 20
       )
         continue;
       const len = Math.hypot(x1 - x0, y1 - y0),

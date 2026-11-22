@@ -1518,7 +1518,7 @@ function updCritters(dt) {
         c.y += c.vy * dt;
         c.vy += 6 * dt;
         c.f += dt * 10;
-        if (c.y < G.cam.y - 60 || c.x < G.cam.x - 80 || c.x > G.cam.x + W + 80) {
+        if (c.y < G.cam.y - 60 || c.x < G.cam.x - 80 || c.x > G.cam.x + VW + 80) {
           if (c.t < -12) {
             const h = c.home;
             c.x = h[0] * 16 + 8;
@@ -1601,9 +1601,9 @@ function updCritters(dt) {
   // rane di notte e pesci che saltano
   if (night && Math.random() < dt * 0.25 && p.y > 36 * 16) AU.play('croak');
   if (!night && Math.random() < dt * 0.08) {
-    const x = G.cam.x + Math.random() * W,
+    const x = G.cam.x + Math.random() * VW,
       y = 43 * 16 + 6 + Math.random() * 16;
-    if (y > G.cam.y && y < G.cam.y + H && m.get(Math.floor(x / 16), Math.floor(y / 16)) === 3) {
+    if (y > G.cam.y && y < G.cam.y + VH && m.get(Math.floor(x / 16), Math.floor(y / 16)) === 3) {
       for (let i = 0; i < 6; i++)
         G.parts.push({
           k: 'water',
@@ -2648,6 +2648,48 @@ function genSoilHD() {
   };
   T.tilled = [0, 1, 2].map(i => mkS(false, 121 + i));
   T.tilledW = [0, 1, 2].map(i => mkS(true, 131 + i));
+  // ogni zolla ha i bordi secondo le vicine (bit: 1 su, 2 destra, 4 giù, 8 sinistra = c'è terra
+  // lavorata anche lì): gli angoli liberi sono arrotondati, la terra sta un po' più in basso del prato
+  // (ombra sul bordo in alto e ai lati, labbro chiaro in basso)
+  T.zolla = [T.tilled, T.tilledW].map(arr => arr.map(c => Array.from({ length: 16 }, (_, k) => zolla(c, k))));
+}
+function zolla(src, k) {
+  const N = 32,
+    R = 6,
+    [c, x] = mk(N, N);
+  c.s = 2;
+  x.drawImage(src, 0, 0);
+  const id = x.getImageData(0, 0, N, N),
+    d = id.data,
+    su = !(k & 1),
+    de = !(k & 2),
+    giu = !(k & 4),
+    si = !(k & 8);
+  for (let y = 0; y < N; y++)
+    for (let X = 0; X < N; X++) {
+      const i = (y * N + X) * 4;
+      // angolo arrotondato dove i due lati vicini sono liberi
+      const cx = X < R && si ? R : X >= N - R && de ? N - R - 1 : -1,
+        cy = y < R && su ? R : y >= N - R && giu ? N - R - 1 : -1;
+      let f = 1;
+      if (cx >= 0 && cy >= 0) {
+        const r = Math.hypot(X - cx, y - cy);
+        if (r > R) {
+          d[i + 3] = 0;
+          continue;
+        }
+        if (r > R - 1.5) f *= 0.62;
+      }
+      if (su && y < 2) f *= 0.58;
+      else if (su && y < 4) f *= 0.8;
+      if (si && X < 2) f *= 0.72;
+      if (de && X >= N - 2) f *= 0.78;
+      if (giu && y === N - 1) f *= 0.62;
+      else if (giu && y >= N - 3) f *= 1.18;
+      if (f !== 1) for (let j = 0; j < 3; j++) d[i + j] = Math.min(255, d[i + j] * f);
+    }
+  x.putImageData(id, 0, 0);
+  return c;
 }
 function genCropsHD() {
   const S = fn => {

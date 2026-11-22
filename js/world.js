@@ -648,7 +648,7 @@ function disegnaOmbreVive(m, cx, cy) {
     if (!o.img || o.deco || !OMBRA_VIVA.has(o.kind)) continue;
     const s = SHADOWK[o.kind],
       X = o.dx + iw(o.img) / 2 + s[2];
-    if (X < cx - 30 || X > cx + W + 30 || o.sy < cy - 10 || o.sy > cy + H + 10) continue;
+    if (X < cx - 30 || X > cx + VW + 30 || o.sy < cy - 10 || o.sy > cy + VH + 10) continue;
     ctx.beginPath();
     ctx.ellipse(X, o.sy - 1, s[0], s[1], 0, 0, Math.PI * 2);
     ctx.fill();
@@ -884,6 +884,33 @@ function buildGround(m) {
             x.fillRect(px, py, 0.5, 0.5);
           }
         }
+      }
+    }
+  // gli angoli dei sentieri che sporgono nel prato sono arrotondati
+  const RA = 3.5;
+  for (let ty = 0; ty < m.h; ty++)
+    for (let tx = 0; tx < m.w; tx++) {
+      const g = m.get(tx, ty);
+      if (g !== 2 && g !== 11) continue;
+      for (const [sx, sy] of [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1]
+      ]) {
+        if (!isG(tx + sx, ty) || !isG(tx, ty + sy) || !isG(tx + sx, ty + sy)) continue;
+        // centro del quarto di cerchio, dentro la piastrella
+        const cx = tx * 16 + (sx < 0 ? RA : 16 - RA),
+          cy = ty * 16 + (sy < 0 ? RA : 16 - RA);
+        for (let j = 0; j < RA; j += 0.5)
+          for (let i = 0; i < RA; i += 0.5) {
+            const px = sx < 0 ? tx * 16 + i : tx * 16 + 16 - 0.5 - i,
+              py = sy < 0 ? ty * 16 + j : ty * 16 + 16 - 0.5 - j,
+              r = Math.hypot(px + 0.25 - cx, py + 0.25 - cy);
+            if (r <= RA - 0.6) continue;
+            x.fillStyle = r > RA ? GR[2 + (hsh(px * 2, py * 2) % 2)] : 'rgba(40,25,10,.28)';
+            x.fillRect(px, py, 0.5, 0.5);
+          }
       }
     }
   if (m.water)
@@ -1142,10 +1169,10 @@ function updatePlayer(dt) {
     p.stepT -= dt;
     if (p.stepT <= 0) {
       p.stepT = 0.28;
-      AU.play('step');
-      addPrint(p);
       const [ux, uy] = ptile(p),
         ug = m.get(ux, uy);
+      AU.play(suonoPasso(m, ug));
+      addPrint(p);
       if (ug === 2 || ug === 11 || ug === 10)
         for (let i = 0; i < 2; i++)
           G.parts.push({
@@ -1270,12 +1297,12 @@ function spawnHorse(tx, ty, speed) {
 function updateCam(dt) {
   const m = G.map,
     p = G.player;
-  let cx = p.x - W / 2,
-    cy = p.y - 12 - H / 2;
+  let cx = p.x - VW / 2,
+    cy = p.y - 12 - VH / 2;
   const mw = m.w * 16,
     mh = m.h * 16;
-  cx = mw <= W ? (mw - W) / 2 : clamp(cx, 0, mw - W);
-  cy = mh <= H ? (mh - H) / 2 : clamp(cy, 0, mh - H);
+  cx = mw <= VW ? (mw - VW) / 2 : clamp(cx, 0, mw - VW);
+  cy = mh <= VH ? (mh - VH) / 2 : clamp(cy, 0, mh - VH);
   G.cam.x = cx;
   G.cam.y = cy;
 }
@@ -1318,7 +1345,7 @@ function drawWater(m, tx0, ty0, tx1, ty1, cx) {
   RX.setTransform(2, 0, 0, -2, -2 * cx, 2 * Y0);
   for (const o of m.objs) {
     if (!o.img || o.sy < Y0 - 80 || o.sy >= Y0) continue;
-    if (o.dx > cx + W || o.dx + iw(o.img) < cx) continue;
+    if (o.dx > cx + VW || o.dx + iw(o.img) < cx) continue;
     dImg(RX, o.img, Math.round(o.dx), Math.round(o.dy));
   }
   const ents = [];
@@ -1332,7 +1359,7 @@ function drawWater(m, tx0, ty0, tx1, ty1, cx) {
   ctx.globalAlpha = 0.34;
   for (let y = 0; y < 32; y += 2) {
     const off = Math.round(Math.sin(G.t * 2.2 + y * 0.45) * 1.2);
-    ctx.drawImage(RC, 0, y * 2, W * 2, 4, cx + off, Y0 + y, W, 2);
+    ctx.drawImage(RC, 0, y * 2, VW * 2, 4, cx + off, Y0 + y, VW, 2);
   }
   ctx.globalAlpha = 1;
   for (let ty = wy0; ty <= wy1; ty++)
@@ -1392,8 +1419,8 @@ function drawClouds(cx, cy) {
   ctx.globalAlpha = a;
   const ox = (G.t * 7) % 320,
     oy = (G.t * 2.5) % 220;
-  for (let X = Math.floor((cx - ox) / 320) * 320 + ox; X < cx + W; X += 320)
-    for (let Y = Math.floor((cy - oy) / 220) * 220 + oy; Y < cy + H; Y += 220)
+  for (let X = Math.floor((cx - ox) / 320) * 320 + ox; X < cx + VW; X += 320)
+    for (let Y = Math.floor((cy - oy) / 220) * 220 + oy; Y < cy + VH; Y += 220)
       ctx.drawImage(CLOUD, Math.round(X), Math.round(Y));
   ctx.globalAlpha = 1;
 }
@@ -1428,22 +1455,22 @@ function atmosphere(m) {
     ctx.globalCompositeOperation = 'soft-light';
     ctx.globalAlpha = a;
     ctx.fillStyle = col;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, VW, VH);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
   }
   if (!out) return;
   if (wx === 'nuvoloso') {
     ctx.fillStyle = 'rgba(80,90,105,.14)';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, VW, VH);
   }
   if (wx === 'pioggia') {
     ctx.fillStyle = 'rgba(30,40,60,.3)';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, VW, VH);
   }
   if (wx === 'nebbia') {
     ctx.fillStyle = 'rgba(205,210,220,.15)';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, VW, VH);
   }
   const ray = (t >= 6 * 60 + 30 && t < 9 * 60) || (t >= 15 * 60 + 30 && t < 18 * 60 + 30);
   if (ray && (wx === 'sereno' || wx === 'nuvoloso') && G.horror < 0.6) {
@@ -1451,14 +1478,14 @@ function atmosphere(m) {
     ctx.save();
     ctx.rotate(-0.5);
     for (let i = 0; i < 4; i++) {
-      const x0 = ((i * 173 + G.t * 4) % (W + 360)) - 180,
+      const x0 = ((i * 173 + G.t * 4) % (VW + 360)) - 180,
         w = 16 + ((i * 37) % 30),
         g = ctx.createLinearGradient(x0, 0, x0 + w, 0);
       g.addColorStop(0, 'rgba(255,220,150,0)');
       g.addColorStop(0.5, `rgba(255,215,140,${wx === 'sereno' ? 0.075 : 0.035})`);
       g.addColorStop(1, 'rgba(255,220,150,0)');
       ctx.fillStyle = g;
-      ctx.fillRect(x0, -200, w, H + 500);
+      ctx.fillRect(x0, -200, w, VH + 500);
     }
     ctx.restore();
     ctx.globalCompositeOperation = 'source-over';
@@ -1724,6 +1751,7 @@ function render() {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
   if (!m || !G.st) return;
+  ctx.setTransform(RS * ZOOM, 0, 0, RS * ZOOM, 0, 0);
   const sx = (Math.random() - 0.5) * G.shake * 2,
     sy = (Math.random() - 0.5) * G.shake * 2;
   G.shake *= 0.9;
@@ -1733,16 +1761,16 @@ function render() {
   ctx.translate(-cx, -cy);
   const tx0 = Math.max(0, Math.floor(cx / 16)),
     ty0 = Math.max(0, Math.floor(cy / 16)),
-    tx1 = Math.min(m.w - 1, Math.floor((cx + W) / 16)),
-    ty1 = Math.min(m.h - 1, Math.floor((cy + H) / 16));
+    tx1 = Math.min(m.w - 1, Math.floor((cx + VW) / 16)),
+    ty1 = Math.min(m.h - 1, Math.floor((cy + VH) / 16));
   if (m.water) drawWater(m, tx0, ty0, tx1, ty1, cx);
   {
     const gw = m.ground.width,
       gh = m.ground.height,
       sx0 = Math.max(0, cx),
       sy0 = Math.max(0, cy),
-      sx1 = Math.min(gw, cx + W),
-      sy1 = Math.min(gh, cy + H);
+      sx1 = Math.min(gw, cx + VW),
+      sy1 = Math.min(gh, cy + VH);
     if (sx1 > sx0 && sy1 > sy0)
       ctx.drawImage(
         m.ground,
@@ -1764,26 +1792,15 @@ function render() {
       const [x, y] = k.split(',').map(Number);
       if (x < tx0 - 1 || x > tx1 + 1 || y < ty0 - 1 || y > ty1 + 1) continue;
       const f = fm[k];
-      const arr = f.w ? T.tilledW : T.tilled;
-      ctx.drawImage(arr[hsh(x, y) % 3], x * 16, y * 16, 16, 16);
+      const vicina = (dx, dy) => (fm[x + dx + ',' + (y + dy)] ? 1 : 0),
+        bordi = vicina(0, -1) | (vicina(1, 0) << 1) | (vicina(0, 1) << 2) | (vicina(-1, 0) << 3);
+      ctx.drawImage(T.zolla[f.w ? 1 : 0][hsh(x, y) % 3][bordi], x * 16, y * 16, 16, 16);
       if (f.f)
         for (let i = 0; i < 7; i++) {
           const h = hsh(x * 7 + i, y * 13 + i);
           ctx.fillStyle = i % 3 ? 'rgba(24,14,6,.6)' : 'rgba(214,176,90,.75)';
-          ctx.fillRect(x * 16 + 1 + (h % 14), y * 16 + 1 + ((h >> 5) % 14), 1, 1);
+          ctx.fillRect(x * 16 + 3 + (h % 10), y * 16 + 3 + ((h >> 5) % 10), 1, 1);
         }
-      for (let d = 0; d < 4; d++) {
-        const [dx, dy] = DIRV[d];
-        if (fm[x + dx + ',' + (y + dy)]) continue;
-        ctx.fillStyle = 'rgba(30,16,8,.55)';
-        if (dy === 1) ctx.fillRect(x * 16, y * 16 + 15, 16, 1);
-        else if (dy === -1) {
-          ctx.fillRect(x * 16, y * 16, 16, 1);
-          ctx.fillStyle = 'rgba(30,16,8,.25)';
-          ctx.fillRect(x * 16, y * 16 + 1, 16, 1);
-        } else if (dx === 1) ctx.fillRect(x * 16 + 15, y * 16, 1, 16);
-        else ctx.fillRect(x * 16, y * 16, 1, 16);
-      }
     }
   }
   disegnaOmbreVive(m, cx, cy);
@@ -1794,7 +1811,7 @@ function render() {
   const list = [];
   for (const o of m.objs) {
     if (!o.img) continue;
-    if (o.dx > cx + W + 8 || o.dx + iw(o.img) < cx - 8 || o.dy > cy + H + 8 || o.dy + ih(o.img) < cy - 8)
+    if (o.dx > cx + VW + 8 || o.dx + iw(o.img) < cx - 8 || o.dy > cy + VH + 8 || o.dy + ih(o.img) < cy - 8)
       continue;
     list.push(o);
   }
@@ -1826,7 +1843,7 @@ function render() {
   }
   if (m.id === 'main' && G.critters)
     for (const c of G.critters)
-      if (c.x > cx - 30 && c.x < cx + W + 30 && c.y > cy - 20 && c.y < cy + H + 40)
+      if (c.x > cx - 30 && c.x < cx + VW + 30 && c.y > cy - 20 && c.y < cy + VH + 40)
         list.push({
           crit: c,
           sy: c.k === 'crow' && c.st !== 'perch' ? 9e9 : c.k === 'duck' ? 43 * 16 + 2 : c.y
@@ -1977,9 +1994,9 @@ function render() {
       }
     }
     LX.globalCompositeOperation = 'source-over';
-    LX.clearRect(0, 0, W, H);
+    LX.clearRect(0, 0, VW, VH);
     LX.fillStyle = `rgba(10,8,30,${d})`;
-    LX.fillRect(0, 0, W, H);
+    LX.fillRect(0, 0, VW, VH);
     LX.globalCompositeOperation = 'destination-out';
     for (const l of L) {
       const g = LX.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
@@ -2023,17 +2040,18 @@ function render() {
   if (fogA > 0) {
     ctx.globalAlpha = fogA;
     for (let i = 0; i < 9; i++) {
-      const fx = ((i * 137 + G.t * (6 + i)) % (W + 120)) - 100,
-        fy = ((i * 61) % H) + Math.sin(G.t * 0.3 + i) * 8;
+      const fx = ((i * 137 + G.t * (6 + i)) % (VW + 120)) - 100,
+        fy = ((i * 61) % VH) + Math.sin(G.t * 0.3 + i) * 8;
       ctx.drawImage(FOG, fx, fy, 180, 70);
     }
     ctx.globalAlpha = 1;
   }
   if (G.redTint > 0) {
     ctx.fillStyle = `rgba(130,0,0,${(G.redTint * (0.85 + 0.15 * Math.sin(G.t * 6))).toFixed(2)})`;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, VW, VH);
   }
   drawGuide();
+  ctx.setTransform(RS, 0, 0, RS, 0, 0);
   postFX();
 }
 // una finestra del paese è accesa se in casa c'è qualcuno (OCC, aggiornato in grafica.js) e non è ancora ora
@@ -2105,7 +2123,7 @@ function updParts(dt) {
     if (G.night < 0.5 && G.horror < 0.6 && leafSeason() && Math.random() < dt * 5)
       G.parts.push({
         k: 'leaf',
-        x: G.cam.x + Math.random() * W * 1.2,
+        x: G.cam.x + Math.random() * VW * 1.2,
         y: G.cam.y - 6,
         vx: -8 - Math.random() * 10,
         vy: 12 + Math.random() * 10,
@@ -2117,8 +2135,8 @@ function updParts(dt) {
     if (G.night > 0.3 && G.horror < 0.5 && Math.random() < dt * 3)
       G.parts.push({
         k: 'fly',
-        x: G.cam.x + Math.random() * W,
-        y: G.cam.y + Math.random() * H,
+        x: G.cam.x + Math.random() * VW,
+        y: G.cam.y + Math.random() * VH,
         vx: 0,
         vy: 0,
         t: 0,
@@ -2128,7 +2146,7 @@ function updParts(dt) {
     if (G.horror > 0.5 && Math.random() < dt * 4)
       G.parts.push({
         k: 'ash',
-        x: G.cam.x + Math.random() * W,
+        x: G.cam.x + Math.random() * VW,
         y: G.cam.y - 4,
         vx: (Math.random() - 0.5) * 6,
         vy: 10 + Math.random() * 8,
@@ -2141,8 +2159,8 @@ function updParts(dt) {
       for (let i = 0; i < n; i++)
         G.parts.push({
           k: 'rain',
-          x: G.cam.x + Math.random() * (W + 60),
-          y: G.cam.y + Math.random() * H - 50,
+          x: G.cam.x + Math.random() * (VW + 60),
+          y: G.cam.y + Math.random() * VH - 50,
           vx: -40,
           vy: 300,
           t: 0,
@@ -2151,12 +2169,12 @@ function updParts(dt) {
     }
     if (G.night < 0.3 && G.horror < 0.5 && wx !== 'pioggia' && Math.random() < dt * 0.05) {
       const dir = Math.random() < 0.5 ? 1 : -1,
-        y0 = G.cam.y + 15 + Math.random() * H * 0.5,
+        y0 = G.cam.y + 15 + Math.random() * VH * 0.5,
         n = 3 + ((Math.random() * 4) | 0);
       for (let i = 0; i < n; i++)
         G.parts.push({
           k: 'bird',
-          x: dir > 0 ? G.cam.x - 20 - i * 11 : G.cam.x + W + 20 + i * 11,
+          x: dir > 0 ? G.cam.x - 20 - i * 11 : G.cam.x + VW + 20 + i * 11,
           y: y0 + (i % 2) * 7 + i * 2,
           vx: dir * (44 + Math.random() * 8),
           vy: -2,
@@ -2174,8 +2192,8 @@ function updParts(dt) {
     )
       G.parts.push({
         k: 'fly2',
-        x: G.cam.x + Math.random() * W,
-        y: G.cam.y + Math.random() * H,
+        x: G.cam.x + Math.random() * VW,
+        y: G.cam.y + Math.random() * VH,
         vx: (Math.random() - 0.5) * 12,
         vy: 0,
         t: 0,

@@ -2385,10 +2385,10 @@ const ART3 = {
         const sp = s === 3 ? 3 : 9 + (i % 4) * 2,
           x =
             cx +
-            ((((i * 131.7 + T * (4 + (i % 3)) + Math.sin(T * 1.1 + i) * 14) % (W + 40)) + W + 40) %
-              (W + 40)) -
+            ((((i * 131.7 + T * (4 + (i % 3)) + Math.sin(T * 1.1 + i) * 14) % (VW + 40)) + VW + 40) %
+              (VW + 40)) -
             20,
-          y = cy + ((i * 71.3 + T * sp) % (H + 30)) - 15,
+          y = cy + ((i * 71.3 + T * sp) % (VH + 30)) - 15,
           c = pal[i % pal.length];
         if (s === 3) {
           const on = (Math.sin(T * 2 + i * 1.7) + 1) / 2;
@@ -2955,8 +2955,8 @@ const TOOLS = {
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         for (let i = 0; i < 60; i++) {
-          const x = ((((i * 53.7 + T * -70) % (W + 80)) + W + 80) % (W + 80)) - 40,
-            y = ((i * 97.1 + T * 520) % (H + 60)) - 30;
+          const x = ((((i * 53.7 + T * -70) % (VW + 80)) + VW + 80) % (VW + 80)) - 40,
+            y = ((i * 97.1 + T * 520) % (VH + 60)) - 30;
           ctx.moveTo(x, y);
           ctx.lineTo(x - 2.4, y + 18);
         }
@@ -2967,8 +2967,8 @@ const TOOLS = {
         for (let i = 0; i < 26; i++) {
           const per = 1.1 + (i % 5) * 0.13,
             k = ((T + i * 0.37) % per) / per,
-            x = (i * 137.3) % W,
-            y = (i * 71.9 + Math.floor((T + i * 0.37) / per) * 31) % H;
+            x = (i * 137.3) % VW,
+            y = (i * 71.9 + Math.floor((T + i * 0.37) / per) * 31) % VH;
           ctx.strokeStyle = `rgba(200,220,245,${(0.35 * (1 - k)).toFixed(2)})`;
           ctx.beginPath();
           ctx.ellipse(x, y, 1 + k * 5, (1 + k * 5) * 0.38, 0, 0, 7);
@@ -2981,10 +2981,10 @@ const TOOLS = {
         for (let i = 0; i < 34; i++) {
           const sp = 10 + (i % 6) * 3,
             x =
-              ((((i * 113.3 + T * (6 + (i % 4)) + Math.sin(T * 0.8 + i) * 18) % (W + 20)) + W + 20) %
-                (W + 20)) -
+              ((((i * 113.3 + T * (6 + (i % 4)) + Math.sin(T * 0.8 + i) * 18) % (VW + 20)) + VW + 20) %
+                (VW + 20)) -
               10,
-            y = ((i * 61.7 + T * sp) % (H + 20)) - 10,
+            y = ((i * 61.7 + T * sp) % (VH + 20)) - 10,
             s = i % 5 === 0 ? 2.5 : 1.5;
           ctx.fillStyle = 'rgba(255,255,255,.35)';
           ctx.fillRect(x - 0.5, y - 0.5, s + 1, s + 1);
@@ -2995,11 +2995,11 @@ const TOOLS = {
       }
       if (wx === 'nebbia') {
         ctx.save();
-        const g = ctx.createLinearGradient(0, 0, 0, H);
+        const g = ctx.createLinearGradient(0, 0, 0, VH);
         g.addColorStop(0, 'rgba(220,225,235,.0)');
         g.addColorStop(1, 'rgba(220,225,235,.22)');
         ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, H);
+        ctx.fillRect(0, 0, VW, VH);
         ctx.restore();
       }
     } catch (e) {}
@@ -4456,9 +4456,9 @@ function vivoTick(dt) {
         o.img &&
         o.img.canopyH &&
         o.dx > G.cam.x - 20 &&
-        o.dx < G.cam.x + W &&
+        o.dx < G.cam.x + VW &&
         o.dy > G.cam.y - 60 &&
-        o.dy < G.cam.y + H
+        o.dy < G.cam.y + VH
     );
     if (trees.length) {
       const o = trees[(Math.random() * trees.length) | 0],
@@ -4554,8 +4554,8 @@ function vivoTick(dt) {
           !n.hidden &&
           n.map === 'main' &&
           !n.script &&
-          Math.abs(n.x - G.cam.x - W / 2) < W / 2 + 20 &&
-          Math.abs(n.y - G.cam.y - H / 2) < H / 2 + 20
+          Math.abs(n.x - G.cam.x - VW / 2) < VW / 2 + 20 &&
+          Math.abs(n.y - G.cam.y - VH / 2) < VH / 2 + 20
       );
       for (const a of N) {
         const b = N.find(
@@ -4578,8 +4578,8 @@ function vivoTick(dt) {
         !n.hidden &&
         n.map === 'main' &&
         !VIVO.emo.has(n.id) &&
-        Math.abs(n.x - G.cam.x - W / 2) < W / 2 &&
-        Math.abs(n.y - G.cam.y - H / 2) < H / 2
+        Math.abs(n.x - G.cam.x - VW / 2) < VW / 2 &&
+        Math.abs(n.y - G.cam.y - VH / 2) < VH / 2
     );
     if (N.length) {
       const n = N[(Math.random() * N.length) | 0];
@@ -4589,7 +4589,7 @@ function vivoTick(dt) {
   const cold = out && (isWinter() || G.st.weather === 'neve' || (G.st.time < 8 * 60 && isAutumn()));
   if (cold && Math.random() < dt * 2.5) {
     const L = [G.player, ...G.npcs.filter(n => !n.hidden && n.map === 'main')].filter(
-      e => Math.abs(e.x - G.cam.x - W / 2) < W / 2 && Math.abs(e.y - G.cam.y - H / 2) < H / 2
+      e => Math.abs(e.x - G.cam.x - VW / 2) < VW / 2 && Math.abs(e.y - G.cam.y - VH / 2) < VH / 2
     );
     if (L.length) {
       const e = L[(Math.random() * L.length) | 0],
@@ -4759,10 +4759,10 @@ addEventListener('keydown', e => {
             if (
               !o.img ||
               !o.img.canopyH ||
-              o.dx > cx + W + 20 ||
+              o.dx > cx + VW + 20 ||
               o.dx + 40 < cx - 20 ||
               o.sy < cy - 10 ||
-              o.sy > cy + H + 30
+              o.sy > cy + VH + 30
             )
               continue;
             const bx = o.dx + iw(o.img) / 2,
@@ -4791,7 +4791,7 @@ addEventListener('keydown', e => {
           ctx.save();
           ctx.globalAlpha = clamp(VIVO.lv * 0.9, 0, 0.88);
           ctx.fillStyle = SNOWPAT;
-          ctx.fillRect(cx, cy, W, H);
+          ctx.fillRect(cx, cy, VW, VH);
           ctx.restore();
         }
       }
@@ -4821,7 +4821,7 @@ addEventListener('keydown', e => {
               o.kind !== 'post')
           )
             continue;
-          if (o.dx > cx + W || o.dx + iw(o.img) < cx || o.dy > cy + H || o.dy + ih(o.img) < cy) continue;
+          if (o.dx > cx + VW || o.dx + iw(o.img) < cx || o.dy > cy + VH || o.dy + ih(o.img) < cy) continue;
           const c = snowCap(o.img, o.kind !== 'fence' && o.kind !== 'post');
           if (c) ctx.drawImage(c, Math.round(o.dx), Math.round(o.dy), iw(o.img), ih(o.img));
         }
@@ -4847,7 +4847,7 @@ addEventListener('keydown', e => {
       // abitanti: emozioni e lanterne di notte
       for (const n of G.npcs) {
         if (n.hidden || n.map !== 'main') continue;
-        if (n.x < cx - 20 || n.x > cx + W + 20 || n.y < cy - 10 || n.y > cy + H + 40) continue;
+        if (n.x < cx - 20 || n.x > cx + VW + 20 || n.y < cy - 10 || n.y > cy + VH + 40) continue;
         const e = VIVO.emo.get(n.id);
         if (e && !G.bubbles.some(b => b.n === n)) {
           const bob = Math.sin(G.t * 6) * 0.8;
@@ -4880,7 +4880,7 @@ addEventListener('keydown', e => {
         const s = n.dir === 1 ? -1 : 1,
           X = n.x + s * 7,
           Y = n.y - 12;
-        if (X < G.cam.x - 30 || X > G.cam.x + W + 30 || Y < G.cam.y - 30 || Y > G.cam.y + H + 30) continue;
+        if (X < G.cam.x - 30 || X > G.cam.x + VW + 30 || Y < G.cam.y - 30 || Y > G.cam.y + VH + 30) continue;
         const r = 22 + Math.sin(G.t * 9 + n.x) * 1.2,
           g = ctx.createRadialGradient(X, Y, 0, X, Y, r);
         g.addColorStop(0, 'rgba(255,190,90,.45)');
@@ -5110,9 +5110,9 @@ function svTick(dt) {
         cx = G.cam.x,
         cy = G.cam.y,
         vis = o =>
-          o.dx < cx + W + 10 &&
+          o.dx < cx + VW + 10 &&
           o.dx + iw(o.img) > cx - 10 &&
-          o.dy < cy + H + 10 &&
+          o.dy < cy + VH + 10 &&
           o.dy + ih(o.img) > cy - 10;
       for (const o of m.objs) {
         if (!o.img || !vis(o)) continue;
@@ -5255,9 +5255,9 @@ function svTick(dt) {
       for (const o of m.objs) {
         if (
           !o.img ||
-          o.dx > cx + W + 40 ||
+          o.dx > cx + VW + 40 ||
           o.dx + iw(o.img) < cx - 40 ||
-          o.dy > cy + H + 40 ||
+          o.dy > cy + VH + 40 ||
           o.dy + ih(o.img) < cy - 40
         )
           continue;

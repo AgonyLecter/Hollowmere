@@ -112,7 +112,7 @@ function shovelAct(fx, fy) {
     delete W2.tiles[k];
     setGround(m, fx, fy, 1);
     addItem('lastre', 1);
-    AU.play('mine');
+    allImpatto(() => GESTO.pietra(fx * 16 + 8, fy * 16 + 12));
     return true;
   }
   if (W2.tiles[k] === 2) {

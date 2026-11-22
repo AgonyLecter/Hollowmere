@@ -19,7 +19,8 @@ const SUITES = {
   zaino: require('./zaino'),
   coop: require('./coop'),
   scimmia: require('./scimmia'),
-  storia: require('./storia')
+  storia: require('./storia'),
+  gesti: require('./gesti')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

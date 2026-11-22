@@ -231,8 +231,8 @@ function faunaPosto(F, m) {
   const cx = G.cam.x,
     cy = G.cam.y;
   for (let tries = 0; tries < 30; tries++) {
-    const x = Math.floor((cx - 40 + Math.random() * (W + 80)) / 16),
-      y = Math.floor((cy - 20 + Math.random() * (H + 40)) / 16);
+    const x = Math.floor((cx - 40 + Math.random() * (VW + 80)) / 16),
+      y = Math.floor((cy - 20 + Math.random() * (VH + 40)) / 16);
     if (x < 1 || y < 1 || x >= m.w - 1 || y >= m.h - 1) continue;
     const g = m.get(x, y),
       o = m.objAt(x, y),
@@ -289,8 +289,8 @@ function faunaNuovo(id, F, m) {
   if (F.m === 'vola') a.z = 6 + Math.random() * 10;
   if (F.m === 'cielo') {
     a.z = 40 + Math.random() * 30;
-    a.x = G.cam.x + (a.dir > 0 ? -20 : W + 20);
-    a.y = G.cam.y + 30 + Math.random() * (H - 40);
+    a.x = G.cam.x + (a.dir > 0 ? -20 : VW + 20);
+    a.y = G.cam.y + 30 + Math.random() * (VH - 40);
     a.vx = a.dir * (id === 'rondine' ? 90 : 55);
   }
   return a;
@@ -392,7 +392,7 @@ function faunaTick(dt) {
           a.vx = -a.vx;
           a.dir = Math.sign(a.vx);
         }
-        if (a.x < G.cam.x - 60 || a.x > G.cam.x + W + 60) a.morto = 1;
+        if (a.x < G.cam.x - 60 || a.x > G.cam.x + VW + 60) a.morto = 1;
         break;
       }
       case 'terra': {
@@ -477,7 +477,7 @@ function faunaTick(dt) {
         break;
       }
     }
-    if (Math.abs(a.x - G.cam.x - W / 2) > W + 200 || Math.abs(a.y - G.cam.y - H / 2) > H + 200) a.morto = 1;
+    if (Math.abs(a.x - G.cam.x - VW / 2) > VW + 200 || Math.abs(a.y - G.cam.y - VH / 2) > VH + 200) a.morto = 1;
   }
   G.fauna = L.filter(a => !a.morto);
   taccuinoTick(dt);

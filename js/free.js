@@ -669,10 +669,19 @@ function freeActBase(fx, fy) {
     addXP('racc', t.startsWith('w_') ? 4 : 2);
     delete W2.debris[k];
     mapRemove(m, o);
-    AU.play(t === 'sasso' ? 'mine' : t === 'ramo' ? 'chop' : 'pick');
-    hitFx(fx, fy, t === 'sasso' ? '#a8a59a' : '#8a6a3a');
-    flyPop(got[0], fx * 16 + 8, fy * 16 + 4);
-    floatText(`+${got[1]} ${ITEMS[got[0]].n}`, fx * 16 + 8, fy * 16 - 4);
+    restaFinoAllImpatto(o);
+    allImpatto(() => {
+      const x = fx * 16 + 8,
+        y = fy * 16 + 12;
+      if (t === 'sasso') GESTO.pietra(x, y);
+      else if (t === 'ramo') GESTO.legno(x, y);
+      else if (t === 'erbaccia') GESTO.erba(x, y, 6);
+      else AU.play('pick');
+    });
+    allImpatto(() => {
+      flyPop(got[0], fx * 16 + 8, fy * 16 + 4);
+      floatText(`+${got[1]} ${ITEMS[got[0]].n}`, fx * 16 + 8, fy * 16 - 4);
+    });
     st.flags.debris = (st.flags.debris || 0) + 1;
     return true;
   }
@@ -689,25 +698,24 @@ function freeActBase(fx, fy) {
       need = Math.max(1, { tree: 5, ceppo: 2, log: 6 }[o.kind] - (goldTools() ? 1 : 0));
     if (!useEnergy(skLv('racc') >= 2 ? 1 : 2)) return true;
     G.hits[hk] = (G.hits[hk] || 0) + 1;
-    markHit(o);
-    AU.play('chop');
-    hitFx(o.tx, o.ty, '#8a6a3a');
-    if (o.kind === 'tree' && Math.random() < 0.5)
-      for (let i = 0; i < 4; i++)
-        G.parts.push({
-          k: 'spark',
-          x: o.tx * 16 + 8 + (Math.random() - 0.5) * 30,
-          y: o.ty * 16 - 30,
-          vx: (Math.random() - 0.5) * 20,
-          vy: 10,
-          t: 0,
-          life: 1,
-          c: seasonOf() === 1 ? '#eef3fa' : ['#d86a28', '#e8a040', '#6a9a3a', '#5a9a2a'][seasonOf()]
-        });
-    if (G.hits[hk] < need) {
-      floatText('•'.repeat(G.hits[hk]), o.tx * 16 + 8, o.ty * 16 - 6, '#f6d98a', 0.6);
-      return true;
-    }
+    // all'impatto: l'albero trema, le schegge volano, e dalla chioma cade qualche foglia
+    allImpatto(() => {
+      markHit(o);
+      GESTO.legno(o.tx * 16 + 8, o.ty * 16 + 12);
+      if (o.kind === 'tree')
+        for (let i = 0; i < 5; i++)
+          G.parts.push({
+            k: 'spark',
+            x: o.tx * 16 + 8 + (Math.random() - 0.5) * 30,
+            y: o.ty * 16 - 30,
+            vx: (Math.random() - 0.5) * 20,
+            vy: 10,
+            t: 0,
+            life: 1,
+            c: seasonOf() === 1 ? '#eef3fa' : ['#d86a28', '#e8a040', '#6a9a3a', '#5a9a2a'][seasonOf()]
+          });
+    });
+    if (G.hits[hk] < need) return true;
     delete G.hits[hk];
     const n =
       { tree: 8 + Math.floor(Math.random() * 5), ceppo: 3, log: 14 }[o.kind] + (skLv('racc') >= 4 ? 1 : 0);
@@ -715,9 +723,9 @@ function freeActBase(fx, fy) {
     if (!addItem('legna', n)) return true;
     if (o.kind === 'tree') {
       W2.gone[hk] = { day: st.day };
-      AU.play('slam');
-      G.shake = 3;
       mapRemove(m, o);
+      // l'albero cade (dalla parte opposta a te), con lo scricchiolio e poi il tonfo
+      alberoCade(o.img, o.dx + iw(o.img) / 2, o.dy + ih(o.img));
       m.add(OB('ceppo', o.tx, o.ty, IMG.stump, { act: 'ceppo', of: hk }));
       st.flags.felled = (st.flags.felled || 0) + 1;
       Ext.run('fatto', 'albero', 1);
@@ -729,12 +737,16 @@ function freeActBase(fx, fy) {
       const g = W2.gone[o.of];
       if (g) g.stumpGone = 1;
       mapRemove(m, o);
+      restaFinoAllImpatto(o);
     } else {
       W2.gone[hk] = { day: st.day };
       mapRemove(m, o);
+      restaFinoAllImpatto(o);
     }
-    flyPop('legna', o.tx * 16 + 8, o.ty * 16 - 6);
-    floatText(`+${n} Legna`, o.tx * 16 + 8, o.ty * 16 - 10);
+    allImpatto(() => {
+      flyPop('legna', o.tx * 16 + 8, o.ty * 16 - 6);
+      floatText(`+${n} Legna`, o.tx * 16 + 8, o.ty * 16 - 10);
+    });
     return true;
   }
   // rocce: piccone
@@ -743,13 +755,15 @@ function freeActBase(fx, fy) {
     const hk = fkey(o.tx, o.ty);
     if (!useEnergy(skLv('racc') >= 2 ? 1 : 2)) return true;
     G.hits[hk] = (G.hits[hk] || 0) + 1;
-    markHit(o);
-    AU.play('mine');
-    hitFx(o.tx, o.ty, '#a8a59a');
-    if (G.hits[hk] < (goldTools() ? 2 : 3)) {
-      floatText('•'.repeat(G.hits[hk]), o.tx * 16 + 8, o.ty * 16 - 6, '#f6d98a', 0.6);
-      return true;
-    }
+    const rx = o.tx * 16 + 8,
+      ry = o.ty * 16 + 12;
+    allImpatto(() => {
+      markHit(o);
+      GESTO.pietra(rx, ry);
+    });
+    if (G.hits[hk] < (goldTools() ? 2 : 3)) return true;
+    // l'ultimo colpo: la roccia si spacca
+    allImpatto(() => GESTO.roccia(rx, ry));
     delete G.hits[hk];
     const n = 4 + Math.floor(Math.random() * 3) + (skLv('racc') >= 4 ? 1 : 0);
     if (!addItem('pietra', n)) return true;
@@ -757,12 +771,15 @@ function freeActBase(fx, fy) {
     addXP('racc', 10);
     if (Math.random() < (skLv('racc') >= 6 ? 0.5 : 0.3)) {
       addItem('ferro', 1 + (Math.random() < 0.3 ? 1 : 0));
-      floatText('+ Minerale di ferro', o.tx * 16 + 8, o.ty * 16 - 16, '#c8703a');
+      allImpatto(() => floatText('+ Minerale di ferro', o.tx * 16 + 8, o.ty * 16 - 16, '#c8703a'));
     }
     W2.gone[hk] = { day: st.day };
     mapRemove(m, o);
-    flyPop('pietra', o.tx * 16 + 8, o.ty * 16 - 4);
-    floatText(`+${n} Pietra`, o.tx * 16 + 8, o.ty * 16 - 6);
+    restaFinoAllImpatto(o);
+    allImpatto(() => {
+      flyPop('pietra', o.tx * 16 + 8, o.ty * 16 - 4);
+      floatText(`+${n} Pietra`, o.tx * 16 + 8, o.ty * 16 - 6);
+    });
     st.flags.mined = (st.flags.mined || 0) + 1;
     return true;
   }
@@ -774,7 +791,8 @@ function freeActBase(fx, fy) {
       delete W2.built[o.bk];
       mapRemove(m, o);
       addItem('legna', st.day - b.d >= 12 ? 6 : 1);
-      AU.play('chop');
+      allImpatto(() => GESTO.legno(o.tx * 16 + 8, o.ty * 16 + 12));
+      alberoCade(o.img, o.dx + iw(o.img) / 2, o.dy + ih(o.img));
       UI.toast("Hai tagliato l'albero.");
       return true;
     }
@@ -842,7 +860,7 @@ function freeActBase(fx, fy) {
     W2.tiles[k] = 11;
     setGround(m, fx, fy, 11);
     removeItem('lastre', 1);
-    AU.play('mine');
+    AU.play('pietra');
     addXP('arti', 1);
     return true;
   }
@@ -931,38 +949,18 @@ function falciaAct(fx, fy) {
   let n = 0;
   for (const o of L) {
     mapRemove(m, o);
+    restaFinoAllImpatto(o);
     n += 1 + (Math.random() < 0.35 ? 1 : 0);
-    for (let i = 0; i < 6; i++)
-      G.parts.push({
-        k: 'leaf',
-        x: o.dx + iw(o.img) / 2,
-        y: o.dy + ih(o.img) - 4,
-        vx: (Math.random() - 0.5) * 30,
-        vy: -12 - Math.random() * 14,
-        t: 0,
-        life: 0.7,
-        c: ['#5e8035', '#86aa4a', '#a3c262'][i % 3]
-      });
   }
+  // all'impatto: la lama passa, l'erba tagliata vola
+  allImpatto(() => GESTO.erba(fx * 16 + 8, fy * 16 + 12, 8 + L.length * 4));
   st.free.gone[fkey(fx, fy)] = { day: st.day };
   Ext.run('fatto', 'falcia', L.length);
   if (!addItem('fibra', n)) return true;
-  AU.play('falce');
-  floatText(`+${n} Fibra`, fx * 16 + 8, fy * 16 - 6);
+  allImpatto(() => floatText(`+${n} Fibra`, fx * 16 + 8, fy * 16 - 6));
   addXP('racc', 2);
   return true;
 }
-Object.assign(SFX, {
-  falce: (a, t) => a.noise(t, 0.16, 0.14, 'bandpass', 2400, 1.5, null, 0.01, 5600),
-  chop: (a, t) => {
-    a.noise(t, 0.08, 0.35, 'bandpass', 900, 3);
-    a.osc('triangle', 180, t, 0.08, 0.08, null, 0.002, 120);
-  },
-  mine: (a, t) => {
-    a.noise(t, 0.05, 0.3, 'highpass', 2600, 1);
-    a.osc('square', 1400, t, 0.04, 0.03, null, 0.001, 900);
-  }
-});
 
 // ---------- cassa ----------
 function chestMenu(bk) {
