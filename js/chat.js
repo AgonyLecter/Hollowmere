@@ -60,7 +60,6 @@ function chatIn(m) {
   const mine = n === chatMe();
   CHAT.log.push({ n, t, ts: Date.now() });
   CHAT.log = CHAT.log.slice(-40);
-  const o = mine ? G.player : Object.values(G.others).find(o => o.name === n);
   G.chatB = (G.chatB || []).filter(b => b.who !== n);
   G.chatB.push({ who: n, t, life: 6, t0: G.t, emo: isEmojiOnly(t) });
   if (!mine) {

@@ -251,52 +251,6 @@ function drawOther(o) {
   ctx.fillStyle = '#bfe3ff';
   ctx.fillText(t, X, Y);
 }
-function drawChatBubbles() {
-  if (!G.chatB) return;
-  const me = (G.visit ? G.home : G.st).name;
-  ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
-  ctx.textAlign = 'center';
-  for (const b of G.chatB) {
-    const o = b.who === me ? G.player : Object.values(G.others).find(o => o.name === b.who);
-    if (!o) continue;
-    const t = b.t.slice(0, 40),
-      w = Math.ceil(ctx.measureText(t).width) + 8,
-      X = Math.round(o.x),
-      Y = Math.round(o.y - 50);
-    ctx.fillStyle = '#3b1f0e';
-    ctx.fillRect(X - w / 2 - 1, Y - 10, w + 2, 13);
-    ctx.fillStyle = '#eaf6ff';
-    ctx.fillRect(X - w / 2, Y - 9, w, 11);
-    ctx.fillStyle = '#1a2a3a';
-    ctx.fillText(t, X, Y);
-  }
-}
-async function chatSay() {
-  if (!PRES_V) {
-    UI.toast("Non c'è nessuno con cui parlare: serve la connessione.");
-    return;
-  }
-  const t = await new Promise(res => {
-    UI.open(
-      `<h2>Scrivi</h2><input class="tx" id="chatIn" maxlength="60" placeholder="Un saluto, una domanda…" autocomplete="off"><p style="text-align:right;margin-top:6px"><button class="btn" data-close>Annulla</button> <button class="btn" id="chatOk">Invia</button></p>`,
-      () => res(null)
-    );
-    const go = () => {
-      const v = $('#chatIn').value.trim().replace(/[<>]/g, '').slice(0, 60);
-      UI._mclose = null;
-      UI.close();
-      res(v || null);
-    };
-    $('#chatOk').onclick = go;
-    UI.onEnter = go;
-    setTimeout(() => $('#chatIn') && $('#chatIn').focus(), 50);
-  });
-  if (!t) return;
-  const me = (G.visit ? G.home : G.st).name;
-  MP.say(PRES_V, { n: me, t, ts: Date.now() });
-  G.chatB = G.chatB || [];
-  G.chatB.push({ who: me, t, life: 5 });
-}
 
 // ---------- viaggi ----------
 async function travelMenu() {
@@ -497,6 +451,7 @@ function visitAct(fx, fy) {
     burst('water', fx * 16 + 8, fy * 16 + 4, 10);
     G.visit.watered++;
     MP.act(G.visit.pid, { t: 'water', k: fkey(fx, fy), day: st.day, from: G.home.name });
+    if (f.c) Ext.run('fatto', 'annaffia', 1);
     return true;
   }
   if (o && o.act === 'bin') {
@@ -550,6 +505,7 @@ function inboxStart() {
   INBOX_OFF = MP.inbox(st.pid, a => inboxApply(a)) || null;
 }
 function inboxApply(a) {
+  if (Ext.intercetta('posta', a)) return;
   const st = G.visit ? G.home : G.st;
   if (!st || !isFree(st)) return;
   st.flags.mpVisited = 1;
@@ -626,7 +582,11 @@ function cassettaFoglio(presi, left) {
         L = id && DONO_BIGLIETTI[id],
         i = st.inv.findIndex(s => s && s.id === m.item),
         dove = i >= 10 ? ' <span class="small">· nello zaino, fila 2 (⇅)</span>' : '';
-      return `<div class="mrow"><canvas data-i="${m.item}" width="32" height="32"></canvas><span><b>${esc(ITEMS[m.item].n)}</b>${m.n > 1 ? ' ×' + m.n : ''} — da <b>${esc(m.from)}</b>${dove}${L ? `<br><span class="small">${esc(L[Math.floor(Math.random() * L.length)])}</span>` : id ? '' : `<br><span class="small">Dal villaggio di ${esc(m.from)}.</span>`}</span></div>`;
+      // senza mittente: l'avevi ricevuto a zaino pieno e il gioco te l'ha messo da parte
+      const chi = m.from
+        ? ` — da <b>${esc(m.from)}</b>`
+        : ' <span class="small">— messo da parte: lo zaino era pieno</span>';
+      return `<div class="mrow"><canvas data-i="${m.item}" width="32" height="32"></canvas><span><b>${esc(ITEMS[m.item].n)}</b>${m.n > 1 ? ' ×' + m.n : ''}${chi}${dove}${L ? `<br><span class="small">${esc(L[Math.floor(Math.random() * L.length)])}</span>` : id || !m.from ? '' : `<br><span class="small">Dal villaggio di ${esc(m.from)}.</span>`}</span></div>`;
     };
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>La cassetta</h2>` +

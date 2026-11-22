@@ -7,8 +7,6 @@
     INV = [1],
     PRI = [2],
     EST = [3];
-  const MATTINA = [5, 12],
-    SERA = [18, 22];
 
   // ======================= FRASI AL PASSAGGIO: STAGIONI E NUOVI ARRIVATI =======================
   Dialoghi.aggiungi('passaggio', {

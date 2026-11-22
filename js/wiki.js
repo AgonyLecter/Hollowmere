@@ -153,18 +153,12 @@ const Wiki = {
     const COOK = D.COOK;
     const CROPS = D.CROPS;
     const seedP = id => (I['s_' + id] ? I['s_' + id].p : null);
-    const RES = Object.fromEntries(D.RES_POOL.map(r => [r.id, r]));
-    const RES_F = new Set(['nora', 'lia', 'mirta', 'ada', 'rina']);
     const teaches = id => COOK.filter(r => r.da === id);
     const fruitTree = Object.fromEntries(
       Object.entries(I)
         .filter(([, v]) => v.tree)
         .map(([k, v]) => [v.tree, k])
     );
-    const wildSeason = id =>
-      Object.entries(D.WILD)
-        .filter(([, l]) => l.includes(id))
-        .map(([s]) => +s);
 
     // dove si trova ogni oggetto (per la scheda oggetti)
     const fonti = {};
@@ -176,8 +170,8 @@ const Wiki = {
     for (const f of Object.values(D.FESTE)) for (const [x] of f.shop) F(x, f.n);
     for (const [x] of D.NOVE_SHOP) F(x, 'Nove');
     for (const k of Object.keys(CROPS)) F(k, 'orto');
-    for (const [s, l] of Object.entries(D.WILD)) for (const x of l) F(x, 'raccolta selvatica');
-    for (const [f, t] of Object.entries(fruitTree)) F(f, 'albero da frutto');
+    for (const l of Object.values(D.WILD)) for (const x of l) F(x, 'raccolta selvatica');
+    for (const f of Object.keys(fruitTree)) F(f, 'albero da frutto');
     for (const a of Object.values(D.ANIMALS)) F(a.prod, 'animali: ' + a.pl);
     for (const l of Object.values(D.FISH)) for (const x of l) F(x[0], 'pesca');
     for (const t of D.ore) for (const [x] of t) F(x, 'miniera');

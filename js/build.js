@@ -39,39 +39,6 @@ function ownedAt(x, y, st) {
   }
   return null;
 }
-function landMenu() {
-  const st = G.st,
-    own = new Set(myLand());
-  UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>Le terre della Valle</h2><p class="small">«Il Consiglio vende quello che nessuno lavora più. Pagate, e la terra è vostra: potete zapparla, costruirci, farci vialetti.» — Hai <b>${CZ(st.money)}</b></p>` +
-      Object.entries(PLOTS)
-        .filter(([k]) => k !== 'casa')
-        .map(
-          ([k, P]) =>
-            `<div class="mrow"><span><b>${P.n}</b><br><span class="small">${P.d}</span></span>${own.has(k) ? '<span class="small">tua</span>' : `<b class="price">${CZ(P.p)}</b><button class="btn" data-l="${k}" ${st.money >= P.p ? '' : 'disabled'}>Compra</button>`}</div>`
-        )
-        .join('') +
-      '<p class="small">Dove la terra è tua, la casella davanti a te si illumina quando tieni in mano zappa, pala o qualcosa da costruire.</p>'
-  );
-  $('#mbox')
-    .querySelectorAll('[data-l]')
-    .forEach(
-      b =>
-        (b.onclick = () => {
-          const P = PLOTS[b.dataset.l];
-          if (st.money < P.p) return;
-          st.money -= P.p;
-          (st.free.land = st.free.land || ['casa']).push(b.dataset.l);
-          AU.play('coin');
-          UI.hud();
-          UI.toast(`Hai comprato: ${P.n}.`);
-          G.landFlash = { id: b.dataset.l, t: G.t };
-          NET.save(st);
-          UI._mclose = null;
-          landMenu();
-        })
-    );
-}
 // bordo delle terre: picchetti agli angoli, e un contorno quando hai in mano un attrezzo da lavoro
 function drawLand(m) {
   if (m.id !== 'main' || !isFree() || G.visit) return;
@@ -406,8 +373,7 @@ function genBuildArt() {
 }
 // arredo in casa
 function furnFree(m, x, y) {
-  const g = m.get(x, y),
-    st = G.st;
+  const g = m.get(x, y);
   return (
     g === 6 &&
     !m.objAt(x, y) &&

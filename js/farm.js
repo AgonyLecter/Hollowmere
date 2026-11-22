@@ -166,13 +166,14 @@ function removeItem(id, n = 1) {
   UI.hotbar();
 }
 function giveItem(id, n = 1) {
+  // zaino pieno: l'oggetto aspetta nella cassetta delle spedizioni di casa (prima prendeva il posto del primo
+  // oggetto dello zaino, di solito la zappa, che spariva)
   if (!addItem(id, n)) {
-    const inv = G.st.inv,
-      i = inv.findIndex(s => s && ITEMS[s.id].t !== 'key');
-    if (i >= 0) {
-      inv[i] = { id, n };
-      UI.hotbar();
-    }
+    const casa = G.home || G.st;
+    (casa.mailbox = casa.mailbox || []).push({ item: id, n, from: '' });
+    AU.play('pick');
+    UI.toast(`Lo zaino è pieno: ${ITEMS[id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
+    return;
   }
   AU.play('pick');
   const p = G.player;
@@ -229,6 +230,7 @@ function harvest(tx, ty, f) {
     0.08 + (f.f ? 0.42 : 0) + (c.bad ? 0 : 0.15) + (isFree(st) && skLv('agri') >= 4 ? 0.15 : 0);
   if (rich) n++;
   if (!addItem(t, n)) return;
+  Ext.run('fatto', 'raccogli', 1);
   if (cr.re) {
     c.a = cr.days - cr.re;
     c.dry = 0;
@@ -358,6 +360,7 @@ function farmAct(tx, ty) {
     AU.play('water');
     burst('water', tx * 16 + 8, ty * 16 + 4, 10);
     if (f.c) {
+      Ext.run('fatto', 'annaffia', 1);
       st.flags.watered = (st.flags.watered || 0) + 1;
       addXP('agri', 1);
       tip(
@@ -692,7 +695,7 @@ const ACT = {
   bin: async () => {
     const it = selItem(),
       st = G.st;
-    if (isFree(st) && mailboxTake()) return;
+    if (mailboxTake()) return;
     if (it && ITEMS[it.id].t === 'crop') {
       const v = Mercato.vendi(it.id, it.n);
       st.shipped.push([it.id, it.n, v]);

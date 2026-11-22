@@ -444,8 +444,7 @@ function friendsHTML() {
           by = t =>
             Object.keys(kn)
               .filter(k => kn[k] === t)
-              .map(k => (ITEMS[k] ? ITEMS[k].n : k)),
-          n = NPC(id);
+              .map(k => (ITEMS[k] ? ITEMS[k].n : k));
         const line = (lab, arr, col) =>
           arr.length ? `<br><span style="color:${col}">${lab}:</span> ${esc(arr.join(', '))}` : '';
         return `<div class="mrow"><canvas data-p="${id}" width="64" height="64" style="width:calc(26*var(--u));height:calc(26*var(--u))"></canvas><span><b>${NAMES[id]}</b>${isBday(id) ? ' 🎂 <b>oggi compie gli anni!</b>' : ''}<br><span class="small">${esc(Porte.doveRiga(id))}</span><br><span class="hearts">${'♥'.repeat(h)}${'♡'.repeat(Math.max(0, 10 - h))}</span><span class="small"><br>Compleanno: ${bdayLabel(id)}${st.gifted[id] ? ' · regalo di oggi fatto' : ''}${line('Ama', by(3), '#a8301a')}${line('Piace', by(2), '#7a5a1a')}${line('Gradisce', by(1), '#5a6a3a')}${line('Detesta', by(-1), '#4a4a5a')}${Object.keys(kn).length ? '' : '<br>Gusti: ancora da scoprire.'}</span></span></div>`;

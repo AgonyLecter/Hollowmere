@@ -48,8 +48,7 @@ const VITA = {
   },
   agatha(st) {
     const t = st.time,
-      d = WDAY(st),
-      s = seasonOf(st);
+      d = WDAY(st);
     if (t < 450) return null;
     if (d === 6 && t >= 660 && t < 900)
       return zoneOpen('lago', st) ? VA(64, 27, 2, 'picnic') : VA(20, 40, 0, 'picnic');
@@ -410,8 +409,7 @@ function saluto(n) {
   const st = G.st,
     t = st.time,
     h = hearts(n.id),
-    nm = '{n}',
-    s = seasonOf(st);
+    nm = '{n}';
   const L = [];
   L.push(t < 720 ? `Buongiorno, ${nm}!` : t < 1080 ? `Buon pomeriggio, ${nm}.` : `Buonasera, ${nm}.`);
   if (h >= 6) L.push(`Eccoti! Mi mancavi, ${nm}.`, 'Sei il mio vicino preferito. Non dirlo agli altri.');
@@ -847,8 +845,7 @@ Object.assign(ACTD, { paint: 'dipinge', mine: 'scava', watch: 'guarda', deliver:
 // ---------- si accorgono di te ----------
 function contesto(st) {
   const L = [],
-    t = st.time,
-    p = G.player;
+    t = st.time;
   if (st.energy < 25) L.push('Hai una faccia stanca, {n}. Mangia qualcosa, o vai a dormire.');
   if (t >= 23 * 60) L.push("È tardi, {n}. A quest'ora escono le Ombre.");
   let dry = 0,

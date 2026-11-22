@@ -300,3 +300,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .itrash.on{opacity:1;background:linear-gradient(#6a2a1a,#3a1410)}
 .itools{align-items:center}
 .ihand{height:calc(26*var(--u));overflow:hidden}.ihand .iinfo{max-height:calc(26*var(--u));overflow:hidden}
+/* la missione comune (pannello 👥) */
+.ins-barra{height:calc(6*var(--u));background:#6e5236;box-shadow:inset 0 0 0 var(--u) #3a2414;margin:calc(2*var(--u)) 0}
+.ins-barra b{display:block;height:100%;background:linear-gradient(#fff2a0,#e8b040)}

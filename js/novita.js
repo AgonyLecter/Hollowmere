@@ -290,6 +290,25 @@ const NOVITA = [
         t: 'Nel villaggio di un amico le <b>casse</b> e le <b>macchine</b> adesso funzionano davvero insieme: quello che mettete e prendete arriva sempre, anche se lo fate nello stesso momento. E se chiudi il gioco mentre sei in visita, quello che hai fatto resta salvato.'
       }
     ]
+  },
+  {
+    id: 'insieme',
+    v: 37,
+    n: 'Insieme nella Valle',
+    steps: [
+      {
+        t: 'Quando qualcuno entra nel tuo villaggio (o in quello dove sei) adesso te ne accorgi: compare un avviso. Il pulsante <b>👥</b> in alto (o il tasto U) mostra chi c’è e cosa può fare.'
+      },
+      {
+        t: 'Da lì dai o togli il permesso <b>🔨 Può costruire</b> agli amici, e aggiungi agli amici chi è passato a trovarti. C’è scritto chiaro cosa può fare ogni ospite, e cosa no.'
+      },
+      {
+        t: 'Quando siete in più nello stesso villaggio arriva la <b>missione comune</b> del giorno: annaffiare, raccogliere, abbattere alberi o falciare, tutti insieme. Contano le mosse di ognuno, e a missione compiuta il premio va a tutti.'
+      },
+      {
+        t: 'E due cose sistemate: un regalo o un piatto ricevuti a zaino pieno non prendono più il posto di niente (aspettano nella cassetta), e nelle macchine un tocco mette un lotto, il doppio tocco tutta la pila.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

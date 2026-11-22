@@ -993,32 +993,8 @@ Object.assign(EGG_EXTRA, {
 
 // ================= GRAFICA =================
 function genSempreArt() {
-  const stone = rp('#9a968c'),
-    roof = rp('#3a4a6a'),
-    wood = rp('#7a5030');
-  IMG.museo = SP(64, 52, P => {
-    P.rect(6, 36, 116, 64, stone, {
-      mod: (X, Y, v) => {
-        const r = Math.floor(Y / 6),
-          off = r % 2 ? 5 : 0;
-        return Y % 6 === 0 || (X + off) % 12 === 0 ? v - 0.22 : v;
-      }
-    });
-    P.body(
-      14,
-      38,
-      () => 64,
-      Y => 22 + (Y - 14) * 1.7,
-      roof,
-      { nyF: () => -0.6, mod: (X, Y, v) => (Y % 4 === 0 ? v - 0.2 : v) }
-    );
-    P.rect(10, 36, 108, 4, rp('#e8e0d0'), { spec: 0.5 });
-    for (const x of [16, 36, 92, 112]) P.capsule(x, 42, x, 98, 3, rp('#e8e0d0'), { spec: 0.6 });
-    P.rect(54, 66, 20, 34, rp('#4a2a14'));
-    P.rect(52, 64, 24, 3, rp('#c8a03a'), { spec: 0.8 });
-    for (const x of [26, 98]) P.rect(x - 6, 56, 12, 16, rp('#ffe08a'), { spec: 0.8 });
-    P.rect(48, 20, 32, 10, rp('#c8a03a'), { spec: 0.8 });
-  });
+  // il museo: il disegno è in grafica.js (ART2)
+  IMG.museo = ART2.museo();
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);

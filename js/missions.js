@@ -160,7 +160,6 @@ const pickFrom = L => L[(G.st.day + G.st.time) % L.length];
 function ottavioSell() {
   const st = G.st,
     L = st.inv.map((s, i) => [s, i]).filter(([s]) => s && ITEMS[s.id].t === 'crop');
-  const pr = id => Math.round(sellPrice(id) * 1.2);
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>Ottavio compra</h2><p class="small">Paga subito, il 20% in più della cassetta. Porta tutto in città.</p>` +
       (L.length

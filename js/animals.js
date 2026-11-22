@@ -73,7 +73,6 @@ const AIMG = {};
 function genAnimalArt() {
   const wood = rp('#8a5a30'),
     dk = rp('#5a3a1e'),
-    roof = rp('#7a2a1a'),
     roof2 = rp('#4a3a3a');
   const I = (id, fn) => {
     const P = new PX(32, 32);
@@ -195,38 +194,9 @@ function genAnimalArt() {
     P.ellipse(16, 18, 11, 5.4, rp('#c8202a'), { spec: 0.6 });
     for (const k of [-6, -2, 2, 6]) P.line(16 + k - 4, 14, 16 + k + 4, 22, C('#e0a85a'));
   });
-  AIMG.pollaio = SP(48, 34, P => {
-    P.rect(4, 22, 88, 44, wood, { mod: woodMod, spec: 0.2 });
-    P.body(
-      2,
-      26,
-      Y => 48,
-      Y => 12 + (Y - 2) * 1.7,
-      roof2,
-      { nyF: () => -0.5, mod: (X, Y, v) => (Y % 5 === 0 ? v - 0.2 : v) }
-    );
-    P.rect(40, 40, 16, 26, dk);
-    P.rect(14, 34, 12, 10, rp('#2a1a10'));
-    P.rect(70, 34, 12, 10, rp('#2a1a10'));
-    P.rect(30, 58, 36, 4, rp('#d8b048'));
-  });
-  AIMG.stalla = SP(64, 48, P => {
-    P.rect(4, 30, 120, 64, rp('#9a3a24'), { mod: woodMod, spec: 0.2 });
-    P.body(
-      2,
-      34,
-      Y => 64,
-      Y => 14 + (Y - 2) * 1.7,
-      roof2,
-      { nyF: () => -0.5, mod: (X, Y, v) => (Y % 6 === 0 ? v - 0.2 : v) }
-    );
-    P.rect(46, 50, 36, 44, dk);
-    P.line(46, 50, 82, 94, C('#e8dcc0'));
-    P.line(82, 50, 46, 94, C('#e8dcc0'));
-    P.rect(46, 50, 36, 2, rp('#e8dcc0'));
-    P.rect(16, 44, 16, 12, rp('#2a1a10'));
-    P.rect(96, 44, 16, 12, rp('#2a1a10'));
-  });
+  // pollaio e stalla: i disegni sono in grafica.js (ART2)
+  AIMG.pollaio = ART2.pollaio();
+  AIMG.stalla = ART2.stalla();
   AIMG.mucca = critFrames(28, 22, 2, (P, f) => {
     const wh = rp('#f2ece0'),
       bk = rp('#2a2630'),
@@ -589,43 +559,3 @@ const COOK = [
   { id: 'umido', need: { fagioli: 1, pomodoro: 1 }, min: 50 },
   { id: 'crostata', need: { fragola: 1, uovo: 1, latte: 1 }, min: 70 }
 ];
-function cookModal() {
-  const st = G.st,
-    can = r => Object.entries(r.need).every(([k, v]) => countItem(k) >= v);
-  UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>Il camino</h2><p class="small">Ogni piatto prende un po' di tempo. I piatti ridanno energia, e agli abitanti piacciono più dei raccolti crudi.</p>` +
-      COOK.map(
-        (r, i) =>
-          `<div class="mrow"><canvas data-i="${r.id}" width="32" height="32"></canvas><span>${ITEMS[r.id].n}<br><span class="small">${Object.entries(
-            r.need
-          )
-            .map(
-              ([k, v]) =>
-                `<span style="color:${countItem(k) >= v ? 'inherit' : '#a8301a'}">${v} ${ITEMS[k].n.toLowerCase()}</span>`
-            )
-            .join(
-              ' + '
-            )} · +${ITEMS[r.id].e} energia</span></span><button class="btn" data-c="${i}" ${can(r) ? '' : 'disabled'}>Cucina</button></div>`
-      ).join('')
-  );
-  $('#mbox')
-    .querySelectorAll('canvas[data-i]')
-    .forEach(c => c.getContext('2d').drawImage(ICON[c.dataset.i], 0, 0));
-  $('#mbox')
-    .querySelectorAll('[data-c]')
-    .forEach(
-      b =>
-        (b.onclick = async () => {
-          const r = COOK[+b.dataset.c];
-          if (!can(r)) return;
-          UI._mclose = null;
-          UI.close();
-          for (const [k, v] of Object.entries(r.need)) removeItem(k, v);
-          AU.play('hoe');
-          await passTime(r.min);
-          AU.play('ok');
-          st.flags.cooked = (st.flags.cooked || 0) + 1;
-          giveItem(r.id);
-        })
-    );
-}

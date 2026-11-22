@@ -537,16 +537,16 @@ function applyFreeBase(m, st) {
       addBigBuilt(m, k, b);
       continue;
     }
-    const img = placeImg(b.id, b),
-      o = m.add(
-        OB('built', x, y, img, {
-          act: 'built',
-          bk: k,
-          bid: b.id,
-          canopy: !!ITEMS[b.id].tree,
-          frames: Array.isArray(FREEIMG[b.id]) ? FREEIMG[b.id] : null
-        })
-      );
+    const img = placeImg(b.id, b);
+    m.add(
+      OB('built', x, y, img, {
+        act: 'built',
+        bk: k,
+        bid: b.id,
+        canopy: !!ITEMS[b.id].tree,
+        frames: Array.isArray(FREEIMG[b.id]) ? FREEIMG[b.id] : null
+      })
+    );
     if (b.id === 'lampione') m.lights.push({ x: x * 16 + 8, y: y * 16 - 14, r: 62 });
   }
 }
@@ -574,8 +574,7 @@ function placeImg(id, b) {
 // ogni mattina: nuovi detriti nei prati e nei campi vuoti; gli irrigatori bagnano
 function freeMorningBase(st) {
   if (!isFree(st)) return;
-  const W2 = st.free,
-    m = G.maps && G.maps.main;
+  const W2 = st.free;
   const n = Object.keys(W2.debris).length;
   if (n < 40) {
     const add = 6 + Math.floor(Math.random() * 6);
@@ -721,6 +720,7 @@ function freeActBase(fx, fy) {
       mapRemove(m, o);
       m.add(OB('ceppo', o.tx, o.ty, IMG.stump, { act: 'ceppo', of: hk }));
       st.flags.felled = (st.flags.felled || 0) + 1;
+      Ext.run('fatto', 'albero', 1);
       tip(
         'tutFell',
         "Albero abbattuto! Tra una decina di giorni ne ricrescerà uno. Il ceppo si toglie con l'accetta."
@@ -945,6 +945,7 @@ function falciaAct(fx, fy) {
       });
   }
   st.free.gone[fkey(fx, fy)] = { day: st.day };
+  Ext.run('fatto', 'falcia', L.length);
   if (!addItem('fibra', n)) return true;
   AU.play('falce');
   floatText(`+${n} Fibra`, fx * 16 + 8, fy * 16 - 6);
@@ -1137,16 +1138,6 @@ const FREE_SEASON = {
   2: 'Primavera! Fragole, {n}. Le fragole di Hollowmere sono le migliori del mondo. Credo.',
   3: "Che caldo. Il mais arriva più alto di Brom, quest'estate."
 };
-function freeTalkLine(id) {
-  const st = G.st,
-    L = [...(FREE_L[id] || ['…'])];
-  const s = seasonOf();
-  if (FREE_SEASON[s]) L.push(FREE_SEASON[s]);
-  if (id === 'agatha' && st.demand) L.push('Oggi pago bene: ' + PL[st.demand] + ', tesoro.');
-  st.talkN = st.talkN || {};
-  const k = (st.talkN[id] = (st.talkN[id] || 0) + 1);
-  return L[(st.day * 7 + k * 5) % L.length];
-}
 // la notte: cambio di stagione (le colture fuori stagione muoiono)
 function freeNight(st, prev) {
   if (!isFree(st)) return;

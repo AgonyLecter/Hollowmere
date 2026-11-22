@@ -199,13 +199,11 @@ const NET = {
       return false;
     }
     const D = this.api;
-    let k = this.key(pid),
-      made = false;
+    let k = this.key(pid);
     try {
       if (!k) {
         k = rkey();
         await D.set(this.r('segreti/' + pid), k);
-        made = true;
       }
       await D.set(this.r('proprietari/' + pid), { uid: this.uid || '', k });
       LS.set('hm_key_' + pid, k);
@@ -358,7 +356,6 @@ const LZ = (() => {
   function comp(u, bits, gc) {
     if (u == null) return '';
     let i,
-      v,
       D = {},
       C = {},
       w = '',

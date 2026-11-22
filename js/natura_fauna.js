@@ -1045,7 +1045,7 @@ Ext.on('arte', () => {
       )
     };
     // l'icona per il taccuino: il primo fotogramma
-    for (const [id, I] of Object.entries(FAUNA_IMG)) {
+    for (const I of Object.values(FAUNA_IMG)) {
       const v = I.var ? I.var[0] : I;
       I.icona =
         (v.fermo && (Array.isArray(v.fermo) ? v.fermo[0] : v.fermo)) ||

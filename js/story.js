@@ -958,7 +958,6 @@ function drawGuide() {
   } else {
     X = clamp(sx, M, W - RM);
     Y = clamp(sy, TOP, H - BOT);
-    const a = Math.atan2(sy - (Y - 0), sx - X);
     tri(X, Y, Math.atan2(sy - H / 2, sx - W / 2) - Math.PI / 2);
   }
   const d = Math.round(Math.hypot(T.x - G.player.x, T.y - G.player.y) / 16),
@@ -1655,8 +1654,7 @@ async function escapeEnd() {
 }
 // ---------- finale 2: l'Erede ----------
 async function ending2(taken, why) {
-  const st = G.st,
-    F = st.flags;
+  const st = G.st;
   G.cut++;
   G.chase = false;
   G.festaChase = false;
@@ -1805,8 +1803,7 @@ function eredeTick(dt) {
 }
 // ---------- finale 3: spezzare il patto ----------
 async function breakPact() {
-  const st = G.st,
-    F = st.flags;
+  const st = G.st;
   G.cut++;
   try {
     G.cutMusic = 'silent';

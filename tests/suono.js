@@ -113,6 +113,28 @@ module.exports = async function (t, { browser }) {
     return Musica.B === B;
   });
   t.true('entrando in casa il brano continua (cambia solo il colore)', continua);
+  // la pioggia: all'aperto si sente, in casa attutita, in miniera per niente
+  const pioggia = await page.evaluate(() => {
+    const st = G.st,
+      R = {},
+      prima = [G.map, st.weather];
+    st.weather = 'pioggia';
+    for (const [k, mp] of [
+      ['fuori', G.maps.main],
+      ['casa', G.maps.house],
+      ['miniera', { id: 'miniera', interior: 1 }]
+    ]) {
+      G.map = mp;
+      AU.rainG.gain._v = undefined;
+      AU.ambiente(AU.c.currentTime, 0);
+      R[k] = AU.rainG.gain._v;
+    }
+    [G.map, st.weather] = prima;
+    return R;
+  });
+  t.true('la pioggia si sente all’aperto', pioggia.fuori > 0);
+  t.true('in casa arriva attutita', pioggia.casa > 0 && pioggia.casa < pioggia.fuori / 2);
+  t.eq('in miniera non si sente', pioggia.miniera, 0);
 
   // --- le scintille della fucina ---
   const fucina = await page.evaluate(() => {

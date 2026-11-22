@@ -1151,6 +1151,8 @@ function genEspArt() {
       P.capsule(x + 1, h + 2, x + 1, h + 7, 1.4, rp('#6a4a2a'));
     }
   });
+  // la casetta dei nuovi abitanti: una casa piccola del paese (VB.casetta in grafica.js)
+  AIMG.casetta = ART2.casetta();
   IMG.pontile = SP(32, 10, P => {
     P.rect(0, 4, 64, 10, wood, { mod: woodMod });
     for (let x = 0; x < 64; x += 8) P.line(x, 4, x, 14, C('#4a2a14'));
