@@ -44,8 +44,12 @@ module.exports = async function (t, { browser, shot }) {
         document
           .querySelector(`#mbox .islot[data-w="z"][data-i="${Z.findIndex(s => s && s.id === id)}"]`)
           .click();
-    tocca('ferro');
+    tocca('ferro'); // un tocco: un lotto (5)
+    const unLotto = G.st.free.built['21,29'].m.in;
+    tocca('ferro'); // subito dopo: doppio tocco, il resto della pila
     tocca('legna');
+    tocca('legna');
+    window.__unLotto = unLotto;
     const m = G.st.free.built['21,29'].m;
     return {
       i: m.i,
@@ -56,7 +60,8 @@ module.exports = async function (t, { browser, shot }) {
       legna: countItem('legna')
     };
   });
-  t.eq('il ferro va dentro', dentro.in, 12);
+  t.eq('un tocco mette un lotto (5 ferro)', await page.evaluate(() => window.__unLotto), 5);
+  t.eq('il doppio tocco mette il resto', dentro.in, 12);
   t.eq('la legna va nel fuoco', dentro.f, 3);
   t.eq('lo zaino si svuota di ferro', dentro.ferro, 0);
   t.true('e la fornace si accende', dentro.lav);
@@ -134,10 +139,10 @@ module.exports = async function (t, { browser, shot }) {
     macGui('30,40', b);
     const vecchia = b.m.on;
     document.querySelector('.mslot[data-m="o"]').click();
-    const Z = G.st.inv;
-    document
-      .querySelector(`#mbox .islot[data-w="z"][data-i="${Z.findIndex(s => s && s.id === 'mais')}"]`)
-      .click();
+    const Z = G.st.inv,
+      im = Z.findIndex(s => s && s.id === 'mais');
+    // doppio tocco: tutta la pila
+    for (let k = 0; k < 2; k++) document.querySelector(`#mbox .islot[data-w="z"][data-i="${im}"]`).click();
     const liv = !!document.querySelector('#mbox [data-liv]');
     st.time = 9 * 60 + 185;
     macAggiorna();

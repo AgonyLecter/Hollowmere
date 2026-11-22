@@ -626,7 +626,11 @@ function cassettaFoglio(presi, left) {
         L = id && DONO_BIGLIETTI[id],
         i = st.inv.findIndex(s => s && s.id === m.item),
         dove = i >= 10 ? ' <span class="small">· nello zaino, fila 2 (⇅)</span>' : '';
-      return `<div class="mrow"><canvas data-i="${m.item}" width="32" height="32"></canvas><span><b>${esc(ITEMS[m.item].n)}</b>${m.n > 1 ? ' ×' + m.n : ''} — da <b>${esc(m.from)}</b>${dove}${L ? `<br><span class="small">${esc(L[Math.floor(Math.random() * L.length)])}</span>` : id ? '' : `<br><span class="small">Dal villaggio di ${esc(m.from)}.</span>`}</span></div>`;
+      // senza mittente: l'avevi ricevuto a zaino pieno e il gioco te l'ha messo da parte
+      const chi = m.from
+        ? ` — da <b>${esc(m.from)}</b>`
+        : ' <span class="small">— messo da parte: lo zaino era pieno</span>';
+      return `<div class="mrow"><canvas data-i="${m.item}" width="32" height="32"></canvas><span><b>${esc(ITEMS[m.item].n)}</b>${m.n > 1 ? ' ×' + m.n : ''}${chi}${dove}${L ? `<br><span class="small">${esc(L[Math.floor(Math.random() * L.length)])}</span>` : id || !m.from ? '' : `<br><span class="small">Dal villaggio di ${esc(m.from)}.</span>`}</span></div>`;
     };
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>La cassetta</h2>` +

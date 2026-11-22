@@ -188,7 +188,10 @@ function zRimetti() {
   }
   if (!zInfila(L.z, s)) return;
   if (L.c && !zInfila(L.c, s)) return;
-  addItem(s.id, s.n);
+  // lo zaino si è riempito da fuori (un regalo arrivato mentre avevi qualcosa in mano): nella cassetta
+  const casa = G.home || G.st;
+  (casa.mailbox = casa.mailbox || []).push({ item: s.id, n: s.n, from: '' });
+  UI.toast(`Lo zaino è pieno: ${ITEMS[s.id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
 }
 // tocco su un posto
 function zTocca(w, i, lungo) {

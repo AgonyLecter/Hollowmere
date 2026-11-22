@@ -524,7 +524,8 @@ function macGui(k, b) {
       ${slot('o', 'mac-out')}
     </div>
     <div class="iinfo mac-info"></div>
-    <h3>Zaino <span class="small">— tocca per mettere dentro</span></h3>` + zGrid('z', Z, ''),
+    <h3>Zaino <span class="small">— tocca: un lotto · doppio tocco: tutta la pila</span></h3>` +
+      zGrid('z', Z, ''),
     () => {
       clearInterval(MACG.timer);
       MACG.k = MACG.b = null;
@@ -542,7 +543,14 @@ function macGui(k, b) {
       const dentro = M.ok(s.id) || (M.fuel && s.id === M.fuel);
       if (!dentro) el.classList.add('mno');
     }
-    el.onclick = () => macMetti(+el.dataset.i);
+    // un tocco: un lotto (quello che serve per un pezzo); doppio tocco: il resto della pila
+    el.onclick = () => {
+      const i = +el.dataset.i,
+        ora = performance.now(),
+        doppio = MACG.tocco && MACG.tocco.i === i && ora - MACG.tocco.t < 330;
+      MACG.tocco = doppio ? null : { i, t: ora };
+      macMetti(i, doppio);
+    };
   });
   box.querySelectorAll('.mslot').forEach(el => (el.onclick = () => macTogli(el.dataset.m)));
   const liv = box.querySelector('[data-liv]');
@@ -601,16 +609,20 @@ function macAggiorna() {
   set('o', m.on > 0 ? m.o : null, m.on, m.i ? M.out(m.i) : M.vuole ? M.out(M.vuole) : null);
   box.querySelector('.mac-out').classList.toggle('pronto', m.on > 0);
 }
+// ridisegna senza far saltare la schermata (UI.open la riporterebbe in cima)
 function macRidisegna() {
   if (!MACG.b) return;
-  const { k, b } = MACG;
+  const { k, b } = MACG,
+    box = $('#mbox'),
+    y = box.scrollTop,
+    t = MACG.timer;
   UI._mclose = null;
-  const t = MACG.timer;
   macGui(k, b);
   clearInterval(t);
+  box.scrollTop = y;
 }
 // dallo zaino alla macchina: tutta la pila (fino a 99)
-function macMetti(i) {
+function macMetti(i, tutto) {
   const b = MACG.b,
     M = MACH[b.id],
     Z = G.st.inv,
@@ -631,7 +643,8 @@ function macMetti(i) {
     return;
   }
   const ora = dove === 'f' ? m.f || 0 : m.in || 0,
-    n = Math.min(s.n, MAC_MAX - ora);
+    lotto = dove === 'f' ? 1 : macNeed(M, s.id),
+    n = Math.min(s.n, MAC_MAX - ora, tutto ? s.n : lotto);
   if (n <= 0) {
     UI.toast('È piena.');
     return;

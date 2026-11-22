@@ -119,6 +119,19 @@ module.exports = async function (t, { browser, shot }) {
   });
   t.true('zaino pieno: lo scambio che farebbe perdere qualcosa non si fa', pieno.fermo);
   t.eq('e non si perde niente', pieno.legna + '/' + pieno.pietra, '10/10');
+  // un regalo (o un piatto) a zaino pieno non deve prendere il posto di niente
+  const pieno2 = await page.evaluate(() => {
+    const st = G.st;
+    st.inv = Array(30)
+      .fill(0)
+      .map((_, i) => ({ id: i === 0 ? 'hoe' : 'legna', n: 1 }));
+    for (let i = 1; i < 30; i++) st.inv[i] = { id: ['pietra', 'fibra', 'accetta', 'can'][i % 4] + '', n: 1 };
+    st.mailbox = [];
+    giveItem('pane');
+    return { zappa: st.inv[0] && st.inv[0].id, posta: st.mailbox.map(m => m.item).join(',') };
+  });
+  t.eq('a zaino pieno la zappa resta al suo posto', pieno2.zappa, 'hoe');
+  t.eq('e il regalo aspetta nella cassetta', pieno2.posta, 'pane');
   t.eq('zaino: nessun errore', errors.join('\n'), '');
   await page.close();
 };
