@@ -615,6 +615,8 @@ function macMetti(i) {
     m.i = s.id;
     m.in = ora + n;
   }
+  // in cooperativo al padrone arriva l'operazione, non la fotografia della macchina
+  Ext.run('contenitore', MACG.k, 'macchina', [{ s: dove, id: s.id, n }]);
   AU.play('blip');
   macSim(b);
   macRidisegna();
@@ -631,6 +633,7 @@ function macTogli(w) {
     if (!addItem(id, n)) return;
     m.on = 0;
     m.o = null;
+    Ext.run('contenitore', MACG.k, 'macchina', [{ s: 'o', id, n: -n }]);
     AU.play('pick');
     addXP('arti', Math.min(40, 4 * n));
     UI.toast(`+${n} ${ITEMS[id].n}`);
@@ -638,12 +641,14 @@ function macTogli(w) {
   } else if (w === 'in') {
     if (!m.in) return;
     if (!addItem(m.i, m.in)) return;
+    Ext.run('contenitore', MACG.k, 'macchina', [{ s: 'in', id: m.i, n: -m.in }]);
     m.in = 0;
     m.i = null;
     AU.play('blip');
   } else if (w === 'f') {
     if (!m.f) return;
     if (!addItem(M.fuel, m.f)) return;
+    Ext.run('contenitore', MACG.k, 'macchina', [{ s: 'f', id: M.fuel, n: -m.f }]);
     m.f = 0;
     AU.play('blip');
   }
