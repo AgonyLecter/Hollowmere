@@ -266,6 +266,97 @@ const NAT_CROPS = {
     k: 'flower',
     c: '#7a4ac8',
     ic: ['fiore', '#7a4ac8', '#f0d040']
+  },
+  // --- la Valle d'inverno e di primavera (aggiunte) ---
+  radicchio: {
+    n: 'Radicchio',
+    pl: 'cespi di radicchio',
+    sg: 'un cespo di radicchio',
+    s: [1],
+    days: 5,
+    v: 70,
+    p: 40,
+    k: 'leaf',
+    c: '#8a2a3a',
+    ic: ['foglie', '#8a2a3a', '#f0e8e0']
+  },
+  cavolonero: {
+    n: 'Cavolo nero',
+    pl: 'mazzi di cavolo nero',
+    sg: 'un mazzo di cavolo nero',
+    s: [0, 1],
+    days: 5,
+    re: 3,
+    v: 60,
+    p: 35,
+    k: 'leaf',
+    c: '#2f4a3a',
+    ic: ['foglie', '#2f4a3a', '#6a8a5a']
+  },
+  pastinaca: {
+    n: 'Pastinaca',
+    pl: 'pastinache',
+    sg: 'una pastinaca',
+    s: [0, 1],
+    days: 6,
+    v: 55,
+    p: 30,
+    k: 'bulb',
+    c: '#efe6c4',
+    ic: ['lungo', '#efe6c4', '#6a9a4a']
+  },
+  rabarbaro: {
+    n: 'Rabarbaro',
+    pl: 'gambi di rabarbaro',
+    sg: 'un gambo di rabarbaro',
+    s: [2],
+    days: 5,
+    re: 3,
+    v: 55,
+    p: 40,
+    k: 'tall',
+    c: '#c84a5a',
+    ic: ['gambi', '#c84a5a']
+  },
+  fagiolini: {
+    n: 'Fagiolini',
+    pl: 'manciate di fagiolini',
+    sg: 'una manciata di fagiolini',
+    s: [2, 3],
+    days: 4,
+    re: 2,
+    v: 40,
+    p: 30,
+    k: 'pole',
+    c: '#5aa83a',
+    ic: ['baccello', '#5aa83a', '#a8d878']
+  },
+  peperoncino: {
+    n: 'Peperoncino',
+    pl: 'mazzetti di peperoncini',
+    sg: 'un mazzetto di peperoncini',
+    s: [3],
+    days: 5,
+    re: 2,
+    v: 50,
+    p: 35,
+    k: 'bush',
+    c: '#3a7a2a',
+    fr: '#d8201a',
+    ic: ['lungo', '#d8201a', '#3a7a2a']
+  },
+  erbacipollina: {
+    n: 'Erba cipollina',
+    pl: 'mazzi di erba cipollina',
+    sg: 'un mazzo di erba cipollina',
+    s: [2, 3],
+    days: 3,
+    re: 2,
+    v: 25,
+    p: 20,
+    k: 'leaf',
+    c: '#4a9a3a',
+    ic: ['erba', '#4a9a3a']
   }
 };
 const NAT_SEEDX = {
@@ -275,7 +366,12 @@ const NAT_SEEDX = {
   broccolo: "Cresce solo d'inverno, quando l'orto dorme.",
   carciofo: 'Lento, ma poi ricresce per tutta la primavera.',
   orzo: 'Al mulino diventa farina.',
-  viola: "Fiorisce anche col freddo, d'inverno e in primavera."
+  viola: "Fiorisce anche col freddo, d'inverno e in primavera.",
+  radicchio: "Il cuore dell'orto d'inverno: amaro, rosso e bianco.",
+  cavolonero: 'Più gela, più è buono. Ricresce fino a fine inverno.',
+  pastinaca: 'Una carota bianca e dolce, che non teme il freddo.',
+  rabarbaro: 'Gambi rosa e aspri: in torta diventano dolci.',
+  peperoncino: 'Rosso. Agatha lo coltiva lo stesso: «nel piatto non conta».'
 };
 // alberi da frutto nuovi (t: nome dell'albero)
 const NAT_FRUIT = {
@@ -374,14 +470,50 @@ const NAT_FRUIT = {
     p: 400,
     d: "Una vite: uva a fine estate e in autunno. Nella botte, succo d'uva.",
     ic: ['grappolo', '#5a3a8a']
+  },
+  nocciole: {
+    t: 'nocciolo',
+    n: 'Nocciole',
+    pl: 'manciate di nocciole',
+    sg: 'una manciata di nocciole',
+    s: [3, 0],
+    c: '#a87a4a',
+    v: 35,
+    p: 300,
+    d: 'Un nocciolo vicino a casa: nocciole a fine estate e in autunno, senza andare nel bosco.',
+    esiste: 1
+  },
+  cotogne: {
+    t: 'cotogno',
+    n: 'Mele cotogne',
+    pl: 'mele cotogne',
+    sg: 'una mela cotogna',
+    s: [0],
+    c: '#e8c840',
+    v: 55,
+    p: 340,
+    d: 'Mele cotogne in autunno: dure e profumate. Crude no, cotte sì.',
+    ic: ['frutto', '#e8c840']
+  },
+  sorbe: {
+    t: 'sorbo',
+    n: 'Sorbe',
+    pl: 'grappoli di sorbe',
+    sg: 'un grappolo di sorbe',
+    s: [0, 1],
+    c: '#d8702a',
+    v: 45,
+    p: 320,
+    d: "Bacche in autunno e d'inverno. I vecchi piantavano il sorbo davanti a casa, «contro quelli del bosco».",
+    ic: ['bacche', '#d8702a', 3]
   }
 };
 // raccolta selvatica nuova, per stagione
 const NAT_WILD = {
-  0: ['finferli', 'cinorrodi', 'corbezzoli'],
-  1: ['ginepro', 'pinoli', 'tartufo', 'crescione'],
-  2: ['ortica', 'aglio_orsino', 'sambuco', 'violette', 'spugnole', 'crescione'],
-  3: ['menta', 'origano', 'finocchietto', 'lamponi']
+  0: ['finferli', 'cinorrodi', 'corbezzoli', 'prugnole', 'chiodini'],
+  1: ['ginepro', 'pinoli', 'tartufo', 'crescione', 'vischio'],
+  2: ['ortica', 'aglio_orsino', 'sambuco', 'violette', 'spugnole', 'crescione', 'bruscandoli', 'primule'],
+  3: ['menta', 'origano', 'finocchietto', 'lamponi', 'iperico']
 };
 const NAT_WILD_ITEMS = {
   finferli: {
@@ -493,6 +625,54 @@ const NAT_WILD_ITEMS = {
     sg: 'un cestino di lamponi',
     v: 60,
     ic: ['bacche', '#e8304a', 1]
+  },
+  prugnole: {
+    n: 'Prugnole',
+    pl: 'manciate di prugnole',
+    sg: 'una manciata di prugnole',
+    v: 35,
+    d: 'Blu e aspre: vanno colte dopo la prima brina.',
+    ic: ['bacche', '#3a3a6a', 3]
+  },
+  chiodini: {
+    n: 'Chiodini',
+    pl: 'manciate di chiodini',
+    sg: 'una manciata di chiodini',
+    v: 55,
+    d: 'Crescono a grappoli sui ceppi tagliati.',
+    ic: ['fungo', '#c89a4a', '#e8d0a0']
+  },
+  vischio: {
+    n: 'Vischio',
+    pl: 'rametti di vischio',
+    sg: 'un rametto di vischio',
+    v: 50,
+    d: 'Non si mangia. Lo si appende sopra la porta, prima della campana delle nove.',
+    ic: ['bacche', '#f0f0e0', 2]
+  },
+  bruscandoli: {
+    n: 'Bruscandoli',
+    pl: 'mazzi di bruscandoli',
+    sg: 'un mazzo di bruscandoli',
+    v: 45,
+    d: 'I germogli del luppolo selvatico, lungo le siepi.',
+    ic: ['gambi', '#6aa84a']
+  },
+  primule: {
+    n: 'Primule',
+    pl: 'mazzetti di primule',
+    sg: 'un mazzetto di primule',
+    v: 25,
+    d: "I primi fiori dopo la neve. Si mangiano anche, nell'insalata.",
+    ic: ['fiore', '#f0e070', '#e89a2a']
+  },
+  iperico: {
+    n: 'Iperico',
+    pl: "mazzi d'iperico",
+    sg: "un mazzo d'iperico",
+    v: 40,
+    d: 'Fiorisce a San Giovanni. Lo chiamano «scacciadiavoli».',
+    ic: ['fiore', '#f0c020', '#c88a10']
   }
 };
 
@@ -531,7 +711,7 @@ for (const [id, f] of Object.entries(NAT_FRUIT)) {
   if (typeof BIG_BUILT !== 'undefined') BIG_BUILT['alb_' + f.t] = 8;
   MERC_STOCK.push('alb_' + f.t);
 }
-JUICY.push('uva', 'melograno', 'nespole', 'gelsi', 'cachi', 'lamponi', 'corbezzoli');
+JUICY.push('uva', 'melograno', 'nespole', 'gelsi', 'cachi', 'lamponi', 'corbezzoli', 'cotogne', 'prugnole');
 for (const s of [0, 1, 2, 3]) for (const id of NAT_WILD[s]) if (!WILD[s].includes(id)) WILD[s].push(id);
 for (const [id, w] of Object.entries(NAT_WILD_ITEMS)) {
   ITEMS[id] = { n: w.n, t: 'crop', v: w.v, ...(w.d ? { d: w.d } : {}) };
@@ -553,7 +733,7 @@ Ext.on('freeMorning', st => {
 // conserve e succhi anche per tutto il nuovo
 for (const id of [...Object.keys(NAT_CROPS), ...Object.keys(NAT_FRUIT), ...Object.keys(NAT_WILD_ITEMS)]) {
   const it = ITEMS[id];
-  if (!it || id === 'tartufo') continue;
+  if (!it || ['tartufo', 'vischio', 'iperico'].includes(id)) continue;
   if (!ITEMS['cons_' + id])
     ITEMS['cons_' + id] = {
       n: 'Conserva di ' + it.n.toLowerCase(),

@@ -252,6 +252,28 @@ const NOVITA = [
         t: 'La barra adesso è staccata in fondo, come in Minecraft. Per buttare qualcosa prendilo in mano e tocca il cestino. E niente si perde: se chiudi con qualcosa in mano, torna da solo nello zaino.'
       }
     ]
+  },
+  {
+    id: 'valle_inverno',
+    v: 35,
+    n: 'Orto, bosco e prato nuovi',
+    steps: [
+      {
+        t: 'Nell’orto: <b>radicchio</b> e <b>cavolo nero</b> per l’inverno, <b>pastinaca</b>, <b>rabarbaro</b>, <b>fagiolini</b>, <b>peperoncino</b> ed <b>erba cipollina</b>. I semi li trovi da Agatha nella loro stagione e sul carro del cocchiere.'
+      },
+      {
+        t: 'Dal cocchiere anche tre alberelli nuovi: il <b>cotogno</b>, il <b>nocciolo</b> e il <b>sorbo</b>, che dà frutti perfino d’inverno. I vecchi lo piantavano davanti a casa, «contro quelli del bosco».'
+      },
+      {
+        t: 'Nei prati e nel bosco: prugnole e chiodini d’autunno, vischio d’inverno, bruscandoli e primule in primavera, iperico d’estate. E diciassette ricette nuove: alcune te le insegnano gli abitanti, altre le scopri da te.'
+      },
+      {
+        t: 'E guarda per terra: il prato adesso è un prato vero, che cambia con le stagioni. L’erba alta ondeggia col vento e si piega quando ci passi in mezzo.'
+      },
+      {
+        t: 'E le misure tornano: la <b>casetta</b> dei nuovi abitanti è una casa vera, grande come quelle del paese (5×4), il <b>mulino</b> è una torre alta come il fienile e la <b>torre di guardia</b> sulla Collina svetta sopra i tetti.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

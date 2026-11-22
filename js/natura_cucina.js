@@ -696,6 +696,183 @@ const NAT_RICETTE = [
     abil: ['racc', 6],
     d: "Il bosco d'autunno, cotto.",
     ic: ['torta', '#7a4a2a', '#e8d8b0']
+  },
+  // --- la Valle d'inverno e di primavera (aggiunte) ---
+  {
+    id: 'cotognata',
+    n: 'Cotognata',
+    need: { cotogne: 2, miele: 1 },
+    e: 45,
+    min: 60,
+    da: 'agatha',
+    d: "La merenda d'inverno: si taglia a quadretti e dura fino a primavera.",
+    ic: ['torrone', '#e8b040', '#c88a20']
+  },
+  {
+    id: 'ribollita',
+    n: 'Ribollita',
+    need: { cavolonero: 1, fagioli: 1, pane: 1, cipolla: 1 },
+    e: 90,
+    min: 60,
+    da: 'bruno',
+    b: 'fatica',
+    d: 'Il pane di ieri, il cavolo di oggi. Meno fatica per mezza giornata.',
+    ic: ['zuppa', '#6a5a3a', '#2f4a3a']
+  },
+  {
+    id: 'spaghettiaop',
+    n: 'Aglio, olio e peperoncino',
+    need: { farina: 1, aglio: 1, olio: 1, peperoncino: 1 },
+    e: 70,
+    min: 20,
+    da: 'teo',
+    b: 'passo',
+    d: 'La pasta di mezzanotte dei minatori. Passo svelto per mezza giornata.',
+    ic: ['pasta', '#e8d890', '#d8201a']
+  },
+  {
+    id: 'tortarabarbaro',
+    n: 'Torta di rabarbaro',
+    need: { rabarbaro: 2, farina: 1, uovo: 1, miele: 1 },
+    e: 95,
+    min: 70,
+    adv: 1,
+    da: 'silvio',
+    d: 'Aspra e dolce insieme, come la primavera in montagna.',
+    ic: ['torta', '#e8c890', '#c84a5a']
+  },
+  {
+    id: 'patateerba',
+    n: "Patate all'erba cipollina",
+    need: { patata: 2, erbacipollina: 1, burro: 1 },
+    e: 60,
+    min: 40,
+    da: 'mirta',
+    d: 'Mirta ci mette le erbe che le avanzano dal banco.',
+    ic: ['teglia', '#e8c870', '#4a9a3a']
+  },
+  {
+    id: 'sciroppoprugnole',
+    n: 'Sciroppo di prugnole',
+    need: { prugnole: 3, miele: 1 },
+    e: 30,
+    min: 40,
+    da: 'gaspare',
+    d: 'Viola scuro, dolce e aspro. Gaspare dice che fa bene alla voce.',
+    ic: ['bottiglia', '#3a3a6a']
+  },
+  {
+    id: 'polentachiodini',
+    n: 'Polenta e chiodini',
+    need: { mais: 1, latte: 1, chiodini: 2 },
+    e: 85,
+    min: 50,
+    da: 'elio',
+    b: 'raccolta',
+    d: 'La cena dei pastori in autunno. Selvatici abbondanti per mezza giornata.',
+    ic: ['piatto', '#f0c840', '#c89a4a']
+  },
+  {
+    id: 'tisanaiperico',
+    n: "Tisana d'iperico",
+    need: { iperico: 2, miele: 1 },
+    e: 25,
+    min: 15,
+    da: 'lucius',
+    d: 'La notte di San Giovanni la si beve per non sognare il bosco.',
+    ic: ['tazza', '#e8b030']
+  },
+  {
+    id: 'insalataprimule',
+    n: 'Insalata di primule',
+    need: { primule: 1, lattuga: 1, uovo: 1 },
+    e: 40,
+    min: 10,
+    da: 'lia',
+    d: 'Lia dice che i fiori si mangiano solo quando nessuno li ha visti.',
+    ic: ['piatto', '#7ab84a', '#f0e070']
+  },
+  {
+    id: 'trotaerbe',
+    n: "Trota all'erba cipollina",
+    need: { trota: 1, erbacipollina: 1, burro: 1 },
+    e: 80,
+    min: 30,
+    da: 'nora',
+    d: 'Nora la cuoce sulla pietra calda, in riva al fiume.',
+    ic: ['piatto', '#c8a080', '#4a9a3a']
+  },
+  {
+    id: 'orzottoradicchio',
+    n: 'Orzotto al radicchio',
+    need: { orzo: 2, radicchio: 1, formaggio: 1 },
+    e: 90,
+    min: 50,
+    adv: 1,
+    da: 'clara',
+    d: 'Clara lo faceva in città, col riso. Qui il riso non c’è.',
+    ic: ['zuppa', '#e8d8b0', '#8a2a3a']
+  },
+  {
+    id: 'frittatabruscandoli',
+    n: 'Frittata di bruscandoli',
+    need: { bruscandoli: 2, uovo: 2 },
+    e: 60,
+    min: 20,
+    scopri: 1,
+    d: 'Amarognola, verde, di primavera.',
+    ic: ['frittata', '#f0d060', '#6aa84a']
+  },
+  {
+    id: 'pastinacheforno',
+    n: 'Pastinache al forno',
+    need: { pastinaca: 2, rosmarino: 1, olio: 1 },
+    e: 65,
+    min: 50,
+    adv: 1,
+    scopri: 1,
+    d: "Dolci e croccanti fuori. Il profumo del rosmarino d'inverno.",
+    ic: ['teglia', '#efe6c4', '#3a6a4a']
+  },
+  {
+    id: 'fagioliniaglio',
+    n: "Fagiolini all'aglio",
+    need: { fagiolini: 2, aglio: 1, olio: 1 },
+    e: 45,
+    min: 20,
+    scopri: 1,
+    d: 'Verdi, lucidi, svelti.',
+    ic: ['piatto', '#5aa83a', '#f0f0e0']
+  },
+  {
+    id: 'radicchiobrace',
+    n: 'Radicchio alla brace',
+    need: { radicchio: 2, olio: 1 },
+    e: 40,
+    min: 15,
+    scopri: 1,
+    d: 'Amaro e dolce, con le righe nere della griglia.',
+    ic: ['piatto', '#8a2a3a', '#3a2a2a']
+  },
+  {
+    id: 'gelatinasorbe',
+    n: 'Gelatina di sorbe',
+    need: { sorbe: 3, miele: 1 },
+    e: 35,
+    min: 40,
+    scopri: 1,
+    d: 'Aspra. Dicono che tenga lontani i brutti sogni.',
+    ic: ['vasetto', '#d8702a']
+  },
+  {
+    id: 'vellutatapastinaca',
+    n: 'Vellutata di pastinaca',
+    need: { pastinaca: 2, latte: 1, burro: 1 },
+    e: 75,
+    min: 40,
+    abil: ['agri', 7],
+    d: 'Liscia come la neve fresca.',
+    ic: ['zuppa', '#f0e8c8', '#e8d8a0']
   }
 ];
 for (const r of NAT_RICETTE) {
@@ -715,6 +892,15 @@ for (const r of NAT_RICETTE) {
   ama('tobia', { caramelleviola: 3, sorbettolamponi: 3, cachicucchiaio: 2, lamponi: 2 });
   ama('ottavio', { bruschetta: 3, pastapesto: 3, olio: 1 });
   ama('irene', { caponata: 3, carciofimenta: 3, favecicoria: 2, violette: 2 });
+  // la Valle d'inverno e di primavera
+  ama('agatha', { cotognata: 3, vischio: 2 });
+  ama('lucius', { tisanaiperico: 3, iperico: 2 });
+  ama('clara', { orzottoradicchio: 3, primule: 2 });
+  ama('brom', { ribollita: 2, pastinacheforno: 2 });
+  ama('tobia', { sciroppoprugnole: 3, tortarabarbaro: 2 });
+  ama('ezekiel', { vischio: 3, sorbe: 2, gelatinasorbe: 2 });
+  ama('ottavio', { spaghettiaop: 3 });
+  ama('irene', { radicchiobrace: 2, cotogne: 1 });
 }
 
 // ---------- effetti dei piatti ----------

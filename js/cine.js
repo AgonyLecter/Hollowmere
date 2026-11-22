@@ -9,6 +9,7 @@ const CX = {
     x.fillRect(Math.round(X), Math.round(Y), Math.round(w), Math.round(h));
   },
   disc(x, c, X, Y, r) {
+    if (!(r > 0)) return;
     x.fillStyle = c;
     x.beginPath();
     x.arc(Math.round(X), Math.round(Y), r, 0, 7);
@@ -220,7 +221,7 @@ const SHOTS = {
     const bob = Math.round(Math.sin(t * 14) * 1);
     coachSide(x, 150, 200 + bob, 1.5, t, { run: 1 });
     for (let i = 0; i < 10; i++) {
-      const k = (t * 1.7 + i * 0.1) % 1;
+      const k = (((t * 1.7 + i * 0.1) % 1) + 1) % 1;
       CX.disc(
         x,
         `rgba(200,160,110,${(0.5 * (1 - k)).toFixed(2)})`,
@@ -262,7 +263,7 @@ const SHOTS = {
     CX.glow(x, X + 80, 190, 90, 'rgba(255,190,90,.22)');
     coachSide(x, X, 218 + Math.round(Math.sin(t * 12)), 1.3, t, { run: 1, dark: 1, lamp: 1 });
     for (let i = 0; i < 3; i++) {
-      const ft = (t * 0.6 + i * 0.4) % 1;
+      const ft = (((t * 0.6 + i * 0.4) % 1) + 1) % 1;
       CX.ell(
         x,
         `rgba(170,180,200,${(0.12 * (1 - Math.abs(ft - 0.5) * 2)).toFixed(3)})`,

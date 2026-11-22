@@ -259,6 +259,116 @@ module.exports = async function (t, { browser }) {
         .filter(x => prima(x, 3) && x.testi.some(t => /radici rosse|\bteste\b|catene/i.test(t)))
         .map(x => x.chi + ': ' + x.testi[0].slice(0, 40))
     );
+    // si può ottenere tutto: partendo dalle fonti (botteghe, orto, raccolta, animali, pesca, miniera) e da ciò
+    // che si trasforma (macchine, mulino, cucina, banco), ogni oggetto e ogni ingrediente deve essere raggiungibile
+    {
+      const ok = new Set(['legna', 'pietra', 'fibra', 'uovo', 'ferro', 'essenza', 'concime', 'pane']),
+        add = k => !ok.has(k) && (ok.add(k), true);
+      for (const [k, v] of Object.entries(ITEMS)) if (v.t === 'seed') ok.add(k);
+      for (const k of MERC_STOCK) ok.add(k);
+      for (const r of RES_POOL) for (const [x] of r.shop) ok.add(x);
+      for (const [x] of DECOR_SHOP) ok.add(x);
+      for (const f of Object.values(FESTE)) for (const [x] of f.shop || []) ok.add(x);
+      for (const [x] of NOVE_SHOP) ok.add(x);
+      for (const [x] of BOTTEGA) ok.add(x);
+      for (const l of Object.values(WILD)) for (const x of l) ok.add(x);
+      for (const l of Object.values(FISH)) for (const x of l) ok.add(x[0]);
+      for (const f of [5, 15, 30, 45, 80]) for (const [x] of oreTable(f)) ok.add(x);
+      const impara = r => BASE_RECIPES.includes(r.id) || r.da || r.scopri || r.abil;
+      const coppie = Object.entries(MACH).flatMap(([, M]) =>
+        Object.keys(ITEMS)
+          .filter(k => {
+            try {
+              return M.ok(k);
+            } catch (e) {
+              return false;
+            }
+          })
+          .map(k => [k, M.out(k)])
+      );
+      for (let giro = true; giro; ) {
+        giro = false;
+        for (const [c] of Object.entries(CROPS))
+          if (Object.keys(ITEMS).some(x => ITEMS[x].t === 'seed' && ITEMS[x].crop === c && ok.has(x)))
+            giro = add(c) || giro;
+        for (const [k, v] of Object.entries(ITEMS)) if (v.tree && ok.has(k)) giro = add(v.tree) || giro;
+        for (const [a, b] of coppie) if (ok.has(a)) giro = add(b) || giro;
+        if (Object.keys(MILL).some(k => ok.has(k))) giro = add('farina') || giro;
+        for (const r of COOK)
+          if (impara(r) && Object.keys(r.need).every(k => ok.has(k))) giro = add(r.id) || giro;
+        for (const c of CRAFTS) if (Object.keys(c.c).every(k => ok.has(k))) giro = add(c.id) || giro;
+        for (const a of Object.values(ANIMALS)) if (ok.has(a.home)) giro = add(a.prod) || giro;
+      }
+      bad(
+        'oggetti che non si possono ottenere in nessun modo',
+        Object.keys(ITEMS).filter(k => !ok.has(k) && !['tool', 'key', 'bad'].includes(ITEMS[k].t))
+      );
+      bad(
+        'ricette con ingredienti che non si possono ottenere',
+        COOK.filter(r => Object.keys(r.need).some(k => !ok.has(k))).map(r => r.id)
+      );
+      bad(
+        'colture senza un seme che si possa comprare',
+        Object.keys(CROPS).filter(
+          c => !Object.keys(ITEMS).some(x => ITEMS[x].t === 'seed' && ITEMS[x].crop === c)
+        )
+      );
+    }
+    // proporzioni coerenti fra gli edifici (misure in pixel di gioco; un personaggio è alto 32, una casella 16)
+    {
+      const dim = c => (c ? [iw(c), ih(c)] : [0, 0]),
+        V = k => dim(IMG[k]),
+        piccole = { cottage: V('cottage'), forge: V('forge'), casetta: dim(AIMG.casetta) },
+        grandi = { house: V('house'), store: V('store'), elder: V('elder') },
+        torri = { mulino: dim(AIMG.mulino), torre: dim(IMG.torre), fienile: V('barn') },
+        annessi = {
+          pollaio: dim(AIMG.pollaio),
+          ovile: dim(AIMG.ovile),
+          stalla: dim(AIMG.stalla),
+          serra: dim(AIMG.serra),
+          silos: dim(AIMG.silos),
+          pozzo: dim(AIMG.pozzogrande)
+        },
+        maxW = o => Math.max(...Object.values(o).map(d => d[0])),
+        maxH = o => Math.max(...Object.values(o).map(d => d[1])),
+        minH = o => Math.min(...Object.values(o).map(d => d[1])),
+        fuori = (o, f) =>
+          Object.entries(o)
+            .filter(([, d]) => !f(d))
+            .map(([k, d]) => k + ' ' + d.join('×'));
+      const P0 = piccole.cottage;
+      bad(
+        'case piccole di misure diverse (cottage, fucina, casetta)',
+        fuori(piccole, d => Math.abs(d[0] - P0[0]) <= 2 && Math.abs(d[1] - P0[1]) <= 2)
+      );
+      bad(
+        'case grandi non più grandi delle piccole',
+        fuori(grandi, d => d[0] > maxW(piccole) && d[1] > maxH(piccole))
+      );
+      bad(
+        'museo più piccolo delle case grandi',
+        fuori({ museo: dim(IMG.museo) }, d => d[0] >= maxW(grandi) && d[1] >= maxH(grandi))
+      );
+      bad(
+        'la chiesa non è l’edificio più alto',
+        fuori({ chiesa: V('chapel') }, d => d[1] > Math.max(maxH(torri), maxH(grandi), dim(IMG.museo)[1]))
+      );
+      bad(
+        'torri e mulino più bassi delle case grandi',
+        fuori(torri, d => d[1] >= minH(grandi))
+      );
+      bad(
+        'annessi agricoli alti come una casa',
+        fuori(annessi, d => d[1] < minH(piccole))
+      );
+      // un edificio del giocatore non deve debordare dalla sua impronta più di mezza casella per lato
+      bad(
+        'costruzioni più larghe della loro impronta',
+        Object.keys(ITEMS)
+          .filter(k => ITEMS[k].size && AIMG[k] && iw(AIMG[k]) > ITEMS[k].size[0] * 16 + 16)
+          .map(k => k + ' ' + iw(AIMG[k]) + ' su ' + ITEMS[k].size[0] * 16)
+      );
+    }
     // ogni aspetto produce i suoi fotogrammi senza errori
     const sheetErr = [];
     for (const k of Object.keys(LOOKS)) {
