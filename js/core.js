@@ -13,9 +13,19 @@ const RS = 2;
 // inquadratura del mondo: ZOOM pixel di schermo per pixel di mondo (l'interfaccia resta in W×H);
 // il mondo visibile è VW×VH. Tutto ciò che sta in coordinate di mondo (camera, cosa disegnare, tocchi)
 // usa VW/VH; ciò che sta sullo schermo (vignetta, lampi, cinematiche) usa W/H.
-const ZOOM = 1.5;
-let VW = W / ZOOM;
-const VH = H / ZOOM;
+// Lo sceglie il giocatore (Opzioni, tasti + e −, due dita sullo schermo) e resta salvato.
+const ZOOM_MIN = 1,
+  ZOOM_MAX = 2,
+  ZOOM_BASE = 1.25;
+let ZOOM = ZOOM_BASE,
+  VW = W / ZOOM,
+  VH = H / ZOOM;
+function impostaZoom(z, salva) {
+  ZOOM = Math.round(clamp(+z || ZOOM_BASE, ZOOM_MIN, ZOOM_MAX) * 100) / 100;
+  VW = W / ZOOM;
+  VH = H / ZOOM;
+  if (salva) LS.set('hm_zoom', String(ZOOM));
+}
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 cv.width = W * RS;
@@ -60,7 +70,7 @@ function fit() {
   const nw = clamp(Math.round((H * vw) / vh / 2) * 2, 480, MAXW);
   if (nw !== W || cv.height !== H * RS) {
     W = nw;
-    VW = W / ZOOM;
+    impostaZoom(ZOOM);
     cv.width = W * RS;
     cv.height = H * RS;
     ctx.imageSmoothingEnabled = false;
@@ -144,6 +154,7 @@ const LS = {
     } catch (e) {}
   }
 };
+impostaZoom(LS.get('hm_zoom'));
 const SC = n => `${n} ${Math.abs(n) === 1 ? 'scudo' : 'scudi'}`,
   CZ = n => `<span class="coin"></span>${n}`;
 function esc(s) {
@@ -239,7 +250,44 @@ addEventListener('keydown', e => {
     UI.selectSlot(n);
   }
   if (e.code === 'KeyF') goFull();
+  if (G.mode === 'game' && !UI.modalOpen) {
+    if (e.code === 'Equal' || e.code === 'NumpadAdd') impostaZoom(ZOOM + 0.25, true);
+    if (e.code === 'Minus' || e.code === 'NumpadSubtract') impostaZoom(ZOOM - 0.25, true);
+  }
 });
+// due dita sul mondo (non sulla levetta né sui pulsanti): allargarle avvicina, stringerle allontana
+{
+  let d0 = 0,
+    z0 = ZOOM;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  const suMondo = e => e.touches.length === 2 && [...e.touches].every(t => t.target === cv);
+  cv.addEventListener(
+    'touchstart',
+    e => {
+      if (!suMondo(e) || G.mode !== 'game') return;
+      d0 = dist(e.touches);
+      z0 = ZOOM;
+    },
+    { passive: true }
+  );
+  cv.addEventListener(
+    'touchmove',
+    e => {
+      if (!d0 || !suMondo(e)) return;
+      impostaZoom(z0 * (dist(e.touches) / d0));
+    },
+    { passive: true }
+  );
+  cv.addEventListener(
+    'touchend',
+    e => {
+      if (!d0 || e.touches.length >= 2) return;
+      d0 = 0;
+      impostaZoom(ZOOM, true);
+    },
+    { passive: true }
+  );
+}
 addEventListener('keyup', e => {
   IN.keys[e.code] = false;
 });
