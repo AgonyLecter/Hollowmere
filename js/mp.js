@@ -451,6 +451,7 @@ function visitAct(fx, fy) {
     burst('water', fx * 16 + 8, fy * 16 + 4, 10);
     G.visit.watered++;
     MP.act(G.visit.pid, { t: 'water', k: fkey(fx, fy), day: st.day, from: G.home.name });
+    if (f.c) Ext.run('fatto', 'annaffia', 1);
     return true;
   }
   if (o && o.act === 'bin') {
@@ -504,6 +505,7 @@ function inboxStart() {
   INBOX_OFF = MP.inbox(st.pid, a => inboxApply(a)) || null;
 }
 function inboxApply(a) {
+  if (Ext.intercetta('posta', a)) return;
   const st = G.visit ? G.home : G.st;
   if (!st || !isFree(st)) return;
   st.flags.mpVisited = 1;

@@ -720,6 +720,7 @@ function freeActBase(fx, fy) {
       mapRemove(m, o);
       m.add(OB('ceppo', o.tx, o.ty, IMG.stump, { act: 'ceppo', of: hk }));
       st.flags.felled = (st.flags.felled || 0) + 1;
+      Ext.run('fatto', 'albero', 1);
       tip(
         'tutFell',
         "Albero abbattuto! Tra una decina di giorni ne ricrescerà uno. Il ceppo si toglie con l'accetta."
@@ -944,6 +945,7 @@ function falciaAct(fx, fy) {
       });
   }
   st.free.gone[fkey(fx, fy)] = { day: st.day };
+  Ext.run('fatto', 'falcia', L.length);
   if (!addItem('fibra', n)) return true;
   AU.play('falce');
   floatText(`+${n} Fibra`, fx * 16 + 8, fy * 16 - 6);

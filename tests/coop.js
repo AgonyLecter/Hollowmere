@@ -115,6 +115,54 @@ module.exports = async function (t, { browser }) {
   t.eq('e l’ospite vede la cassa giusta', r.ospiteVedeCassa2, '5/5');
   t.eq('spostando una cassa piena il contenuto la segue', r.spostata, 5);
   t.eq('in visita si salva la propria partita', r.salvataggio, 'OSPITE');
+  // la missione comune: il padrone la apre quando arriva qualcuno, contano tutti, il premio va a ognuno
+  const ins = await page.evaluate(() => {
+    const R = {},
+      posta = [];
+    MP.act = (to, a) => posta.push(JSON.parse(JSON.stringify(Object.assign({ to }, a))));
+    G.visit = null;
+    G.home = null;
+    const st = G.st;
+    st.pid = 'PADRONE';
+    st.mpFriends = [{ pid: 'OSPITE', name: 'Bea', coop: true }];
+    PRES_V = 'PADRONE';
+    G.others = { OSPITE: { name: 'Bea', g: 'f', x: 0, y: 0, seen: performance.now() } };
+    insApri();
+    const m = st.free.insieme;
+    R.aperta = !!m && m.day === st.day;
+    R.inQuest = activeQuests().some(q => /insieme|Missione comune/.test(q.t(st)));
+    insManda();
+    R.mandata = posta.some(p => p.t === 'ins' && p.to === 'OSPITE');
+    // il padrone fa metà, l'ospite il resto
+    const soldi0 = st.money;
+    Ext.run('fatto', m.tipo, Math.floor(m.obj / 2));
+    inboxApply({ t: 'insc', tipo: m.tipo, n: m.obj, day: st.day, from: 'OSPITE', name: 'Bea' });
+    R.compiuta = m.premiato === 1 && m.fatto === m.obj;
+    R.premioPadrone = st.money - soldi0;
+    R.premioOspite = posta.filter(p => p.t === 'insp' && p.to === 'OSPITE').length;
+    R.contributi = Object.values(m.chi)
+      .map(c => c.n)
+      .join('+');
+    // il pannello: chi c'è, il suo ruolo, il permesso
+    insiemeMenu();
+    R.pannello = /Bea/.test($('#mbox').textContent) && !!$('#mbox [data-perm]');
+    UI.close();
+    // l'ospite riceve il premio
+    const prima = st.money;
+    inboxApply({ t: 'insp', n: 300, from: 'PADRONE', name: 'Ada' });
+    R.premioRicevuto = st.money - prima;
+    PRES_V = null;
+    G.others = {};
+    return R;
+  });
+  t.true('missione comune: il padrone la apre quando arriva un amico', ins.aperta);
+  t.true('e compare negli obiettivi', ins.inQuest);
+  t.true('e parte per chi c’è', ins.mandata);
+  t.true('contano le azioni di tutti e due, fino in fondo', ins.compiuta);
+  t.true('il padrone ha il suo premio', ins.premioPadrone > 0);
+  t.eq('e il premio parte anche per l’amico', ins.premioOspite, 1);
+  t.true('nel pannello 👥 c’è chi è presente, con il permesso', ins.pannello);
+  t.eq('l’ospite riceve il premio', ins.premioRicevuto, 300);
   t.eq('cooperativo: nessun errore', errors.join('\n'), '');
   await page.close();
 };

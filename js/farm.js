@@ -230,6 +230,7 @@ function harvest(tx, ty, f) {
     0.08 + (f.f ? 0.42 : 0) + (c.bad ? 0 : 0.15) + (isFree(st) && skLv('agri') >= 4 ? 0.15 : 0);
   if (rich) n++;
   if (!addItem(t, n)) return;
+  Ext.run('fatto', 'raccogli', 1);
   if (cr.re) {
     c.a = cr.days - cr.re;
     c.dry = 0;
@@ -359,6 +360,7 @@ function farmAct(tx, ty) {
     AU.play('water');
     burst('water', tx * 16 + 8, ty * 16 + 4, 10);
     if (f.c) {
+      Ext.run('fatto', 'annaffia', 1);
       st.flags.watered = (st.flags.watered || 0) + 1;
       addXP('agri', 1);
       tip(

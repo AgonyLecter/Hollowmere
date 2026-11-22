@@ -253,6 +253,7 @@ const UI = {
     $('#ctime').textContent = `${h}:${String(mm - (mm % 10)).padStart(2, '0')}`;
     $('#cmoney').textContent = st.money;
     $('#bChat').classList.toggle('hide', !PRES_V);
+    $('#bIns').classList.toggle('hide', !PRES_V);
     $('#efill').style.height = st.energy + '%';
     $('#efill').style.background = st.energy < 25 ? 'linear-gradient(#ffb07a,#c0221e)' : '';
     document.body.classList.toggle('corrupt', G.horror > 0.35);

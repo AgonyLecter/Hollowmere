@@ -32,6 +32,9 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `ottieni` | qualcosa è entrato nello zaino (`id`, `n`) |
 | `mangia` | il giocatore ha mangiato un piatto (`id`) |
 | `porta:intercetta` | il giocatore usa la porta di un edificio del paese (`o`); chi restituisce qualcosa la gestisce |
+| `contenitore` | il giocatore ha cambiato una cassa o una macchina (`k`, `tipo`, `ops`): in cooperativo parte come operazione |
+| `fatto` | un'azione che conta per la missione comune (`tipo`: annaffia, raccogli, albero, falcia; `n`) |
+| `posta:intercetta` (`Ext.intercetta('posta', a)`) | un messaggio dalla posta (`visite/<pid>`); chi lo gestisce restituisce `true` |
 
 ## Mappa dei file (in ordine di caricamento)
 - **Motore**: `core.js` (stato, input, effetti sonori, Ext), `musica.js` (la colonna sonora: brani scritti come dati —
