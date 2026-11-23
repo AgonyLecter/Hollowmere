@@ -150,7 +150,10 @@ const GX = (() => {
       band: r(L.hatBand || '#8a6a3a'),
       belt: r(L.belt || '#3a2414'),
       gold: r('#d8a84a'),
-      vest: r(L.vest)
+      vest: r(L.vest),
+      coat: r(L.coat),
+      cravat: r(L.cravat || '#e8e0cc'),
+      shawl: r(L.shawl)
     };
     RC.set(L, R);
     return R;
@@ -176,8 +179,8 @@ const GX = (() => {
       legTop = 36 + k,
       hw = 7 + wide;
     const sway = walk ? Math.sin(ph - 1) * 1.2 : br ? 0.5 : 0;
-    const top = L.robe ? R.robe : R.sh;
-    const hasHat = L.hat === 'tall' || L.hat === 'bonnet' || L.hat === 'cap';
+    const top = L.robe ? R.robe : L.coat ? R.coat : R.sh;
+    const hasHat = L.hat === 'tall' || L.hat === 'bonnet' || L.hat === 'cap' || L.hat === 'tricorn';
     const hairMod = (X, Y, t) => {
       const h = (X * 7 + 3) % 5;
       if (h === 0 && Y > cy - ry + 3) t--;
@@ -213,6 +216,25 @@ const GX = (() => {
           paint(P, new MK().rect(lx - 3 + (q > 0 ? 1 : 0), 48 - Math.round(lift), 6, 3), R.shoe, {
             mod: (X, Y, t) => (Y === 48 - Math.round(lift) && t < 4 ? 4 : t)
           });
+          // stivali alti: il cuoio sale fino al polpaccio, con il risvolto chiaro
+          if (L.boots) {
+            const y0 = legTop + 6;
+            paint(P, new MK().rect(lx - 2.5, y0, 5, 48 - Math.round(lift) - y0), R.shoe, {
+              nc: 1,
+              mod: (X, Y, t) => (Y === y0 ? 4 : t)
+            });
+          }
+        }
+      if (L.boots && side)
+        for (const q of [-1, 1]) {
+          const fx = cx + (q > 0 ? s : -s) * 4,
+            lift = Math.max(0, q > 0 ? c : -c) * 2;
+          paint(
+            P,
+            new MK().cap((cx + q * 0.4 + fx) / 2, (legTop + 47 - lift) / 2 + 1, fx, 47 - lift, 2.5, 2.3),
+            q > 0 ? R.shoe : dk(R.shoe, 0.8),
+            { nc: 1 }
+          );
         }
     };
     const shoesOnly = () => {
@@ -300,6 +322,93 @@ const GX = (() => {
         paint(P, VM, R.vest, { ck: 0.8 });
         if (front) for (const d of [6, 9]) P.set(cx + 2, tTop + d, R.gold[3]);
       }
+    };
+    // ---- finanziera: la giacca lunga fino al ginocchio, aperta davanti, con revers, bottoni e code dietro
+    const coat = () => {
+      if (!L.coat || L.robe) return;
+      const bot = legTop + 9,
+        cw = Y => (Y < legTop ? tw(Y) + 0.6 : tw(legTop - 1) + 0.6 + (Y - legTop) * 0.22),
+        apre = Y => (Y < tTop + 5 ? 1.2 + (Y - tTop) * 0.45 : 3.2 + (Y - tTop - 5) * 0.16);
+      const M = new MK().band(
+        tTop,
+        bot,
+        Y => cx + (Y > legTop && walk ? ((sway * (Y - legTop)) / 10) * (side ? 1 : 0.4) : 0),
+        cw,
+        (X, Y) => {
+          const ax = Math.abs(X + 0.5 - cx);
+          if (front && ax < apre(Y)) return false;
+          if (side && Y > legTop && X > cx + 1) return false;
+          if (back && Y > legTop + 1 && ax < 0.7) return false;
+          return Y <= bot - ((X + Math.floor((ph || 0) * 2)) % 4 === 0 ? 1 : 0);
+        }
+      );
+      paint(P, M, R.coat, {
+        mod: (X, Y, t) => (Y > legTop && (X - cx + 40) % 4 === 0 ? t - 1 : t)
+      });
+      if (front) {
+        for (let Y = tTop; Y < tTop + 7; Y++) {
+          const a = apre(Y),
+            xl = Math.floor(cx - a) - 1,
+            xr = Math.ceil(cx + a);
+          if (M.has(xl, Y)) P.set(xl, Y, R.coat[4]);
+          if (M.has(xr, Y)) P.set(xr, Y, R.coat[4]);
+        }
+        for (const d of [7, 10, 13]) {
+          const Y = tTop + d,
+            X = Math.floor(cx - apre(Y)) - 1;
+          if (M.has(X, Y)) P.set(X, Y, R.gold[3]);
+        }
+      }
+    };
+    // ---- cravatta a fiocco, bianca o del colore scelto
+    const cravat = () => {
+      if (!L.cravat || back) return;
+      const C2 = R.cravat;
+      if (side) {
+        P.set(cx + 2, tTop, C2[4]);
+        P.set(cx + 3, tTop, C2[3]);
+        P.set(cx + 2, tTop + 1, C2[3]);
+        P.set(cx + 3, tTop + 2, C2[2]);
+        return;
+      }
+      for (let X = cx - 2; X <= cx + 1; X++) P.set(X, tTop, C2[X < cx ? 4 : 3]);
+      P.set(cx - 1, tTop + 1, C2[2]);
+      P.set(cx, tTop + 1, C2[2]);
+      for (let X = cx - 2; X <= cx + 1; X++) P.set(X, tTop + 2, C2[X < cx ? 3 : 2]);
+      P.set(cx - 1, tTop + 3, C2[3]);
+      P.set(cx, tTop + 3, C2[2]);
+    };
+    // ---- scialle sulle spalle, con la frangia
+    const shawl = () => {
+      if (!L.shawl) return;
+      let M;
+      if (back)
+        M = new MK().band(
+          tTop - 1,
+          tTop + 12,
+          () => cx,
+          Y => hw + 1.2 - (Y - tTop) * 0.75
+        );
+      else if (side)
+        M = new MK().band(
+          tTop - 1,
+          tTop + 8,
+          () => cx - 1,
+          Y => 4.6 - (Y - tTop) * 0.3
+        );
+      else
+        M = new MK().band(
+          tTop - 1,
+          tTop + 9,
+          () => cx,
+          Y => (Y < tTop + 4 ? hw + 1.2 : hw + 1.2 - (Y - tTop - 4) * 1.7),
+          (X, Y) => !(Y < tTop + 3 && Math.abs(X + 0.5 - cx) < 2.6)
+        );
+      paint(P, M, R.shawl, { mod: (X, Y, t) => ((X + Y) % 4 === 0 ? t - 1 : t) });
+      // frangia: sul bordo basso, un pixel sì e uno no
+      M.each((X, Y) => {
+        if (!M.has(X, Y + 1) && X % 2 === 0) P.set(X, Y + 1, R.shawl[1]);
+      });
     };
     // ---- tonaca
     const robe = () => {
@@ -812,6 +921,64 @@ const GX = (() => {
           for (let X = cx - 3; X <= cx + 2; X++) P.set(X, cy + 8, HC[2]);
         }
       }
+      if (L.hat === 'tricorn') {
+        // il tricorno: cupola bassa e tesa rialzata in tre punte, con il bordo chiaro
+        const TB = R.band;
+        paint(
+          P,
+          new MK().band(
+            cy - 12,
+            cy - 6,
+            () => cx,
+            Y => 5.6 - Math.max(0, cy - 10 - Y) * 0.8
+          ),
+          HC,
+          {
+            mod: (X, Y, t) => (Y === cy - 12 ? 4 : t)
+          }
+        );
+        if (side) {
+          const BM = new MK().fn(
+            (x0, y0) => {
+              const dx = x0 - (cx + 1.5),
+                su = dx < -5 ? (-5 - dx) * 0.9 : 0;
+              return (
+                Math.abs(dx) <= 9.5 &&
+                y0 >= cy - 7 - su - Math.abs(dx) * 0.08 &&
+                y0 <= cy - 5 + (dx > 6 ? 0 : 0)
+              );
+            },
+            cx - 9,
+            cy - 13,
+            cx + 12,
+            cy - 4
+          );
+          paint(P, BM, HC, { mod: (X, Y, t) => (!BM.has(X, Y - 1) ? 4 : t) });
+          BM.each((X, Y) => {
+            if (!BM.has(X, Y - 1)) P.set(X, Y, TB[3]);
+          });
+        } else {
+          const BM = new MK().fn(
+            (x0, y0) => {
+              const u = Math.abs(x0 - cx) / 10.5;
+              return u <= 1 && y0 >= cy - 7 - u * u * 4.5 && y0 <= cy - 4.5 - u * u * 3;
+            },
+            cx - 11,
+            cy - 13,
+            cx + 11,
+            cy - 4
+          );
+          paint(P, BM, HC, { mod: (X, Y, t) => (!BM.has(X, Y - 1) ? 4 : t) });
+          BM.each((X, Y) => {
+            if (!BM.has(X, Y - 1)) P.set(X, Y, TB[X < cx ? 4 : 3]);
+          });
+          // la punta davanti
+          if (front) {
+            P.set(cx - 1, cy - 4, HC[2]);
+            P.set(cx, cy - 4, HC[2]);
+          }
+        }
+      }
       if (L.hat === 'cap') {
         paint(
           P,
@@ -838,7 +1005,10 @@ const GX = (() => {
       torso();
       dress();
       apron();
+      coat();
       neck();
+      cravat();
+      shawl();
       // con le braccia alzate il braccio vicino passa davanti alla testa
       const alzato = presa != null && Math.sin(presa) < -0.35;
       if (!alzato) arm(0, false);
@@ -860,10 +1030,12 @@ const GX = (() => {
       robe();
       torso();
       dress();
+      coat();
       if (!maniDavanti) {
         arm(-1);
         arm(1);
       }
+      shawl();
       neck();
       head();
       ears();
@@ -879,10 +1051,13 @@ const GX = (() => {
       torso();
       dress();
       apron();
+      coat();
       cape();
       arm(-1);
       arm(1);
+      shawl();
       neck();
+      cravat();
       mantle();
       head();
       face();

@@ -4245,7 +4245,7 @@ function genPortraitBase(L, mood) {
     R = {
       sk: ramp6(L.skin, 'skin'),
       hr: ramp6(L.hair, 'hair'),
-      cl: ramp6(L.robe || L.cape || L.dress || L.shirt),
+      cl: ramp6(L.robe || L.coat || L.cape || L.dress || L.shirt),
       sh: ramp6(L.shirt),
       beard: L.beard && ramp6(L.beard, 'hair'),
       hat: L.hatCol && ramp6(L.hatCol),
@@ -4281,15 +4281,41 @@ function genPortraitBase(L, mood) {
     R.cl,
     { nyF: Y => (Y < cy + 20 ? -0.7 : 0.1) }
   );
-  if ((L.robe && L.robeOpen) || (!L.robe && !L.cape))
+  if ((L.robe && L.robeOpen) || (!L.robe && !L.cape)) {
+    // sotto la finanziera: il panciotto (se c'è) e la camicia
+    if (L.coat && L.vest)
+      P.body(
+        cy + 16,
+        64,
+        () => cx,
+        Y => Math.max(0, 9 - (Y - cy - 16) * 0.1),
+        ramp6(L.vest),
+        { nyF: () => 0.1 }
+      );
     P.body(
       cy + 16,
       64,
       () => cx,
-      Y => Math.max(0, 6 - (Y - cy - 16) * 0.2),
+      Y => Math.max(0, (L.coat ? 4 : 6) - (Y - cy - 16) * 0.2),
       R.sh,
       { nyF: () => 0.1 }
     );
+  }
+  if (L.shawl) {
+    // lo scialle: sulle spalle, aperto a V davanti
+    P.body(
+      cy + 15,
+      64,
+      () => cx,
+      Y => Math.min(29, 17 + (Y - cy - 15) * 2.4),
+      ramp6(L.shawl),
+      {
+        nyF: Y => (Y < cy + 19 ? -0.7 : 0.1),
+        clip: (X, Y) => Math.abs(X + 0.5 - cx) > 5 + (Y - cy - 15) * 0.9,
+        mod: (X, Y, v) => ((X + Y) % 5 === 0 ? v - 0.1 : v)
+      }
+    );
+  }
   if (L.apron)
     P.body(
       cy + 22,
@@ -4450,6 +4476,32 @@ function genPortraitBase(L, mood) {
       clip: (X, Y) => Y < cy - 6 || (Math.abs(X - cx) > rx - 2 && Y < cy + 14),
       mod: (X, Y, v) => ((X * 2 + Y) % 7 === 0 ? v - 0.1 : v)
     });
+  if (L.cravat) {
+    // la cravatta a fiocco sotto il mento
+    const CR = ramp6(L.cravat);
+    P.body(
+      cy + 17,
+      cy + 24,
+      () => cx,
+      Y => (Y < cy + 20 ? 5 - (Y - cy - 17) : 2 + (Y - cy - 20) * 0.5),
+      CR,
+      { nyF: () => -0.2 }
+    );
+  }
+  if (L.hat === 'tricorn') {
+    // il tricorno: cupola bassa, tesa larga rialzata ai lati, bordo chiaro
+    P.ellipse(cx, cy - 9, rx + 1, 8, R.hat, { clip: (X, Y) => Y < cy - 7, spec: 0.2 });
+    const BR = rx + 10,
+      orlo = R.band || R.hat;
+    for (let X = Math.floor(cx - BR); X <= Math.ceil(cx + BR); X++) {
+      const u = Math.abs(X + 0.5 - cx) / BR;
+      if (u > 1) continue;
+      const y0 = Math.round(cy - 9 - u * u * 8),
+        y1 = Math.round(cy - 5 - u * u * 6);
+      for (let Y = y0; Y <= y1; Y++) P.set(X, Y, R.hat[Y === y0 ? 4 : Y === y1 ? 1 : X < cx ? 3 : 2]);
+      P.set(X, y0, orlo[X < cx ? 4 : 3]);
+    }
+  }
   if (L.hat === 'cap') {
     P.ellipse(cx, cy - 7, rx + 1.5, 12, R.hat, { clip: (X, Y) => Y < cy - 6, spec: 0.2 });
     P.ellipse(cx, cy - 6, rx, 3, R.hat, { clip: (X, Y) => Y > cy - 6.5 });
