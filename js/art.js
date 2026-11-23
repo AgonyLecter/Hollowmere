@@ -786,69 +786,154 @@ function genTilesHD() {
     T[k] = T[k].map((c, i) => up2(c, k === 'void' || k === 'water' ? 0 : 0.1, i + 7));
 }
 // ---------- alberi, pini, cespugli a 2× ----------
+// L'albero d'autunno gotico: stessa tela di sempre (88×116 a 2×, chioma alta 44) perché posizioni, ombre e
+// ondeggiamento non cambino. Radici che affondano, corteccia scura solcata con muschio e cavità, rami contorti
+// che si allargano sotto una chioma a ciuffi (luce da in alto a sinistra). La variante 2 è mezza spoglia.
 function genTreeHD(v) {
   srand(200 + v);
-  const [c, x] = mk(88, 116);
+  const W = 88,
+    H = 116,
+    [c, x] = mk(W, H);
   c.s = 2;
-  const ramp = TREEPAL[v % 5];
-  const bark = ['#22150b', '#3a2414', '#563820', '#74502c', '#8f6a3e'];
-  for (let y = 66; y < 112; y++) {
-    const w = y > 100 ? 12 + Math.min(14, (y - 100) * 2) : 12,
-      x0 = 44 - Math.floor(w / 2);
+  const ramp = TREEPAL[v % 5],
+    bark = ['#140c08', '#24160e', '#3a2416', '#54361f', '#70502e', '#8c6a40'],
+    moss = ['#1e2a14', '#2e4018', '#44581e', '#5e7228'],
+    spoglio = v === 2,
+    cx = 44 + (v % 2 ? 1 : -1);
+  // --- radici: il tronco si allarga e affonda, due o tre radici serpeggiano sul terreno
+  const radice = (dir, len, y0) => {
+    let X = cx + dir * 6,
+      Y = y0,
+      th = 4;
+    for (let i = 0; i < len; i++) {
+      X += dir;
+      if (rnd() < 0.35) Y += rnd() < 0.6 ? 1 : 0;
+      th = Math.max(1, 4 - (i / len) * 4);
+      R_(x, bark[1], Math.round(X), Math.round(Y), 1, Math.ceil(th));
+      R_(x, bark[3], Math.round(X), Math.round(Y), 1, 1);
+    }
+  };
+  radice(-1, 14 + ri(0, 6), 106);
+  radice(1, 12 + ri(0, 6), 107);
+  if (rnd() < 0.6) radice(-1, 7, 110);
+  // --- tronco: un po' storto, solchi verticali, luce a sinistra, muschio a destra in basso
+  const storto = y => Math.round(Math.sin(y * 0.09 + v) * 1.6);
+  for (let y = 58; y < 112; y++) {
+    const base = y > 98 ? (y - 98) * 1.2 : 0,
+      w = Math.round(12 + base + (y < 66 ? (66 - y) * 0.3 : 0)),
+      x0 = cx - Math.floor(w / 2) + storto(y);
     for (let i = 0; i < w; i++) {
       const t = i / (w - 1);
-      let k = t < 0.15 ? 4 : t < 0.4 ? 3 : t < 0.7 ? 2 : t < 0.9 ? 1 : 0;
-      if ((i * 7 + y * 3) % 11 === 0) k = Math.max(0, k - 1);
+      let k = t < 0.12 ? 4 : t < 0.32 ? 3 : t < 0.62 ? 2 : t < 0.86 ? 1 : 0;
+      // solchi: righe scure che scendono, interrotte
+      if ((i * 5 + Math.floor(y / 7)) % 4 === 0 && hsh(i, y >> 2) % 3) k = Math.max(0, k - 2);
+      if (k >= 3 && hsh(i * 3, y) % 9 === 0) k = 5;
       R_(x, bark[k], x0 + i, y);
+      // muschio sul lato in ombra, più fitto vicino a terra
+      if (t > 0.62 && y > 84 && hsh(i * 7 + v, y * 3) % 10 < (y - 84) / 4)
+        R_(x, moss[hsh(i, y) % 3], x0 + i, y);
     }
   }
-  for (let i = 0; i < 10; i++) {
-    const a = ri(40, 47),
-      b = ri(78, 104);
-    R_(x, bark[0], a, b, 1, ri(3, 7));
+  // una cavità nel tronco (non in tutti)
+  if (v % 2 === 1) {
+    const hy = 80 + ri(0, 6),
+      hx = cx - 2 + storto(hy);
+    R_(x, bark[0], hx, hy, 4, 6);
+    R_(x, bark[0], hx + 1, hy - 1, 2, 1);
+    R_(x, '#070403', hx + 1, hy + 1, 2, 4);
+    R_(x, bark[4], hx - 1, hy, 1, 5);
   }
-  R_(x, bark[1], 28, 66, 14, 3);
-  R_(x, bark[3], 28, 66, 14, 1);
-  R_(x, bark[1], 48, 62, 12, 3);
-  R_(x, bark[3], 48, 62, 12, 1);
-  const blobs = [
-    [44, 42, 28],
-    [22, 52, 18],
-    [66, 52, 18],
-    [44, 62, 20],
-    [28, 26, 16],
-    [60, 26, 16],
-    [44, 18, 14]
-  ];
-  const small = [];
-  for (let i = 0; i < 46; i++) {
-    const b = blobs[ri(0, blobs.length - 1)],
-      a = rnd() * Math.PI * 2;
-    small.push([b[0] + Math.cos(a) * b[2] * 0.9, b[1] + Math.sin(a) * b[2] * 0.9, ri(5, 9)]);
+  // --- rami: storti, si dividono; le punte reggono i ciuffi di foglie
+  const punte = [];
+  const ramo = (X, Y, ang, len, th, liv) => {
+    for (let i = 0; i < len; i++) {
+      // storto, ma sempre verso l'alto (un ramo che scende sotto la chioma sembra un artiglio)
+      ang = clamp(ang + (rnd() - 0.5) * 0.5, -Math.PI + 0.35, -0.35);
+      X += Math.cos(ang);
+      Y += Math.sin(ang);
+      const t = Math.max(1, Math.round(th * (1 - (i / len) * 0.5)));
+      R_(x, bark[1], Math.round(X) - (t >> 1), Math.round(Y) - (t >> 1), t, t);
+      R_(x, bark[3], Math.round(X) - (t >> 1), Math.round(Y) - (t >> 1), 1, 1);
+    }
+    if (liv > 0) {
+      const n = liv > 1 ? 2 : 2 + (rnd() < 0.4 ? 1 : 0);
+      for (let k = 0; k < n; k++)
+        ramo(
+          X,
+          Y,
+          ang + (k - (n - 1) / 2) * (0.7 + rnd() * 0.3),
+          len * (0.62 + rnd() * 0.15),
+          th * 0.6,
+          liv - 1
+        );
+    } else punte.push([X, Y]);
+  };
+  const top = 62,
+    L = spoglio ? 1.3 : 1;
+  ramo(cx, top, -Math.PI / 2 + (rnd() - 0.5) * 0.3, 17 * L, 5, 2);
+  ramo(cx - 2, top + 2, -Math.PI / 2 - 0.8, 15 * L, 4, 2);
+  ramo(cx + 2, top + 1, -Math.PI / 2 + 0.8, 15 * L, 4, 2);
+  // --- foglie: un ciuffo per punta (la variante spoglia ne perde molti), più qualche ciuffo di riempimento
+  // la chioma sta dentro un ovale alto (centro cx,30; raggi 33×21): sotto si vede la raggiera dei rami: i ciuffi alle punte dei rami, poi si riempie
+  const dentro = (a, b) => ((a - cx) / 33) ** 2 + ((b - 30) / 21) ** 2 <= 1;
+  const ciuffi = [],
+    spoglie = [];
+  for (const [px, py] of punte) {
+    const a = clamp(px, 22, 66),
+      b = clamp(py, 12, 46);
+    if (spoglio && rnd() < 0.5) spoglie.push([px, py]);
+    else ciuffi.push([a, b, spoglio ? 7 + ri(0, 2) : 9 + ri(0, 4)]);
   }
-  for (let i = 0; i < 30; i++) {
-    const b = blobs[ri(0, blobs.length - 1)],
-      a = rnd() * Math.PI * 2,
-      r = rnd() * b[2] * 0.6;
-    small.push([b[0] + Math.cos(a) * r, b[1] + Math.sin(a) * r, ri(4, 7)]);
-  }
-  paintBlobs(x, blobs.concat(small), ramp, { ao: 0.55, noise: 0.2 });
-  const d = x.getImageData(0, 0, 88, 116).data;
-  for (let i = 0; i < 40; i++) {
-    const a = ri(14, 62),
-      b = ri(8, 50);
-    if (d[(b * 88 + a) * 4 + 3]) {
-      R_(x, ramp[5], a, b, ri(1, 3), 1);
-      R_(x, ramp[4], a, b + 1, 1, 1);
+  if (!spoglio)
+    for (let k = 0; k < 40; k++) {
+      const a = cx + ri(-29, 29),
+        b = 30 + ri(-18, 18);
+      if (!dentro(a, b) || ciuffi.some(([p, q, r]) => Math.hypot(a - p, b - q) < r * 0.9)) continue;
+      ciuffi.push([a, b, 9 + ri(0, 4)]);
+    }
+  // sulle punte spoglie: rametti sottili, storti, come dita
+  for (const [px, py] of spoglie)
+    for (let k = 0; k < 4; k++) {
+      let X = px,
+        Y = py,
+        ang = -Math.PI / 2 + (k - 1) * 0.7 + (rnd() - 0.5) * 0.4;
+      for (let i = 0; i < 5 + ri(0, 3); i++) {
+        ang += (rnd() - 0.5) * 0.6;
+        X += Math.cos(ang);
+        Y += Math.sin(ang);
+        R_(x, bark[i < 2 ? 2 : 1], Math.round(X), Math.round(Y));
+      }
+    }
+  // attorno a ogni ciuffo, foglioline che rendono il bordo frastagliato
+  const minuti = [];
+  for (const [a, b, r] of ciuffi)
+    for (let i = 0; i < 7; i++) {
+      const ang = rnd() * Math.PI * 2;
+      minuti.push([a + Math.cos(ang) * r * 0.95, b + Math.sin(ang) * r * 0.85, ri(2, 4)]);
+    }
+  // la chioma si dipinge su un livello suo: così ci si possono aprire dei varchi da cui si vedono i rami
+  const [cf, xf] = mk(W, H);
+  paintBlobs(xf, ciuffi.concat(minuti), ramp, { ao: 0.6, noise: 0.16 });
+  const d = xf.getImageData(0, 0, W, H).data,
+    pieno = (a, b) => a >= 0 && b >= 0 && a < W && b < H && d[(b * W + a) * 4 + 3] > 0;
+  for (const [a, b, r] of ciuffi) {
+    for (let i = 0; i < 9; i++) {
+      const X = Math.round(a - r * 0.45 + ri(-3, 3)),
+        Y = Math.round(b - r * 0.5 + ri(-2, 2));
+      if (pieno(X, Y)) {
+        R_(xf, ramp[5], X, Y, ri(1, 2), 1);
+        if (rnd() < 0.5) R_(xf, ramp[4], X, Y + 1, 1, 1);
+      }
+    }
+    for (let i = 0; i < 6; i++) {
+      const X = Math.round(a + r * 0.35 + ri(-3, 3)),
+        Y = Math.round(b + r * 0.45 + ri(-2, 2));
+      if (pieno(X, Y)) R_(xf, ramp[0], X, Y, ri(1, 2), 1);
     }
   }
-  for (let i = 0; i < 14; i++) {
-    const a = ri(14, 74),
-      b = ri(40, 76);
-    if (d[(b * 88 + a) * 4 + 3]) R_(x, ramp[0], a, b, 2, 1);
-  }
+  x.drawImage(cf, 0, 0);
   c.canopyH = 44;
-  return outline(c, shade(ramp[0], -0.5));
+  return outline(c, shade(ramp[0], -0.6));
 }
 function genPineHD(v) {
   srand(300 + v);
