@@ -4,6 +4,7 @@
   "description": "Hollowmere — La Valle Quieta. Il gioco non ha bisogno di build: questi script servono solo agli sviluppatori.",
   "scripts": {
     "test": "node tests/run.js",
+    "test:veloce": "node tests/run.js --veloce",
     "test:aggiorna": "node tests/run.js --aggiorna",
     "format": "prettier --write \"js/**/*.js\" \"tests/**/*.js\""
   },

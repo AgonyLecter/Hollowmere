@@ -385,6 +385,22 @@ const NOVITA = [
         t: 'Alla bacheca le faccende del giorno sono molte di più: annaffiare, raccogliere, la legnaia, i muretti, la ronda, il recinto, la pesca per Agatha, le uova, il latte… Finita una, puoi prenderne un’altra (fino a tre al giorno).'
       }
     ]
+  },
+  {
+    id: 'atmosfera',
+    v: 42,
+    n: 'L’autunno di Hollowmere',
+    steps: [
+      {
+        t: 'Guarda per terra: il prato si è fatto ocra e muschio, e le foglie cadute si ammucchiano sotto gli alberi e contro i recinti.'
+      },
+      {
+        t: 'All’alba e la sera una nebbia bassa striscia tra le case e gli alberi. La luce cambia con le ore: ambra di giorno, arancio al tramonto.'
+      },
+      {
+        t: 'E la notte, a Hollowmere, è verde come l’acqua di uno stagno. Le lanterne e le finestre accese sono le uniche isole calde. Non allontanarti troppo dalla luce.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

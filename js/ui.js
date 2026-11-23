@@ -64,7 +64,23 @@ const UI = {
     return this.dlgOpen || this.modalOpen;
   },
   // ---------- dialoghi ----------
+  // I dialoghi si mettono in fila: se ne arriva uno mentre un altro è aperto (Ottavio con una novità mentre
+  // parli con Brom), aspetta che il primo si chiuda. Prima il nuovo prendeva il posto del vecchio, e chi
+  // aspettava la risposta del vecchio restava fermo per sempre (il gioco si bloccava in una scena).
+  // Se non c'è niente in fila il dialogo si apre subito, come sempre.
+  _coda: Promise.resolve(),
+  _inFila: 0,
   say(who, text, mood, opts) {
+    const apri = () => this._apri(who, text, mood, opts),
+      p = this._inFila ? this._coda.then(apri, apri) : apri(),
+      fine = () => {
+        this._inFila--;
+      };
+    this._inFila++;
+    this._coda = p.then(fine, fine);
+    return p;
+  },
+  _apri(who, text, mood, opts) {
     return new Promise(res => {
       const d = $('#dlg'),
         choices = Array.isArray(opts) ? opts : null,
@@ -743,14 +759,18 @@ const UI = {
       const el = $('#lt');
       let i = 0;
       const tick = setInterval(() => {
+        if (!el.isConnected) return clearInterval(tick);
         i += 2;
         el.textContent = txt.slice(0, i);
         if (i % 8 === 0) AU.play('page');
         if (i >= txt.length) {
           clearInterval(tick);
           setTimeout(() => {
+            // la lettera può essere già stata chiusa (saltando la scena): allora non c'è più niente da mostrare
+            const ok = $('#ltok');
+            if (!ok || !el.isConnected) return;
             el.innerHTML = esc(txt) + '\n\n<s style="opacity:.35">non venire</s>';
-            $('#ltok').style.visibility = 'visible';
+            ok.style.visibility = 'visible';
           }, 900);
         }
       }, 28);
