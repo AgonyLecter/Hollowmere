@@ -23,7 +23,9 @@ const TITLE = {
     let st = null;
     try {
       st = JSON.parse(LS.get('hm_save'));
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'main');
+    }
     if (NET.ok && st && st.pid) {
       const r = await NET.load(st.pid);
       if (r && (r.ts || 0) > (st.ts || 0)) st = r;
@@ -98,7 +100,9 @@ const TITLE = {
     let st = null;
     try {
       st = JSON.parse(LS.get('hm_free'));
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'main');
+    }
     if (NET.ok && st && st.pid) {
       const r = await NET.load(st.pid);
       if (r && r.free && (r.ts || 0) > (st.ts || 0)) st = r;
@@ -110,7 +114,9 @@ const TITLE = {
     let base = null;
     try {
       base = JSON.parse(LS.get('hm_freebase') || LS.get('hm_save'));
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'main');
+    }
     if (!base) {
       UI.toast('Finisci la storia per aprire la Valle.');
       return;
@@ -178,7 +184,9 @@ const TITLE = {
             let st = null;
             try {
               st = JSON.parse(LS.get(b.dataset.cp));
-            } catch (e) {}
+            } catch (e) {
+              segnala(e, 'main');
+            }
             if (!st) return;
             UI._mclose = null;
             UI.close();
@@ -307,7 +315,9 @@ function legacySave() {
         (v.flags.festaOn || v.flags.conteggio || v.flags.drank || v.flags.danced || v.flags.gara)
       )
         return v;
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'main');
+    }
   }
   return null;
 }
@@ -1205,13 +1215,17 @@ function loop(now) {
   try {
     AU.setMode(chooseMusic());
     AU.tick();
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'main');
+  }
   requestAnimationFrame(loop);
 }
 async function boot() {
   try {
     await Promise.race([document.fonts.ready, sleep(2500)]);
-  } catch (e) {}
+  } catch (e) {
+    atteso(e);
+  }
   genAll();
   genFreeArt();
   genAnimalArt();

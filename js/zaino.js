@@ -457,7 +457,9 @@ function zDrag(box) {
       }, LUNGO);
       try {
         el.setPointerCapture(e.pointerId);
-      } catch (_) {}
+      } catch (_) {
+        atteso(_);
+      }
     };
     el.onpointermove = e => {
       if (!d || d.el !== el) return;

@@ -135,6 +135,26 @@ const Ext = {
     return Object.fromEntries(Object.entries(this._h).map(([k, L]) => [k, L.length]));
   }
 };
+// ---------- errori: nessuno si ingoia in silenzio ----------
+// segnala: un errore vero (finisce in console come errore: i test lo vedono). rete: Firebase non ha risposto
+// (offline è normale: solo un avviso). atteso: il browser ha detto no a qualcosa che può dire no (memoria piena,
+// schermo intero, audio già chiuso) e va bene così. Gli ultimi errori restano in ERRORI (menu Salvataggio).
+const ERRORI = [];
+function segnala(e, dove) {
+  ERRORI.push({ dove, msg: String((e && e.message) || e).slice(0, 160), t: Date.now() });
+  if (ERRORI.length > 20) ERRORI.shift();
+  console.error('Hollowmere · ' + dove + ':', e);
+}
+function rete(e, dove) {
+  ERRORI.push({
+    dove: 'rete · ' + dove,
+    msg: String((e && (e.code || e.message)) || e).slice(0, 160),
+    t: Date.now()
+  });
+  if (ERRORI.length > 20) ERRORI.shift();
+  console.warn('Hollowmere · rete · ' + dove + ':', e);
+}
+const atteso = () => {};
 const LS = {
   get(k) {
     try {
@@ -146,12 +166,16 @@ const LS = {
   set(k, v) {
     try {
       localStorage.setItem(k, v);
-    } catch (e) {}
+    } catch (e) {
+      atteso(e);
+    }
   },
   del(k) {
     try {
       localStorage.removeItem(k);
-    } catch (e) {}
+    } catch (e) {
+      atteso(e);
+    }
   }
 };
 impostaZoom(LS.get('hm_zoom'));
@@ -332,7 +356,9 @@ if (matchMedia('(pointer:coarse)').matches) {
     jid = e.pointerId;
     try {
       jz.setPointerCapture(jid);
-    } catch (_) {}
+    } catch (_) {
+      atteso(_);
+    }
     const r = jz.getBoundingClientRect();
     ox = e.clientX;
     oy = e.clientY;
@@ -402,7 +428,9 @@ async function goFull(auto) {
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
       try {
         await screen.orientation.lock('landscape');
-      } catch (_) {}
+      } catch (_) {
+        atteso(_);
+      }
     } else {
       if (document.exitFullscreen) await document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -557,7 +585,9 @@ const AU = {
     if (!this.c || !SFX[n]) return;
     try {
       SFX[n](this, this.c.currentTime + delay);
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'core');
+    }
   },
   setMode(m) {
     if (this.mode !== m) {

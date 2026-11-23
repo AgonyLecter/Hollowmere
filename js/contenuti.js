@@ -344,7 +344,9 @@ function animalImg(kind, moving, f) {
             q.y = e.y - (a.kind === 'mucca' || a.kind === 'capra' || a.kind === 'pecora' ? 28 : 18);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'contenuti');
+    }
     return q;
   };
 }
@@ -365,7 +367,9 @@ function animalImg(kind, moving, f) {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'contenuti');
+    }
   });
 }
 // conserve e succhi anche per i raccolti nuovi

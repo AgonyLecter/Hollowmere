@@ -39,7 +39,6 @@ Object.assign(CROPS, {
   mais: { days: 5, n: 'Mais', y: [1, 2], s: [3] },
   porro: { days: 4, n: 'Porro', y: [1, 1], s: [1] }
 });
-const SEASON_ICON = ['🍂', '❄', '🌱', '☀'];
 Object.assign(ITEMS, {
   s_fragola: { n: 'Semi di fragola', t: 'seed', crop: 'fragola', p: 70, x: 'Si raccolgono più volte.' },
   s_pomodoro: { n: 'Semi di pomodoro', t: 'seed', crop: 'pomodoro', p: 60, x: 'Si raccolgono più volte.' },

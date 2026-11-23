@@ -469,7 +469,9 @@ const Richieste = {
       x.clearRect(0, 0, 32, 32);
       try {
         x.drawImage(portrait(c.dataset.p, ''), 0, 0, 32, 32);
-      } catch (e) {}
+      } catch (e) {
+        segnala(e, 'richieste');
+      }
     });
     box.querySelectorAll('canvas[data-i]').forEach(c => {
       const x = c.getContext('2d');

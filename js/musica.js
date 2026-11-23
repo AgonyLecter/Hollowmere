@@ -726,14 +726,18 @@ const Musica = {
       B.g.gain.setValueAtTime(Math.max(0.0001, B.g.gain.value), now);
       B.g.gain.exponentialRampToValueAtTime(0.0001, now + fade);
       B.r.gain.setTargetAtTime(0, now, fade / 3);
-    } catch (e) {}
+    } catch (e) {
+      atteso(e);
+    }
     setTimeout(
       () => {
         try {
           B.g.disconnect();
           B.f.disconnect();
           B.r.disconnect();
-        } catch (e) {}
+        } catch (e) {
+          atteso(e);
+        }
       },
       (fade + 7) * 1000
     );

@@ -12,7 +12,9 @@ async function friendUids(st) {
     try {
       const s = await NET.api.get(NET.r('villaggi/' + f.pid + '/uid'));
       if (s.val()) f.uid = s.val();
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'scambi');
+    }
   }
 }
 function scambioMenu(pid, tab) {

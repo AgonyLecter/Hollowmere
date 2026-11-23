@@ -42,7 +42,9 @@ MP.online = async function () {
         const o = v[vil][pid] || {};
         if (!o.ts || now - o.ts < 120000) on[pid] = vil;
       }
-  } catch (e) {}
+  } catch (e) {
+    rete(e, 'valle');
+  }
   return on;
 };
 // la scheda pubblica del villaggio porta anche il cartello scritto dal giocatore
@@ -53,7 +55,9 @@ MP.online = async function () {
     if (!NET.ok || !st || !st.pid || !isFree(st) || !st.free.motto) return;
     try {
       await NET.api.set(NET.r('villaggi/' + st.pid + '/motto'), String(st.free.motto).slice(0, 60));
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'valle');
+    }
   };
 }
 G.news = [];

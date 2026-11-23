@@ -3,14 +3,20 @@
 // le scintille della fucina solo quando Brom lavora, bussare alle porte, la cassetta che dice chi ha mandato cosa.
 const { openGame, newGame, skipScenes } = require('./helpers');
 // risponde ai dialoghi: sceglie la prima opzione (o quella col testo dato) finché il giocatore non è libero
+// (a tempo, non a giri: su una macchina lenta le scene durano di più)
 async function rispondi(page, scegli) {
-  for (let i = 0; i < 80; i++) {
+  const fine = Date.now() + 30000;
+  while (Date.now() < fine) {
     const s = await page.evaluate(() => ({
       cut: G.cut,
       busy: UI.busy(),
       opts: [...document.querySelectorAll('#dchoices button')].map(b => b.textContent)
     }));
     if (!s.cut && !s.busy) return true;
+    if (!s.opts.length && (await page.evaluate(() => UI.modalOpen && !UI.dlgOpen))) {
+      await page.evaluate(() => UI.close());
+      continue;
+    }
     if (s.opts.length) {
       const k = scegli
         ? Math.max(
@@ -30,6 +36,12 @@ async function rispondi(page, scegli) {
 module.exports = async function (t, { browser }) {
   const { page, errors } = await openGame(browser);
   await newGame(page, 'Ada', 'f');
+  // le scelte dei dialoghi si sbloccano dopo un attimo (contro i tocchi per sbaglio): si aspetta lo sblocco vero
+  await page.evaluate(() => {
+    window.sceltaPronta = async () => {
+      while (performance.now() < UI._lock + 20) await new Promise(r => setTimeout(r, 30));
+    };
+  });
   await page.evaluate(() => {
     freeStart(3);
   });
@@ -178,20 +190,24 @@ module.exports = async function (t, { browser }) {
     runAct(o);
   });
   await page.waitForSelector('#dchoices button', { timeout: 5000 });
-  await page.waitForTimeout(900); // le scelte si sbloccano dopo 0,8 s (contro i tocchi per sbaglio)
+  await page.evaluate(() => sceltaPronta());
   await page.evaluate(() => document.querySelectorAll('#dchoices button')[0].click()); // «Bussa»
   // si segue la scena: dialoghi avanti, nei menu l'ultima voce (di solito «niente, ciao»)
   const scena = await page.evaluate(async () => {
+    // si segue la scena fino in fondo (al massimo un minuto: su una macchina lenta Brom cammina piano)
     let uscito = false,
       k = 0;
-    for (; k < 200 && (G.cut || UI.busy()); k++) {
+    const fine = performance.now() + 60000;
+    for (; performance.now() < fine && (G.cut || UI.busy()); k++) {
       if (!NPC('brom').hidden) uscito = true;
       if (k === 15) Math.random = window.__r;
       const b = [...document.querySelectorAll('#dchoices button')];
       if (b.length) {
-        await new Promise(r => setTimeout(r, 850));
+        await sceltaPronta();
         b[b.length - 1].click();
-      } else UI.advance();
+      } else if (UI.modalOpen && !UI.dlgOpen)
+        UI.close(); // una finestra che non c'entra (una novità…)
+      else UI.advance();
       await new Promise(r => setTimeout(r, 100));
     }
     Math.random = window.__r;
@@ -202,10 +218,11 @@ module.exports = async function (t, { browser }) {
     };
   });
   t.true('bussando, Brom esce sulla soglia', scena.uscito);
-  t.true('la chiacchiera alla porta finisce', scena.finita);
+  t.true('la chiacchiera alla porta finisce' + (scena.finita ? '' : ' (' + scena.dove + ')'), scena.finita);
   await page.waitForTimeout(1500);
   t.true('poi Brom rientra in casa', await page.evaluate(() => NPC('brom').hidden && !NPC('brom').script));
   // bussando di nuovo e di nuovo: risponde male, e non esce
+  await rispondi(page);
   await page.waitForFunction(() => NPC('brom').hidden && !G.cut && !UI.busy(), null, { timeout: 15000 });
   const seccato = await page.evaluate(async () => {
     G.st.friends.brom = 0;
@@ -219,10 +236,11 @@ module.exports = async function (t, { browser }) {
     };
     for (let i = 0; i < 3; i++) {
       runAct(o);
-      for (let k = 0; k < 80 && (G.cut || UI.busy()); k++) {
+      const fine = performance.now() + 30000;
+      while (performance.now() < fine && (G.cut || UI.busy())) {
         const b = document.querySelector('#dchoices button');
         if (b) {
-          await new Promise(r => setTimeout(r, 850));
+          await sceltaPronta();
           b.click();
         } else UI.advance();
         await new Promise(r => setTimeout(r, 120));
@@ -242,10 +260,11 @@ module.exports = async function (t, { browser }) {
     const o = G.maps.main.objs.find(o => o.kind === 'door' && o.key === 'forge');
     runAct(o);
     let txt = '';
-    for (let k = 0; k < 60 && (G.cut || UI.busy()); k++) {
+    const fine = performance.now() + 30000;
+    while (performance.now() < fine && (G.cut || UI.busy())) {
       const c = document.querySelector('#dchoices button');
       if (c) {
-        await new Promise(r => setTimeout(r, 850));
+        await sceltaPronta();
         c.click();
       }
       const d = document.querySelector('#dtext');

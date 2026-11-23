@@ -400,7 +400,9 @@ function rankTick(dt) {
     if (!NET.ok || !st || !st.pid || !isFree(st)) return;
     try {
       await NET.api.set(NET.r('villaggi/' + st.pid + '/rank'), myRank(st));
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'espansione');
+    }
   };
 }
 

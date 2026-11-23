@@ -646,7 +646,9 @@ async function gzCaricaPiume() {
     L.map(async p => {
       try {
         GZ.piume[p.id] = await GZ_DB.piume(p.id);
-      } catch (e) {}
+      } catch (e) {
+        rete(e, 'gazzetta');
+      }
     })
   );
 }
@@ -837,7 +839,9 @@ function gzCollega(d) {
           try {
             GZ.commenti[id] = await GZ_DB.commenti(id);
             gzDisegna();
-          } catch (e) {}
+          } catch (e) {
+            rete(e, 'gazzetta');
+          }
       })
   );
   q('[data-cman]').forEach(
@@ -872,7 +876,9 @@ function gzCollega(d) {
           await GZ_DB.togli(b.dataset.togli);
           delete GZ.posts[b.dataset.togli];
           gzDisegna();
-        } catch (e) {}
+        } catch (e) {
+          rete(e, 'gazzetta');
+        }
       })
   );
   q('[data-mod]').forEach(b => (b.onclick = () => ((GZ.modifica = b.dataset.mod), gzDisegna())));
