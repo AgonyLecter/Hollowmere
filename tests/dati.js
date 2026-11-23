@@ -268,6 +268,7 @@ module.exports = async function (t, { browser }) {
       for (const k of MERC_STOCK) ok.add(k);
       for (const r of RES_POOL) for (const [x] of r.shop) ok.add(x);
       for (const [x] of DECOR_SHOP) ok.add(x);
+      for (const [x] of COMP_SHOP) ok.add(x);
       for (const f of Object.values(FESTE)) for (const [x] of f.shop || []) ok.add(x);
       for (const [x] of NOVE_SHOP) ok.add(x);
       for (const [x] of BOTTEGA) ok.add(x);

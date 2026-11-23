@@ -56,6 +56,26 @@ module.exports = async function (t, { browser }) {
   t.eq('scegli l’uovo d’anatra: prendi solo quello', g.preso, 1);
   t.eq('l’uovo di gallina resta in casa', g.restaGallina, 1);
   t.eq('e quello d’anatra non c’è più', g.restaAnatra, 0);
+  // con un attrezzo in mano conta solo l'attrezzo: la gallina vicina non si accarezza per sbaglio
+  const at = await page.evaluate(() => {
+    const st = G.st;
+    G.map = G.maps.main;
+    st.time = 12 * 60;
+    spawnFarmAnimals();
+    const e = G.fanimals[0];
+    setPos(G.player, Math.floor(e.x / 16) - 1, Math.floor(e.y / 16), 2);
+    G.player.x = e.x - 14;
+    G.player.y = e.y;
+    G.player.dir = 2;
+    st.sel = st.inv.findIndex(s => s && s.id === 'accetta');
+    const conAttrezzo = (aimScelta() || {}).k;
+    const vuoto = st.inv.findIndex(s => !s);
+    st.sel = vuoto;
+    const aManiVuote = (aimScelta() || {}).k;
+    return { conAttrezzo: conAttrezzo || '', aManiVuote };
+  });
+  t.true('con l’ascia in mano la gallina vicina non si accarezza', at.conAttrezzo !== 'animal');
+  t.eq('a mani vuote sì', at.aManiVuote, 'animal');
   // giorno e notte
   const c = await page.evaluate(async () => {
     const st = G.st;

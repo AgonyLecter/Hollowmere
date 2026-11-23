@@ -638,9 +638,7 @@ function freeActBase(fx, fy) {
     id = it && it.id,
     o = m.objAt(fx, fy),
     k = fkey(fx, fy),
-    W2 = st.free,
-    p = G.player;
-  if (animalAct(p.x + DIRV[p.dir][0] * 14, p.y + DIRV[p.dir][1] * 14)) return true;
+    W2 = st.free;
   // raccogliere i detriti
   if (o && o.kind === 'debris') {
     const t = o.dt,
@@ -967,7 +965,6 @@ function chestMenu(bk) {
   const b = G.st.free.built[bk];
   if (!b) return;
   b.inv = inventario(b.inv, CASSA_POSTI);
-  ZPICK = null;
   zaino(bk);
 }
 

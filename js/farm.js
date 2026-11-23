@@ -419,6 +419,8 @@ function farmAct(tx, ty) {
 // chi o cosa hai davanti: una persona, una bestia, il gatto o la casella (un sasso, un albero, un oggetto).
 // Vince il più vicino al punto in cui guardi, con un piccolo vantaggio alle persone: così un gatto o un sasso
 // accanto a qualcuno non ti impediscono di parlarci, e una persona accanto a un sasso non ti impedisce di romperlo.
+// Con un attrezzo in mano conta solo l'attrezzo: niente carezze a bestie, gatti e compagno (basta una casella
+// vuota per coccolarli), e con le persone parli solo se le hai proprio davanti.
 // La usano sia il tasto azione sia il fumetto sopra la testa, che quindi dicono sempre la stessa cosa.
 const AIM_TILE = ['debris', 'tree', 'pine', 'ceppo', 'log', 'rock', 'built', 'bush'];
 function aimScelta() {
@@ -429,21 +431,24 @@ function aimScelta() {
   const ax = p.x + DIRV[p.dir][0] * 14,
     ay = p.y + DIRV[p.dir][1] * 14,
     [fx, fy] = frontTile(),
+    it = st && st.inv && st.inv[st.sel],
+    attrezzo = !!(it && ITEMS[it.id] && ITEMS[it.id].t === 'tool'),
     C = [];
   for (const n of G.npcs) {
     if (n.hidden || n.map !== m.id) continue;
     const [nx, ny] = ptile(n),
       d = Math.hypot(n.x - ax, n.y - ay),
       davanti = nx === fx && ny === fy;
-    if (d < 18 || davanti) C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
+    if (attrezzo ? davanti : d < 18 || davanti)
+      C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
   }
-  if (m.id === 'main' && isFree(st) && G.fanimals)
+  if (!attrezzo && m.id === 'main' && isFree(st) && G.fanimals)
     for (const e of G.fanimals) {
       if (e.dentro) continue;
       const d = Math.hypot(e.x - ax, e.y - ay);
       if (d < 18) C.push({ k: 'animal', r: e, d });
     }
-  if (m.id === 'main' && G.critters)
+  if (!attrezzo && m.id === 'main' && G.critters)
     for (const c of G.critters) {
       if (c.k !== 'cat' && c.k !== 'chicken') continue;
       const d = Math.hypot(c.x - ax, c.y - ay);
@@ -454,7 +459,7 @@ function aimScelta() {
   if ((o && (o.act || AIM_TILE.includes(o.kind))) || (f && f.c))
     C.push({ k: 'tile', d: Math.hypot(fx * 16 + 8 - ax, fy * 16 + 12 - ay) });
   // punto di estensione: altri file aggiungono chi si può toccare ({ k: 'ext', d, act(), fumetto() })
-  Ext.run('mira', C, ax, ay, m);
+  if (!attrezzo) Ext.run('mira', C, ax, ay, m);
   C.sort((a, b) => a.d - b.d);
   return C[0] || null;
 }

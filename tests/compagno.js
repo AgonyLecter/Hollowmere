@@ -83,6 +83,11 @@ module.exports = async function (t, { browser }) {
     G.map = m;
     setPos(G.player, 20, 20, 0);
     for (let i = 0; i < 5; i++) compTick(0.05);
+    // solo il nostro ramo nei dintorni (altrimenti va a prendere il detrito più vicino)
+    for (const o of m.objs.filter(
+      o => o.kind === 'debris' && Math.abs(o.tx - 20) < 9 && Math.abs(o.ty - 20) < 9
+    ))
+      mapRemove(m, o);
     const k = '22,20';
     st.free.debris[k] = 'ramo';
     m.add(OB('debris', 22, 20, FREEIMG.ramo, { act: 'debris', dt: 'ramo', solid: [], hits: [[22, 20]] }));

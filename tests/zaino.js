@@ -1,6 +1,7 @@
 'use strict';
-// 11. Lo zaino stile Minecraft: tocca per prendere e posare, doppio tocco per spostare veloce, tieni premuto
-// per dividere (o posarne uno), la cassa, il cestino, e niente si perde chiudendo con qualcosa in mano.
+// 11. Lo zaino: tocca per scegliere e tocca dove spostare (la pila non lascia mai la sua casella finché non la
+// sposti), doppio tocco per lo spostamento veloce, tieni premuto per metà pila (o per posarne una), la cassa,
+// il cestino; tutto in una schermata senza scorrere; niente si perde chiudendo.
 const { openGame, newGame, skipScenes } = require('./helpers');
 module.exports = async function (t, { browser, shot }) {
   const { page, errors } = await openGame(browser);
@@ -18,24 +19,26 @@ module.exports = async function (t, { browser, shot }) {
       st.inv[1] = { id: 'legna', n: 20 };
       st.inv[2] = { id: 'pietra', n: 7 };
       st.inv[12] = { id: 'legna', n: 5 };
-      ZPICK = null;
       zaino();
     });
   const slot = (w, i) => page.locator(`#mbox .islot[data-w="${w}"][data-i="${i}"]`);
   const inv = () => page.evaluate(() => G.st.inv.map(s => (s ? s.id + ':' + s.n : '')));
   await prepara();
   t.true(
-    'la barra è staccata in basso',
-    await page.evaluate(() => !!document.querySelector('#mbox .ibarra'))
+    'tutto in una schermata: niente da scorrere',
+    await page.evaluate(() => $('#mbox').scrollHeight <= $('#mbox').clientHeight + 2)
   );
-  // tocca e posa in un posto vuoto
+  // tocca e sposta in un posto vuoto
   await slot('z', 2).click();
   await page.waitForTimeout(400);
-  t.true('toccando una pila la prendi in mano', await page.evaluate(() => ZH.s && ZH.s.id === 'pietra'));
+  t.true(
+    'toccando una pila la scegli, e resta al suo posto',
+    await page.evaluate(() => ZSEL.w === 'z' && ZSEL.i === 2 && G.st.inv[2].id === 'pietra')
+  );
   await slot('z', 5).click();
   await page.waitForTimeout(400);
   let I = await inv();
-  t.true('e toccando un posto vuoto la posi', I[5] === 'pietra:7' && I[2] === '');
+  t.true('e toccando un posto vuoto la sposti lì', I[5] === 'pietra:7' && I[2] === '');
   // uguali si uniscono
   await slot('z', 12).click();
   await page.waitForTimeout(400);
@@ -49,20 +52,23 @@ module.exports = async function (t, { browser, shot }) {
   await page.waitForTimeout(600);
   await page.mouse.up();
   await page.waitForTimeout(200);
-  const meta = await page.evaluate(() => [ZH.s && ZH.s.n, G.st.inv[1].n]);
-  t.eq('tenendo premuto prendi metà pila (per eccesso)', meta.join('/'), '13/12');
-  // con qualcosa in mano, tieni premuto per posarne uno
+  t.eq('tenendo premuto scegli metà pila (per eccesso)', await page.evaluate(() => ZSEL.n), 13);
+  // con una pila scelta, tieni premuto su un altro posto: ne posi una
   await slot('z', 7).hover();
   await page.mouse.down();
   await page.waitForTimeout(600);
   await page.mouse.up();
   await page.waitForTimeout(200);
-  const uno = await page.evaluate(() => [ZH.s && ZH.s.n, G.st.inv[7] && G.st.inv[7].n]);
-  t.eq('con la pila in mano, tenendo premuto ne posi uno', uno.join('/'), '12/1');
-  // chiudendo con qualcosa in mano non si perde niente
+  I = await inv();
+  t.eq('tenendo premuto su un altro posto ne posi una', [I[1], I[7]].join(' '), 'legna:24 legna:1');
+  // e toccando un posto vuoto sposti il resto della metà scelta
+  await slot('z', 8).click();
+  await page.waitForTimeout(400);
+  I = await inv();
+  t.eq('la metà scelta va dove tocchi', [I[1], I[8]].join(' '), 'legna:12 legna:12');
   await page.evaluate(() => UI.close());
   I = await inv();
-  t.eq('chiudendo, quello in mano torna nello zaino', I[1], 'legna:24');
+  t.eq('chiudendo non si perde niente', I.filter(Boolean).length, 5);
   // doppio tocco: dalla barra al resto dello zaino
   await prepara();
   await slot('z', 2).dblclick();
@@ -70,27 +76,42 @@ module.exports = async function (t, { browser, shot }) {
   I = await inv();
   const dove = I.findIndex(x => x === 'pietra:7');
   t.true('doppio tocco: dalla barra al resto dello zaino', dove >= 10 && I[2] === '');
-  t.true('e niente resta in mano', await page.evaluate(() => !ZH.s));
   // e indietro, unendosi a una pila uguale se c'è
   await slot('z', 12).dblclick();
   await page.waitForTimeout(400);
   I = await inv();
   t.eq('doppio tocco dallo zaino alla barra: si unisce alla pila uguale', I[1], 'legna:25');
   await page.evaluate(() => UI.close());
-  // la cassa: doppio tocco tra zaino e cassa
+  // la cassa: doppio tocco tra zaino e cassa, sempre senza scorrere
   await page.evaluate(() => {
     G.st.free.built['10,10'] = { id: 'cassa', inv: Array(20).fill(null) };
     chestMenu('10,10');
   });
   await page.waitForTimeout(300);
+  t.true(
+    'cassa e zaino insieme, senza scorrere',
+    await page.evaluate(() => $('#mbox').scrollHeight <= $('#mbox').clientHeight + 2)
+  );
   await slot('z', 1).dblclick();
   await page.waitForTimeout(400);
   const cassa = await page.evaluate(() => G.st.free.built['10,10'].inv.map(s => (s ? s.id + ':' + s.n : '')));
   t.eq('doppio tocco: dallo zaino alla cassa', cassa[0], 'legna:25');
+  // «Uguali»: nella cassa solo quello che c'è già
+  await page.evaluate(() => {
+    G.st.inv[20] = { id: 'legna', n: 3 };
+    G.st.inv[21] = { id: 'fibra', n: 2 };
+  });
+  await page.locator('#mbox [data-z="uguali"]').click();
+  await page.waitForTimeout(300);
+  const ug = await page.evaluate(() => [
+    countItem('legna'),
+    countItem('fibra'),
+    G.st.free.built['10,10'].inv[0].n
+  ]);
+  t.eq('«Uguali» porta in cassa solo le cose che ci sono già', ug.join('/'), '0/2/28');
   if (shot) {
     await slot('c', 0).click();
     await page.waitForTimeout(300);
-    await page.evaluate(() => (document.querySelector('#mbox').scrollTop = 0));
     await page.screenshot({ path: shot });
     await slot('c', 0).click();
   }
@@ -100,25 +121,22 @@ module.exports = async function (t, { browser, shot }) {
   await page.waitForTimeout(400);
   await page.locator('#mbox [data-trash]').click();
   await page.waitForTimeout(300);
-  t.eq('il cestino butta quello che hai in mano', await page.evaluate(() => countItem('pietra')), 0);
+  t.eq('il cestino butta quello che hai scelto', await page.evaluate(() => countItem('pietra')), 0);
   await page.evaluate(() => UI.close());
-  // zaino pieno: lo scambio che farebbe perdere qualcosa non si fa
+  // metà pila su un posto occupato da un'altra cosa: non si fa, e non si perde niente
   const pieno = await page.evaluate(() => {
     const st = G.st;
-    st.inv = Array(30)
-      .fill(0)
-      .map((_, i) => ({ id: i === 0 ? 'legna' : i === 1 ? 'pietra' : 'fibra', n: i < 2 ? 10 : 1 }));
-    for (let i = 2; i < 30; i++) st.inv[i] = { id: ['hoe', 'accetta', 'piccone', 'can'][i % 4], n: 1 };
+    st.inv = Array(30).fill(null);
+    st.inv[0] = { id: 'legna', n: 10 };
+    st.inv[1] = { id: 'pietra', n: 10 };
     zaino();
-    zTocca('z', 0, true); // metà legna in mano, il resto rimane
-    zTocca('z', 1, false); // scambio con la pietra: dopo non ci sarebbe posto per la pietra
-    const fermo = ZH.s && ZH.s.id === 'legna';
+    zTocca('z', 0, true); // metà della legna
+    zTocca('z', 1, false); // sulla pietra: no
     UI.close();
     const tot = id => G.st.inv.filter(s => s && s.id === id).reduce((a, s) => a + s.n, 0);
-    return { fermo, legna: tot('legna'), pietra: tot('pietra') };
+    return tot('legna') + '/' + tot('pietra') + '/' + G.st.inv[1].id;
   });
-  t.true('zaino pieno: lo scambio che farebbe perdere qualcosa non si fa', pieno.fermo);
-  t.eq('e non si perde niente', pieno.legna + '/' + pieno.pietra, '10/10');
+  t.eq('mezza pila su un posto occupato: niente si muove, niente si perde', pieno, '10/10/pietra');
   // un regalo (o un piatto) a zaino pieno non deve prendere il posto di niente
   const pieno2 = await page.evaluate(() => {
     const st = G.st;

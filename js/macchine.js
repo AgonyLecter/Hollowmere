@@ -524,7 +524,7 @@ function macGui(k, b) {
     </div>
     <div class="iinfo mac-info"></div>
     <h3>Zaino <span class="small">— tocca: un lotto · doppio tocco: tutta la pila</span></h3>` +
-      zGrid('z', Z, ''),
+      zGriglia('z', Z.length),
     () => {
       clearInterval(MACG.timer);
       MACG.k = MACG.b = null;
@@ -537,6 +537,8 @@ function macGui(k, b) {
   box.querySelectorAll('.islot[data-w]').forEach(el => {
     const s = Z[+el.dataset.i];
     if (s && ICON[s.id]) el.firstChild.getContext('2d').drawImage(ICON[s.id], 0, 0);
+    el.lastChild.textContent = s && s.n > 1 ? s.n : '';
+    el.classList.toggle('hot', Z.length > 10 && Math.floor(+el.dataset.i / 10) === zRiga());
     if (s) {
       el.title = ITEMS[s.id].n;
       const dentro = M.ok(s.id) || (M.fuel && s.id === M.fuel);

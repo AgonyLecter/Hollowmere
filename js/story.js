@@ -919,7 +919,8 @@ function drawGuide() {
   if (!G.guideOn || G.mode !== 'game' || G.cut || UI.busy() || !G.st || !G.map) return;
   if (!G.objC || G.t > G.objC.t) G.objC = { t: G.t + 0.35, v: guideTarget() };
   const T = G.objC.v;
-  if (!T) return;
+  // a due passi dalla meta la freccia si toglie: c'è già il fumetto di quello che hai davanti
+  if (!T || Math.hypot(T.x - G.player.x, T.y - G.player.y) < 40) return;
   const sx = T.x - G.cam.x,
     sy = T.y - G.cam.y,
     M = 14 / ZOOM,
