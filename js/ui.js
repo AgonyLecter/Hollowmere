@@ -55,7 +55,9 @@ const UI = {
     try {
       const v = JSON.parse(LS.get('hm_vol'));
       if (v) AU.vol = v;
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'ui');
+    }
     this.buildHotbar();
   },
   busy() {

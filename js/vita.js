@@ -219,7 +219,9 @@ function drawVita(m) {
   Ext.on('drawWorldExtras', function (m) {
     try {
       drawVita(m);
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'vita');
+    }
   });
 }
 // le attività hanno anche un'etichetta nel menu degli abitanti
@@ -481,7 +483,9 @@ async function gossipLoad() {
       if (v.built >= 40) GOSSIP.push(`Il villaggio di ${v.name} è pieno di costruzioni. Più del tuo!`);
       if (v.motto) GOSSIP.push(`Ho letto il cartello di ${v.name}: «${String(v.motto).slice(0, 40)}».`);
     }
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'vita');
+  }
 }
 function gossip() {
   return GOSSIP.length ? GOSSIP[Math.floor(Math.random() * GOSSIP.length)] : null;
@@ -865,7 +869,9 @@ function contesto(st) {
   try {
     const q = incToday(st).find(q => !q.claimed && incProg(st, q)[0] >= incProg(st, q)[1]);
     if (q) L.push(`Alla bacheca c'è un incarico che puoi già chiudere: «${incText(q)}».`);
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'vita');
+  }
   if (st.money < 40) L.push('Soldi pochi, eh? Porta qualcosa alla cassetta delle spedizioni.');
   if (st.free.letNew) L.push('Ottavio dice che hai lettere nuove al ponte.');
   return L;
@@ -938,7 +944,9 @@ function indizi(st) {
       const id = miss[Math.floor(st.day + miss.length) % miss.length];
       H.push(`Irene cerca ancora ${ITEMS[id].n.toLowerCase()} per il museo.`);
     }
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'vita');
+  }
   const fr = st.mpFriends || [];
   if (!fr.length)
     H.push(
@@ -962,7 +970,9 @@ let GOSSIP_NOVE = [];
     try {
       const me = (G.visit ? G.home : G.st).pid;
       GOSSIP_NOVE = (await MP.list(60)).filter(v => v.nove && v.pid !== me).map(v => v.name);
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'vita');
+    }
   };
 }
 {
@@ -972,7 +982,9 @@ let GOSSIP_NOVE = [];
     if (!NET.ok || !st || !st.pid || !isFree(st) || !st.flags.nove) return;
     try {
       await NET.api.set(NET.r('villaggi/' + st.pid + '/nove'), true);
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'vita');
+    }
   };
 }
 // le coppie che sussurrano: quando passi vicino, si dicono un indizio che ti manca

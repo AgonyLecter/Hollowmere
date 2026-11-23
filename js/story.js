@@ -1151,7 +1151,9 @@ async function festaStart(forced) {
       cp.py = 20;
       cp.dir = 3;
       LS.set('hm_prefesta', JSON.stringify(cp));
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'story');
+    }
     if (forced) {
       await UI.fade(1, 500);
       AU.play('knock');
@@ -2042,7 +2044,9 @@ async function finishGame(n, name, epi) {
     LS.set('hm_freebase', JSON.stringify(base));
     const cp = LS.get('hm_prefesta');
     if (cp) LS.set('hm_save', cp);
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'story');
+  }
   const E = JSON.parse(LS.get('hm_endings') || '[]');
   await UI.fade(1, 700);
   G.redTint = 0;

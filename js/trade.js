@@ -157,7 +157,9 @@ async function marketBuy(o) {
     }).then(r => {
       won = r.committed && r.snapshot.val() && r.snapshot.val().buyer === st.pid;
     });
-  } catch (e) {}
+  } catch (e) {
+    rete(e, 'trade');
+  }
   if (!won) {
     UI.toast("Qualcuno è stato più veloce: l'offerta non c'è più.", 'bad');
     return;

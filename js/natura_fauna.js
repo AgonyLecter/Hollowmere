@@ -477,7 +477,8 @@ function faunaTick(dt) {
         break;
       }
     }
-    if (Math.abs(a.x - G.cam.x - VW / 2) > VW + 200 || Math.abs(a.y - G.cam.y - VH / 2) > VH + 200) a.morto = 1;
+    if (Math.abs(a.x - G.cam.x - VW / 2) > VW + 200 || Math.abs(a.y - G.cam.y - VH / 2) > VH + 200)
+      a.morto = 1;
   }
   G.fauna = L.filter(a => !a.morto);
   taccuinoTick(dt);

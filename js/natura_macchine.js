@@ -327,7 +327,9 @@ function natDrawMach(e) {
   dImg(ctx, fr, x, y);
   try {
     NAT_ANIM[e.bid](e, x, y, lav, b || {});
-  } catch (err) {}
+  } catch (err) {
+    segnala(err, 'natura_macchine');
+  }
 }
 Ext.on('listaMondo', list => {
   for (const e of list) if (e.kind === 'built' && NAT_MF[e.bid] && !e.disegna) e.disegna = natDrawMach;

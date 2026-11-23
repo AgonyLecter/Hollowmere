@@ -23,7 +23,9 @@ const myHome = () => (G.visit ? G.home : G.st);
         }
       await NET.api.set(NET.r('villaggi/' + st.pid + '/trust'), T);
       await NET.api.set(NET.r('villaggi/' + st.pid + '/trustU'), U);
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'coop');
+    }
   };
 }
 // ogni messaggio porta chi lo manda davvero (le regole possono verificarlo: uid === auth.uid)
@@ -42,7 +44,9 @@ async function coopToggle(pid) {
     try {
       const s = await NET.api.get(NET.r('villaggi/' + pid + '/uid'));
       f.uid = s.val() || '';
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'coop');
+    }
   }
   AU.play('ok');
   UI.toast(
@@ -102,7 +106,9 @@ async function coopToggle(pid) {
           `${G.visit.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto (o premi B), zappa e semina con le tue cose.`
         );
       }
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'coop');
+    }
     UI.hud();
   };
 }
@@ -313,7 +319,9 @@ async function coopCheck() {
       UI.toast(`${v.name} ha tolto il permesso di costruire.`);
     }
     UI.hud();
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'coop');
+  }
 }
 let COOP_T = 20;
 {
@@ -360,10 +368,14 @@ async function coopHas(owner) {
     b = null;
   try {
     a = (await NET.api.get(NET.r('villaggi/' + owner + '/trust/' + me))).val();
-  } catch (e) {}
+  } catch (e) {
+    rete(e, 'coop');
+  }
   try {
     if (NET.uid) b = (await NET.api.get(NET.r('villaggi/' + owner + '/trustU/' + NET.uid))).val();
-  } catch (e) {}
+  } catch (e) {
+    rete(e, 'coop');
+  }
   return a === true || b === true;
 }
 async function coopWhy(owner, name) {
@@ -432,7 +444,9 @@ async function friendsRepair(st) {
       if (!f.uid)
         try {
           f.uid = (await NET.api.get(NET.r('villaggi/' + f.pid + '/uid'))).val() || '';
-        } catch (e) {}
+        } catch (e) {
+          rete(e, 'coop');
+        }
       continue;
     }
     list = list || (await MP.list(200));
@@ -442,7 +456,9 @@ async function friendsRepair(st) {
     f.pid = same[0].pid;
     try {
       f.uid = (await NET.api.get(NET.r('villaggi/' + f.pid + '/uid'))).val() || '';
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'coop');
+    }
     UI.toast(`${f.name} ha un codice nuovo (${f.pid} al posto di ${old}): aggiornato tra i tuoi amici.`);
   }
   NET.save(st);
@@ -467,7 +483,9 @@ coopToggle = async function (pid) {
     try {
       nm = (await NET.api.get(NET.r('villaggi/' + pid + '/name'))).val();
       f.uid = (await NET.api.get(NET.r('villaggi/' + pid + '/uid'))).val() || f.uid || '';
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'coop');
+    }
     if (!nm)
       UI.toast(
         `Attenzione: il codice ${pid} di ${f.name} non risulta più nella Valle. Cercalo nell'albo e riaggiungilo.`,

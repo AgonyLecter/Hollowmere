@@ -59,7 +59,9 @@ const NET = {
         .then(an => {
           try {
             an.getAnalytics(app);
-          } catch (e) {}
+          } catch (e) {
+            atteso(e); // le statistiche le può bloccare il browser
+          }
         })
         .catch(() => {});
       if (!this._listening) {
@@ -75,7 +77,9 @@ const NET = {
     if (!this.ok) {
       try {
         this.msgs = JSON.parse(LS.get('hm_lap') || '[]');
-      } catch (e) {}
+      } catch (e) {
+        segnala(e, 'net');
+      }
       // niente connessione: si riprova da soli, sempre più di rado; appena riesce si riattiva tutto
       this._tries = (this._tries || 0) + 1;
       clearTimeout(this._rt);
@@ -291,7 +295,9 @@ const NET = {
     if (!this.ok) return;
     try {
       await this.api.push(this.r('eredi'), { name: String(name).slice(0, 20), ts: Date.now() });
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'net');
+    }
   },
   async carve(t, n) {
     const m = { t: t.slice(0, 80), n: (n || '').slice(0, 20), ts: Date.now() };
@@ -345,7 +351,9 @@ function netDiag() {
         ? ko(
             'Salvataggio online rifiutato: ' + N.saveErr + (N.ownErr ? ' (proprietà: ' + N.ownErr + ')' : '')
           )
-        : '… nessun salvataggio online ancora in questa sessione'
+        : '… nessun salvataggio online ancora in questa sessione',
+    // gli ultimi errori (da copiare quando si segnala un problema)
+    ...ERRORI.slice(-5).map(x => ko(esc(x.dove + ': ' + x.msg)))
   ].join('<br>');
 }
 // ---------- compressione dei salvataggi (LZ, alfabeto base64: sicuro per Firebase) ----------

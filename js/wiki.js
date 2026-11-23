@@ -72,7 +72,9 @@ const Wiki = {
       if (LOOKS[id])
         try {
           D.portraits[id] = url(portrait(id, ''));
-        } catch (e) {}
+        } catch (e) {
+          segnala(e, 'wiki');
+        }
     D.big = {};
     for (const k of Object.keys(AIMG)) D.big[k] = url(prima(AIMG[k]));
     D.crit = {};

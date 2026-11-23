@@ -120,7 +120,9 @@ function rankBadge() {
     _h();
     try {
       rankBadge();
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'rango');
+    }
   };
 }
 // «+N prestigio» quando sale

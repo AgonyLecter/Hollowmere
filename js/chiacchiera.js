@@ -28,7 +28,9 @@ const Chiacchiera = {
     try {
       const f = freeTalkLine(id);
       if (f && f !== '…') L.push(f);
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'chiacchiera');
+    }
     const h = hearts(id);
     if (!L.length)
       L.push(
@@ -99,7 +101,9 @@ const Chiacchiera = {
           )
         );
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'chiacchiera');
+    }
     // chi ha bisogno di qualcosa
     const aperte = (st.favors || []).filter(f => !f.done && !f.esito && f.id !== id && ITEMS[f.item]);
     if (aperte.length) {
@@ -117,7 +121,9 @@ const Chiacchiera = {
             : `Fra ${g} giorni c'è ${f.n}. ${this.nome(f.org)} sta preparando tutto.`
         );
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'chiacchiera');
+    }
     if (!L.length) L.push('Niente di nuovo. Qui le novità arrivano piano, come la primavera.');
     return this._a(L, 'novita:' + id);
   },

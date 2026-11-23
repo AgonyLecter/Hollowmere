@@ -30,7 +30,9 @@ async function updCheck() {
     try {
       const reg = navigator.serviceWorker && (await navigator.serviceWorker.getRegistration());
       if (reg) await reg.update();
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'update');
+    }
   }
 }
 // il momento giusto per ricaricare
@@ -74,7 +76,9 @@ function updTick() {
         LS.set(isFree(st) ? 'hm_free' : 'hm_save', JSON.stringify(Object.assign(st, { ts: Date.now() })));
         try {
           await Promise.race([NET.save(st), sleep(3000)]);
-        } catch (e) {}
+        } catch (e) {
+          rete(e, 'update');
+        }
         LS.set('hm_resume', JSON.stringify({ kind: isFree(st) ? 'free' : 'story', ts: Date.now() }));
       }
       await UI.fade(1, 400);
@@ -95,7 +99,9 @@ document.addEventListener('visibilitychange', () => {
   let r = null;
   try {
     r = JSON.parse(LS.get('hm_resume') || 'null');
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'update');
+  }
   LS.del('hm_resume');
   if (!r || Date.now() - r.ts > 120000) return;
   // su un telefono lento il titolo può arrivare dopo parecchi secondi: si aspetta fino a un minuto
@@ -105,7 +111,9 @@ document.addEventListener('visibilitychange', () => {
   let st = null;
   try {
     st = JSON.parse(LS.get(r.kind === 'free' ? 'hm_free' : 'hm_save'));
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'update');
+  }
   if (!st) return;
   await startFrom(st);
   UI.toast('Gioco aggiornato. Sei dove eri.');

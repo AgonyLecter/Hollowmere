@@ -3064,7 +3064,9 @@ const TOOLS = {
         ctx.fillRect(0, 0, VW, VH);
         ctx.restore();
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'grafica');
+    }
   };
 }
 
@@ -4221,7 +4223,9 @@ const HORSEMAN = (() => {
         ctx.arc(sx, sy, 1 + k * 3, 0, 7);
         ctx.fill();
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'grafica');
+    }
   });
 }
 // suono tutto suo: drone, coro dissonante, nitrito demoniaco distorto, zoccoli, lama
@@ -4313,7 +4317,9 @@ const HORSEMAN = (() => {
     const r = _sp.apply(this, arguments);
     try {
       AU.play('cavaliere');
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'grafica');
+    }
     return r;
   };
   let nt = 6;
@@ -4328,7 +4334,9 @@ const HORSEMAN = (() => {
           AU.play('nitrito');
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'grafica');
+    }
     return r;
   };
 }
@@ -4575,7 +4583,9 @@ function vivoTick(dt) {
               () => {
                 try {
                   if (G.map === m) throwBall(e, G.player, id);
-                } catch (_) {}
+                } catch (_) {
+                  segnala(_, 'grafica');
+                }
               },
               500 + Math.random() * 500
             );
@@ -4602,7 +4612,9 @@ function vivoTick(dt) {
     for (const s of VIVO.snowmen) {
       try {
         mapRemove(s.m, s.o);
-      } catch (e) {}
+      } catch (e) {
+        segnala(e, 'grafica');
+      }
     }
     VIVO.snowmen = [];
   }
@@ -4682,7 +4694,9 @@ function snowSplash(x, y) {
     });
   try {
     AU.play('step');
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'grafica');
+  }
 }
 function throwBall(from, to, fid) {
   const dx = to.x - from.x,
@@ -5022,7 +5036,9 @@ function occupied() {
       const k = s && s.in ? s.in : !s ? HOMES[n.id] : null;
       if (k) S.add(k);
     }
-  } catch (e) {}
+  } catch (e) {
+    segnala(e, 'grafica');
+  }
   return S;
 }
 let OCC = new Set(),
@@ -5140,7 +5156,9 @@ function svTick(dt) {
         try {
           AU.osc('square', 1400 + Math.random() * 300, AU.c.currentTime, 0.05, 0.03);
           AU.osc('sine', 2600, AU.c.currentTime, 0.12, 0.02);
-        } catch (e) {}
+        } catch (e) {
+          segnala(e, 'grafica');
+        }
       }
     }
   }
@@ -5293,7 +5311,9 @@ function svTick(dt) {
           ctx.fillRect(o.dx + 3, o.dy + 20, 58, 18);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'grafica');
+    }
   });
 }
 

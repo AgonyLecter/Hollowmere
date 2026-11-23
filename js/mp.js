@@ -22,7 +22,9 @@ const MP = {
         anim: (st.free.animals || []).length,
         built: Object.keys(st.free.built).length
       });
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'mp');
+    }
   },
   async list() {
     if (!NET.ok) return [];
@@ -44,7 +46,9 @@ const MP = {
     if (!NET.ok) return;
     try {
       await NET.api.push(NET.r('visite/' + owner), Object.assign({ ts: Date.now() }, a));
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'mp');
+    }
   },
   inbox(pid, cb) {
     if (!NET.ok) return null;
@@ -61,7 +65,9 @@ const MP = {
       mine = NET.r(`presenza/${village}/${me}`);
     try {
       D.onDisconnect(mine).remove();
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'mp');
+    }
     const off = D.onValue(NET.r('presenza/' + village), s => cb(s.val() || {}));
     return {
       // send: tutto (nome, aspetto…) · move: solo la posizione (update, pochi byte: si usa mentre cammini)
@@ -70,7 +76,9 @@ const MP = {
       stop: () => {
         try {
           off && off();
-        } catch (e) {}
+        } catch (e) {
+          rete(e, 'mp');
+        }
         D.remove(mine).catch(() => {});
       }
     };
@@ -88,7 +96,9 @@ const MP = {
     if (!NET.ok) return;
     try {
       await NET.api.push(NET.r('chat/' + village), m);
-    } catch (e) {}
+    } catch (e) {
+      rete(e, 'mp');
+    }
   }
 };
 G.others = {};
@@ -153,7 +163,9 @@ function presenceLeave() {
   if (CHAT_OFF)
     try {
       CHAT_OFF();
-    } catch (e) {}
+    } catch (e) {
+      segnala(e, 'mp');
+    }
   CHAT_OFF = null;
   G.others = {};
 }
