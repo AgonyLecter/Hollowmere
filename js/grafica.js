@@ -4403,202 +4403,22 @@ const HOG = (() => {
 }
 
 // ---------- il Cavaliere senza testa ----------
-const HORSEMAN = (() => {
-  const HB = R6b('#1e1826'),
-    HBd = HB.map(c => c.map(v => v * 0.72)),
-    MN = R6b('#2a1420'),
-    AR = R6b('#2a2a34'),
-    CO = R6b('#141018'),
-    RD = R6b('#8a0e14'),
-    RD2 = R6b('#c41a1a'),
-    ST = R6b('#b8c0c8'),
-    HF = R6b('#4a4a54');
-  const frame = f =>
-    spr2(88, 80, P => {
-      const legs = f
-        ? [
-            [56, 50, 62, 58, 58, 67, 1],
-            [52, 50, 54, 64, 58, 76, 0],
-            [24, 50, 28, 62, 34, 72, 1],
-            [28, 50, 22, 64, 18, 76, 0]
-          ]
-        : [
-            [56, 50, 66, 62, 72, 72, 1],
-            [52, 50, 56, 62, 53, 76, 0],
-            [24, 50, 14, 61, 7, 71, 1],
-            [28, 50, 30, 64, 28, 76, 0]
-          ];
-      // coda
-      for (let i = 0; i < 7; i++)
-        paint2(
-          P,
-          mkM(P).cap(19, 37 + i, 4 - (f ? 3 : 0) + i * 0.6, 50 + i * 2.2 + (f ? -2 : 0), 1.4, 0.6),
-          i % 3 === 1 ? RD : MN,
-          { thin: 1 }
-        );
-      // mantello: fodera rosso sangue sotto, nero sopra, sfilacciato
-      const capeM = mkM(P).poly([
-        [33, 9],
-        [40, 10],
-        [34, 30],
-        [22, 42],
-        [14, 46 - (f ? 4 : 0)],
-        [6, 40 - (f ? 5 : 0)],
-        [12, 30],
-        [22, 18]
-      ]);
-      for (let X = 0; X < 88; X++) {
-        const cut = 40 - (f ? 4 : 0) + ((X * 7) % 5) + (X % 3 ? 2 : 0);
-        for (let Y = cut; Y < 80; Y++) capeM.a[Y * 88 + X] = 0;
-      }
-      paint2(P, capeM, RD2, { mod: (X, Y, t) => ((X + Y * 2 + f * 3) % 7 === 0 ? t - 1 : t) });
-      paint2(
-        P,
-        mkM(P).poly([
-          [33, 9],
-          [40, 10],
-          [36, 20],
-          [24, 30],
-          [12, 34 - (f ? 3 : 0)],
-          [8, 30 - (f ? 4 : 0)],
-          [18, 20],
-          [26, 13]
-        ]),
-        CO,
-        { mod: (X, Y, t) => ((X + Y * 3) % 9 === 0 ? t + 1 : t) }
-      );
-      // zampe lontane
-      for (const [a, b, c, d, e, g, far] of legs)
-        if (far) {
-          paint2(P, mkM(P).cap(a, b, c, d, 3.4, 2.4).cap(c, d, e, g, 2.4, 2), HBd, { thin: 1 });
-          paint2(P, mkM(P).rect(e - 2, g, 5, 3), HF, { thin: 1 });
-        }
-      // corpo
-      paint2(P, mkM(P).ell(40, 44, 22, 10), HB, {
-        mod: (X, Y, t) => {
-          if (Y < 38 && t < 4) t++;
-          if ((X * 5 + Y * 3) % 23 === 0) t--;
-          return t;
-        }
-      });
-      for (let X = 22; X < 58; X += 5) P.set(X, 46 + ((X / 5) % 2), HB[1]);
-      // gualdrappa
-      paint2(
-        P,
-        mkM(P).poly([
-          [30, 34],
-          [48, 34],
-          [50, 46],
-          [46, 50],
-          [42, 47],
-          [38, 51],
-          [34, 47],
-          [30, 49]
-        ]),
-        RD,
-        { mod: (X, Y, t) => (Y === 35 ? t + 1 : t) }
-      );
-      for (let X = 30; X < 50; X += 2) P.set(X, 36, R6b('#d8a84a')[3]);
-      // collo e testa
-      paint2(P, mkM(P).cap(54, 40, 66, 18, 8, 5), HB, { mod: (X, Y, t) => Math.min(t, 3) });
-      paint2(P, mkM(P).rot(75, 18, 11, 5.2, 0.55), HB);
-      paint2(P, mkM(P).rot(81, 23, 4, 3, 0.5), HB, { base: 2 });
-      paint2(
-        P,
-        mkM(P).poly([
-          [64, 12],
-          [66, 4],
-          [69, 11]
-        ]),
-        HB,
-        { thin: 1 }
-      );
-      paint2(
-        P,
-        mkM(P).poly([
-          [67, 12],
-          [71, 5],
-          [72, 13]
-        ]),
-        HB,
-        { thin: 1 }
-      );
-      P.set(83, 24, C('#ff3020'));
-      P.set(84, 25, C('#8a0e14'));
-      for (let X = 76; X < 84; X++) P.set(X, 26 + Math.floor((X - 76) / 3), C('#0a0608'));
-      P.set(79, 27, C('#e8e0d0'));
-      P.set(81, 27, C('#e8e0d0'));
-      P.set(72, 14, C('#ff2a1a'));
-      P.set(73, 14, C('#ffb060'));
-      P.set(72, 15, C('#a01010'));
-      P.set(71, 13, HB[1]);
-      P.set(73, 13, HB[1]);
-      // criniera selvaggia
-      for (let i = 0; i < 11; i++) {
-        const x0 = 57 + i * 1.0,
-          y0 = 34 - i * 2.2,
-          len = 4 + (i % 3) * 1.6 + (f ? 1 : 0);
-        paint2(
-          P,
-          mkM(P).cap(x0, y0, x0 - len, y0 - len * 0.35 - (i % 2) + f, 1.7, 0.5),
-          i % 4 === 2 ? RD : MN,
-          { thin: 1 }
-        );
-      }
-      // zampe vicine
-      for (const [a, b, c, d, e, g, far] of legs)
-        if (!far) {
-          paint2(P, mkM(P).cap(a, b, c, d, 3.6, 2.6).cap(c, d, e, g, 2.6, 2), HB, { thin: 1 });
-          paint2(P, mkM(P).rect(e - 2, g, 5, 3), HF, { thin: 1, mod: (X, Y, t) => (Y === g ? t + 1 : t) });
-        }
-      // cavaliere: gamba e stivale
-      paint2(P, mkM(P).cap(40, 32, 46, 44, 3.2, 2.6).cap(46, 44, 44, 50, 2.6, 2.4), AR);
-      paint2(P, mkM(P).rect(42, 49, 6, 3), CO, { thin: 1 });
-      // busto corazzato
-      paint2(
-        P,
-        mkM(P).poly([
-          [32, 12],
-          [46, 11],
-          [47, 22],
-          [44, 33],
-          [34, 33],
-          [32, 22]
-        ]),
-        AR,
-        {
-          mod: (X, Y, t) => {
-            if (Y === 20 || Y === 27) t--;
-            if (X === 39 && Y > 13) t--;
-            return t;
-          }
-        }
-      );
-      paint2(P, mkM(P).ell(45, 13, 4, 3.4), AR, { mod: (X, Y, t) => (Y === 13 ? t - 1 : t) });
-      paint2(P, mkM(P).ell(33, 13, 3.4, 3), AR, { base: 2 });
-      for (let X = 33; X < 46; X++) P.set(X, 32, R6b('#5a1a1a')[3]);
-      P.set(39, 32, R6b('#d8a84a')[4]);
-      // braccio e spada
-      paint2(P, mkM(P).cap(45, 14, 53, 21, 2.6, 2.2), AR);
-      paint2(P, mkM(P).ell(54, 21, 2.4, 2.2), CO, { thin: 1 });
-      for (let i = 0; i < 28; i++) {
-        const x = 55 + i,
-          y = 19 - Math.round(i * 0.53);
-        P.set(x, y, ST[4]);
-        P.set(x, y + 1, ST[2]);
-        if (i > 24) P.set(x, y, ST[5]);
-      }
-      paint2(P, mkM(P).cap(52, 16, 56, 23, 1), R6b('#6a5a3a'), { thin: 1, flat: 1 });
-      // nessuna testa: colletto e moncone
-      paint2(P, mkM(P).ell(39, 10, 5, 2.6), CO, { thin: 1 });
-      paint2(P, mkM(P).ell(39, 9, 3.4, 1.6), RD, { thin: 1, nc: 1 });
-      P.set(38, 9, RD2[5]);
-      P.set(39, 9, RD2[4]);
-      P.set(40, 8, C('#3a0408'));
-      for (let i = 0; i < 3; i++) P.set(36 + i * 2, 11 + (i % 2), RD2[3]);
-    });
-  return [frame(0), frame(1)];
-})();
+// ---------- il Cavaliere senza testa: disegnato a mano (tools/pixel/cavaliere.pxs → js/cavaliere_mano.js) ----------
+// Due fotogrammi di galoppo, 44×40 unità di gioco (i piedi alla riga 38). PUNTI: dove stanno l'occhio del cavallo,
+// il collo mozzato e le narici nel disegno, per i bagliori della notte.
+const HORSEMAN = ['galoppo0', 'galoppo1'].map(n => {
+  const g = CAVALIERE_MANO.sprite[n],
+    [c, x] = mk(g[0].length, g.length);
+  g.forEach((r, Y) =>
+    [...r].forEach((ch, X) => {
+      if (ch === '.') return;
+      x.fillStyle = CAVALIERE_MANO.tavolozza[ch];
+      x.fillRect(X, Y, 1, 1);
+    })
+  );
+  return c;
+});
+const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
   Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {
     const r = prossimo(...argomenti);
@@ -4616,15 +4436,15 @@ const HORSEMAN = (() => {
         T = G.t,
         bx = h.x,
         by = h.y;
-      const ex = bx + fl * 14,
-        ey = by - 31,
+      const P = HORSEMAN_PUNTI,
+        su = (q, k) => [bx + fl * (q[0] - P.ancora[0] + (k || 0)), by + q[1] - P.ancora[1]],
+        [ex, ey] = su(P.occhio),
         g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 6);
       g.addColorStop(0, 'rgba(255,60,30,.9)');
       g.addColorStop(1, 'rgba(255,0,0,0)');
       ctx.fillStyle = g;
       ctx.fillRect(ex - 6, ey - 6, 12, 12);
-      const nx = bx + fl * -2.5,
-        ny = by - 34;
+      const [nx, ny] = su(P.collo);
       for (let i = 0; i < 9; i++) {
         const k = (T * 1.6 + i / 9) % 1,
           x = nx + Math.sin(T * 3 + i * 2.3) * 2 * k - fl * k * 9,
@@ -4640,8 +4460,8 @@ const HORSEMAN = (() => {
       ctx.fillRect(nx - 9, ny - 9, 18, 18);
       if (Math.floor(T * 2) % 3 === 0) {
         const k = (T * 2) % 1,
-          sx = bx + fl * (20 + k * 6),
-          sy = by - 26 + k * 2;
+          [sx, sy0] = su(P.narici, k * 6),
+          sy = sy0 + k * 2;
         ctx.fillStyle = `rgba(200,200,210,${(0.3 * (1 - k)).toFixed(2)})`;
         ctx.beginPath();
         ctx.arc(sx, sy, 1 + k * 3, 0, 7);
