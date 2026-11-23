@@ -410,6 +410,8 @@ function houseAct(fx, fy) {
       recipeBook();
       return true;
     }
+    // punto di estensione: un arredo con un'azione sua (la ciotola del compagno…)
+    if (Ext.intercetta('arredo', o)) return true;
     UI.toast(ITEMS[o.fid].n + ". Per spostarlo usa l'accetta.");
     return true;
   }

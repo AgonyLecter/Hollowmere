@@ -453,6 +453,8 @@ function aimScelta() {
     f = m.id === 'main' && st.farm && st.farm[fx + ',' + fy];
   if ((o && (o.act || AIM_TILE.includes(o.kind))) || (f && f.c))
     C.push({ k: 'tile', d: Math.hypot(fx * 16 + 8 - ax, fy * 16 + 12 - ay) });
+  // punto di estensione: altri file aggiungono chi si può toccare ({ k: 'ext', d, act(), fumetto() })
+  Ext.run('mira', C, ax, ay, m);
   C.sort((a, b) => a.d - b.d);
   return C[0] || null;
 }
@@ -490,6 +492,10 @@ function doAction() {
   const sc = aimScelta();
   if (sc && sc.k === 'npc') {
     talkTo(sc.r);
+    return;
+  }
+  if (sc && sc.k === 'ext') {
+    sc.act();
     return;
   }
   // le bestie del tuo pollaio e della tua stalla prima delle galline selvatiche del paese

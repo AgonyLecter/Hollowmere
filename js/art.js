@@ -3144,6 +3144,7 @@ function promptInfo() {
     const n = sc.r;
     return { x: n.x, y: n.y - 31, t: st.flags.met[n.id] ? 'Parla' : 'Presentati' };
   }
+  if (sc && sc.k === 'ext') return sc.fumetto();
   if (sc && sc.k === 'animal') {
     const e = sc.r,
       a = e.a;
