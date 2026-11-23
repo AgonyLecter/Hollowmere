@@ -81,17 +81,21 @@ def luce(G):
 def fotogramma(f):
     G = tela()
     # il mantello rosso sangue che sventola dietro, sfilacciato, con le pieghe scure
-    poli(G, [(21, 8), (15, 4), (9, 3), (3, 5), (6, 7), (1, 10), (6, 12), (2, 15), (8, 16), (5, 20), (12, 18), (10, 22), (17, 18), (20, 15)], 'M')
+    o = [0, 1, 0, -1][f]
+    poli(G, [(21, 8), (15, 4 - o), (9, 3 + o), (3, 5 - o), (6, 7), (1, 10 + o), (6, 12), (2, 15 - o), (8, 16), (5, 20 + o), (12, 18), (10, 22 - o), (17, 18), (20, 15)], 'M')
     for i in range(4):
         linea(G, 18 - i, 9 + i, 6 - i, 7 + i * 3, .5, 'm')
     # coda al vento
-    linea(G, 12, 20, 5, 23 + (1 if f else -1), (2, 1), 'K')
-    linea(G, 6, 23, 1, 28 + (2 if f else 0), (1.2, .6), 'K')
-    # gambe (f=0 allungato, f=1 raccolto), zoccoli
-    if f == 0:
-        gambe = [((32, 26), (37, 31), (41, 36)), ((30, 27), (33, 32), (34, 37)), ((15, 26), (10, 31), (5, 34)), ((17, 27), (15, 32), (13, 37))]
-    else:
-        gambe = [((32, 26), (35, 30), (33, 35)), ((30, 27), (28, 32), (30, 37)), ((15, 26), (18, 31), (21, 35)), ((17, 27), (13, 32), (11, 37))]
+    onda = [-1, 0, 1, 0][f]
+    linea(G, 12, 20, 5, 23 + onda, (2, 1), 'K')
+    linea(G, 6, 23 + onda, 1, 28 + [0, 1, 2, 1][f], (1.2, .6), 'K')
+    # le 4 fasi del galoppo: allungato, raccolto davanti, tutto raccolto, spinta da dietro
+    gambe = [
+        [((32, 26), (37, 31), (41, 36)), ((30, 27), (33, 32), (34, 37)), ((15, 26), (10, 31), (5, 34)), ((17, 27), (15, 32), (13, 37))],
+        [((32, 26), (36, 29), (36, 34)), ((30, 27), (31, 32), (32, 37)), ((15, 26), (13, 31), (10, 36)), ((17, 27), (17, 32), (18, 37))],
+        [((32, 26), (35, 30), (33, 35)), ((30, 27), (28, 32), (30, 37)), ((15, 26), (18, 31), (21, 35)), ((17, 27), (13, 32), (11, 37))],
+        [((32, 26), (34, 31), (37, 36)), ((30, 27), (29, 32), (27, 36)), ((15, 26), (14, 31), (16, 36)), ((17, 27), (11, 31), (7, 35))],
+    ][f]
     for i, (a, b, c) in enumerate(gambe):
         ch = 'k' if i % 2 else 'K'
         linea(G, a[0], a[1], b[0], b[1], (2.3, 1.4), ch)
@@ -120,6 +124,14 @@ def fotogramma(f):
     poli(G, [(18, 9), (20, 6), (25, 6), (26, 9)], 'U')
     G[6][21] = 'E'; G[6][22] = 'r'; G[6][23] = 'E'; G[5][22] = 'r'
     G = luce(G)
+    # ritocco a mano del cavaliere (righe 5-16, colonne 16-27): busto, colletto col moncherino, cintura
+    RITOCCO = {5: "Doo.oBrrBUuo", 6: "DDoBEreEBUUo", 7: "MMuuUUUUUUUo", 8: "mmuUUuUUUUUu", 9: "MMMuUUuUUUUo",
+               10: "MMMoUUuUUUUo", 11: "MMMoUUuUUUUo", 12: "MMMoUUuUUUoo", 13: "MMMoMDMMDMoK", 14: "MMMoUUUUUUoK",
+               15: "MMMoUUUUUUUo", 16: "MMMMUUUUUUUM"}
+    for y, riga in RITOCCO.items():
+        for i, ch in enumerate(riga):
+            if ch != '.':
+                G[y][16 + i] = ch
     # contorno scuro tra il cavaliere e il cavallo: le due sagome nere restano leggibili
     N = [r[:] for r in G]
     for y in range(H):
@@ -137,12 +149,12 @@ def fotogramma(f):
             G[Y][X] = 'S' if i < 5 or i % 3 else 'r'
             if Y + 1 < H and G[Y + 1][X] in '.oMmD':
                 G[Y + 1][X] = 's'
-    for x, y in ((18, 4), (15, 5), (13, 7 if f else 6)):
+    for x, y in ((18, 4), (15, 5), (13, 6 + f % 2)):
         G[y][x] = 'r'
     # occhio di brace, denti scoperti, fumo dalle narici
     G[14][39] = 'R'; G[14][40] = 'e'
     G[17][41] = 'l'; G[17][42] = 'l'; G[16][43] = 'r'
-    for dx, dy in ([(-1, -1), (0, -2), (-2, -3)] if f == 0 else [(0, -1), (-1, -3)]):
+    for dx, dy in [[(-1, -1), (0, -2), (-2, -3)], [(0, -1), (-1, -3)], [(-1, -2)], [(0, -1), (-1, -2), (-2, -4)]][f]:
         G[15 + dy][43 + dx] = 'w'
     return contorno(G)
 
@@ -152,7 +164,7 @@ if os.path.exists(out) and '--rifai' not in os.sys.argv:
     print('cavaliere.pxs esiste già: si rifinisce a mano lì (--rifai per ripartire dall\'abbozzo)')
 else:
     righe = ['# Il Cavaliere senza testa, 44x40, due fotogrammi di galoppo. Abbozzo da cavaliere_abbozzo.py,', '# poi rifinito a mano qui.', '@tavolozza', PAL]
-    for f in (0, 1):
+    for f in range(4):
         righe.append(f'@sprite galoppo{f} {W}x{H}')
         righe += [''.join(r) for r in fotogramma(f)]
     open(out, 'w').write('\n'.join(righe) + '\n')

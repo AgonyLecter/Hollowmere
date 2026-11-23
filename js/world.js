@@ -1928,7 +1928,7 @@ function render() {
       favorMark(e.npc);
     } else if (e.horse) {
       const h = G.horse,
-        img = IMG.horse[Math.floor(h.anim / 2) % 2];
+        img = IMG.horse[Math.floor(h.anim / 2) % IMG.horse.length];
       ctx.drawImage(SHADOW, h.x - 12, h.y - 3, 24, 6);
       if (h.dir === 1) {
         ctx.save();
@@ -2167,13 +2167,22 @@ function postFX() {
     const a = Math.min(1, G.scare);
     ctx.fillStyle = `rgba(120,0,0,${a * 0.7})`;
     ctx.fillRect(0, 0, W, H);
-    const img = IMG.horse[Math.floor(G.t * 20) % 2];
-    const s = 5 + (1 - a) * 2 + Math.random() * 0.4;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.translate(W / 2, H / 2 + 20);
-    ctx.scale(s, s);
-    dImg(ctx, img, -22 + (Math.random() - 0.5), -26);
+    if (IMG.spavento) {
+      // l'illustrazione dello spavento: riempie lo schermo e si avvicina mentre svanisce
+      const im = IMG.spavento,
+        s = ((H * 0.98) / im.height) * (1 + (1 - a) * 0.25);
+      ctx.translate(W / 2 + (Math.random() - 0.5) * 3, H / 2 + (Math.random() - 0.5) * 3);
+      ctx.scale(s, s);
+      ctx.drawImage(im, -im.width / 2, -im.height / 2);
+    } else {
+      const img = IMG.horse[Math.floor(G.t * 20) % IMG.horse.length],
+        s = 5 + (1 - a) * 2 + Math.random() * 0.4;
+      ctx.translate(W / 2, H / 2 + 20);
+      ctx.scale(s, s);
+      dImg(ctx, img, -22 + (Math.random() - 0.5), -26);
+    }
     ctx.restore();
     ctx.globalAlpha = 1;
     ctx.drawImage(IMG.grain[Math.floor(Math.random() * 4)], 0, 0, W, H);

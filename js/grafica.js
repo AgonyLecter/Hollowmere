@@ -4404,25 +4404,41 @@ const HOG = (() => {
 
 // ---------- il Cavaliere senza testa ----------
 // ---------- il Cavaliere senza testa: disegnato a mano (tools/pixel/cavaliere.pxs → js/cavaliere_mano.js) ----------
-// Due fotogrammi di galoppo, 44×40 unità di gioco (i piedi alla riga 38). PUNTI: dove stanno l'occhio del cavallo,
+// Quattro fotogrammi di galoppo, 44×40 unità di gioco (i piedi alla riga 38). PUNTI: dove stanno l'occhio del cavallo,
 // il collo mozzato e le narici nel disegno, per i bagliori della notte.
-const HORSEMAN = ['galoppo0', 'galoppo1'].map(n => {
-  const g = CAVALIERE_MANO.sprite[n],
+const HORSEMAN = Object.keys(CAVALIERE_MANO.sprite)
+  .filter(n => n.startsWith('galoppo'))
+  .map(n => {
+    const g = CAVALIERE_MANO.sprite[n],
+      [c, x] = mk(g[0].length, g.length);
+    g.forEach((r, Y) =>
+      [...r].forEach((ch, X) => {
+        if (ch === '.') return;
+        x.fillStyle = CAVALIERE_MANO.tavolozza[ch];
+        x.fillRect(X, Y, 1, 1);
+      })
+    );
+    return c;
+  });
+// lo spavento: il Cavaliere che s'impenna verso il giocatore (tools/pixel/spavento.pxs → js/spavento_mano.js)
+const SPAVENTO = (() => {
+  const g = SPAVENTO_MANO.sprite.spavento,
     [c, x] = mk(g[0].length, g.length);
   g.forEach((r, Y) =>
     [...r].forEach((ch, X) => {
       if (ch === '.') return;
-      x.fillStyle = CAVALIERE_MANO.tavolozza[ch];
+      x.fillStyle = SPAVENTO_MANO.tavolozza[ch];
       x.fillRect(X, Y, 1, 1);
     })
   );
   return c;
-});
+})();
 const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
   Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {
     const r = prossimo(...argomenti);
     IMG.horse = HORSEMAN;
+    IMG.spavento = SPAVENTO;
     return r;
   });
 }

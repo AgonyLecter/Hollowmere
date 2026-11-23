@@ -2084,7 +2084,7 @@ async function finishGame(n, name, epi) {
 ACTD.festa = 'alla Festa';
 function drawEredeHorse() {
   const p = G.player,
-    img = IMG.horse[Math.floor(p.anim / 2) % 2],
+    img = IMG.horse[Math.floor(p.anim / 2) % IMG.horse.length],
     dir = p.dir === 1 ? 1 : p.dir === 2 ? 0 : G._ed || 0;
   G._ed = dir;
   ctx.drawImage(SHADOW, p.x - 12, p.y - 3, 24, 6);
