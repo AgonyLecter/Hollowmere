@@ -192,8 +192,19 @@ module.exports = async function (t, { browser, shot }) {
     st.sel = st.inv.findIndex(s => s && s.id === 'falce');
     const [fx, fy] = frontTile();
     R.mira = freeAimOk(selItem(), fx, fy);
-    const f0 = countItem('fibra');
+    // condizioni esplicite: di giorno, con le forze (su una macchina lenta il resto della prova le consuma)
+    st.time = 10 * 60;
+    st.energy = Math.max(st.energy, 50);
+    const f0 = countItem('fibra'),
+      avvisi = [],
+      _toast = UI.toast;
+    UI.toast = function (t, ...a) {
+      avvisi.push(t);
+      return _toast.call(this, t, ...a);
+    };
     freeAct(fx, fy);
+    UI.toast = _toast;
+    R.perche = `avvisi: ${avvisi.join(' / ') || 'nessuno'}; energia ${st.energy}; ciuffi lì: ${m.objs.filter(q => q.kind === 'tuft' && q.tx === fx && q.ty === fy).length}`;
     R.fibra = countItem('fibra') - f0;
     R.tagliato = !m.objs.some(q => q.kind === 'tuft' && q.tx === fx && q.ty === fy);
     rebuildMaps();
@@ -207,7 +218,7 @@ module.exports = async function (t, { browser, shot }) {
   t.eq('l’incudine apre la sua schermata', inc.titolo, 'Incudine');
   t.eq('all’incudine si forgia la falce', inc.falce, 1);
   t.true('con la falce si mira all’erba alta', !!inc.mira);
-  t.true('falciando si prende fibra', inc.fibra >= 1);
+  t.true('falciando si prende fibra' + (inc.fibra >= 1 ? '' : ' (' + inc.perche + ')'), inc.fibra >= 1);
   t.true('l’erba alta sparisce', inc.tagliato);
   t.true('e non ricompare subito', inc.restaTagliato);
   t.true('dopo tre giorni ricresce', inc.ricresce);

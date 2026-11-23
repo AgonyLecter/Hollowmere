@@ -955,6 +955,8 @@ function buildGround(m) {
       x.fillRect(tx * 16, m.h * 16 - 2.5, 16, 0.5);
     }
   }
+  // punto di estensione: ridipingere il terreno appena fatto (atmosfera.js: colori d'autunno, foglie cadute)
+  Ext.run('terreno', m, x);
   x.globalCompositeOperation = 'source-atop';
   if (!m.interior) {
     srand(4242);
@@ -1810,6 +1812,8 @@ function render() {
     }
   }
   disegnaOmbreVive(m, cx, cy);
+  // punto di estensione: sopra il terreno, sotto oggetti e personaggi (atmosfera.js: la nebbia che striscia a terra)
+  Ext.run('sopraTerreno', m, cx, cy);
   drawPrints(m);
   drawFlowers(m, cx, cy);
   drawAim();
@@ -2001,7 +2005,8 @@ function render() {
     }
     LX.globalCompositeOperation = 'source-over';
     LX.clearRect(0, 0, VW, VH);
-    LX.fillStyle = `rgba(10,8,30,${d})`;
+    // fuori, la notte di Hollowmere è verde-blu come l'acqua di uno stagno; dentro casa resta calda
+    LX.fillStyle = m.interior ? `rgba(10,8,30,${d})` : `rgba(0,20,30,${d})`;
     LX.fillRect(0, 0, VW, VH);
     LX.globalCompositeOperation = 'destination-out';
     for (const l of L) {
@@ -2016,10 +2021,26 @@ function render() {
     ctx.globalCompositeOperation = 'lighter';
     for (const l of L) {
       const g = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
-      g.addColorStop(0, l.red ? 'rgba(200,30,10,.35)' : 'rgba(255,150,60,.16)');
+      g.addColorStop(
+        0,
+        l.red ? 'rgba(200,30,10,.35)' : m.interior ? 'rgba(255,150,60,.16)' : 'rgba(255,150,50,.3)'
+      );
+      if (!m.interior) g.addColorStop(0.5, l.red ? 'rgba(120,15,5,.12)' : 'rgba(220,110,30,.1)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+    }
+    // fuori, la luce di lanterne e finestre tinge d'ambra quello che tocca
+    if (!m.interior) {
+      ctx.globalCompositeOperation = 'overlay';
+      for (const l of L) {
+        if (l.red) continue;
+        const g = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+        g.addColorStop(0, `rgba(255,140,40,${(0.6 * Math.min(1, d * 1.4)).toFixed(2)})`);
+        g.addColorStop(1, 'rgba(255,140,40,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+      }
     }
     ctx.globalCompositeOperation = 'source-over';
   }
@@ -2028,6 +2049,8 @@ function render() {
   drawAmbTop(m);
   ctx.restore();
   atmosphere(m);
+  // punto di estensione: la gradazione dei colori sopra tutto il mondo, sotto fumetti e interfaccia (atmosfera.js)
+  Ext.run('gradazione', m, cx, cy);
   ctx.save();
   ctx.translate(-cx, -cy);
   drawBubbles(m);

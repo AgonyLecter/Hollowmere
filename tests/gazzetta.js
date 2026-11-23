@@ -135,7 +135,9 @@ module.exports = async function (t, { browser }) {
     'il biglietto arriva alla Gazzetta, con foto e testo',
     !!(post && post.s && !post.f && /zafferano/.test(post.t) && /🏡/.test(post.t))
   );
-  t.eq('Pennino parte con il biglietto', await page.evaluate(() => PC.st), 'parte');
+  // «parte» (si alza) o già «via» (su una macchina lenta un fotogramma può durare più di un secondo)
+  const pc = await page.evaluate(() => PC.st);
+  t.true('Pennino parte con il biglietto (' + pc + ')', pc === 'parte' || pc === 'via');
   await page.waitForTimeout(1200);
   if (process.env.GZ_FOTO) await page.screenshot({ path: process.env.GZ_FOTO + '/volo.png' });
   // un biglietto al giorno
