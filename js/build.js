@@ -111,7 +111,7 @@ function shovelAct(fx, fy) {
     if (!useEnergy(1)) return true;
     delete W2.tiles[k];
     setGround(m, fx, fy, 1);
-    addItem('lastre', 1);
+    riponi('lastre', 1);
     allImpatto(() => GESTO.pietra(fx * 16 + 8, fy * 16 + 12));
     return true;
   }

@@ -50,7 +50,7 @@ function rareDrop(o) {
       break;
     }
   }
-  addItem(pick, 1);
+  riponi(pick, 1);
   floatText('+ ' + RARE[pick].n + '!', o.tx * 16 + 8, o.ty * 16 - 22, RARE[pick].c, 2);
   AU.play('ok');
   addXP('racc', 6);
@@ -131,7 +131,7 @@ async function marketPost(item, n, price) {
     UI.toast(`In vendita: ${n} × ${ITEMS[item].n} per ${SC(price)}.`);
     NET.save(me);
   } catch (e) {
-    addItem(item, n);
+    riponi(item, n);
     UI.toast('Il mercato non risponde. Riprova più tardi.', 'bad');
   }
 }
@@ -163,7 +163,7 @@ async function marketBuy(o) {
     return;
   }
   st.money -= o.price;
-  addItem(o.item, o.n);
+  riponi(o.item, o.n);
   UI.hud();
   AU.play('coin');
   UI.toast(`Comprato: ${o.n} × ${ITEMS[o.item].n} da ${o.sname}.`);
@@ -175,7 +175,7 @@ async function marketCancel(o) {
   const st = G.visit ? G.home : G.st;
   try {
     await NET.api.remove(NET.r('mercato/' + o.id));
-    addItem(o.item, o.n);
+    riponi(o.item, o.n);
     UI.toast('Offerta ritirata.');
     NET.save(st);
   } catch (e) {

@@ -5,7 +5,78 @@
 // doppio tocco per spostare veloce, tieni premuto per dividere la pila. La cassa usa lo stesso sistema.
 // Gli oggetti della storia, nella Valle, sono ricordi qualsiasi: si spostano, si mettono in cassa, si buttano.
 
-const INV_FREE = 30;
+const INV_FREE = 30,
+  CASSA_POSTI = 20;
+const cassaVuota = () => Array(CASSA_POSTI).fill(null);
+
+// ---------- contenitori sempre sani ----------
+// Firebase non conserva le liste con i posti vuoti: toglie quelli in fondo (una cassa di 20 posti tornava di 3)
+// e, se il primo è vuoto, la trasforma in un oggetto {"3": …}. Tutto quello che arriva da fuori o da un
+// salvataggio vecchio passa da qui: torna una lista di esattamente n posti, con pile valide nella loro casella.
+// Niente si perde: quello che non trova posto va nella cassetta delle spedizioni (avanzi).
+function pilaSana(s) {
+  if (!s || typeof s !== 'object' || !ITEMS[s.id]) return null;
+  const n = Math.floor(+s.n);
+  return n >= 1 ? { id: s.id, n } : null;
+}
+function inventario(x, n, avanzi) {
+  const A = Array(n).fill(null),
+    fuori = [];
+  if (x && typeof x === 'object')
+    for (const k of Object.keys(x)) {
+      const i = +k,
+        s = pilaSana(x[k]);
+      if (!s) continue;
+      // un attrezzo è sempre da solo nella sua casella: le copie in più vanno in altri posti
+      const pezzi = zTool(s.id) ? Array.from({ length: s.n }, () => ({ id: s.id, n: 1 })) : [s];
+      if (Number.isInteger(i) && i >= 0 && i < n && !A[i]) A[i] = pezzi.shift();
+      fuori.push(...pezzi);
+    }
+  for (const s of fuori) {
+    const resto = zInfila(A, s);
+    if (resto && avanzi) avanzi.push({ id: s.id, n: resto });
+  }
+  return A;
+}
+function macchinaSana(m) {
+  if (!m || typeof m !== 'object') return undefined;
+  const num = v => (Number.isFinite(+v) && +v > 0 ? Math.floor(+v) : 0),
+    id = v => (v && ITEMS[v] ? v : null);
+  return {
+    i: id(m.i),
+    in: id(m.i) ? num(m.in) : 0,
+    f: num(m.f),
+    o: id(m.o),
+    on: id(m.o) ? num(m.on) : 0,
+    t0: Number.isFinite(+m.t0) && m.t0 !== null ? +m.t0 : null
+  };
+}
+// rimette in ordine zaino e casse di una partita (al caricamento): quello che avanza aspetta nella cassetta
+function riparaContenitori(st) {
+  if (!st) return;
+  const avanzi = [];
+  const lung = Array.isArray(st.inv) ? st.inv.length : 0;
+  st.inv = inventario(st.inv, Math.max(isFree(st) ? INV_FREE : 10, lung), avanzi);
+  const B = (st.free && st.free.built) || {};
+  for (const k in B) {
+    const b = B[k];
+    if (!b || typeof b !== 'object') {
+      delete B[k];
+      continue;
+    }
+    if (b.id === 'cassa') b.inv = inventario(b.inv, CASSA_POSTI, avanzi);
+    else if (b.inv !== undefined) {
+      // solo le casse hanno un contenuto: se un'altra costruzione se ne porta dietro uno, va nella cassetta
+      inventario(b.inv, 0, avanzi);
+      delete b.inv;
+    }
+    if (b.m !== undefined) b.m = macchinaSana(b.m);
+  }
+  if (avanzi.length) {
+    st.mailbox = Array.isArray(st.mailbox) ? st.mailbox : Object.values(st.mailbox || {});
+    for (const a of avanzi) st.mailbox.push({ item: a.id, n: a.n, from: '' });
+  }
+}
 const ORD = ['tool', 'seed', 'fert', 'crop', 'food', 'res', 'place', 'arredo', 'gift', 'bad', 'key'];
 // lo zaino della Valle è di 30 posti
 {
@@ -39,8 +110,11 @@ const ZH = { s: null, da: null }; // la pila in mano e da dove viene {w,i}
 let ZLAST = null; // l'ultimo tocco (per il doppio tocco)
 let ZINFO = null; // l'oggetto di cui si mostra la descrizione
 function zLists() {
-  const L = { z: G.st.inv };
-  if (ZCH) L.c = G.st.free.built[ZCH].inv;
+  const L = { z: G.st.inv },
+    b = ZCH && G.st.free && G.st.free.built[ZCH];
+  // la cassa può sparire mentre è aperta (il padrone la toglie): si continua con il solo zaino
+  if (b && Array.isArray(b.inv)) L.c = b.inv;
+  else ZCH = null;
   return L;
 }
 const zTool = id => ITEMS[id] && ITEMS[id].t === 'tool';
@@ -160,12 +234,18 @@ function zInfila(A, s, ordine) {
         return 0;
       }
     }
+  // gli attrezzi uno per casella
+  let resto = s.n;
   for (const i of idx)
     if (!A[i]) {
-      A[i] = { id: s.id, n: s.n };
-      return 0;
+      const k = zTool(s.id) ? 1 : resto;
+      A[i] = { id: s.id, n: k };
+      resto -= k;
+      if (!resto) return 0;
     }
-  return s.n;
+  // la pila resta con quello che non ha trovato posto (chi la rimette giù non duplica niente)
+  s.n = resto;
+  return resto;
 }
 // chiudendo: quello che hai in mano torna a posto (prima da dove veniva, poi nello zaino, poi in cassa)
 function zRimetti() {

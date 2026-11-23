@@ -192,6 +192,7 @@ function migrate(st) {
   const d = newState(st.name || '?', st.g || 'm');
   for (const k in d) if (st[k] === undefined) st[k] = d[k];
   for (const k in d.flags) if (st.flags[k] === undefined) st.flags[k] = d.flags[k];
+  riparaContenitori(st);
   const has = id => st.inv.some(s => s && s.id === id),
     put = id => {
       const i = st.inv.findIndex(s => !s);

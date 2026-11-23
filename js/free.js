@@ -665,7 +665,7 @@ function freeActBase(fx, fy) {
       (skLv('racc') >= 8 || (typeof buffOn === 'function' && buffOn('raccolta'))) &&
       Math.random() < 0.3
     )
-      addItem(got[0], 1);
+      riponi(got[0], 1);
     addXP('racc', t.startsWith('w_') ? 4 : 2);
     delete W2.debris[k];
     mapRemove(m, o);
@@ -770,7 +770,7 @@ function freeActBase(fx, fy) {
     rareDrop(o);
     addXP('racc', 10);
     if (Math.random() < (skLv('racc') >= 6 ? 0.5 : 0.3)) {
-      addItem('ferro', 1 + (Math.random() < 0.3 ? 1 : 0));
+      riponi('ferro', 1 + (Math.random() < 0.3 ? 1 : 0));
       allImpatto(() => floatText('+ Minerale di ferro', o.tx * 16 + 8, o.ty * 16 - 16, '#c8703a'));
     }
     W2.gone[hk] = { day: st.day };
@@ -790,7 +790,7 @@ function freeActBase(fx, fy) {
       if (!useEnergy(2)) return true;
       delete W2.built[o.bk];
       mapRemove(m, o);
-      addItem('legna', st.day - b.d >= 12 ? 6 : 1);
+      riponi('legna', st.day - b.d >= 12 ? 6 : 1);
       allImpatto(() => GESTO.legno(o.tx * 16 + 8, o.ty * 16 + 12));
       alberoCade(o.img, o.dx + iw(o.img) / 2, o.dy + ih(o.img));
       UI.toast("Hai tagliato l'albero.");
@@ -904,7 +904,7 @@ function freeActBase(fx, fy) {
     W2.built[k] = { id };
     if (ITEMS[id].tree) W2.built[k].d = st.day;
     addXP('arti', 3);
-    if (id === 'cassa') W2.built[k].inv = Array(20).fill(null);
+    if (id === 'cassa') W2.built[k].inv = cassaVuota();
     removeItem(id, 1);
     const nb = m.add(
       OB('built', fx, fy, placeImg(id, W2.built[k]), {
@@ -966,7 +966,7 @@ function falciaAct(fx, fy) {
 function chestMenu(bk) {
   const b = G.st.free.built[bk];
   if (!b) return;
-  if (!b.inv) b.inv = Array(20).fill(null);
+  b.inv = inventario(b.inv, CASSA_POSTI);
   ZPICK = null;
   zaino(bk);
 }

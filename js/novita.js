@@ -347,6 +347,22 @@ const NOVITA = [
         t: 'Menù, zaino, dialoghi e banco da lavoro hanno un vestito nuovo: cornici di legno con gli angolari di ferro, bottoni in rilievo, caselle incavate.'
       }
     ]
+  },
+  {
+    id: 'casse_sane',
+    v: 40,
+    n: 'Casse e zaino riparati',
+    steps: [
+      {
+        t: 'Nei villaggi dei giocatori di lunga data alcune casse erano rimaste più piccole (anche solo 3 posti) e certe cose sparivano tra zaino e cassa. Adesso, aprendo il gioco, <b>ogni cassa torna di 20 posti</b> con tutto al suo posto, e lo zaino si rimette in ordine da solo.'
+      },
+      {
+        t: 'Se qualcosa non trova posto, non si perde: ti aspetta nella <b>cassetta delle spedizioni</b>. Lo stesso quando lo zaino è pieno e trovi, compri o vinci qualcosa.'
+      },
+      {
+        t: 'Gli attrezzi non si impilano più: ogni attrezzo ha il suo posto, anche quando ne hai due uguali.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

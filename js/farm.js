@@ -136,21 +136,31 @@ function addItem(id, n = 1) {
   if (ok) Ext.run('ottieni', id, n); // punto di estensione: qualcosa è entrato nello zaino
   return ok;
 }
+// tutto o niente: le pile uguali si uniscono; gli attrezzi no, ognuno occupa il suo posto
 function addItemBase(id, n = 1) {
-  const inv = G.st.inv;
-  let s = inv.find(s => s && s.id === id);
-  if (s) {
-    s.n += n;
-  } else {
-    const i = inv.findIndex(s => !s);
-    if (i < 0) {
+  const inv = G.st.inv,
+    tool = ITEMS[id] && ITEMS[id].t === 'tool',
+    s = !tool && inv.find(s => s && s.id === id);
+  if (s) s.n += n;
+  else {
+    const vuoti = inv.reduce((L, s, i) => (s ? L : L.concat(i)), []);
+    if (vuoti.length < (tool ? n : 1)) {
       UI.toast('Lo zaino è pieno!', 'bad');
       return false;
     }
-    inv[i] = { id, n };
+    if (tool) for (let k = 0; k < n; k++) inv[vuoti[k]] = { id, n: 1 };
+    else inv[vuoti[0]] = { id, n };
   }
   UI.hotbar();
   return true;
+}
+// nello zaino, oppure (se è pieno) nella cassetta delle spedizioni di casa: non si perde mai niente
+function riponi(id, n = 1) {
+  if (addItem(id, n)) return true;
+  const casa = G.home || G.st;
+  (casa.mailbox = casa.mailbox || []).push({ item: id, n, from: '' });
+  UI.toast(`Lo zaino è pieno: ${ITEMS[id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
+  return false;
 }
 function removeItem(id, n = 1) {
   const inv = G.st.inv;
@@ -168,11 +178,8 @@ function removeItem(id, n = 1) {
 function giveItem(id, n = 1) {
   // zaino pieno: l'oggetto aspetta nella cassetta delle spedizioni di casa (prima prendeva il posto del primo
   // oggetto dello zaino, di solito la zappa, che spariva)
-  if (!addItem(id, n)) {
-    const casa = G.home || G.st;
-    (casa.mailbox = casa.mailbox || []).push({ item: id, n, from: '' });
+  if (!riponi(id, n)) {
     AU.play('pick');
-    UI.toast(`Lo zaino è pieno: ${ITEMS[id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
     return;
   }
   AU.play('pick');

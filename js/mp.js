@@ -356,6 +356,7 @@ async function startVisit(pid) {
   try {
     await UI.fade(1, 500);
     const v = JSON.parse(JSON.stringify(s));
+    riparaContenitori(v); // le sue casse come le vedrà: sane anche se il suo salvataggio è vecchio
     v.inv = home.inv;
     v.sel = home.sel;
     v.money = home.money;

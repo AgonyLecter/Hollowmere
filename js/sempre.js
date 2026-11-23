@@ -140,7 +140,7 @@ function incClaim(st, q) {
   UI.toast(`Incarico completato: ${incText(q)}. +${SC(q.pay)}`);
   if (q.big && Math.random() < 0.6) {
     const r = ['alb_ciliegio', 'statua', 'lampadario', 'fontana'][Math.floor(Math.random() * 4)];
-    addItem(r, 1);
+    riponi(r, 1);
     UI.toast(`Premio della settimana: ${ITEMS[r].n}!`);
   }
   NET.save(st);
@@ -360,7 +360,7 @@ function museoMenu(cat) {
             UI.hud();
             UI.toast(`Premio del museo: +${SC(pr[1])}!`);
           } else {
-            addItem(pr[0], pr[1]);
+            riponi(pr[0], pr[1]);
             UI.toast(`Premio del museo: ${ITEMS[pr[0]].n}!`);
           }
         }
@@ -647,7 +647,7 @@ function ricordiAt(fx, fy) {
         AU.play('whisper');
         for (const l of R.text) await narr(l, { dark: 1 });
         F.ricordi[k] = st.day;
-        addItem(R.item, 1);
+        riponi(R.item, 1);
         AU.play('ok');
         const n = Object.keys(F.ricordi).length;
         UI.toast(`Ricordo trovato (${n}/4): ${ITEMS[R.item].n}.`);
