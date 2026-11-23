@@ -230,7 +230,7 @@ function bmAction() {
     const id = it.id,
       d = { id };
     if (ITEMS[id].tree) d.d = st.day;
-    if (id === 'cassa') d.inv = Array(20).fill(null);
+    if (id === 'cassa') d.inv = cassaVuota();
     removeItem(id, 1);
     bmPut(fkey(x, y), d);
     addXP('arti', ITEMS[id].size ? 10 : 3);

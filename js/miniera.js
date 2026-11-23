@@ -388,7 +388,7 @@ function mineAct(fx, fy) {
       if (s.hp <= 0) {
         s.gone = 1;
         if (Math.random() < 0.5) {
-          addItem('essenza', 1);
+          riponi('essenza', 1);
           floatText("+ Essenza d'ombra", s.x, s.y - 24, '#c8a8ff');
         }
         addXP('racc', 8);
@@ -419,9 +419,9 @@ function mineAct(fx, fy) {
       f >= 20 ? (Math.random() < 0.5 ? 'oro' : 'ametista') : f >= 10 ? 'quarzo' : 'ferro',
       Math.random() < 0.3 ? 'diamante' : null
     ].filter(Boolean);
-    for (const l of loot) addItem(l, l === 'diamante' ? 1 : 2 + Math.floor(f / 10));
+    for (const l of loot) riponi(l, l === 'diamante' ? 1 : 2 + Math.floor(f / 10));
     if (f % 10 === 0 && Math.random() < 0.6)
-      addItem(['statua', 'fontana', 'lampadario', 'specchio', 'banderuola'][Math.floor(f / 10) % 5], 1);
+      riponi(['statua', 'fontana', 'lampadario', 'specchio', 'banderuola'][Math.floor(f / 10) % 5], 1);
     mapRemove(m, o);
     AU.play('coin');
     UI.hud();

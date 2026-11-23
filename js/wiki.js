@@ -32,6 +32,7 @@ const Wiki = {
       FRUIT,
       BOTTEGA,
       DECOR_SHOP,
+      COMP_SHOP,
       TELAIO,
       FESTE,
       LIKES,
@@ -167,6 +168,7 @@ const Wiki = {
     for (const k of D.MERC_STOCK) F(k, 'carro del cocchiere');
     for (const r of D.RES_POOL) for (const [x] of r.shop) F(x, 'bottega di ' + N[r.id].split(' ')[0]);
     for (const [x] of D.DECOR_SHOP) F(x, 'arredi di Agatha');
+    for (const [x] of D.COMP_SHOP || []) F(x, 'bottega del compagno');
     for (const f of Object.values(D.FESTE)) for (const [x] of f.shop) F(x, f.n);
     for (const [x] of D.NOVE_SHOP) F(x, 'Nove');
     for (const k of Object.keys(CROPS)) F(k, 'orto');
@@ -502,7 +504,7 @@ const Wiki = {
     ${Object.entries(D.ANIMALS)
       .map(
         ([k, a]) =>
-          `<tr><td>${big(animalImg[k], 32)}</td><td><b>${esc(a.n)}</b></td><td>${it(a.home)}</td><td>${a.cap}</td><td>${a.cost}</td><td>${it(a.prod)} <span class="small">${a.mode === 'milk' ? '(si munge)' : a.mode === 'shear' ? '(si tosa)' : '(raccogli a terra)'}</span></td></tr>`
+          `<tr><td>${big(animalImg[k], 32)}</td><td><b>${esc(a.n)}</b></td><td>${it(a.home)}</td><td>${a.cap}</td><td>${a.cost}</td><td>${it(a.prod)} <span class="small">(lo prendi in ${esc(ITEMS[a.home] ? ITEMS[a.home].n.toLowerCase() : 'casa sua')})</span></td></tr>`
       )
       .join('')}</table>
     <h3>Le api</h3>

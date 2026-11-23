@@ -1218,7 +1218,7 @@ const TALK = {
       await say('tobia', 'Ti regalo una cosa. È bella. Il rosso è bello. Non dirlo a nessuno.');
       const c = await ask('tobia', '(Ti porge un nastro rosso.)', ['Prendilo', 'Rifiuta']);
       if (c === 0) {
-        addItem('nastro', 1);
+        riponi('nastro', 1);
         addQuiete(-6);
         F.tookRibbon = 1;
         await say('tobia', 'Hihi! Adesso siamo amici. Amici rossi.');
@@ -1415,7 +1415,7 @@ const QUESTS = [
   { s: () => G.erede, t: () => 'Insegui il forestiero', d: () => false, alarm: 1 },
   {
     s: st => st.choreOk && !st.choreDone,
-    t: st => 'Faccenda: ' + CHORES[st.chore].t,
+    t: st => 'Faccenda: ' + choreText(st),
     d: st => st.choreDone,
     free: 1
   }

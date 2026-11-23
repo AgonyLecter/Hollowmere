@@ -390,13 +390,21 @@ const UI = {
       7: 'Domani: il Conteggio. Non mancate.'
     };
     this.open(`<button class="btn mclose" data-close>✕</button><h2>Bacheca delle Faccende</h2>
-   <div class="paper"><p><b>Faccenda del giorno:</b><br>${c ? esc(c.t) : 'Nessuna.'}<br><span class="small">Ricompensa: ${CZ(c ? c.pay : 0)}</span></p>
-   <p>${st.choreDone ? '✓ Completata. Grazie, vicino.' : st.choreOk ? 'Accettata. Il villaggio conta su di te.' : `<button class="btn" id="acc">Accetta la faccenda</button>`}</p></div>
+   <div class="paper"><p><b>Faccenda del giorno:</b><br>${c ? esc(st.choreOk ? choreText(st) : c.t) : 'Nessuna.'}<br><span class="small">Ricompensa: ${CZ(c ? c.pay : 0)}</span></p>
+   <p>${st.choreDone ? '✓ Completata. Grazie, vicino.' + (isFree(st) && (st.choreFatte || 0) < CHORE_GIORNO ? ` <button class="btn" id="altra">Un'altra faccenda (${st.choreFatte}/${CHORE_GIORNO})</button>` : '') : st.choreOk ? 'Accettata. Il villaggio conta su di te.' : `<button class="btn" id="acc">Accetta la faccenda</button>`}</p></div>
    ${fv.length ? `<h3>Richieste del villaggio</h3><p class="small">${fv.map(f => `• ${NAMES[f.id]} cerca ${fmtItems(f.item, f.n)} — ${CZ(f.reward)}, entro ${DAYN[(f.until + 3) % 7]}`).join('<br>')}</p>` : ''}<h3>Avvisi</h3><p class="small">• Chi trova oggetti ROSSI li seppellisca. Subito.<br>${isFree(st) ? `• ${seasonName()}, giorno ${seasonDay()} di ${SEASON_LEN}. Semi di stagione all'Emporio.<br>` : `• Festa del Raccolto: ${st.chapter >= 4 ? '<b>stasera</b>' : st.flags.ch3end || fest === 1 ? '<b>domani</b>' : fest > 1 ? `tra ${fest} giorni` : '<b>presto</b>'}. Portate zucche.<br>`}• Al suono della campana: a casa.<br>${st.demand ? `• Quotazione del giorno: ${PL[st.demand]} +40% nella cassetta.<br>` : ''}${PREPT[st.day] ? `• ${PREPT[st.day]}<br>` : ''}${H2(st) ? '• <span style="color:#8a0f0f">' + fmt('Benvenut{o|a}') + ', ' + esc(st.name) + '. ' + fmt('Ti abbiamo contat{o|a}.') + '</span>' : '• Si cerca un aiuto per la fucina. Chiedere a Brom.'}</p>`);
+    const al = $('#altra');
+    if (al)
+      al.onclick = () => {
+        choreScegli(st, true);
+        AU.play('ui');
+        this._mclose = null;
+        this.board();
+      };
     const a = $('#acc');
     if (a)
       a.onclick = () => {
-        st.choreOk = true;
+        choreAccetta(st);
         AU.play('ok');
         if (st.chore === 'foglie') rebuildMaps();
         this.close();

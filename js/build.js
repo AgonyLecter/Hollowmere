@@ -111,7 +111,7 @@ function shovelAct(fx, fy) {
     if (!useEnergy(1)) return true;
     delete W2.tiles[k];
     setGround(m, fx, fy, 1);
-    addItem('lastre', 1);
+    riponi('lastre', 1);
     allImpatto(() => GESTO.pietra(fx * 16 + 8, fy * 16 + 12));
     return true;
   }
@@ -410,6 +410,8 @@ function houseAct(fx, fy) {
       recipeBook();
       return true;
     }
+    // punto di estensione: un arredo con un'azione sua (la ciotola del compagno…)
+    if (Ext.intercetta('arredo', o)) return true;
     UI.toast(ITEMS[o.fid].n + ". Per spostarlo usa l'accetta.");
     return true;
   }

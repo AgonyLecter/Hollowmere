@@ -14,6 +14,8 @@ module.exports = async function (t, { browser }) {
       p = G.player,
       n = G.npcs.find(n => n.id === 'brom');
     G.map = G.maps.main;
+    // a mani vuote (con un attrezzo in mano conta solo l'attrezzo: vedi animali.js)
+    G.st.sel = G.st.inv.findIndex(s => !s);
     // il giocatore guarda a destra (dir 1 = destra? si cerca la direzione con dx > 0)
     const dir = DIRV.findIndex(v => v[0] > 0 && v[1] === 0);
     const metti = () => {

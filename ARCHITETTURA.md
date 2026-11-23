@@ -33,8 +33,10 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `mangia` | il giocatore ha mangiato un piatto (`id`) |
 | `porta:intercetta` | il giocatore usa la porta di un edificio del paese (`o`); chi restituisce qualcosa la gestisce |
 | `contenitore` | il giocatore ha cambiato una cassa o una macchina (`k`, `tipo`, `ops`): in cooperativo parte come operazione |
-| `fatto` | un'azione che conta per la missione comune (`tipo`: annaffia, raccogli, albero, falcia; `n`) |
+| `fatto` | un'azione che conta per la missione comune e per le faccende (`tipo`: annaffia, raccogli, albero, falcia; `n`) |
 | `posta:intercetta` (`Ext.intercetta('posta', a)`) | un messaggio dalla posta (`visite/<pid>`); chi lo gestisce restituisce `true` |
+| `mira` | chi o cosa si può toccare davanti al giocatore (`C`, `ax`, `ay`, `m`): si aggiunge `{ k: 'ext', d, act(), fumetto() }` a `C` |
+| `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
 
 ## Mappa dei file (in ordine di caricamento)
 - **Motore**: `core.js` (stato, input, effetti sonori, Ext), `musica.js` (la colonna sonora: brani scritti come dati —
@@ -45,7 +47,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 - **La Valle (gioco libero)**: `free.js`, `animals.js`, `build.js`, `garden.js`, `macchine.js` (abilità, macchine,
   alberi da frutto), `trade.js`, `anim.js`, `valle.js`, `espansione.js` (rango, zone, nuovi abitanti), `costruire.js`,
   `miniera.js`, `sempre.js` (museo, traguardi, eventi), `rango.js`, `vita.js` (giornate e chiacchiere degli abitanti),
-  `aspetto.js`, `zaino.js`, `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
+  `aspetto.js`, `zaino.js` (zaino, casse e la riparazione dei contenitori), `compagno.js` (il cane o il gatto:
+  adozione, Segui/Resta, bottega), `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
 - **Multiplayer**: `mp.js`, `missions.js`, `chat.js`, `coop.js`, `scambi.js`, `postino.js`, `coop_vivo.js`.
 - **Grafica rifatta**: `grafica.js` (personaggi, edifici, animali, attrezzi, cibi, atmosfera, strutture animate).
 - **Natura**: `natura_flora.js` (colture, alberi, selvatici), `natura_macchine.js` (frantoio, essiccatoio, zangola,

@@ -20,7 +20,11 @@ const SUITES = {
   coop: require('./coop'),
   scimmia: require('./scimmia'),
   storia: require('./storia'),
-  gesti: require('./gesti')
+  gesti: require('./gesti'),
+  contenitori: require('./contenitori'),
+  animali: require('./animali'),
+  compagno: require('./compagno'),
+  faccende: require('./faccende')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

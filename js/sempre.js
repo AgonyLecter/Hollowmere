@@ -140,7 +140,7 @@ function incClaim(st, q) {
   UI.toast(`Incarico completato: ${incText(q)}. +${SC(q.pay)}`);
   if (q.big && Math.random() < 0.6) {
     const r = ['alb_ciliegio', 'statua', 'lampadario', 'fontana'][Math.floor(Math.random() * 4)];
-    addItem(r, 1);
+    riponi(r, 1);
     UI.toast(`Premio della settimana: ${ITEMS[r].n}!`);
   }
   NET.save(st);
@@ -185,6 +185,141 @@ function incWire(st, again) {
     incWire(st, () => UI.board());
   };
 }
+// ================= LE FACCENDE DELLA VALLE =================
+// La faccenda del giorno (bacheca in piazza): oltre alle quattro storiche, il lavoro vero di un villaggio.
+// Come si contano: vedi CHORES in farm.js.
+const haBestie = (st, ...k) => (st.free.animals || []).some(a => k.includes(a.kind));
+const ilCompagno = st => st.free && st.free.pet;
+Object.assign(CHORES, {
+  annaffia: { valle: 1, t: 'Annaffia 10 zolle del tuo orto', n: 10, fatto: 'annaffia', pay: 50 },
+  raccolto: { valle: 1, t: 'Raccogli 6 ortaggi', n: 6, fatto: 'raccogli', pay: 70 },
+  legnaia: { valle: 1, t: 'Abbatti 2 alberi per la legnaia del paese', n: 2, fatto: 'albero', pay: 80 },
+  sentieri: { valle: 1, t: "Falcia 10 ciuffi d'erba alta lungo i sentieri", n: 10, fatto: 'falcia', pay: 55 },
+  inverno: { valle: 1, t: "Metti da parte 25 legna per l'inverno", n: 25, ottieni: ['legna'], pay: 60 },
+  muretti: { valle: 1, t: 'Raccogli 15 pietre per i muretti', n: 15, ottieni: ['pietra'], pay: 60 },
+  reti: { valle: 1, t: 'Raccogli 12 fibre: Clara rammenda le reti', n: 12, ottieni: ['fibra'], pay: 55 },
+  uova: {
+    valle: 1,
+    t: 'Prendi 3 uova dal pollaio',
+    n: 3,
+    ottieni: ['uovo', 'uovo_anatra'],
+    ok: st => haBestie(st, 'gallina', 'anatra'),
+    pay: 45
+  },
+  mungi: {
+    valle: 1,
+    t: 'Prendi 2 secchi di latte dalla stalla',
+    n: 2,
+    ottieni: ['latte', 'latte_capra'],
+    ok: st => haBestie(st, 'mucca', 'capra'),
+    pay: 60
+  },
+  lana: {
+    valle: 1,
+    t: "Prendi una matassa di lana dall'ovile",
+    n: 1,
+    ottieni: ['lana'],
+    ok: st => haBestie(st, 'pecora'),
+    pay: 60
+  },
+  erbe: {
+    valle: 1,
+    t: 'Raccogli 3 erbe o frutti spontanei',
+    n: 3,
+    ottieni: id => Object.values(WILD).some(L => L.includes(id)),
+    pay: 60
+  },
+  cena: {
+    valle: 1,
+    t: 'Pesca 2 pesci per la cena di Agatha',
+    n: 2,
+    misura: st => st.free.fished || 0,
+    pay: 80
+  },
+  pulizia: {
+    valle: 1,
+    t: 'Ripulisci 6 detriti: rami, sassi, erbacce',
+    n: 6,
+    misura: st => st.flags.debris || 0,
+    pay: 50
+  },
+  piatto: { valle: 1, t: 'Cucina un piatto caldo', n: 1, misura: st => st.flags.cooked || 0, pay: 60 },
+  banco: {
+    valle: 1,
+    t: 'Costruisci qualcosa al banco da lavoro',
+    n: 1,
+    misura: st => st.flags.crafted || 0,
+    pay: 50
+  },
+  ferro: {
+    valle: 1,
+    t: 'Porta su dalla miniera 3 minerali di ferro',
+    n: 3,
+    ottieni: ['ferro'],
+    ok: st => zoneOpen('collina', st),
+    pay: 90
+  },
+  saluti: {
+    valle: 1,
+    t: 'Saluta 4 abitanti',
+    n: 4,
+    misura: st => Object.keys(st.talked || {}).length,
+    pay: 45
+  },
+  regalo: {
+    valle: 1,
+    t: 'Fai un regalo a qualcuno del paese',
+    n: 1,
+    misura: st => Object.keys(st.gifted || {}).length,
+    pay: 50
+  },
+  ronda: {
+    valle: 1,
+    t: 'Fai la ronda: bacheca, pozzo, cimitero e ponte',
+    n: 4,
+    luoghi: [
+      [40, 17, 'La bacheca'],
+      [47, 20, 'Il pozzo'],
+      [53, 9, 'Il cimitero'],
+      [44, 41, 'Il ponte']
+    ],
+    pay: 55
+  },
+  recinto: {
+    valle: 1,
+    t: 'Controlla i quattro pali del recinto a nord',
+    n: 4,
+    luoghi: POSTS.slice(0, 4).map(([x, y], i) => [x, y + 1, `Il palo ${i + 1}`]),
+    pay: 50
+  },
+  bestie: {
+    valle: 1,
+    t: 'Accarezza 3 delle tue bestie',
+    n: 3,
+    assoluto: 1,
+    misura: st => (st.free.animals || []).filter(a => a.pet).length,
+    ok: st => (st.free.animals || []).length >= 3,
+    pay: 45
+  },
+  compagno: {
+    valle: 1,
+    t: 'Coccola il tuo compagno e dagli da mangiare',
+    n: 2,
+    assoluto: 1,
+    misura: st => (ilCompagno(st).coccole ? 1 : 0) + (ilCompagno(st).pappa ? 1 : 0),
+    ok: ilCompagno,
+    pay: 40
+  },
+  ciotola: {
+    valle: 1,
+    t: 'Riempi la ciotola del tuo compagno',
+    n: 1,
+    assoluto: 1,
+    misura: st => (ilCompagno(st).ciotola > 0 ? 1 : 0),
+    ok: st => ilCompagno(st) && Object.values(st.free.inside || {}).some(f => f && f.id === 'ciotola'),
+    pay: 40
+  }
+});
 QUESTS.push({
   free: 1,
   s: st => isFree(st) && !G.visit,
@@ -360,7 +495,7 @@ function museoMenu(cat) {
             UI.hud();
             UI.toast(`Premio del museo: +${SC(pr[1])}!`);
           } else {
-            addItem(pr[0], pr[1]);
+            riponi(pr[0], pr[1]);
             UI.toast(`Premio del museo: ${ITEMS[pr[0]].n}!`);
           }
         }
@@ -647,7 +782,7 @@ function ricordiAt(fx, fy) {
         AU.play('whisper');
         for (const l of R.text) await narr(l, { dark: 1 });
         F.ricordi[k] = st.day;
-        addItem(R.item, 1);
+        riponi(R.item, 1);
         AU.play('ok');
         const n = Object.keys(F.ricordi).length;
         UI.toast(`Ricordo trovato (${n}/4): ${ITEMS[R.item].n}.`);

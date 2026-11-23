@@ -110,7 +110,7 @@ function rebuildKeep() {
 function contApplica(st, b, tipo, ops, da) {
   const posta = (id, n) => (st.mailbox = st.mailbox || []).push({ item: id, n, from: da || 'Un amico' });
   if (tipo === 'cassa') {
-    b.inv = b.inv || Array(20).fill(null);
+    b.inv = inventario(b.inv, CASSA_POSTI);
     for (const { id, n } of ops) {
       if (!ITEMS[id] || !n) continue;
       if (n > 0) {
@@ -171,11 +171,12 @@ function contDaPadrone(c, ack) {
   for (const k in c) {
     const b = st.free.built[k];
     if (!b) continue;
+    // arriva da Firebase: la lista della cassa può essere accorciata o diventata un oggetto
     const x = c[k] || {};
-    for (const f of CONT) {
-      if (x[f]) b[f] = JSON.parse(JSON.stringify(x[f]));
-      else delete b[f];
-    }
+    if (x.inv) b.inv = inventario(x.inv, CASSA_POSTI);
+    else delete b.inv;
+    if (x.m) b.m = macchinaSana(x.m);
+    else delete b.m;
     for (const o of L) if (o.k === k) contApplica(st, b, o.tipo, o.ops);
     zCassaDaFuori(k);
     if (MACG.k === k) MACG.firma = '';

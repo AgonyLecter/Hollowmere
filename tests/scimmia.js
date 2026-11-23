@@ -49,6 +49,8 @@ module.exports = async function (t, { browser }) {
       return P;
     });
   const problemi = new Set();
+  // i campi arati si contano lungo tutta la partita: la scimmia poi ci posa sopra di tutto, a caso
+  let campi = 0;
   for (let giro = 0; giro < 24; giro++) {
     await page.evaluate(giro => {
       const st = G.st,
@@ -115,6 +117,7 @@ module.exports = async function (t, { browser }) {
     }, giro);
     await skipScenes(page, { max: 40 });
     for (const p of await regole()) problemi.add(p);
+    campi = Math.max(campi, await page.evaluate(() => Object.keys(G.st.farm).length));
     // ogni quattro giri si dorme
     if (giro % 4 === 3) {
       await page.evaluate(() => {
@@ -129,9 +132,10 @@ module.exports = async function (t, { browser }) {
     giorni: G.st.day - G.st.free.start,
     costruiti: G.st.flags.crafted || 0,
     cucinati: G.st.flags.cooked || 0,
-    campi: Object.keys(G.st.farm).length,
+    campi: 0,
     energia: G.st.energy
   }));
+  fatto.campi = campi;
   console.log('    (la scimmia ha fatto: ' + JSON.stringify(fatto) + ')');
   t.true(
     'la scimmia ha davvero giocato (giorni, costruzioni, campi)',

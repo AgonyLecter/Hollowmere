@@ -136,21 +136,31 @@ function addItem(id, n = 1) {
   if (ok) Ext.run('ottieni', id, n); // punto di estensione: qualcosa è entrato nello zaino
   return ok;
 }
+// tutto o niente: le pile uguali si uniscono; gli attrezzi no, ognuno occupa il suo posto
 function addItemBase(id, n = 1) {
-  const inv = G.st.inv;
-  let s = inv.find(s => s && s.id === id);
-  if (s) {
-    s.n += n;
-  } else {
-    const i = inv.findIndex(s => !s);
-    if (i < 0) {
+  const inv = G.st.inv,
+    tool = ITEMS[id] && ITEMS[id].t === 'tool',
+    s = !tool && inv.find(s => s && s.id === id);
+  if (s) s.n += n;
+  else {
+    const vuoti = inv.reduce((L, s, i) => (s ? L : L.concat(i)), []);
+    if (vuoti.length < (tool ? n : 1)) {
       UI.toast('Lo zaino è pieno!', 'bad');
       return false;
     }
-    inv[i] = { id, n };
+    if (tool) for (let k = 0; k < n; k++) inv[vuoti[k]] = { id, n: 1 };
+    else inv[vuoti[0]] = { id, n };
   }
   UI.hotbar();
   return true;
+}
+// nello zaino, oppure (se è pieno) nella cassetta delle spedizioni di casa: non si perde mai niente
+function riponi(id, n = 1) {
+  if (addItem(id, n)) return true;
+  const casa = G.home || G.st;
+  (casa.mailbox = casa.mailbox || []).push({ item: id, n, from: '' });
+  UI.toast(`Lo zaino è pieno: ${ITEMS[id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
+  return false;
 }
 function removeItem(id, n = 1) {
   const inv = G.st.inv;
@@ -168,11 +178,8 @@ function removeItem(id, n = 1) {
 function giveItem(id, n = 1) {
   // zaino pieno: l'oggetto aspetta nella cassetta delle spedizioni di casa (prima prendeva il posto del primo
   // oggetto dello zaino, di solito la zappa, che spariva)
-  if (!addItem(id, n)) {
-    const casa = G.home || G.st;
-    (casa.mailbox = casa.mailbox || []).push({ item: id, n, from: '' });
+  if (!riponi(id, n)) {
     AU.play('pick');
-    UI.toast(`Lo zaino è pieno: ${ITEMS[id].n} ti aspetta nella cassetta delle spedizioni.`, 'bad');
     return;
   }
   AU.play('pick');
@@ -412,6 +419,8 @@ function farmAct(tx, ty) {
 // chi o cosa hai davanti: una persona, una bestia, il gatto o la casella (un sasso, un albero, un oggetto).
 // Vince il più vicino al punto in cui guardi, con un piccolo vantaggio alle persone: così un gatto o un sasso
 // accanto a qualcuno non ti impediscono di parlarci, e una persona accanto a un sasso non ti impedisce di romperlo.
+// Con un attrezzo in mano conta solo l'attrezzo: niente carezze a bestie, gatti e compagno (basta una casella
+// vuota per coccolarli), e con le persone parli solo se le hai proprio davanti (non di lato).
 // La usano sia il tasto azione sia il fumetto sopra la testa, che quindi dicono sempre la stessa cosa.
 const AIM_TILE = ['debris', 'tree', 'pine', 'ceppo', 'log', 'rock', 'built', 'bush'];
 function aimScelta() {
@@ -422,20 +431,24 @@ function aimScelta() {
   const ax = p.x + DIRV[p.dir][0] * 14,
     ay = p.y + DIRV[p.dir][1] * 14,
     [fx, fy] = frontTile(),
+    it = st && st.inv && st.inv[st.sel],
+    attrezzo = !!(it && ITEMS[it.id] && ITEMS[it.id].t === 'tool'),
     C = [];
   for (const n of G.npcs) {
     if (n.hidden || n.map !== m.id) continue;
     const [nx, ny] = ptile(n),
       d = Math.hypot(n.x - ax, n.y - ay),
       davanti = nx === fx && ny === fy;
-    if (d < 18 || davanti) C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
+    if (attrezzo ? davanti || d < 10 : d < 18 || davanti)
+      C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
   }
-  if (m.id === 'main' && isFree(st) && G.fanimals)
+  if (!attrezzo && m.id === 'main' && isFree(st) && G.fanimals)
     for (const e of G.fanimals) {
+      if (e.dentro) continue;
       const d = Math.hypot(e.x - ax, e.y - ay);
       if (d < 18) C.push({ k: 'animal', r: e, d });
     }
-  if (m.id === 'main' && G.critters)
+  if (!attrezzo && m.id === 'main' && G.critters)
     for (const c of G.critters) {
       if (c.k !== 'cat' && c.k !== 'chicken') continue;
       const d = Math.hypot(c.x - ax, c.y - ay);
@@ -445,6 +458,8 @@ function aimScelta() {
     f = m.id === 'main' && st.farm && st.farm[fx + ',' + fy];
   if ((o && (o.act || AIM_TILE.includes(o.kind))) || (f && f.c))
     C.push({ k: 'tile', d: Math.hypot(fx * 16 + 8 - ax, fy * 16 + 12 - ay) });
+  // punto di estensione: altri file aggiungono chi si può toccare ({ k: 'ext', d, act(), fumetto() })
+  if (!attrezzo) Ext.run('mira', C, ax, ay, m);
   C.sort((a, b) => a.d - b.d);
   return C[0] || null;
 }
@@ -482,6 +497,10 @@ function doAction() {
   const sc = aimScelta();
   if (sc && sc.k === 'npc') {
     talkTo(sc.r);
+    return;
+  }
+  if (sc && sc.k === 'ext') {
+    sc.act();
     return;
   }
   // le bestie del tuo pollaio e della tua stalla prima delle galline selvatiche del paese
@@ -1004,6 +1023,7 @@ const ACT = {
 function choreDone() {
   const st = G.st;
   st.choreDone = true;
+  st.choreFatte = (st.choreFatte || 0) + 1;
   const c = CHORES[st.chore];
   st.money += c.pay;
   AU.play('coin');
@@ -1011,12 +1031,103 @@ function choreDone() {
   addQuiete(3);
   addFriend('ezekiel', 1);
 }
+// Le faccende storiche si completano con la loro azione (campana, foglie, pozzo, spaventapasseri). Le altre
+// (vedi le faccende della Valle in sempre.js) dicono come si contano, e il conto parte quando le accetti:
+//   n          quante volte
+//   fatto      un tipo di Ext 'fatto' ('annaffia', 'raccogli', 'albero', 'falcia')
+//   ottieni    gli oggetti che entrano nello zaino che contano (lista o funzione id → vero)
+//   misura     un numero della partita che cresce (pesci pescati, detriti tolti…): conta quanto sale
+//   luoghi     [[x, y, nome]] da raggiungere nel villaggio
+//   assoluto   la misura conta così com'è (non da quando l'hai accettata)
+//   ok(st)     se oggi si può proporre (hai le galline? il compagno?)
+//   valle      solo nel gioco libero
 const CHORES = {
   campana: { t: 'Suona la campana della cappella tra le 12:00 e le 13:00', pay: 60 },
   foglie: { t: 'Spazza le 4 cataste di foglie davanti alla cappella', pay: 50 },
   pozzo: { t: 'Prendi acqua dal pozzo e versala sulla tomba di Elias', pay: 45 },
   spaventa: { t: 'Rimetti il cappello allo spaventapasseri della tua fattoria', pay: 35 }
 };
+// la mattina una faccenda; nella Valle, finita quella, alla bacheca se ne prende un'altra (fino a CHORE_GIORNO)
+const CHORE_GIORNO = 3;
+function choreScegli(st, altra) {
+  if (!altra) st.choreFatte = 0;
+  const ks = Object.keys(CHORES).filter(
+    k => k !== st.lastChore && (!CHORES[k].valle || isFree(st)) && (!CHORES[k].ok || CHORES[k].ok(st))
+  );
+  st.chore = ks[(Math.random() * ks.length) | 0];
+  st.lastChore = st.chore;
+  st.choreOk = st.choreDone = false;
+  st.choreC = 0;
+  st.choreV = [];
+}
+function choreAccetta(st) {
+  const c = CHORES[st.chore];
+  st.choreOk = true;
+  st.choreC = 0;
+  st.choreV = [];
+  st.choreB = c && c.misura ? c.misura(st) : 0;
+}
+// a che punto sei: [fatti, quanti] (null per le faccende storiche, che non hanno un conto)
+function choreProg(st) {
+  const c = CHORES[st.chore];
+  if (!c || !c.n) return null;
+  const a = c.misura
+    ? c.misura(st) - (c.assoluto ? 0 : st.choreB || 0)
+    : c.luoghi
+      ? (st.choreV || []).length
+      : st.choreC || 0;
+  return [Math.min(c.n, Math.max(0, a)), c.n];
+}
+const choreText = st => {
+  const c = CHORES[st.chore],
+    p = choreProg(st);
+  return c ? c.t + (p ? ` (${p[0]}/${p[1]})` : '') : '';
+};
+function choreVerifica(st) {
+  const p = choreProg(st);
+  if (p && p[0] >= p[1] && st.choreOk && !st.choreDone) {
+    choreDone();
+    UI.quest();
+  }
+}
+const choreAttiva = () => {
+  const st = G.st;
+  return !G.visit && st && st.choreOk && !st.choreDone && CHORES[st.chore];
+};
+Ext.on('fatto', (tipo, n) => {
+  const c = choreAttiva();
+  if (!c || c.fatto !== tipo) return;
+  G.st.choreC = (G.st.choreC || 0) + n;
+  choreVerifica(G.st);
+});
+Ext.on('ottieni', (id, n) => {
+  const c = choreAttiva();
+  if (!c || !c.ottieni || !(typeof c.ottieni === 'function' ? c.ottieni(id) : c.ottieni.includes(id))) return;
+  G.st.choreC = (G.st.choreC || 0) + n;
+  choreVerifica(G.st);
+});
+// i conti della partita e i luoghi si controllano due volte al secondo
+{
+  let T = 0;
+  Ext.on('mpTick', dt => {
+    T -= dt;
+    if (T > 0) return;
+    T = 0.5;
+    const c = choreAttiva();
+    if (!c || !c.n) return;
+    const st = G.st;
+    if (c.luoghi && G.map && G.map.id === 'main') {
+      const [px, py] = ptile(G.player);
+      for (const [x, y, nome] of c.luoghi)
+        if (!st.choreV.includes(nome) && Math.abs(px - x) <= 2 && Math.abs(py - y) <= 2) {
+          st.choreV.push(nome);
+          AU.play('blip');
+          UI.toast(`${nome} ✓ (${st.choreV.length}/${c.luoghi.length})`);
+        }
+    }
+    choreVerifica(st);
+  });
+}
 ACT.leaves = o => {
   const st = G.st;
   st.leaves[o.li] = 1;

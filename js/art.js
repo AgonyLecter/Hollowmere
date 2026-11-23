@@ -3144,13 +3144,14 @@ function promptInfo() {
     const n = sc.r;
     return { x: n.x, y: n.y - 31, t: st.flags.met[n.id] ? 'Parla' : 'Presentati' };
   }
+  if (sc && sc.k === 'ext') return sc.fumetto();
   if (sc && sc.k === 'animal') {
     const e = sc.r,
       a = e.a;
     return {
       x: e.x,
       y: e.y - (a.kind === 'mucca' ? 30 : 18),
-      t: a.kind === 'mucca' && a.prod ? 'Mungi ' + a.name : a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
+      t: a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
     };
   }
   if (sc && sc.k === 'critter') {
