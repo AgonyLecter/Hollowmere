@@ -1,0 +1,75 @@
+# Il protagonista (ragazzo), di fronte, fermo. Stile: contorno scuro netto, 3 toni piatti per colore.
+@tavolozza
+o #1e1418
+O #120c0e
+S #eab48a
+s #c98a66
+H #f6cfa4
+n #e2957c
+R #6b3e1f
+r #4a2812
+h #9a6234
+e #2a2030
+l #f4eee4
+m #a2584a
+C #5c4636
+c #3e2e24
+k #7c624c
+V #8a5c30
+v #64401e
+g #e0b050
+W #f0e8d6
+w #c8baa0
+P #4a3c2e
+p #2f261d
+B #2c1e16
+b #4e382a
+@ombra S=s H=S R=r h=R C=c k=C V=v W=w P=p b=B
+@sprite fermo_giu 24x47 specchio
+......oooooo
+....oohhhhRR
+...ohhhRRRRh
+..ohRRRRRhhR
+..oRRRRRhRRR
+..oRRRRRRRRr
+.ohRRRrRRRrR
+.oRRRrSrRrSS
+.oRRrSSSrSSS
+.oRrSrrrSSSS
+oSoSSeeSSSSS
+oSoSSelSSSSS
+.ooSnSSSSSSs
+..osSSSSSSSm
+...osSSSSSSS
+....oosSSSSS
+......ooosSS
+.........osS
+......oooccW
+....oockCkWW
+...ockCCCkWw
+..okCCCCCkVW
+..oCCoCCCkVW
+..oCCoCCkVgV
+..oCCoCCkVVV
+..oCCoCCkVgV
+..oCCoCCkVVV
+..oCCoCCkvvv
+..oWWoCCkPPP
+..oSSoCCkPPP
+..osSoCCcPPP
+...ooOCCcPPP
+.....oCCcPPP
+.....oCCcPPo
+.....oCCcPPo
+.....occcPPo
+......ooPPPo
+......oPPPpo
+......oPPPpo
+......oPPPpo
+......obBBBo
+......oBBBBo
+......oBBBBo
+......oBBBBo
+.....obBBBBo
+.....oBBBBBo
+.....oooooo.
