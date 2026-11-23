@@ -548,13 +548,19 @@ function shadowNightRaid(st) {
     G.stolenN = (G.stolenN || 0) + 1;
   }
 }
-function genMissionArt() {
+function genMissionArtBase() {
   FREEIMG.mobj = SP(12, 12, P => {
     P.ellipse(12, 15, 9, 8, rp('#a8743e'), { spec: 0.3 });
     P.rect(9, 4, 6, 5, rp('#7a4a20'));
     P.ellipse(12, 4, 4, 2, rp('#e8c23a'), { spec: 0.8 });
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genMissionArt', …)
+function genMissionArt(...a) {
+  return Ext.catena('genMissionArt', genMissionArtBase, this, a);
+}
+
 // bacheca: le missioni disponibili e l'avviso del giorno
 {
   const _b = UI.board.bind(UI);

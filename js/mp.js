@@ -265,7 +265,7 @@ function drawOther(o) {
 }
 
 // ---------- viaggi ----------
-async function travelMenu() {
+async function travelMenuBase() {
   const st = G.visit ? G.home : G.st;
   if (!isFree(st)) return false;
   if (!MP.ok()) {
@@ -352,7 +352,13 @@ async function travelMenu() {
   };
   return true;
 }
-async function startVisit(pid) {
+
+// catena: altri file la avvolgono con Ext.avvolgi('travelMenu', …)
+function travelMenu(...a) {
+  return Ext.catena('travelMenu', travelMenuBase, this, a);
+}
+
+async function startVisitBase(pid) {
   const home = G.visit ? G.home : G.st;
   if (G.visit) await endVisit(true);
   const s = await MP.load(pid);
@@ -404,6 +410,12 @@ async function startVisit(pid) {
     G.cut--;
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('startVisit', …)
+function startVisit(...a) {
+  return Ext.catena('startVisit', startVisitBase, this, a);
+}
+
 async function endVisit(quiet) {
   if (!G.visit) return;
   const v = G.st,
@@ -442,7 +454,7 @@ async function endVisit(quiet) {
   }
 }
 // azioni da ospite: annaffiare, lasciare regali, tornare
-function visitAct(fx, fy) {
+function visitActBase(fx, fy) {
   if (!G.visit) return false;
   const st = G.st,
     m = G.map,
@@ -476,6 +488,12 @@ function visitAct(fx, fy) {
   );
   return true;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('visitAct', …)
+function visitAct(...a) {
+  return Ext.catena('visitAct', visitActBase, this, a);
+}
+
 function giftMenu() {
   const st = G.st,
     L = st.inv
@@ -517,7 +535,7 @@ function inboxStart() {
   if (INBOX_OFF || !isFree(st) || !st.pid) return;
   INBOX_OFF = MP.inbox(st.pid, a => inboxApply(a)) || null;
 }
-function inboxApply(a) {
+function inboxApplyBase(a) {
   if (Ext.intercetta('posta', a)) return;
   const st = G.visit ? G.home : G.st;
   if (!st || !isFree(st)) return;
@@ -555,6 +573,12 @@ function inboxApply(a) {
     UI.toast(`${a.from || 'Qualcuno'} ti ha lasciato un regalo nella cassetta delle spedizioni.`);
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('inboxApply', …)
+function inboxApply(...a) {
+  return Ext.catena('inboxApply', inboxApplyBase, this, a);
+}
+
 // la cassetta: si prende tutto, e un foglio dice chi ha mandato cosa (e resta nel registro dei doni)
 const DONO_BIGLIETTI = {
   clara: ["«L'ho sfornato stamattina. Mangialo caldo, se fai in tempo.»", '«Per te. Non dirlo ad Agatha.»'],

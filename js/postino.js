@@ -126,8 +126,7 @@ async function postino() {
 }
 // al posto del riquadro che partiva da solo: arriva Ottavio, solo all'aperto e nel tuo villaggio
 {
-  const _tt = tourTick;
-  tourTick = function (dt) {
+  Ext.avvolgi('tourTick', function (prossimo, dt) {
     const st = homeSt();
     if (
       !G.tour &&
@@ -154,6 +153,6 @@ async function postino() {
       TOUR_WAIT = Math.max(TOUR_WAIT, 2);
       return;
     }
-    return _tt(dt);
-  };
+    return prossimo(dt);
+  });
 }

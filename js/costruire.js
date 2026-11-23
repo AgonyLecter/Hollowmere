@@ -18,7 +18,7 @@ function houseRebuild() {
   applyLook(G.maps.house, st);
   G.map = G.maps.house;
 }
-function bmOpen() {
+function bmOpenBase() {
   if (G.mode !== 'game' || G.cut || UI.busy()) return;
   if (!isFree(G.st)) {
     UI.toast("La modalità costruzione c'è nella Valle (gioco libero).");
@@ -39,6 +39,12 @@ function bmOpen() {
   AU.play('ui');
   bmBar();
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('bmOpen', …)
+function bmOpen(...a) {
+  return Ext.catena('bmOpen', bmOpenBase, this, a);
+}
+
 function bmClose() {
   const b = G.bm;
   if (!b) return;
@@ -174,7 +180,7 @@ function bmTarget(x, y) {
   if (o && o.kind === 'built' && G.st.free.built[o.bk]) return o;
   return null;
 }
-function bmAction() {
+function bmActionBase() {
   const b = G.bm;
   if (!b) return;
   if (G.map && G.map.id === 'house') return bmActionHouse();
@@ -294,12 +300,17 @@ function bmAction() {
   AU.play('pick');
   bmBar();
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('bmAction', …)
+function bmAction(...a) {
+  return Ext.catena('bmAction', bmActionBase, this, a);
+}
+
 // il cursore: frecce/WASD/joystick, mouse, tocco
 {
-  const _up = updatePlayer;
-  updatePlayer = function (dt) {
+  Ext.avvolgi('updatePlayer', function (prossimo, dt) {
     const b = G.bm;
-    if (!b) return _up(dt);
+    if (!b) return prossimo(dt);
     if (!bmHome() || G.cut) {
       bmClose();
       return;
@@ -323,13 +334,12 @@ function bmAction() {
     b.y = clamp(b.y + dy, 1, G.map.h - 2);
     b.t = b.held ? 0.09 : 0.25;
     b.held = 1;
-  };
+  });
 }
 {
-  const _uc = updateCam;
-  updateCam = function (dt) {
+  Ext.avvolgi('updateCam', function (prossimo, dt) {
     const b = G.bm;
-    if (!b || !G.map) return _uc(dt);
+    if (!b || !G.map) return prossimo(dt);
     const m = G.map,
       mw = m.w * 16,
       mh = m.h * 16;
@@ -340,14 +350,13 @@ function bmAction() {
     cy = mh <= VH ? (mh - VH) / 2 : clamp(cy, 0, mh - VH);
     G.cam.x += (cx - G.cam.x) * k;
     G.cam.y += (cy - G.cam.y) * k;
-  };
+  });
 }
 {
-  const _da = doAction;
-  doAction = function () {
+  Ext.avvolgi('doAction', function (prossimo) {
     if (G.bm) return bmAction();
-    return _da();
-  };
+    return prossimo();
+  });
 }
 {
   const cvs = cv;
@@ -482,14 +491,13 @@ function drawBM() {
   ctx.restore();
 }
 {
-  const _dg = drawGuide;
-  drawGuide = function () {
+  Ext.avvolgi('drawGuide', function (prossimo) {
     if (G.bm) {
       drawBM();
       return;
     }
-    _dg();
-  };
+    prossimo();
+  });
 }
 {
   const _sel = UI.selectSlot.bind(UI);
@@ -812,7 +820,7 @@ COOK.push(
   { id: 'tortamele', need: { farina: 1, mela: 2 }, min: 70, da: 'bruno' }
 );
 // grafica
-function genCostrArt() {
+function genCostrArtBase() {
   const dk = rp('#5a3a1e'),
     stone = rp('#8a877d'),
     roof = rp('#6a3a2a'),
@@ -934,6 +942,12 @@ function genCostrArt() {
     for (let i = 0; i < 4; i++) P.line(8 + i * 5, 14, 10 + i * 5, 21, C('#a85a2a'));
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genCostrArt', …)
+function genCostrArt(...a) {
+  return Ext.catena('genCostrArt', genCostrArtBase, this, a);
+}
+
 {
   Ext.on('applyFree:prima', function (m, st) {
     if (!AIMG.serra && PX.prototype.line) genCostrArt();
@@ -973,9 +987,8 @@ LOOKOPT.tema = {
   }
 };
 {
-  const _al = applyLook;
-  applyLook = function (m, st) {
-    _al(m, st);
+  Ext.avvolgi('applyLook', function (prossimo, m, st) {
+    prossimo(m, st);
     if (!isFree(st) || m.id !== 'main') return;
     const L = myLook(st),
       t = L.tema && LOOKOPT.tema.o[L.tema];
@@ -985,7 +998,7 @@ LOOKOPT.tema = {
     for (const o of m.objs)
       if (o.kind === 'built' && o.img && !(ITEMS[o.bid] && ITEMS[o.bid].tree))
         o.img = tintTop(o.img, t[1], frac, mode);
-  };
+  });
 }
 GUIDES.push({
   id: 'costruire',
@@ -1032,13 +1045,12 @@ function isProtected(x, y) {
   return false;
 }
 {
-  const _own = ownedAt;
-  ownedAt = function (x, y, st) {
-    const id = _own(x, y, st);
+  Ext.avvolgi('ownedAt', function (prossimo, x, y, st) {
+    const id = prossimo(x, y, st);
     if (!id) return null;
     if (id !== 'casa' && isProtected(x, y)) return null;
     return id;
-  };
+  });
 }
 
 // in casa: piazza, sposta e togli i mobili (la cucina, la libreria, i quadri…)
@@ -1112,9 +1124,8 @@ function bmActionHouse() {
 // se per qualunque motivo il personaggio si ritrova dentro qualcosa di solido (un mobile appena messo, una
 // costruzione, un salvataggio strano), dopo un attimo viene spostato nella casella libera più vicina
 {
-  const _up = updatePlayer;
-  updatePlayer = function (dt) {
-    _up(dt);
+  Ext.avvolgi('updatePlayer', function (prossimo, dt) {
+    prossimo(dt);
     const p = G.player,
       m = G.map;
     if (!m || G.mode !== 'game' || G.cut || p.auto || G.erede) return;
@@ -1142,7 +1153,7 @@ function bmActionHouse() {
           }
         }
     if (best) setPos(p, best[0], best[1], p.dir);
-  };
+  });
 }
 GUIDES.push({
   id: 'casa_arredo',

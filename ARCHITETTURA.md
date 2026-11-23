@@ -12,7 +12,17 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
    Ext.on('applyFree:prima', (m, st) => { /* prima */ });
    Ext.on('freeAct:intercetta', (fx, fy) => { if (gestito) return true; });   // azione nella Valle
    ```
-   Il test `toppe` conta le sovrascritture rimaste e non permette che aumentino.
+   Per decidere *se e quando* chiamare la funzione originale (sostituirla in certi casi, cambiarne il
+   risultato) si usa un involucro. La funzione originale si dichiara come catena, l'involucro si iscrive:
+   ```js
+   // file originale
+   function nomeBase(x, y) { /* ... */ }
+   function nome(...a) { return Ext.catena('nome', nomeBase, this, a); }
+   // un altro file
+   Ext.avvolgi('nome', function (prossimo, x, y) { if (speciale) return 1; return prossimo(x, y); });
+   ```
+   L'ultimo involucro iscritto è il più esterno. Il test `toppe` non ammette nessuna sovrascrittura
+   (né `nome = function…` né `window[nome] = …`): il tetto è zero. Per convertire in blocco: `tools/a_catena.js`.
 3. **Formattazione automatica:** `npm run format` (Prettier) prima di salvare.
 4. **Un file nuovo** va aggiunto sia in `index.html` sia nella lista `CORE` di `sw.js`, nello stesso ordine,
    e a ogni pubblicazione si cambia `CACHE` in `sw.js` (così i telefoni si aggiornano da soli).

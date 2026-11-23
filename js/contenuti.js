@@ -329,9 +329,8 @@ function animalImg(kind, moving, f) {
 }
 
 {
-  const _pi = promptInfo;
-  promptInfo = function () {
-    const q = _pi.apply(this, arguments);
+  Ext.avvolgi('promptInfo', function (prossimo, ...argomenti) {
+    const q = prossimo(...argomenti);
     try {
       if (q && G.fanimals && G.map.id === 'main') {
         const p = G.player,
@@ -348,7 +347,7 @@ function animalImg(kind, moving, f) {
       segnala(e, 'contenuti');
     }
     return q;
-  };
+  });
 }
 // l'ovile si apre come pollaio e stalla
 {
@@ -1110,9 +1109,8 @@ const CART = (() => {
 })();
 // applica: dopo l'orto (prima dei barattoli, che copiano le icone dei raccolti)
 {
-  const _gg = genGardenArt;
-  genGardenArt = function () {
-    const r = _gg.apply(this, arguments);
+  Ext.avvolgi('genGardenArt', function (prossimo, ...argomenti) {
+    const r = prossimo(...argomenti);
     try {
       for (const k in CART.ICONS) ICON[k] = CART.ICONS[k];
       for (const f of Object.values(NEWFRUIT))
@@ -1167,7 +1165,7 @@ const CART = (() => {
       console.error(e);
     }
     return r;
-  };
+  });
 }
 
 // ---------- frutti veri sugli alberi (prima erano quadratini) ----------
@@ -1419,12 +1417,11 @@ const CART = (() => {
       }
     }
   };
-  const _gd = genDishArt;
-  genDishArt = function () {
-    const r = _gd.apply(this, arguments);
+  Ext.avvolgi('genDishArt', function (prossimo, ...argomenti) {
+    const r = prossimo(...argomenti);
     setNew();
     return r;
-  };
+  });
 }
 
 // ---------- animali nuovi e ovile ----------
@@ -1567,9 +1564,8 @@ const CART = (() => {
         B.S(P, 42, 50, C('#f0f0f0'));
       })
   };
-  const _ga = genAnimalArt;
-  genAnimalArt = function () {
-    const r = _ga.apply(this, arguments);
+  Ext.avvolgi('genAnimalArt', function (prossimo, ...argomenti) {
+    const r = prossimo(...argomenti);
     try {
       AIMG.anatra = AN.anatra();
       AIMG.capra = AN.capra();
@@ -1580,5 +1576,5 @@ const CART = (() => {
       console.error(e);
     }
     return r;
-  };
+  });
 }

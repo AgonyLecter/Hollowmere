@@ -143,10 +143,9 @@ function avLook(g, a) {
 // il proprio personaggio (solo nella Valle: la storia resta com'era)
 let AV_LAST = '';
 {
-  const _as = applySeasonLooks;
-  applySeasonLooks = function () {
+  Ext.avvolgi('applySeasonLooks', function (prossimo) {
     const was = LOOK_SEASON;
-    _as();
+    prossimo();
     const st = avSt();
     if (!st || !isFree(st) || !st.avatar) {
       AV_LAST = '';
@@ -164,7 +163,7 @@ let AV_LAST = '';
     );
     delete SHEET.player;
     for (const k in PORT) if (k.startsWith('player|')) delete PORT[k];
-  };
+  });
 }
 function avApply() {
   LOOK_SEASON = -1;
@@ -398,7 +397,7 @@ function telaioMenu() {
     }
   });
 }
-function genAspettoArt() {
+function genAspettoArtBase() {
   const wood = rp('#8a5a32'),
     dk = rp('#5a3a1e');
   FREEIMG.telaio = SP(16, 22, P => {
@@ -417,6 +416,12 @@ function genAspettoArt() {
   P.outline();
   ICON.telaio = pxCanvas(P);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genAspettoArt', …)
+function genAspettoArt(...a) {
+  return Ext.catena('genAspettoArt', genAspettoArtBase, this, a);
+}
+
 {
   Ext.on('applyFree:prima', function (m, st) {
     if (!FREEIMG.telaio && PX.prototype.line) genAspettoArt();

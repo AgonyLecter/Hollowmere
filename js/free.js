@@ -99,7 +99,7 @@ const PLACE_TOOL = {
 
 // ---------- grafica ----------
 const FREEIMG = {};
-function genFreeArt() {
+function genFreeArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -411,6 +411,12 @@ function genFreeArt() {
   ];
   for (const t of ['fragola', 'pomodoro', 'mais', 'porro']) CROPW[t] = CROPIMG[t].map(wiltImg);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genFreeArt', …)
+function genFreeArt(...a) {
+  return Ext.catena('genFreeArt', genFreeArtBase, this, a);
+}
+
 // albero d'inverno: tronco e rami nudi, neve sopra
 function winterTree(v) {
   srand(400 + v);
@@ -979,7 +985,7 @@ const FREE_INTRO = {
     "Il recinto è grigio. Il ponte è stato ricostruito con il legno dell'Albero bruciato. La Valle è libera, e da fuori qualcuno comincia ad arrivare."
   ]
 };
-async function freeStart(ending) {
+async function freeStartBase(ending) {
   const st = G.st,
     F = st.flags;
   G.cut++;
@@ -1067,6 +1073,12 @@ async function freeStart(ending) {
     G.cut--;
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('freeStart', …)
+function freeStart(...a) {
+  return Ext.catena('freeStart', freeStartBase, this, a);
+}
+
 // obiettivi del gioco libero (guidano i primi giorni)
 QUESTS.push(
   {
@@ -1153,7 +1165,7 @@ function freeNight(st, prev) {
   }
   G.seasonNews = { s, n };
 }
-function shopItems() {
+function shopItemsBase() {
   const s = seasonOf();
   return [
     ...Object.keys(ITEMS).filter(k => ITEMS[k].t === 'seed' && cropInSeason(ITEMS[k].crop, s)),
@@ -1161,6 +1173,12 @@ function shopItems() {
     'pane'
   ];
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('shopItems', …)
+function shopItems(...a) {
+  return Ext.catena('shopItems', shopItemsBase, this, a);
+}
+
 function freeAimOk(it, tx, ty) {
   const st = G.st,
     m = G.map,

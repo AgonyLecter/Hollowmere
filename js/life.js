@@ -374,7 +374,7 @@ const CHATC = [
     st => !!st.forge
   ]
 ];
-function chatPool() {
+function chatPoolBase() {
   const st = G.st;
   return Dialoghi.chiacchiere().concat(
     CHATS,
@@ -387,6 +387,11 @@ function chatPool() {
       }
     })
   );
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('chatPool', …)
+function chatPool(...a) {
+  return Ext.catena('chatPool', chatPoolBase, this, a);
 }
 
 // ---------- tempo che passa (cucina, messa) ----------

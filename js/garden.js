@@ -171,7 +171,7 @@ function wildMorning(st) {
 }
 
 // ---------- grafica ----------
-function genGardenArt() {
+function genGardenArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -393,6 +393,11 @@ function genGardenArt() {
   }
 }
 
+// catena: altri file la avvolgono con Ext.avvolgi('genGardenArt', …)
+function genGardenArt(...a) {
+  return Ext.catena('genGardenArt', genGardenArtBase, this, a);
+}
+
 // ---------- ricettario e cucina vera ----------
 // adv: serve la cucina economica (la si costruisce al banco e si mette in casa); da: chi te la insegna
 COOK.push(
@@ -532,7 +537,7 @@ function recipeBook() {
   }
 }
 // piatti nuovi: icone semplici, ciotola o piatto con il colore dell'ingrediente principale
-function genDishArt() {
+function genDishArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -603,6 +608,11 @@ function genDishArt() {
     ])
   };
   for (const id in D) I(id, D[id]);
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genDishArt', …)
+function genDishArt(...a) {
+  return Ext.catena('genDishArt', genDishArtBase, this, a);
 }
 
 // ---------- gli abitanti nel gioco libero: chiedono, insegnano, passano a trovarti ----------

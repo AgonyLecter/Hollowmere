@@ -496,7 +496,7 @@ const SEASON_LOOK = {
   }
 };
 let LOOK_SEASON = -1;
-function applySeasonLooks() {
+function applySeasonLooksBase() {
   const st = G.st;
   if (!st) return;
   const s = isFree(st) ? seasonOf(st) : 0,
@@ -520,6 +520,11 @@ function applySeasonLooks() {
   );
   delete SHEET.player;
   for (const k in PORT) delete PORT[k];
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('applySeasonLooks', …)
+function applySeasonLooks(...a) {
+  return Ext.catena('applySeasonLooks', applySeasonLooksBase, this, a);
 }
 
 // ---------- la Valle di stagione: fiori, foglie, neve sui tetti ----------

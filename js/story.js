@@ -259,7 +259,7 @@ function buildWood(st) {
   m.doors.push({ tx: 15, ty: 43, to: 'main', x: 30, y: 5, dir: 0 });
   return m;
 }
-function genWoodArt() {
+function genWoodArtBase() {
   {
     const [c, x] = mk2(112, 104);
     srand(777);
@@ -354,6 +354,12 @@ function genWoodArt() {
     IMG.corpo = c;
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genWoodArt', …)
+function genWoodArt(...a) {
+  return Ext.catena('genWoodArt', genWoodArtBase, this, a);
+}
+
 PROMPT.woodgrave = 'Leggi';
 PROMPT.albero = 'Guarda';
 PROMPT.corpo = 'Guarda';
@@ -795,7 +801,7 @@ async function claraAllyTalk(n) {
   return say('clara', t, F.woodDone ? 'fear' : '');
 }
 // ---------- indicatore dell'obiettivo ----------
-function guideTarget() {
+function guideTargetBase() {
   const st = G.st,
     m = G.map;
   if (st.day < 1) return null;
@@ -915,7 +921,13 @@ function guideTarget() {
   }
   return null;
 }
-function drawGuide() {
+
+// catena: altri file la avvolgono con Ext.avvolgi('guideTarget', …)
+function guideTarget(...a) {
+  return Ext.catena('guideTarget', guideTargetBase, this, a);
+}
+
+function drawGuideBase() {
   if (!G.guideOn || G.mode !== 'game' || G.cut || UI.busy() || !G.st || !G.map) return;
   if (!G.objC || G.t > G.objC.t) G.objC = { t: G.t + 0.35, v: guideTarget() };
   const T = G.objC.v;
@@ -972,6 +984,12 @@ function drawGuide() {
   }
   ctx.restore();
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('drawGuide', …)
+function drawGuide(...a) {
+  return Ext.catena('drawGuide', drawGuideBase, this, a);
+}
+
 G.guideOn = LS.get('hm_guide') !== '0';
 // ---------- scheda Lore ----------
 function loreHTML() {

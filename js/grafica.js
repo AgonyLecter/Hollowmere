@@ -1692,15 +1692,14 @@ function genVillage(key) {
   return c;
 }
 {
-  const _go = genObjects;
-  genObjects = function () {
-    _go();
+  Ext.avvolgi('genObjects', function (prossimo) {
+    prossimo();
     try {
       for (const k in VB) IMG[k] = genVillage(k);
     } catch (e) {
       console.error(e);
     }
-  };
+  });
 }
 
 // ---------- costruzioni della Valle (stesse misure di prima) ----------
@@ -2396,10 +2395,8 @@ const ART3 = {
 };
 {
   const Wk = (name, keys) => {
-    const f = window[name];
-    if (typeof f !== 'function') return;
-    window[name] = function () {
-      const r = f.apply(this, arguments);
+    Ext.avvolgi(name, function (prossimo, ...a) {
+      const r = prossimo(...a);
       for (const k of keys) {
         try {
           FREEIMG[k] = ART3[k]();
@@ -2408,7 +2405,7 @@ const ART3 = {
         }
       }
       return r;
-    };
+    });
   };
   Wk('genFreeArt', ['cassa', 'banco']);
   Wk('genFarm2Art', ['apiario', 'fornace', 'botte']);
@@ -2478,24 +2475,23 @@ const ART3 = {
 
 // ---------- ritratti: stesse espressioni, ombre a toni pieni come gli sprite ----------
 {
-  const _gp = genPortrait,
-    _lit = lit,
+  const _lit = lit,
     _pick = pickI;
   const celLit = (n, o) => {
     const v = _lit(n, o);
     return v < 0.4 ? 0.18 : v < 0.72 ? 0.5 : v < 0.95 ? 0.68 : 0.86;
   };
   const celPick = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
-  genPortrait = function (L, mood) {
+  Ext.avvolgi('genPortrait', function (prossimo, L, mood) {
     lit = celLit;
     pickI = celPick;
     try {
-      return _gp(L, mood);
+      return prossimo(L, mood);
     } finally {
       lit = _lit;
       pickI = _pick;
     }
-  };
+  });
 }
 
 // ======================================================================
@@ -2549,7 +2545,9 @@ const CEL = (() => {
     'genWoodArt',
     'genDeco'
   ])
-    if (typeof window[name] === 'function') window[name] = run(window[name]);
+    Ext.avvolgi(name, function (prossimo, ...a) {
+      return run(prossimo).apply(this, a);
+    });
   return { run };
 })();
 
@@ -2884,8 +2882,7 @@ const TOOLS = {
 
 // ---------- particelle e atmosfera ----------
 {
-  const _dp = drawParts;
-  drawParts = function () {
+  Ext.avvolgi('drawParts', function (prossimo) {
     const rest = [];
     for (const p of G.parts) {
       const X = p.x,
@@ -2995,17 +2992,16 @@ const TOOLS = {
     const all = G.parts;
     G.parts = rest;
     try {
-      _dp();
+      prossimo();
     } finally {
       G.parts = all;
     }
-  };
+  });
 }
 // pioggia: velo obliquo e cerchi nelle pozzanghere; neve: fiocchi grandi in primo piano
 {
-  const _at = atmosphere;
-  atmosphere = function (m) {
-    _at(m);
+  Ext.avvolgi('atmosphere', function (prossimo, m) {
+    prossimo(m);
     try {
       if (m.interior || !G.st) return;
       const wx = G.st.weather,
@@ -3067,7 +3063,7 @@ const TOOLS = {
     } catch (e) {
       segnala(e, 'grafica');
     }
-  };
+  });
 }
 
 {
@@ -3081,13 +3077,11 @@ const TOOLS = {
     }
   };
   for (const name of ['genIconsHD', 'genFreeArt', 'genEspArt']) {
-    const f = window[name];
-    if (typeof f !== 'function') continue;
-    window[name] = function () {
-      const r = f.apply(this, arguments);
+    Ext.avvolgi(name, function (prossimo, ...a) {
+      const r = prossimo(...a);
       setTools();
       return r;
-    };
+    });
   }
 }
 
@@ -3557,13 +3551,11 @@ const DISH = (() => {
     'genCostrArt',
     'genFarm2Art'
   ]) {
-    const f = window[name];
-    if (typeof f !== 'function') continue;
-    window[name] = function () {
-      const r = f.apply(this, arguments);
+    Ext.avvolgi(name, function (prossimo, ...a) {
+      const r = prossimo(...a);
       setDishes();
       return r;
-    };
+    });
   }
 }
 
@@ -3967,13 +3959,11 @@ const HOG = (() => {
     }
   };
   for (const name of ['genDeco', 'genCritters', 'genAnimalArt']) {
-    const f = window[name];
-    if (typeof f !== 'function') continue;
-    window[name] = function () {
-      const r = f.apply(this, arguments);
+    Ext.avvolgi(name, function (prossimo, ...a) {
+      const r = prossimo(...a);
       setAni();
       return r;
-    };
+    });
   }
 }
 
@@ -4175,12 +4165,11 @@ const HORSEMAN = (() => {
   return [frame(0), frame(1)];
 })();
 {
-  const _pp = genPropsHD;
-  genPropsHD = function () {
-    const r = _pp.apply(this, arguments);
+  Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {
+    const r = prossimo(...argomenti);
     IMG.horse = HORSEMAN;
     return r;
-  };
+  });
 }
 // bagliori sopra al buio: occhio rosso del cavallo, braci dal collo mozzato, alito
 {
@@ -4312,20 +4301,18 @@ const HORSEMAN = (() => {
     neigh(a, t + 0.02, 0.47, 0.12);
     a.osc('sine', 46, t, 1.4, 0.3, a.sfx, 0.2);
   };
-  const _sp = spawnHorse;
-  spawnHorse = function () {
-    const r = _sp.apply(this, arguments);
+  Ext.avvolgi('spawnHorse', function (prossimo, ...argomenti) {
+    const r = prossimo(...argomenti);
     try {
       AU.play('cavaliere');
     } catch (e) {
       segnala(e, 'grafica');
     }
     return r;
-  };
+  });
   let nt = 6;
-  const _uh = updateHorse;
-  updateHorse = function (dt) {
-    const r = _uh.apply(this, arguments);
+  Ext.avvolgi('updateHorse', function (prossimo, dt, ...altri) {
+    const r = prossimo(dt, ...altri);
     try {
       if (G.horse && G.horse.on) {
         nt -= dt;
@@ -4338,7 +4325,7 @@ const HORSEMAN = (() => {
       segnala(e, 'grafica');
     }
     return r;
-  };
+  });
 }
 
 // =====================================================================
@@ -4493,16 +4480,15 @@ function npcEmoKind() {
 
 // ---- aggiornamento (solo stato visivo) ----
 {
-  const _up = updParts;
-  updParts = function (dt) {
-    const r = _up.apply(this, arguments);
+  Ext.avvolgi('updParts', function (prossimo, dt, ...altri) {
+    const r = prossimo(dt, ...altri);
     try {
       if (G.mode === 'game' && !UI.modalOpen) vivoTick(dt);
     } catch (e) {
       console.error(e);
     }
     return r;
-  };
+  });
 }
 function vivoTick(dt) {
   const m = G.map;
@@ -4823,8 +4809,7 @@ addEventListener('keydown', e => {
 
 // ---- disegno: a terra (prima degli oggetti) ----
 {
-  const _pr = drawPrints;
-  drawPrints = function (m, dt) {
+  Ext.avvolgi('drawPrints', function (prossimo, m, dt, ...altri) {
     try {
       if (!m.interior && m.id === 'main') {
         const cx = G.cam.x,
@@ -4874,8 +4859,8 @@ addEventListener('keydown', e => {
     } catch (e) {
       ctx.globalAlpha = 1;
     }
-    return _pr.apply(this, arguments);
-  };
+    return prossimo(m, dt, ...altri);
+  });
 }
 // ---- disegno: sopra gli oggetti ----
 {
@@ -4973,8 +4958,7 @@ addEventListener('keydown', e => {
 }
 // ---- particelle nuove: fiato e schegge di neve ----
 {
-  const _dp2 = drawParts;
-  drawParts = function () {
+  Ext.avvolgi('drawParts', function (prossimo) {
     const rest = [];
     for (const p of G.parts) {
       if (p.k === 'breath') {
@@ -4992,11 +4976,11 @@ addEventListener('keydown', e => {
     const all = G.parts;
     G.parts = rest;
     try {
-      _dp2();
+      prossimo();
     } finally {
       G.parts = all;
     }
-  };
+  });
 }
 
 // ======================================================================
@@ -5055,16 +5039,15 @@ const PALE = Array.from({ length: 8 }, (_, i) => {
 // ---------- stato animato ----------
 const SV = { smokeT: 0, spark: 0, sil: new Map(), bees: 0 };
 {
-  const _up = updParts;
-  updParts = function (dt) {
-    const r = _up.apply(this, arguments);
+  Ext.avvolgi('updParts', function (prossimo, dt, ...altri) {
+    const r = prossimo(dt, ...altri);
     try {
       if (G.mode === 'game' || G.mode === 'title') svTick(dt);
     } catch (e) {
       console.error(e);
     }
     return r;
-  };
+  });
 }
 function svTick(dt) {
   const m = G.map;
