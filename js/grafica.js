@@ -2367,6 +2367,18 @@ const GB = (w, h, fn) => {
   P.outline();
   return pxCanvas(P);
 };
+// come GB, ma più alto di «alza» unità: sopra il disegno di sempre si aggiunge una cima gotica (cima(P, B, h0),
+// dove h0 è la riga in cui comincia il disegno di sempre)
+const GBalto = (w, h, alza, fn, cima) => {
+  const P = new PX(w * 2, h * 2);
+  srand(w * 31 + h);
+  fn(P, BK);
+  const Q = new PX(w * 2, (h + alza) * 2);
+  Q.d.set(P.d, alza * 2 * w * 2 * 4);
+  cima(Q, BK, alza * 2);
+  Q.outline();
+  return pxCanvas(Q);
+};
 // riempie una forma con colonne (cx,hw(Y)) restituendo una clip
 const clipBand = (cx, hwF) => (X, Y) => Math.abs(X + 0.5 - cx) <= hwF(Y);
 const ART2 = {
@@ -2577,51 +2589,71 @@ const ART2 = {
   // il mulino a vento: una torre di pietra alta come il fienile del paese (64×96), tetto conico, porta ad arco.
   // Le pale girano: le disegna PALE a ogni fotogramma, alla stessa scala (MULINO_PALE dice dove stanno)
   mulino: () =>
-    GB(64, 96, (P, B) => {
-      const ST = B.R6('#9a968a'),
-        RF = B.R6('#6a3a2a'),
-        WD = B.R6('#8a5a32'),
-        CX = 64,
-        hwT = Y => 22 + (Y - 70) * 0.12;
-      B.stones(P, CX - 38, 70, 76, 116, ST, {
-        rh: 8,
-        bw: 12,
-        clip: clipBand(CX, hwT),
-        shadeX: X => {
-          const n = (X + 0.5 - CX) / 30;
-          return n < -0.6 ? 1 : n > 0.75 ? -2 : n > 0.35 ? -1 : 0;
-        },
-        moss: 1
-      });
-      B.F(P, CX - 38, 184, 76, 4, B.tc(ST, 1));
-      // due finestrelle una sopra l'altra
-      for (const y of [96, 126]) {
-        B.F(P, CX - 5, y, 10, 14, B.tc(WD, 1));
-        B.F(P, CX - 4, y + 1, 8, 12, C('#1e1410'));
-        B.F(P, CX - 1, y + 1, 2, 12, B.tc(WD, 3));
-      }
-      // porta ad arco, alta come quelle delle case del paese
-      for (let yy = 0; yy < 36; yy++) {
-        const hw = yy < 6 ? Math.round(Math.sqrt(36 - (6 - yy) * (6 - yy)) * 1.4) : 9;
-        B.F(P, CX - hw - 1, 150 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
-        if (yy > 0)
-          for (let xx = -hw + 1; xx < hw - 1; xx++)
-            B.S(P, CX + xx, 150 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
-      }
-      // tetto conico
-      for (let Y = 30; Y < 74; Y++) {
-        const h2 = 5 + (Y - 30) * 0.8;
-        for (let X = Math.round(CX - h2); X < Math.round(CX + h2); X++) {
-          const n = (X + 0.5 - CX) / h2;
-          let t = (Y - 30) % 5 === 4 ? 1 : 3;
-          if (n < -0.4) t++;
-          if (n > 0.4) t--;
-          if (n > 0.8) t--;
-          B.S(P, X, Y, B.tc(RF, t));
+    GBalto(
+      64,
+      96,
+      10,
+      (P, B) => {
+        const ST = B.R6('#9a968a'),
+          RF = B.R6('#6a3a2a'),
+          WD = B.R6('#8a5a32'),
+          CX = 64,
+          hwT = Y => 22 + (Y - 70) * 0.12;
+        B.stones(P, CX - 38, 70, 76, 116, ST, {
+          rh: 8,
+          bw: 12,
+          clip: clipBand(CX, hwT),
+          shadeX: X => {
+            const n = (X + 0.5 - CX) / 30;
+            return n < -0.6 ? 1 : n > 0.75 ? -2 : n > 0.35 ? -1 : 0;
+          },
+          moss: 1
+        });
+        B.F(P, CX - 38, 184, 76, 4, B.tc(ST, 1));
+        // due finestrelle una sopra l'altra
+        for (const y of [96, 126]) {
+          B.F(P, CX - 5, y, 10, 14, B.tc(WD, 1));
+          B.F(P, CX - 4, y + 1, 8, 12, C('#1e1410'));
+          B.F(P, CX - 1, y + 1, 2, 12, B.tc(WD, 3));
         }
+        // porta ad arco, alta come quelle delle case del paese
+        for (let yy = 0; yy < 36; yy++) {
+          const hw = yy < 6 ? Math.round(Math.sqrt(36 - (6 - yy) * (6 - yy)) * 1.4) : 9;
+          B.F(P, CX - hw - 1, 150 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
+          if (yy > 0)
+            for (let xx = -hw + 1; xx < hw - 1; xx++)
+              B.S(P, CX + xx, 150 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
+        }
+        // tetto conico
+        for (let Y = 30; Y < 74; Y++) {
+          const h2 = 5 + (Y - 30) * 0.8;
+          for (let X = Math.round(CX - h2); X < Math.round(CX + h2); X++) {
+            const n = (X + 0.5 - CX) / h2;
+            let t = (Y - 30) % 5 === 4 ? 1 : 3;
+            if (n < -0.4) t++;
+            if (n > 0.4) t--;
+            if (n > 0.8) t--;
+            B.S(P, X, Y, B.tc(RF, t));
+          }
+        }
+        B.F(P, CX - 40, 72, 80, 4, B.tc(RF, 1));
+      },
+      (P, B, h0) => {
+        // il cappello d'ardesia appuntito, con il pinnacolo di ferro
+        const cx = 64,
+          SR = B.R6('#2e2e3a');
+        // il cappello scende fino al tetto vero del mulino
+        let fondo = h0;
+        while (fondo < P.h - 1 && !P.d[(fondo * P.w + cx) * 4 + 3]) fondo++;
+        fondo += 3;
+        for (let Y = 4; Y < fondo; Y++) {
+          const hw = 1 + (Y - 4) * 0.7;
+          for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++)
+            B.S(P, X, Y, B.tc(SR, (Y - 4) % 4 === 0 ? 1 : X < cx ? 3 : 2));
+        }
+        B.F(P, cx - 1, 0, 2, 5, C('#141016'));
       }
-      B.F(P, CX - 40, 72, 80, 4, B.tc(RF, 1));
-    }),
+    ),
   _x: () => null
 };
 const MULINO_PALE = { cx: 64, hy: 62, L: 58 };
@@ -2765,141 +2797,170 @@ Object.assign(ART2, {
   casetta: () => IMG.casetta || (IMG.casetta = genVillage('casetta')),
   // il museo: un tempietto neoclassico più grande delle case (112×84), sei colonne, frontone con lo stemma
   museo: () =>
-    GB(112, 84, (P, B) => {
-      const ST = B.R6('#a8a294'),
-        MB = B.R6('#ece4d4'),
-        RF = B.R6('#3a4a6a'),
-        G = B.R6('#d8b04a'),
-        LG = B.R6('#4a2a14'),
-        CX = 112;
-      // corpo in pietra con le ali un po' più basse
-      B.stones(P, 10, 92, 46, 64, ST, { rh: 8, bw: 16 });
-      B.stones(P, 168, 92, 46, 64, ST, { rh: 8, bw: 16, shadeX: () => -1 });
-      B.stones(P, 40, 70, 144, 86, ST, { rh: 8, bw: 18, shadeX: X => (X > 170 ? -1 : 0) });
-      // cornicione delle ali
-      for (const x of [6, 164]) {
-        B.F(P, x, 86, 54, 6, B.tc(MB, 3));
-        B.F(P, x, 86, 54, 1, B.tc(MB, 5));
-        B.F(P, x, 91, 54, 1, B.tc(MB, 1));
-        B.F(P, x, 80, 54, 6, B.tc(RF, x < 100 ? 3 : 2));
-        B.F(P, x, 80, 54, 1, B.tc(RF, 4));
-      }
-      // finestre ad arco nelle ali (luce calda dentro)
-      const finestra = (x, y, w, h) => {
-        B.F(P, x - 2, y - 2, w + 4, h + 4, B.tc(MB, 2));
-        for (let Y = 0; Y < h; Y++)
-          for (let X = 0; X < w; X++) {
-            const dx = X + 0.5 - w / 2,
-              arco = Y < w / 2 && dx * dx + (Y - w / 2) * (Y - w / 2) > (w / 2) * (w / 2);
-            if (arco) continue;
-            B.S(P, x + X, y + Y, C(Y < h * 0.3 ? '#fff4c0' : Y < h * 0.7 ? '#ffe08a' : '#f0c060'));
+    GBalto(
+      112,
+      84,
+      28,
+      (P, B) => {
+        const ST = B.R6('#a8a294'),
+          MB = B.R6('#9e988a'),
+          RF = B.R6('#3a4a6a'),
+          G = B.R6('#d8b04a'),
+          LG = B.R6('#4a2a14'),
+          CX = 112;
+        // corpo in pietra con le ali un po' più basse
+        B.stones(P, 10, 92, 46, 64, ST, { rh: 8, bw: 16 });
+        B.stones(P, 168, 92, 46, 64, ST, { rh: 8, bw: 16, shadeX: () => -1 });
+        B.stones(P, 40, 70, 144, 86, ST, { rh: 8, bw: 18, shadeX: X => (X > 170 ? -1 : 0) });
+        // cornicione delle ali
+        for (const x of [6, 164]) {
+          B.F(P, x, 86, 54, 6, B.tc(MB, 3));
+          B.F(P, x, 86, 54, 1, B.tc(MB, 5));
+          B.F(P, x, 91, 54, 1, B.tc(MB, 1));
+          B.F(P, x, 80, 54, 6, B.tc(RF, x < 100 ? 3 : 2));
+          B.F(P, x, 80, 54, 1, B.tc(RF, 4));
+        }
+        // finestre ad arco nelle ali (luce calda dentro)
+        const finestra = (x, y, w, h) => {
+          B.F(P, x - 2, y - 2, w + 4, h + 4, B.tc(MB, 2));
+          for (let Y = 0; Y < h; Y++)
+            for (let X = 0; X < w; X++) {
+              const dx = X + 0.5 - w / 2,
+                arco = Y < w / 2 && dx * dx + (Y - w / 2) * (Y - w / 2) > (w / 2) * (w / 2);
+              if (arco) continue;
+              B.S(P, x + X, y + Y, C(Y < h * 0.3 ? '#fff4c0' : Y < h * 0.7 ? '#ffe08a' : '#f0c060'));
+            }
+          B.F(P, x + w / 2 - 1, y + 2, 2, h - 2, B.tc(MB, 3));
+          B.F(P, x, y + Math.round(h * 0.55), w, 1, B.tc(MB, 3));
+          B.F(P, x - 4, y + h + 2, w + 8, 3, B.tc(MB, 4));
+        };
+        finestra(24, 104, 18, 30);
+        finestra(182, 104, 18, 30);
+        // trabeazione con la scritta
+        B.F(P, 30, 56, 164, 14, B.tc(MB, 3));
+        B.F(P, 30, 56, 164, 1, B.tc(MB, 5));
+        B.F(P, 30, 69, 164, 1, B.tc(MB, 1));
+        for (let X = 34; X < 190; X += 8) B.F(P, X, 66, 4, 2, B.tc(MB, 2));
+        // MVSEO in lettere d'oro (pixel)
+        const L = {
+          M: ['10001', '11011', '10101', '10001', '10001'],
+          V: ['10001', '10001', '10001', '01010', '00100'],
+          S: ['01111', '10000', '01110', '00001', '11110'],
+          E: ['11111', '10000', '11110', '10000', '11111'],
+          O: ['01110', '10001', '10001', '10001', '01110']
+        };
+        'MVSEO'.split('').forEach((ch, i) =>
+          L[ch].forEach((r, y) =>
+            [...r].forEach((v, x) => {
+              if (v === '1') B.S(P, CX - 17 + i * 7 + x, 58 + y, B.tc(G, y < 2 ? 5 : 3));
+            })
+          )
+        );
+        // frontone
+        for (let Y = 14; Y < 56; Y++) {
+          const h2 = Math.round(10 + (Y - 14) * 2.2);
+          for (let X = CX - h2; X < CX + h2; X++) {
+            const edge = Math.abs(X + 0.5 - CX) > h2 - 6;
+            B.S(
+              P,
+              X,
+              Y,
+              edge ? B.tc(RF, (Y + X) % 4 === 0 ? 1 : X < CX ? 4 : 2) : B.tc(MB, X > CX + h2 * 0.5 ? 2 : 3)
+            );
           }
-        B.F(P, x + w / 2 - 1, y + 2, 2, h - 2, B.tc(MB, 3));
-        B.F(P, x, y + Math.round(h * 0.55), w, 1, B.tc(MB, 3));
-        B.F(P, x - 4, y + h + 2, w + 8, 3, B.tc(MB, 4));
-      };
-      finestra(24, 104, 18, 30);
-      finestra(182, 104, 18, 30);
-      // trabeazione con la scritta
-      B.F(P, 30, 56, 164, 14, B.tc(MB, 3));
-      B.F(P, 30, 56, 164, 1, B.tc(MB, 5));
-      B.F(P, 30, 69, 164, 1, B.tc(MB, 1));
-      for (let X = 34; X < 190; X += 8) B.F(P, X, 66, 4, 2, B.tc(MB, 2));
-      // MVSEO in lettere d'oro (pixel)
-      const L = {
-        M: ['10001', '11011', '10101', '10001', '10001'],
-        V: ['10001', '10001', '10001', '01010', '00100'],
-        S: ['01111', '10000', '01110', '00001', '11110'],
-        E: ['11111', '10000', '11110', '10000', '11111'],
-        O: ['01110', '10001', '10001', '10001', '01110']
-      };
-      'MVSEO'.split('').forEach((ch, i) =>
-        L[ch].forEach((r, y) =>
-          [...r].forEach((v, x) => {
-            if (v === '1') B.S(P, CX - 17 + i * 7 + x, 58 + y, B.tc(G, y < 2 ? 5 : 3));
-          })
-        )
-      );
-      // frontone
-      for (let Y = 14; Y < 56; Y++) {
-        const h2 = Math.round(10 + (Y - 14) * 2.2);
-        for (let X = CX - h2; X < CX + h2; X++) {
-          const edge = Math.abs(X + 0.5 - CX) > h2 - 6;
-          B.S(
-            P,
-            X,
-            Y,
-            edge ? B.tc(RF, (Y + X) % 4 === 0 ? 1 : X < CX ? 4 : 2) : B.tc(MB, X > CX + h2 * 0.5 ? 2 : 3)
-          );
         }
-      }
-      B.F(P, 18, 54, 188, 3, B.tc(RF, 1));
-      // stemma nel timpano: scudo d'oro con un libro
-      for (let yy = -9; yy <= 9; yy++)
-        for (let xx = -8; xx <= 8; xx++) {
-          const inside = yy < 2 ? Math.abs(xx) <= 8 : Math.abs(xx) <= 8 - (yy - 2) * 1.1;
-          if (!inside) continue;
-          const bordo = Math.abs(xx) >= 7 || yy <= -8 || (yy > 2 && Math.abs(xx) >= 7 - (yy - 2) * 1.1);
-          B.S(P, CX + xx, 38 + yy, B.tc(G, bordo ? 1 : xx + yy < 0 ? 5 : 3));
-        }
-      B.F(P, CX - 5, 35, 10, 6, B.tc(MB, 4));
-      B.F(P, CX, 35, 1, 6, B.tc(LG, 2));
-      B.F(P, CX - 2, 10, 4, 5, B.tc(G, 4));
-      for (const x of [22, 202]) B.F(P, x - 3, 48, 6, 6, B.tc(G, 3));
-      // portone
-      B.F(P, CX - 16, 96, 32, 58, B.tc(MB, 1));
-      for (let Y = 0; Y < 54; Y++)
-        for (let X = 0; X < 26; X++) {
-          const dx = X + 0.5 - 13;
-          if (Y < 13 && dx * dx + (Y - 13) * (Y - 13) > 169) continue;
-          B.S(P, CX - 13 + X, 100 + Y, B.tc(LG, X % 6 === 0 ? 1 : X < 13 ? 2 : 3));
-        }
-      B.F(P, CX - 1, 112, 2, 42, B.tc(LG, 1));
-      B.S(P, CX - 4, 132, B.tc(G, 5));
-      B.S(P, CX + 3, 132, B.tc(G, 5));
-      // colonne scanalate
-      for (const x of [48, 70, 92, 132, 154, 176]) {
-        for (let Y = 74; Y < 150; Y++)
-          for (let X = x - 5; X < x + 5; X++) {
-            const k = X - (x - 5);
-            let t = k < 2 ? 4 : k > 7 ? 2 : 3;
-            if (k === 3 || k === 6) t--;
-            B.S(P, X, Y, B.tc(MB, t));
+        B.F(P, 18, 54, 188, 3, B.tc(RF, 1));
+        // stemma nel timpano: scudo d'oro con un libro
+        for (let yy = -9; yy <= 9; yy++)
+          for (let xx = -8; xx <= 8; xx++) {
+            const inside = yy < 2 ? Math.abs(xx) <= 8 : Math.abs(xx) <= 8 - (yy - 2) * 1.1;
+            if (!inside) continue;
+            const bordo = Math.abs(xx) >= 7 || yy <= -8 || (yy > 2 && Math.abs(xx) >= 7 - (yy - 2) * 1.1);
+            B.S(P, CX + xx, 38 + yy, B.tc(G, bordo ? 1 : xx + yy < 0 ? 5 : 3));
           }
-        B.F(P, x - 7, 70, 14, 4, B.tc(MB, 4));
-        B.F(P, x - 7, 73, 14, 1, B.tc(MB, 2));
-        B.F(P, x - 7, 148, 14, 4, B.tc(MB, 3));
-        B.F(P, x - 7, 151, 14, 1, B.tc(MB, 1));
-        // ombra della colonna sul muro
-        B.F(P, x + 5, 76, 3, 72, B.tc(ST, 0));
+        B.F(P, CX - 5, 35, 10, 6, B.tc(MB, 4));
+        B.F(P, CX, 35, 1, 6, B.tc(LG, 2));
+        B.F(P, CX - 2, 10, 4, 5, B.tc(G, 4));
+        for (const x of [22, 202]) B.F(P, x - 3, 48, 6, 6, B.tc(G, 3));
+        // portone
+        B.F(P, CX - 16, 96, 32, 58, B.tc(MB, 1));
+        for (let Y = 0; Y < 54; Y++)
+          for (let X = 0; X < 26; X++) {
+            const dx = X + 0.5 - 13;
+            if (Y < 13 && dx * dx + (Y - 13) * (Y - 13) > 169) continue;
+            B.S(P, CX - 13 + X, 100 + Y, B.tc(LG, X % 6 === 0 ? 1 : X < 13 ? 2 : 3));
+          }
+        B.F(P, CX - 1, 112, 2, 42, B.tc(LG, 1));
+        B.S(P, CX - 4, 132, B.tc(G, 5));
+        B.S(P, CX + 3, 132, B.tc(G, 5));
+        // colonne scanalate
+        for (const x of [48, 70, 92, 132, 154, 176]) {
+          for (let Y = 74; Y < 150; Y++)
+            for (let X = x - 5; X < x + 5; X++) {
+              const k = X - (x - 5);
+              let t = k < 2 ? 4 : k > 7 ? 2 : 3;
+              if (k === 3 || k === 6) t--;
+              B.S(P, X, Y, B.tc(MB, t));
+            }
+          B.F(P, x - 7, 70, 14, 4, B.tc(MB, 4));
+          B.F(P, x - 7, 73, 14, 1, B.tc(MB, 2));
+          B.F(P, x - 7, 148, 14, 4, B.tc(MB, 3));
+          B.F(P, x - 7, 151, 14, 1, B.tc(MB, 1));
+          // ombra della colonna sul muro
+          B.F(P, x + 5, 76, 3, 72, B.tc(ST, 0));
+        }
+        // stendardi rossi tra le colonne
+        for (const x of [81, 143]) {
+          B.F(P, x - 5, 80, 10, 26, C('#8a2a2a'));
+          B.F(P, x - 5, 80, 10, 2, B.tc(G, 4));
+          B.F(P, x - 1, 86, 2, 12, B.tc(G, 3));
+          B.S(P, x - 5, 106, C('#8a2a2a'));
+          B.S(P, x + 4, 106, C('#8a2a2a'));
+          B.F(P, x - 3, 106, 6, 2, C('#6a1a1a'));
+        }
+        // scalinata larga
+        for (let i = 0; i < 4; i++) {
+          const y = 152 + i * 4,
+            x0 = 34 - i * 6;
+          B.F(P, x0, y, 224 - x0 * 2, 4, B.tc(MB, i % 2 ? 3 : 4));
+          B.F(P, x0, y, 224 - x0 * 2, 1, B.tc(MB, 5));
+          B.F(P, x0, y + 3, 224 - x0 * 2, 1, B.tc(MB, 1));
+        }
+        // vasi con l'alloro ai lati della scala
+        for (const x of [20, 204]) {
+          B.F(P, x - 6, 146, 12, 10, B.tc(ST, 2));
+          B.F(P, x - 7, 146, 14, 2, B.tc(ST, 4));
+          for (let yy = 0; yy < 12; yy++)
+            for (let xx = -7; xx <= 7; xx++)
+              if (xx * xx + (yy - 6) * (yy - 6) * 1.4 < 50)
+                B.S(P, x + xx, 132 + yy, C((xx + yy) % 3 ? '#3f7a2a' : '#5a9a3a'));
+        }
+      },
+      (P, B, h0) => {
+        // la torre dell'orologio: pietra annerita, quadrante di bronzo scuro, guglia d'ardesia e pinnacolo
+        const cx = 112,
+          PI = B.R6('#6a665e'),
+          SR = B.R6('#2e2e3a'),
+          BR = B.R6('#7a5a2e');
+        B.F(P, cx - 18, 22, 36, h0 + 2, B.tc(PI, 3));
+        B.F(P, cx - 18, 22, 2, h0 + 2, B.tc(PI, 4));
+        B.F(P, cx + 16, 22, 2, h0 + 2, B.tc(PI, 1));
+        for (let Y = 26; Y < h0 + 24; Y += 7) B.F(P, cx - 18, Y, 36, 1, B.tc(PI, 2));
+        for (let yy = -10; yy <= 10; yy++)
+          for (let xx = -10; xx <= 10; xx++) {
+            const d = Math.hypot(xx, yy);
+            if (d <= 10) B.S(P, cx + xx, 38 + yy, d > 8.5 ? B.tc(BR, 1) : B.tc(BR, d < 2 ? 5 : 3));
+          }
+        B.F(P, cx, 30, 1, 8, C('#1a1214'));
+        B.F(P, cx, 38, 6, 1, C('#1a1214'));
+        for (let Y = 2; Y < 24; Y++) {
+          const hw = 2 + (Y - 2) * 0.95;
+          for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++)
+            B.S(P, X, Y, B.tc(SR, (Y - 2) % 5 === 0 ? 1 : X < cx ? 3 : 2));
+        }
+        B.F(P, cx - 1, 0, 2, 4, C('#141016'));
       }
-      // stendardi rossi tra le colonne
-      for (const x of [81, 143]) {
-        B.F(P, x - 5, 80, 10, 26, C('#8a2a2a'));
-        B.F(P, x - 5, 80, 10, 2, B.tc(G, 4));
-        B.F(P, x - 1, 86, 2, 12, B.tc(G, 3));
-        B.S(P, x - 5, 106, C('#8a2a2a'));
-        B.S(P, x + 4, 106, C('#8a2a2a'));
-        B.F(P, x - 3, 106, 6, 2, C('#6a1a1a'));
-      }
-      // scalinata larga
-      for (let i = 0; i < 4; i++) {
-        const y = 152 + i * 4,
-          x0 = 34 - i * 6;
-        B.F(P, x0, y, 224 - x0 * 2, 4, B.tc(MB, i % 2 ? 3 : 4));
-        B.F(P, x0, y, 224 - x0 * 2, 1, B.tc(MB, 5));
-        B.F(P, x0, y + 3, 224 - x0 * 2, 1, B.tc(MB, 1));
-      }
-      // vasi con l'alloro ai lati della scala
-      for (const x of [20, 204]) {
-        B.F(P, x - 6, 146, 12, 10, B.tc(ST, 2));
-        B.F(P, x - 7, 146, 14, 2, B.tc(ST, 4));
-        for (let yy = 0; yy < 12; yy++)
-          for (let xx = -7; xx <= 7; xx++)
-            if (xx * xx + (yy - 6) * (yy - 6) * 1.4 < 50)
-              B.S(P, x + xx, 132 + yy, C((xx + yy) % 3 ? '#3f7a2a' : '#5a9a3a'));
-      }
-    })
+    )
 });
 
 // ---------- oggetti costruibili piccoli ----------
