@@ -1800,41 +1800,52 @@ const VB = {
     w: 6,
     h: 5,
     roofH: 44,
-    wall: 'planks',
-    wc: '#c79a62',
-    roof: '#7f58a0',
+    wall: 'boards',
+    wc: '#7a6a58',
+    roof: '#34323c',
     win: [
       [12, 52],
       [70, 52]
     ],
     door: 2,
     chimney: 1,
-    shutter: '#4a6a3a',
-    curtain: '#e8dcc0'
+    shutter: '#3a2a22',
+    curtain: '#c8a870',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'punta',
+    abbaini: 1,
+    alza: 26
   },
   store: {
     w: 6,
     h: 5,
     roofH: 42,
     wall: 'planks',
-    wc: '#d9c49a',
-    roof: '#4c7c8c',
+    wc: '#8a7a62',
+    roof: '#4a3434',
     win: [
       [10, 52],
       [70, 52]
     ],
     door: 3,
-    shutter: '#2f5a6a',
+    shutter: '#2e2a26',
     sign: 1,
-    awning: '#b8402a'
+    awning: '#5a1a1e',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'doppia',
+    alza: 22
   },
   elder: {
     w: 6,
     h: 5,
     roofH: 42,
     wall: 'stone',
-    wc: '#6e6a64',
-    roof: '#3a3944',
+    wc: '#55524c',
+    roof: '#24222a',
     win: [
       [10, 52],
       [70, 52]
@@ -1843,91 +1854,120 @@ const VB = {
     chimney: 1,
     doorCol: '#2b2420',
     trim: '#9a968c',
-    moss: 1
+    moss: 1,
+    vine: 1,
+    tetto: 'doppia',
+    edera: 2,
+    alza: 24
   },
   barn: {
     w: 4,
     h: 6,
     roofH: 46,
     wall: 'boards',
-    wc: '#8a3026',
-    roof: '#4a3a32',
+    wc: '#5e1e1a',
+    roof: '#2a2420',
     win: [],
     door: 2,
-    doorCol: '#4a1a14',
-    barn: 1
+    doorCol: '#2e1410',
+    barn: 1,
+    moss: 1,
+    tetto: 'punta',
+    edera: 1,
+    alza: 14
   },
   cottage: {
     w: 5,
     h: 4,
     roofH: 30,
     wall: 'plaster',
-    wc: '#e6d3a6',
-    roof: '#d9a23a',
+    wc: '#b0a48c',
+    roof: '#6e6034',
     thatch: 1,
     win: [
       [8, 38],
       [58, 38]
     ],
     door: 2,
-    shutter: '#7a8a4a',
-    timber: '#5a3a22',
-    curtain: '#d88a8a'
+    shutter: '#3e4a30',
+    timber: '#33241a',
+    curtain: '#b87a6a',
+    vine: 1,
+    lantern: 1,
+    tetto: 'punta',
+    edera: 2,
+    alza: 18
   },
   forge: {
     w: 5,
     h: 4,
     roofH: 30,
     wall: 'stone',
-    wc: '#8a7a6a',
-    roof: '#5a483c',
+    wc: '#4e4a46',
+    roof: '#2a2420',
     win: [[8, 38]],
     door: 2,
     chimney: 1,
-    forge: 1
+    forge: 1,
+    moss: 1,
+    tetto: 'punta',
+    alza: 16
   },
   // la casetta dei nuovi abitanti: una casa piccola come il cottage e la fucina (stesse misure)
   casetta: {
     w: 5,
     h: 4,
     roofH: 30,
-    wall: 'plaster',
-    wc: '#e8d8b8',
-    roof: '#8a5a3a',
+    wall: 'boards',
+    wc: '#6e6254',
+    roof: '#3e3436',
     win: [
       [8, 38],
       [58, 38]
     ],
     door: 2,
     chimney: 1,
-    shutter: '#5a7a8a',
-    curtain: '#e8dcc0'
+    shutter: '#2e3a3e',
+    curtain: '#c8a870',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'punta',
+    alza: 18
   },
   chapel: {
     w: 7,
     h: 7,
-    roofH: 50,
-    extra: 22,
+    roofH: 34,
+    extra: 40,
     wall: 'plaster',
-    wc: '#e8e0cc',
-    roof: '#585868',
+    wc: '#8a8476',
+    roof: '#2a2a34',
     win: [
       [12, 96],
       [90, 96]
     ],
     door: 3,
-    trim: '#f2ead6',
+    trim: '#b8b2a4',
     chapel: 1,
-    glass: '#3a2a5a'
+    glass: '#3a2a5a',
+    lancet: 1,
+    moss: 1,
+    tetto: 'punta',
+    abbaini: 1,
+    edera: 1,
+    alza: 16
   }
 };
 function genVillage(key) {
   const o = VB[key],
     B = BK,
     Wd = o.w * 16,
-    Hd = o.h * 16 + (o.extra || 0),
+    // alza: quanto più alto è il tetto gotico (le finestre e le luci scendono di altrettanto)
+    alza = o.alza || 0,
+    Hd = o.h * 16 + (o.extra || 0) + alza,
     r0 = (o.extra || 0) * 2,
-    rh = (o.roofH + (o.extra || 0)) * 2,
+    rh = (o.roofH + (o.extra || 0) + alza) * 2,
     PW = (Wd + 2) * 2,
     PH = Hd * 2,
     bx = 2;
@@ -1941,6 +1981,10 @@ function genVillage(key) {
     wy0 = rh - 4,
     wy1 = PH - 10;
   const shadeX = X => (X > wx1 - 26 ? -1 : 0);
+  // svuota un pixel (P.set con trasparenza mescola il colore, non cancella)
+  const svuota = (X, Y) => {
+    if (X >= 0 && Y >= 0 && X < P.w && Y < P.h) P.d[(Y * P.w + X) * 4 + 3] = 0;
+  };
   // muro
   if (o.wall === 'planks') B.planks(P, wx0, wy0, ww, wy1 - wy0, WR, { rowH: 9 });
   else if (o.wall === 'boards') B.boards(P, wx0, wy0, ww, wy1 - wy0, WR, { bw: 8 });
@@ -1964,10 +2008,17 @@ function genVillage(key) {
   }
   // lato in ombra
   for (let i = 0; i < 24; i++) B.dark(P, wx1 - 24 + i, wy0, 1, wy1 - wy0, 1 - i * 0.012);
+  // le colature della pioggia sotto la grondaia: il legno e la pietra anneriti dagli anni
+  for (let X = wx0 + 3; X < wx1 - 3; X += 2) {
+    const h = B.hh(X, 31) % 40;
+    if (B.hh(X, 17) % 3) continue;
+    for (let k = 0; k < h; k++) B.dark(P, X, wy0 + 2 + k, 1, 1, 0.82 + (k / h) * 0.16);
+  }
   B.plinth(P, bx + 2, PH - 10, Wd * 2 - 4, 10);
   // finestre e porta
   const lights = [];
-  for (const [wx, wy] of o.win) {
+  for (const [wx, wy0_] of o.win) {
+    const wy = wy0_ + alza;
     B.windowPX(P, (1 + wx) * 2, wy * 2, {
       trim: o.trim,
       shutter: o.shutter,
@@ -1976,11 +2027,24 @@ function genVillage(key) {
       flowers: !o.chapel
     });
     lights.push([wx, wy, 10, 10]);
+    if (o.lancet) {
+      // l'arco a sesto acuto sopra la finestra: cornice di pietra e vetro scuro
+      const X = (1 + wx) * 2,
+        Y = wy * 2,
+        ST = B.R6(o.trim || '#b8b2a4'),
+        VE = B.R6(o.glass || '#3a2a5a');
+      for (let k = 0; k < 12; k++) {
+        const hw = Math.round(11 * Math.sqrt(1 - (k / 12) ** 1.6));
+        B.F(P, X + 11 - hw - 2, Y - 1 - k, hw * 2 + 4, 1, B.tc(ST, k % 3 ? 3 : 2));
+        if (hw > 1) B.F(P, X + 11 - hw, Y - 1 - k, hw * 2, 1, B.tc(VE, k < 4 ? 2 : 3));
+      }
+      B.F(P, X + 10, Y - 12, 2, 12, B.tc(ST, 1));
+    }
   }
   if (o.barn) {
     // portone a X
     const D = B.R6(o.doorCol),
-      T = B.R6('#e8dcc0'),
+      T = B.R6('#8a7e6a'),
       X = bx + 20 * 2,
       Y = rh + 16;
     B.F(P, X, Y, 48, PH - 10 - Y, B.tc(D, 2));
@@ -2004,12 +2068,39 @@ function genVillage(key) {
   }
   if (o.door != null && !o.barn)
     B.doorPX(P, (bx / 2 + o.door * 16 + 2) * 2, (Hd - 21) * 2, { col: o.doorCol, trim: o.trim });
+  if (o.lantern && o.door != null) {
+    // la lanterna appesa al suo braccio di ferro, a destra della porta: vetro caldo, gabbia scura
+    const X = (bx / 2 + o.door * 16 + 2) * 2 + 30,
+      Y = (Hd - 21) * 2 - 2,
+      FE = C('#18141a');
+    B.F(P, X - 4, Y, 9, 2, FE);
+    B.F(P, X + 3, Y, 2, 6, FE);
+    B.F(P, X - 1, Y + 2, 7, 2, FE);
+    B.F(P, X, Y + 4, 5, 8, FE);
+    B.F(P, X + 1, Y + 5, 3, 6, C('#f0b850'));
+    B.S(P, X + 1, Y + 5, C('#fff0b0'));
+    B.F(P, X - 1, Y + 12, 7, 2, FE);
+  }
+  if (o.vine) {
+    // rampicanti secchi che salgono dal basso, con qualche foglia rossa
+    for (const v of [wx0 + 8, wx1 - 16]) {
+      let X = v;
+      for (let Y = wy1 - 2; Y > wy0 + 10 + (B.hh(v, 3) % 20); Y--) {
+        X += B.hh(X, Y) % 7 === 0 ? (B.hh(Y, X) % 2 ? 1 : -1) : 0;
+        B.S(P, X, Y, C('#2a2418'));
+        if (B.hh(X, Y) % 9 === 0) {
+          B.S(P, X + 1, Y, C(B.hh(Y, 5) % 2 ? '#6a1e16' : '#4a3a1e'));
+          B.S(P, X + 1, Y - 1, C('#2a2418'));
+        }
+      }
+    }
+  }
   if (o.awning) {
     const AR = B.R6(o.awning),
       WH = B.R6('#efe6d2');
     for (const [wx, wy] of o.win) {
       const X = (1 + wx) * 2 - 6,
-        Y = wy * 2 - 14;
+        Y = (wy + alza) * 2 - 14;
       for (let yy = 0; yy < 8; yy++)
         for (let xx = 0; xx < 32; xx++) {
           const st = Math.floor(xx / 4) % 2;
@@ -2024,7 +2115,7 @@ function genVillage(key) {
   }
   if (o.sign) {
     const W2 = B.R6('#6a4224'),
-      G = B.R6('#e8c23a'),
+      G = B.R6('#a88a3a'),
       X = (bx / 2 + 30) * 2,
       Y = rh + 4;
     B.F(P, X, Y, 72, 18, B.tc(W2, 1));
@@ -2040,7 +2131,7 @@ function genVillage(key) {
   }
   if (o.forge) {
     const X = (bx / 2 + 60) * 2,
-      Y = 78;
+      Y = 78 + alza * 2;
     B.F(P, X - 3, Y - 3, 22, 18, C('#2a2420'));
     for (let yy = 0; yy < 12; yy++)
       for (let xx = 0; xx < 16; xx++) {
@@ -2063,60 +2154,177 @@ function genVillage(key) {
     moss: o.moss || o.roof === '#4a3a32'
   });
   B.eave(P, bx, rh, Wd * 2, RR);
-  if (o.barn) {
-    const T = B.R6('#e8dcc0'),
-      hx = bx + 26 * 2,
-      hy = rh - 40;
-    B.F(P, hx - 3, hy - 3, 30, 26, B.tc(T, 1));
-    B.F(P, hx - 2, hy - 2, 28, 24, B.tc(T, 3));
-    B.F(P, hx - 2, hy - 2, 28, 1, B.tc(T, 5));
-    B.F(P, hx, hy, 24, 20, C('#1e120c'));
-    for (let i = 0; i < 24; i++) {
-      const h2 = 5 + (B.hh(i, 5) % 7);
-      B.F(P, hx + i, hy + 20 - h2, 1, h2, C(B.hh(i, 7) % 3 ? '#d8b048' : '#b8902a'));
-      if (B.hh(i, 9) % 3 === 0) B.S(P, hx + i, hy + 19 - h2, C('#f0d070'));
+  // il colmo vecchio s'incurva nel mezzo; qua e là manca una scandola
+  for (let X = bx; X < bx + Wd * 2; X++) {
+    const t = (X - bx) / (Wd * 2),
+      giu = Math.round(Math.sin(t * Math.PI) * 3 + (B.hh(X, 77) % 3 === 0 ? 1 : 0));
+    for (let Y = r0; Y < r0 + giu; Y++) svuota(X, Y);
+  }
+  for (let i = 0; i < Math.floor(Wd / 6); i++) {
+    const X = bx + 10 + (B.hh(i, 5) % (Wd * 2 - 30)),
+      Y = r0 + 10 + (B.hh(i, 9) % Math.max(4, rh - r0 - 24));
+    B.F(P, X, Y, 5, 3, C('#100c10'));
+    B.F(P, X, Y + 3, 5, 1, B.tc(RR, 1));
+  }
+  // ---- tetti gotici: frontoni ripidi verso chi guarda (uno o due), il resto del tetto si ritaglia
+  const punte = o.tetto === 'doppia' ? [bx + Wd * 0.5, bx + Wd * 1.5] : o.tetto === 'punta' ? [bx + Wd] : [];
+  const mezza = o.tetto === 'doppia' ? Wd * 0.5 + 2 : Wd + 2,
+    alto = r0 + (o.chapel ? 30 : 0),
+    falda = X => {
+      // la riga più alta del tetto in questa colonna (fuori dai frontoni: niente tetto)
+      let y = 1e9;
+      for (const px of punte) {
+        const d = Math.abs(X + 0.5 - px) / mezza;
+        if (d <= 1) y = Math.min(y, alto + d * (rh - alto));
+      }
+      return y;
+    };
+  if (punte.length) {
+    for (let X = 0; X < PW; X++) {
+      const yf = falda(X);
+      for (let Y = r0; Y < Math.min(rh, yf); Y++) svuota(X, Y);
     }
-    B.F(P, hx + 11, hy - 10, 2, 8, C('#3e3e46'));
-    B.F(P, hx + 8, hy - 11, 8, 2, C('#5a5a64'));
+    const WG = B.R6(shade(o.wc, -0.28)),
+      LEGNO = B.R6('#2a1e18');
+    for (const px of punte) {
+      // la parete del frontone dentro la falda, ad assi verticali
+      const banda = 9;
+      for (let Y = alto + banda + 4; Y < rh + 2; Y++) {
+        const hw = mezza * ((Y - alto) / (rh - alto)) - banda;
+        for (let X = Math.round(px - hw); X < Math.round(px + hw); X++)
+          B.S(P, X, Y, B.tc(WG, (X - Math.round(px)) % 5 === 0 ? 1 : X < px ? 3 : 2));
+        // il bordo intagliato: una cornice scura con i pendagli a merletto
+        for (const q of [-1, 1]) {
+          const X = Math.round(px + q * hw);
+          B.F(P, X - (q > 0 ? 0 : 2), Y, 3, 1, B.tc(LEGNO, 2));
+          if ((Y - alto) % 6 === 0) {
+            B.S(P, X - q * 3, Y + 1, B.tc(LEGNO, 2));
+            B.S(P, X - q * 3, Y + 2, B.tc(LEGNO, 1));
+          }
+        }
+      }
+      // la finestra a sesto acuto del frontone, accesa
+      const fy = Math.round(alto + (rh - alto) * 0.55),
+        fh = 16;
+      for (let k = 0; k < fh; k++) {
+        const hw = k < 6 ? Math.round(5 * Math.sqrt(k / 6)) : 5;
+        B.F(P, Math.round(px) - hw - 2, fy + k, hw * 2 + 4, 1, B.tc(LEGNO, 1));
+        if (hw > 1) B.F(P, Math.round(px) - hw, fy + k, hw * 2, 1, C(k < 4 ? '#ffe0a0' : '#d8963a'));
+      }
+      B.F(P, Math.round(px) - 1, fy + 2, 2, fh - 2, B.tc(LEGNO, 1));
+      B.F(P, Math.round(px) - 5, fy + 9, 10, 1, B.tc(LEGNO, 1));
+      // il pinnacolo di ferro in cima
+      B.F(P, Math.round(px) - 1, alto - 10, 2, 12, C('#141016'));
+      B.F(P, Math.round(px) - 2, alto - 12, 4, 3, C('#141016'));
+    }
+  }
+  // ---- abbaini sulle falde: piccoli frontoni con il vetro caldo
+  if (o.abbaini && punte.length === 1) {
+    const px = punte[0];
+    for (const q of [-1, 1]) {
+      const X = Math.round(px + q * mezza * 0.55),
+        Y = Math.round(falda(X)) + 10;
+      for (let k = 0; k < 12; k++) {
+        const hw = Math.min(7, Math.round(k * 0.9));
+        B.F(P, X - hw, Y + k, hw * 2, 1, B.tc(RR, k % 3 ? 2 : 1));
+      }
+      B.F(P, X - 3, Y + 6, 6, 7, C('#2a1e18'));
+      B.F(P, X - 2, Y + 7, 4, 5, C('#e0a048'));
+      B.S(P, X - 2, Y + 7, C('#fff0b0'));
+    }
+  }
+  // ---- la natura che si riprende la casa: edera dagli angoli, erbacce alla base
+  if (o.edera) {
+    for (const [x0, dir] of [
+      [wx0, 1],
+      [wx1, -1]
+    ]) {
+      if (o.edera === 1 && dir < 0) continue;
+      const larg = 30 + (B.hh(x0, 1) % 20);
+      for (let i = 0; i < larg; i++) {
+        const X = x0 + dir * i,
+          alt = (wy1 - wy0 + (rh - r0) * 0.6) * (1 - i / larg) ** 1.4;
+        for (let Y = wy1; Y > wy1 - alt; Y--) {
+          const h = B.hh(X * 3, Y * 7) % 100;
+          if (h < 55 && P.has(X, Y))
+            B.S(
+              P,
+              X,
+              Y,
+              C(h < 12 ? '#1a2414' : h < 30 ? '#2e3a22' : h < 45 ? '#3e4a2a' : h < 52 ? '#566236' : '#5a3a22')
+            );
+        }
+      }
+    }
+  }
+  for (let X = bx + 2; X < bx + Wd * 2 - 2; X++) {
+    const h = B.hh(X, 41) % 9;
+    if (h < 5) for (let k = 0; k < h; k++) B.S(P, X, PH - 10 - k, C(k > 2 ? '#566236' : '#33402a'));
   }
   let chim = null;
   if (o.chimney) {
-    const chx = (bx / 2 + Wd - 22) * 2;
-    B.chimney(P, chx, r0 + 6, 22);
-    chim = [bx / 2 + Wd - 22 + 3, o.extra || 0];
+    const chx = (bx / 2 + Wd - 22) * 2,
+      // con il tetto a punta il comignolo poggia sulla falda, non nel vuoto
+      cy0 = punte.length ? Math.max(r0 + 6, Math.round(falda(chx + 6)) - 18) : r0 + 6;
+    B.chimney(P, chx, cy0, 22);
+    chim = [bx / 2 + Wd - 22 + 3, Math.round(cy0 / 2) - 3];
   }
   if (o.chapel) {
     const cx = bx + Wd,
-      TW = B.R6('#e8e0cc'),
-      SR = B.R6('#4a4a58'),
-      G = B.R6('#e8c23a');
-    // torre
-    B.plaster(P, cx - 22, 16, 44, 96, TW, { cracks: 1, bricks: 0, shadeX: X => (X > cx + 14 ? -1 : 0) });
-    B.quoins(P, cx - 22, 20, 90, B.R6('#b8b2a4'), false);
-    B.quoins(P, cx + 21, 20, 90, B.R6('#b8b2a4'), true);
-    // cella campanaria
-    B.F(P, cx - 13, 30, 26, 30, C('#14141c'));
-    B.F(P, cx - 13, 30, 26, 2, B.tc(TW, 1));
-    for (let yy = 0; yy < 14; yy++) {
-      const w2 = Math.round(Math.sqrt(Math.max(0, 49 - (yy - 6) * (yy - 6) * 0.6)) * 1.1);
-      B.F(P, cx - w2, 38 + yy, w2 * 2, 1, B.tc(G, yy < 3 ? 5 : yy < 9 ? 3 : 2));
+      TW = B.R6(o.wc),
+      SR = B.R6('#2e2e3a'),
+      FE = C('#141016'),
+      bronzo = B.R6('#8a6a3a'),
+      tTop = 46;
+    // la torre: intonaco annerito, sale fino al tetto
+    B.plaster(P, cx - 22, tTop, 44, r0 + 44 - tTop, TW, {
+      cracks: 2,
+      bricks: 1,
+      shadeX: X => (X > cx + 12 ? -1 : 0)
+    });
+    B.quoins(P, cx - 22, tTop + 4, r0 + 38 - tTop, B.R6('#8a867c'), false);
+    B.quoins(P, cx + 21, tTop + 4, r0 + 38 - tTop, B.R6('#8a867c'), true);
+    // la cella campanaria a sesto acuto, con la campana di bronzo scuro
+    for (let k = 0; k < 30; k++) {
+      const hw = k < 8 ? Math.round(9 * Math.sqrt(k / 8)) : 9;
+      B.F(P, cx - hw, tTop + 8 + k, hw * 2, 1, C('#0c0a0e'));
     }
-    B.F(P, cx - 1, 52, 2, 4, B.tc(G, 1));
-    for (let yy = 30; yy < 60; yy += 5) B.F(P, cx - 13, yy, 26, 1, C('#2a2a34'));
-    // guglia
-    for (let yy = 0; yy < 18; yy++) {
-      const hw = 4 + yy * 1.5;
+    for (let yy = 0; yy < 12; yy++) {
+      const w2 = Math.round(Math.sqrt(Math.max(0, 36 - (yy - 5) * (yy - 5) * 0.5)));
+      B.F(P, cx - w2, tTop + 22 + yy, w2 * 2, 1, B.tc(bronzo, yy < 3 ? 4 : yy < 8 ? 3 : 2));
+    }
+    // la guglia: alta, d'ardesia scura, a file di scaglie; in cima la croce di ferro
+    for (let Y = 12; Y < tTop + 2; Y++) {
+      const hw = 1 + (Y - 12) * 0.78;
       for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++) {
-        const k = yy % 4;
-        let t = k === 3 ? 1 : X < cx ? 4 : 2;
-        if (k === 0) t++;
-        B.S(P, X, yy + 2, B.tc(SR, t));
+        let t = X < cx ? 3 : 2;
+        if ((Y - 12) % 5 === 0) t = 1;
+        else if ((X + Y) % 6 === 0) t++;
+        B.S(P, X, Y, B.tc(SR, t));
       }
     }
-    B.F(P, cx - 30, 19, 60, 2, B.tc(SR, 1));
-    B.F(P, cx - 1, 0, 2, 4, B.tc(G, 4));
+    B.F(P, cx - 28, tTop, 56, 3, B.tc(SR, 1));
+    B.F(P, cx - 1, 0, 3, 13, FE);
+    B.F(P, cx - 4, 3, 9, 3, FE);
     // rosone
-    const ry = 136;
+    // contrafforti di pietra ai lati e portale a sesto acuto sopra la porta
+    const PI = B.R6('#6a665e');
+    for (const X of [wx0 + 34, wx1 - 42]) {
+      B.F(P, X, rh + 4, 8, PH - 10 - rh - 4, B.tc(PI, 3));
+      B.F(P, X, rh + 4, 1, PH - 10 - rh - 4, B.tc(PI, 4));
+      B.F(P, X + 7, rh + 4, 1, PH - 10 - rh - 4, B.tc(PI, 1));
+      for (let Y = rh + 10; Y < PH - 10; Y += 12) B.F(P, X, Y, 8, 1, B.tc(PI, 1));
+    }
+    {
+      const X = (bx / 2 + o.door * 16 + 2) * 2 + 10,
+        Y = (Hd - 21) * 2;
+      for (let k = 0; k < 14; k++) {
+        const hw = Math.round(14 * Math.sqrt(1 - (k / 14) ** 1.5));
+        B.F(P, X - hw - 2, Y - 1 - k, hw * 2 + 4, 1, B.tc(PI, k % 3 ? 3 : 2));
+        if (hw > 2) B.F(P, X - hw + 1, Y - 1 - k, hw * 2 - 2, 1, C('#1a1214'));
+      }
+    }
+    const ry = r0 + 22; // il rosone sulla torre, sopra il tetto
     for (let yy = -16; yy <= 16; yy++)
       for (let xx = -16; xx <= 16; xx++) {
         const d = Math.hypot(xx, yy);
@@ -2124,10 +2332,10 @@ function genVillage(key) {
         const a = Math.atan2(yy, xx);
         let c;
         if (d > 14) c = B.tc(B.R6('#5a3b22'), 2);
-        else if (d < 4) c = C('#e8c23a');
+        else if (d < 4) c = C('#8a6a2a');
         else {
           const seg = Math.floor((a + Math.PI) / (Math.PI / 4));
-          c = C(['#c0303a', '#2a5aa8', '#e8c23a', '#3a8a4a'][seg % 4]);
+          c = C(['#6a1a22', '#2a3a5a', '#8a6a2a', '#2a4a32'][seg % 4]);
           if (Math.abs(((a + Math.PI) % (Math.PI / 4)) - Math.PI / 8) > Math.PI / 9 || d % 5 < 1)
             c = C('#2a1a10');
         }
@@ -4433,6 +4641,23 @@ const SPAVENTO = (() => {
   );
   return c;
 })();
+// l'Albero dei Morti disegnato a mano (tools/pixel/albero.pxs → js/albero_mano.js), stessa misura di prima
+{
+  Ext.avvolgi('genWoodArt', function (prossimo, ...a) {
+    const r = prossimo(...a);
+    const g = ALBERO_MANO.sprite.albero,
+      [c, x] = mk(g[0].length, g.length);
+    g.forEach((riga, Y) =>
+      [...riga].forEach((ch, X) => {
+        if (ch === '.') return;
+        x.fillStyle = ALBERO_MANO.tavolozza[ch];
+        x.fillRect(X, Y, 1, 1);
+      })
+    );
+    IMG.albero = c;
+    return r;
+  });
+}
 const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
   Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {
