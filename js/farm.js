@@ -490,7 +490,7 @@ function critterAct(c) {
     c.st = 'move';
   }
 }
-function doAction() {
+function doActionBase() {
   const [fx, fy] = frontTile();
   const p = G.player;
   toolSwing();
@@ -529,6 +529,12 @@ function doAction() {
   if (eatSel()) return;
   if (G.map.id === 'main') farmAct(fx, fy);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('doAction', …)
+function doAction(...a) {
+  return Ext.catena('doAction', doActionBase, this, a);
+}
+
 function runAct(o) {
   const f = ACT[o.act];
   if (f) {

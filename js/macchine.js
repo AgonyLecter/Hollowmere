@@ -925,7 +925,7 @@ function treeAct(o, b) {
   return true;
 }
 // ---------- grafica ----------
-function genFarm2Art() {
+function genFarm2ArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -1226,4 +1226,9 @@ function genFarm2Art() {
           { spec: 0.3 }
         );
   });
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genFarm2Art', …)
+function genFarm2Art(...a) {
+  return Ext.catena('genFarm2Art', genFarm2ArtBase, this, a);
 }

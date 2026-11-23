@@ -919,7 +919,7 @@ function pxCanvas(P) {
   c.s = 2;
   return c;
 }
-function genDeco() {
+function genDecoBase() {
   // panchina
   let P = new PX(40, 26),
     wd = ramp6('#8a5a32'),
@@ -1088,6 +1088,12 @@ function genDeco() {
   IMG.hydr = pxCanvas(P);
   genCritters();
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genDeco', …)
+function genDeco(...a) {
+  return Ext.catena('genDeco', genDecoBase, this, a);
+}
+
 // ---------- animali: fotogrammi rivolti a destra (la sinistra è specchiata) ----------
 const CRIT = {};
 function critFrames(w, h, n, fn) {
@@ -1098,7 +1104,7 @@ function critFrames(w, h, n, fn) {
     return pxCanvas(P);
   });
 }
-function genCritters() {
+function genCrittersBase() {
   const wh = ramp6('#f2ece0'),
     rd = ramp6('#c8402a'),
     yl = ramp6('#e8a83a'),
@@ -1217,6 +1223,12 @@ function genCritters() {
     if (f) P.ellipse(10, 8, 1.6, 1.2, ramp6('#e8e0a0'));
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genCritters', …)
+function genCritters(...a) {
+  return Ext.catena('genCritters', genCrittersBase, this, a);
+}
+
 // ---------- posizionamento decorazioni ----------
 function addDeco(m, st) {
   srand(5150);
@@ -1553,7 +1565,7 @@ const RP = {};
 const rp = h => RP[h] || (RP[h] = ramp6(h));
 const woodMod = (X, Y, v) =>
   v + ((X * 7 + Y * 13) % 17 === 0 ? -0.18 : 0) + ((Y * 3 + X) % 23 === 0 ? 0.1 : 0);
-function genPropsHD() {
+function genPropsHDBase() {
   PX.prototype.rect = function (x0, y0, w, h, ramp, o = {}) {
     const n = o.n || [0, -0.15, 1];
     this.shape(
@@ -2225,6 +2237,12 @@ function genPropsHD() {
   IMG.fenceHg = fenceHD('h', 1);
   IMG.fenceVg = fenceHD('v', 1);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genPropsHD', …)
+function genPropsHD(...a) {
+  return Ext.catena('genPropsHD', genPropsHDBase, this, a);
+}
+
 function fenceHD(kind, grey) {
   return SP(16, 22, P => {
     const r = grey ? rp('#8d8a80') : rp('#e8c23a');
@@ -2267,7 +2285,7 @@ function fenceHD(kind, grey) {
   });
 }
 // ---------- icone 32×32 ----------
-function genIconsHD() {
+function genIconsHDBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -2500,6 +2518,12 @@ function genIconsHD() {
   packet('s_fagioli', 'fagioli', '#5a9a2a');
   packet('s_cavolo', 'cavolo', '#2f5a4a');
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genIconsHD', …)
+function genIconsHD(...a) {
+  return Ext.catena('genIconsHD', genIconsHDBase, this, a);
+}
+
 // ---------- colture ----------
 function genSoilHD() {
   const mkS = (wet, seed) => {
@@ -2588,7 +2612,7 @@ function zolla(src, k) {
   x.putImageData(id, 0, 0);
   return c;
 }
-function genCropsHD() {
+function genCropsHDBase() {
   const S = fn => {
     const P = new PX(32, 48);
     fn(P);
@@ -2822,6 +2846,12 @@ function genCropsHD() {
         return c;
       });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genCropsHD', …)
+function genCropsHD(...a) {
+  return Ext.catena('genCropsHD', genCropsHDBase, this, a);
+}
+
 function imgTop(c) {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   for (let y = 0; y < c.height; y++)
@@ -2915,7 +2945,7 @@ function addPrint(e, big) {
   });
   if (G.prints.length > 160) G.prints.shift();
 }
-function drawPrints(m, dt) {
+function drawPrintsBase(m, dt) {
   for (const p of G.prints) {
     if (p.m !== m.id) continue;
     const a = Math.min(1, (1 - p.t / p.life) * 1.4) * 0.6 * p.a;
@@ -2938,6 +2968,12 @@ function drawPrints(m, dt) {
     }
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('drawPrints', …)
+function drawPrints(...a) {
+  return Ext.catena('drawPrints', drawPrintsBase, this, a);
+}
+
 function updPrints(dt) {
   for (const p of G.prints) p.t += dt;
   G.prints = G.prints.filter(p => p.t < p.life);
@@ -3030,7 +3066,7 @@ const PROMPT = {
   table: 'Tavolo',
   anvil: 'Incudine'
 };
-function promptInfo() {
+function promptInfoBase() {
   const st = G.st,
     m = G.map;
   if (G.mode !== 'game' || G.cut || UI.busy()) return null;
@@ -3068,6 +3104,12 @@ function promptInfo() {
   }
   return null;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('promptInfo', …)
+function promptInfo(...a) {
+  return Ext.catena('promptInfo', promptInfoBase, this, a);
+}
+
 function drawExits() {
   const m = G.map,
     p = G.player;
@@ -3134,7 +3176,7 @@ function drawPrompt() {
     ctx.fillRect(q.x, ay + 3, 1, 1);
   }
 }
-function genObjects() {
+function genObjectsBase() {
   IMG.tree = [0, 1, 2, 3, 4].map(genTreeHD);
   IMG.pine = [0, 1, 2].map(genPineHD);
   IMG.bush = genBushHD(false);
@@ -3728,6 +3770,12 @@ function genObjects() {
     return c;
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genObjects', …)
+function genObjects(...a) {
+  return Ext.catena('genObjects', genObjectsBase, this, a);
+}
+
 const PLAYER_LOOKS = {
   m: {
     skin: '#f0c39a',
@@ -4091,7 +4139,7 @@ function drawSpr(x2, k, e, X, Y) {
   x2.drawImage(sheetOf(k), fr * CW, e.dir * CHH, CW, CHH, X - 9, Y - 27, 18, 27);
 }
 // ---------- ritratti 64×64 ----------
-function genPortrait(L, mood) {
+function genPortraitBase(L, mood) {
   const P = new PX(64, 64),
     dark = mood === 'dark',
     R = {
@@ -4325,6 +4373,12 @@ function genPortrait(L, mood) {
   P.put(x, 0, 0);
   return c;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genPortrait', …)
+function genPortrait(...a) {
+  return Ext.catena('genPortrait', genPortraitBase, this, a);
+}
+
 function portrait(id, mood) {
   const k = id + '|' + (mood || '');
   if (!PORT[k]) PORT[k] = genPortrait(LOOKS[id], mood);

@@ -370,10 +370,9 @@ const VCHAT_SEASON = [
   ]
 ];
 {
-  const _cp = chatPool;
-  chatPool = function () {
+  Ext.avvolgi('chatPool', function (prossimo) {
     const st = G.st;
-    if (!isFree(st)) return _cp();
+    if (!isFree(st)) return prossimo();
     const s = seasonOf(st);
     const R = residents(st).map(r => r.id),
       pairs = [];
@@ -391,7 +390,7 @@ const VCHAT_SEASON = [
       VCHAT_SEASON.filter(c => c[0] === s).map(c => c.slice(1)),
       pairs
     );
-  };
+  });
 }
 
 // ---------- ti salutano davvero ----------
@@ -436,9 +435,8 @@ function saluto(n) {
   return L[Math.floor(Math.random() * L.length)];
 }
 {
-  const _nb = npcBarks;
-  npcBarks = function (dt) {
-    if (!isFree(G.st) || G.visit) return _nb(dt);
+  Ext.avvolgi('npcBarks', function (prossimo, dt) {
+    if (!isFree(G.st) || G.visit) return prossimo(dt);
     if (G.cut || UI.busy() || G.map.id !== 'main') {
       for (const b of G.bubbles) b.life -= dt;
       G.bubbles = G.bubbles.filter(b => b.life > 0);
@@ -463,7 +461,7 @@ function saluto(n) {
     }
     for (const b of G.bubbles) b.life -= dt;
     G.bubbles = G.bubbles.filter(b => b.life > 0);
-  };
+  });
 }
 
 // ---------- notizie dagli altri villaggi ----------
@@ -595,9 +593,8 @@ function invitoTick() {
 // commentano quello che fai vicino a loro
 let COMM_T = 0;
 {
-  const _ts = toolSwing;
-  toolSwing = function () {
-    _ts();
+  Ext.avvolgi('toolSwing', function (prossimo) {
+    prossimo();
     const st = G.st;
     if (!isFree(st) || G.visit || G.t < COMM_T) return;
     const it = selItem();
@@ -615,7 +612,7 @@ let COMM_T = 0;
       pala: ['Un vialetto nuovo?']
     }[it.id];
     if (C) bubble(n, C[Math.floor(Math.random() * C.length)], 2.4);
-  };
+  });
 }
 {
   Ext.on('mpTick', function (dt) {
@@ -990,9 +987,8 @@ let GOSSIP_NOVE = [];
 // le coppie che sussurrano: quando passi vicino, si dicono un indizio che ti manca
 const SUSS = ['agatha', 'clara', 'tobia', 'ezekiel', 'lucius', 'brom'];
 {
-  const _cp = chatPool;
-  chatPool = function () {
-    const L = _cp(),
+  Ext.avvolgi('chatPool', function (prossimo) {
+    const L = prossimo(),
       st = G.st;
     if (!isFree(st) || G.visit) return L;
     const H = indizi(st);
@@ -1014,13 +1010,12 @@ const SUSS = ['agatha', 'clara', 'tobia', 'ezekiel', 'lucius', 'brom'];
         ]);
       }
     return L.concat(W, W);
-  };
+  });
 } // i sussurri pesano il doppio delle chiacchiere normali
 // quello che senti finisce nel diario
 {
-  const _bu = bubble;
-  bubble = function (n, t, life) {
-    _bu(n, t, life);
+  Ext.avvolgi('bubble', function (prossimo, n, t, life) {
+    prossimo(n, t, life);
     const st = G.st;
     if (!st || !isFree(st) || G.visit) return;
     const s = String(t);
@@ -1034,20 +1029,19 @@ const SUSS = ['agatha', 'clara', 'tobia', 'ezekiel', 'lucius', 'brom'];
       if (Math.hypot(n.x - G.player.x, n.y - G.player.y) < 90)
         UI.toast('👂 Hai sentito un sussurro. È nel diario: ☰ → Traguardi.');
     }
-  };
+  });
 }
 {
-  const _th = tragHTML;
-  tragHTML = function (st) {
+  Ext.avvolgi('tragHTML', function (prossimo, st) {
     const S = (st.free.sussurri || []).slice().reverse();
     return (
-      _th(st) +
+      prossimo(st) +
       `<h3>Sussurri sentiti (${S.length})</h3>` +
       (S.length
         ? S.map(s => `<p class="small">👂 ${esc(fmt(s))}</p>`).join('')
         : '<p class="small">Passa vicino a due abitanti che parlano piano: a volte si lasciano scappare qualcosa.</p>')
     );
-  };
+  });
 }
 GUIDES.push({
   id: 'vita2',

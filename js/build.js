@@ -32,13 +32,19 @@ const PLOTS = {
   }
 };
 const myLand = st => ((st = st || G.st), (st.free && st.free.land) || ['casa']);
-function ownedAt(x, y, st) {
+function ownedAtBase(x, y, st) {
   for (const id of myLand(st)) {
     const P = PLOTS[id];
     if (P && P.r.some(([a, b, c, d]) => x >= a && x <= c && y >= b && y <= d)) return id;
   }
   return null;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('ownedAt', …)
+function ownedAt(...a) {
+  return Ext.catena('ownedAt', ownedAtBase, this, a);
+}
+
 // bordo delle terre: picchetti agli angoli, e un contorno quando hai in mano un attrezzo da lavoro
 function drawLand(m) {
   if (m.id !== 'main' || !isFree() || G.visit) return;
@@ -207,7 +213,7 @@ const DECOR_SHOP = [
   ['quadro', 350],
   ['pala', 150]
 ];
-function genBuildArt() {
+function genBuildArtBase() {
   const wood = rp('#8a5a30'),
     dk = rp('#5a3a1e'),
     I = (id, fn) => {
@@ -371,6 +377,12 @@ function genBuildArt() {
     P.rect(20, 1, 5, 5, rp('#a8301a'));
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genBuildArt', …)
+function genBuildArt(...a) {
+  return Ext.catena('genBuildArt', genBuildArtBase, this, a);
+}
+
 // arredo in casa
 function furnFree(m, x, y) {
   const g = m.get(x, y);

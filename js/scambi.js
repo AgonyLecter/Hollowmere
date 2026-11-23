@@ -140,9 +140,8 @@ function postaMenu() {
 }
 // nel ponte: «✉ Manda» accanto a ogni amico, e la posta
 {
-  const _tm = travelMenu;
-  travelMenu = async function () {
-    const r = await _tm();
+  Ext.avvolgi('travelMenu', async function (prossimo) {
+    const r = await prossimo();
     const box = $('#mbox');
     if (!r || !UI.modalOpen || !box) return r;
     const st = myHome(),
@@ -172,13 +171,12 @@ function postaMenu() {
       postaMenu();
     };
     return r;
-  };
+  });
 }
 // arriva qualcosa
 {
-  const _ia = inboxApply;
-  inboxApply = function (a) {
-    if (!a || !['dono', 'scudi', 'lettera'].includes(a.t)) return _ia(a);
+  Ext.avvolgi('inboxApply', function (prossimo, a) {
+    if (!a || !['dono', 'scudi', 'lettera'].includes(a.t)) return prossimo(a);
     const st = myHome();
     if (!st || !isFree(st)) return;
     const f = amico(st, a.from);
@@ -208,7 +206,7 @@ function postaMenu() {
       );
     }
     NET.save(st);
-  };
+  });
 }
 GUIDES.push({
   id: 'scambi',

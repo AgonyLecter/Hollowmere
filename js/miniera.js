@@ -259,7 +259,7 @@ function mineRockImg(ore) {
 }
 
 // ---------- entrare, scendere, risalire ----------
-async function mineGo(f) {
+async function mineGoBase(f) {
   const st = G.st,
     ms = mineSt(st);
   G.cut++;
@@ -283,6 +283,12 @@ async function mineGo(f) {
     G.cut--;
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('mineGo', …)
+function mineGo(...a) {
+  return Ext.catena('mineGo', mineGoBase, this, a);
+}
+
 async function mineLeave() {
   G.cut++;
   try {
@@ -327,9 +333,8 @@ PROMPT.mchest = 'Apri';
 ACT.miniera = () => mineEnter();
 // l'imbocco sulla Collina
 {
-  const _be = buildEast;
-  buildEast = function (m, st) {
-    _be(m, st);
+  Ext.avvolgi('buildEast', function (prossimo, m, st) {
+    prossimo(m, st);
     if (m.id !== 'main' || !isFree(st) || m.w < 100 || !zoneOpen('collina', st)) return;
     const [x, y] = MINE_IN;
     m.objs
@@ -355,7 +360,7 @@ ACT.miniera = () => mineEnter();
         ]
       })
     );
-  };
+  });
 }
 
 // ---------- scavare e il resto, nella miniera ----------
@@ -484,15 +489,14 @@ function mineAct(fx, fy) {
   return true;
 }
 {
-  const _da = doAction;
-  doAction = function () {
+  Ext.avvolgi('doAction', function (prossimo) {
     if (G.map && G.map.id === 'miniera' && !G.bm) {
       toolSwing();
       const [fx, fy] = frontTile();
       return mineAct(fx, fy);
     }
-    return _da();
-  };
+    return prossimo();
+  });
 }
 // le Ombre della miniera
 G.mshad = [];
@@ -574,17 +578,15 @@ function mineTick(dt) {
 }
 // buio pesto, tranne le torce e la tua lanterna
 {
-  const _dl = darkLevel;
-  darkLevel = function () {
-    const d = _dl();
+  Ext.avvolgi('darkLevel', function (prossimo) {
+    const d = prossimo();
     return G.map && G.map.id === 'miniera' ? 0.9 : d;
-  };
+  });
 }
 // il piano corrente, in alto
 {
-  const _dg = drawGuide;
-  drawGuide = function () {
-    _dg();
+  Ext.avvolgi('drawGuide', function (prossimo) {
+    prossimo();
     if (!G.map || G.map.id !== 'miniera' || G.mode !== 'game') return;
     ctx.save();
     ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
@@ -595,7 +597,7 @@ function mineTick(dt) {
     ctx.fillStyle = '#f6d98a';
     ctx.fillText(t, VW / 2, 13);
     ctx.restore();
-  };
+  });
 }
 // se salvi o esci dentro la miniera, ti ritrovi all'imbocco
 {
@@ -610,23 +612,22 @@ function mineTick(dt) {
   };
 }
 {
-  const _rb = rebuildMaps;
-  rebuildMaps = function () {
+  Ext.avvolgi('rebuildMaps', function (prossimo) {
     const mm = G.maps && G.maps.miniera,
       cur = G.map;
-    _rb();
+    prossimo();
     if (mm) {
       G.maps.miniera = mm;
       if (cur && cur.id === 'miniera') G.map = mm;
     }
-  };
+  });
 }
 // il prestigio conta anche la profondità
 {
 }
 
 // ---------- grafica ----------
-function genMineArt() {
+function genMineArtBase() {
   genMineTiles();
   const wood = rp('#7a5030'),
     dk = rp('#4a2e18'),
@@ -748,6 +749,12 @@ function genMineArt() {
       );
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genMineArt', …)
+function genMineArt(...a) {
+  return Ext.catena('genMineArt', genMineArtBase, this, a);
+}
+
 {
   Ext.on('applyFree:prima', function (m, st) {
     if (!IMG.imbocco && PX.prototype.line) genMineArt();

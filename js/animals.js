@@ -70,7 +70,7 @@ const ANAMES = [
 
 // ---------- grafica ----------
 const AIMG = {};
-function genAnimalArt() {
+function genAnimalArtBase() {
   const wood = rp('#8a5a30'),
     dk = rp('#5a3a1e'),
     roof2 = rp('#4a3a3a');
@@ -219,6 +219,11 @@ function genAnimalArt() {
     P.capsule(4, 10, 2, 15, 0.6, wh);
   });
   FREEIMG.uovo = SP(8, 7, P => P.ellipse(8, 8, 5, 6, rp('#f4ead8'), { spec: 0.7 }));
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genAnimalArt', …)
+function genAnimalArt(...a) {
+  return Ext.catena('genAnimalArt', genAnimalArtBase, this, a);
 }
 
 // ---------- edifici grandi: posizionamento e impronta ----------

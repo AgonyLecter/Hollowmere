@@ -281,7 +281,7 @@ function inviteReceived(a, st) {
 }
 
 // ---------- grafica ----------
-function genTradeArt() {
+function genTradeArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -412,4 +412,9 @@ function genTradeArt() {
     P.ellipse(12, 14, 10, 13, rp('#a8b0a8'), { spec: 0.9 });
     P.ellipse(12, 14, 8, 11, rp('#d8e8f0'), { spec: 1, amb: 0.8 });
   });
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genTradeArt', …)
+function genTradeArt(...a) {
+  return Ext.catena('genTradeArt', genTradeArtBase, this, a);
 }

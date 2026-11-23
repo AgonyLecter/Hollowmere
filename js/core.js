@@ -131,8 +131,28 @@ const Ext = {
     for (const f of this._h[punto] || []) s += f(...a) || 0;
     return s;
   },
+  // avvolgere: un file aggiunge comportamento attorno a una funzione di un altro file, decidendo se e quando
+  // chiamare quella originale (prossimo). La funzione originale si dichiara come catena:
+  //   function nome(...a) { return Ext.catena('nome', nomeBase, this, a); }
+  //   Ext.avvolgi('nome', function (prossimo, x, y) { if (speciale) return 1; return prossimo(x, y); });
+  // L'ultimo iscritto è il più esterno: è il primo a decidere.
+  _a: {},
+  avvolgi(punto, fn) {
+    (this._a[punto] = this._a[punto] || []).push(fn);
+    return fn;
+  },
+  catena(punto, base, self, args) {
+    const L = this._a[punto];
+    if (!L || !L.length) return base.apply(self, args);
+    const chiama = (k, a) =>
+      k < 0 ? base.apply(self, a) : L[k].call(self, (...b) => chiama(k - 1, b), ...a);
+    return chiama(L.length - 1, args);
+  },
   elenco() {
-    return Object.fromEntries(Object.entries(this._h).map(([k, L]) => [k, L.length]));
+    return {
+      ...Object.fromEntries(Object.entries(this._h).map(([k, L]) => [k, L.length])),
+      ...Object.fromEntries(Object.entries(this._a).map(([k, L]) => ['avvolge ' + k, L.length]))
+    };
   }
 };
 // ---------- errori: nessuno si ingoia in silenzio ----------

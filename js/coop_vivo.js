@@ -211,8 +211,7 @@ const VIETATI = {
   museo: 'Il museo è suo: puoi guardare, non donare.'
 };
 {
-  const _da = doAction;
-  doAction = function () {
+  Ext.avvolgi('doAction', function (prossimo) {
     const v = G.visit;
     // davanti a un altro giocatore: dai qualcosa (ovunque, anche a casa tua)
     const o = altroDavanti();
@@ -220,7 +219,7 @@ const VIETATI = {
       daiMenu(o.pid, o.name);
       return;
     }
-    if (!(v && v.coop) || G.bm || G.map.id !== 'main') return _da();
+    if (!(v && v.coop) || G.bm || G.map.id !== 'main') return prossimo();
     const [fx, fy] = frontTile(),
       ob = G.map.objAt(fx, fy),
       it = selItem(),
@@ -239,12 +238,12 @@ const VIETATI = {
     G.visit = null;
     G.coopAct = true;
     try {
-      _da();
+      prossimo();
     } finally {
       G.visit = v;
       G.coopAct = false;
     }
-  };
+  });
 }
 // durante le azioni da ospite niente salvataggi: il villaggio non è tuo (lo salva il padrone)
 {
@@ -257,9 +256,8 @@ const VIETATI = {
 // il vecchio invio «a pezzi» lascia il posto alle differenze
 
 {
-  const _sv2 = startVisit;
-  startVisit = async function (pid) {
-    await _sv2(pid);
+  Ext.avvolgi('startVisit', async function (prossimo, pid) {
+    await prossimo(pid);
     if (G.visit) {
       // quello che avevi fatto nelle casse e nelle macchine e il padrone non ha ancora ricevuto
       const ack = (G.st.free.coopAck || {})[G.home.pid] || 0;
@@ -270,7 +268,7 @@ const VIETATI = {
       G.visit.wsnap = snapW(G.st);
       G.visit.t0 = G.st.day;
     }
-  };
+  });
 }
 let CP_T = 0;
 function coopSend(dt) {
@@ -298,8 +296,7 @@ let OWN_LAST = null,
   OWN_SAVE = 0,
   COOP_NOTE = 0;
 {
-  const _ia = inboxApply;
-  inboxApply = function (a) {
+  Ext.avvolgi('inboxApply', function (prossimo, a) {
     if (!a) return;
     if (a.t === 'osync') {
       const v = G.visit;
@@ -383,8 +380,8 @@ let OWN_LAST = null,
       NET.save(st);
       return;
     }
-    return _ia(a);
-  };
+    return prossimo(a);
+  });
 }
 // ogni secondo, se ci sono ospiti online nel tuo villaggio, il villaggio cambiato parte verso di loro: le
 // differenze di costruzioni e campi, il contenuto cambiato di casse e macchine e le operazioni confermate.
@@ -578,9 +575,8 @@ function daiMenu(pid, name) {
 }
 // «A · Dai» sopra il giocatore che hai davanti
 {
-  const _dg = drawGuide;
-  drawGuide = function () {
-    _dg();
+  Ext.avvolgi('drawGuide', function (prossimo) {
+    prossimo();
     const o = altroDavanti();
     if (!o || G.cut || UI.busy() || G.bm) return;
     const X = Math.round(o.x - G.cam.x),
@@ -595,7 +591,7 @@ function daiMenu(pid, name) {
     ctx.fillStyle = '#f6d98a';
     ctx.fillText(t, X, Y);
     ctx.restore();
-  };
+  });
 }
 GUIDES.push({
   id: 'coop2',

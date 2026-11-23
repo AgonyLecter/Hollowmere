@@ -5,11 +5,17 @@
 // il colpo: l'attrezzo disegnato in mano al personaggio fa un arco davanti a lui
 const SWING_T = 0.36,
   SWING_TOOLS = { hoe: 1, can: 1, accetta: 1, piccone: 1, pala: 1, falce: 1 };
-function toolSwing() {
+function toolSwingBase() {
   const it = selItem();
   if (!it || !SWING_TOOLS[it.id] || G.cut || UI.busy()) return;
   G.toolA = { id: it.id, t0: G.t, dir: G.player.dir };
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('toolSwing', …)
+function toolSwing(...a) {
+  return Ext.catena('toolSwing', toolSwingBase, this, a);
+}
+
 function swingK() {
   const a = G.toolA;
   if (!a) return -1;
@@ -238,7 +244,7 @@ function tintTop(img, col, frac, mode) {
   TINTC.set(key, c);
   return c;
 }
-function applyLook(m, st) {
+function applyLookBase(m, st) {
   if (!isFree(st)) return;
   const L = myLook(st);
   if (m.id === 'main') {
@@ -281,6 +287,12 @@ function applyLook(m, st) {
     x.globalCompositeOperation = 'source-over';
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('applyLook', …)
+function applyLook(...a) {
+  return Ext.catena('applyLook', applyLookBase, this, a);
+}
+
 function lookMenu() {
   const st = G.st,
     L = (st.free.look = st.free.look || {});

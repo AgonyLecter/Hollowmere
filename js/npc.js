@@ -141,12 +141,18 @@ const BARKS2 = {
   tobia: ['Hihi. Rosso!', 'Conta, conta!']
 };
 // fumetto sopra un personaggio. opt.w = bisbiglio (grigio, tratteggiato). Le frasi lunghe restano più a lungo.
-function bubble(n, t, life = 2.6, opt = {}) {
+function bubbleBase(n, t, life = 2.6, opt = {}) {
   const txt = fmt(t);
   life = Math.max(life, Math.min(7, 1.6 + txt.length / 16));
   G.bubbles = G.bubbles.filter(b => b.n !== n);
   G.bubbles.push({ n, t: txt, life, max: life, w: !!opt.w });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('bubble', …)
+function bubble(...a) {
+  return Ext.catena('bubble', bubbleBase, this, a);
+}
+
 function npcGo(n, tx, ty) {
   const m = G.maps[n.map];
   const [sx, sy] = ptile(n);
@@ -390,7 +396,7 @@ function npcIdle(n, s, dt) {
   if (s.act === 'flowers' && Math.random() < 0.3) bubble(n, '♪');
   if (s.act === 'play' && Math.random() < 0.2) bubble(n, 'Hihi!', 1.6);
 }
-function npcBarks(dt) {
+function npcBarksBase(dt) {
   if (G.cut || UI.busy() || G.map.id !== 'main') return;
   const p = G.player;
   for (const n of G.npcs) {
@@ -420,6 +426,12 @@ function npcBarks(dt) {
   for (const b of G.bubbles) b.life -= dt;
   G.bubbles = G.bubbles.filter(b => b.life > 0);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('npcBarks', …)
+function npcBarks(...a) {
+  return Ext.catena('npcBarks', npcBarksBase, this, a);
+}
+
 function snapNPCs() {
   for (const n of G.npcs) {
     if (n.script) continue;

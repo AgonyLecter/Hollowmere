@@ -129,7 +129,7 @@ Object.assign(PLOTS, {
     d: 'Lontana da tutto. Il posto più quieto della Valle.'
   }
 });
-function buildEast(m, st) {
+function buildEastBase(m, st) {
   if (!IMG.torre && PX.prototype.line) genEspArt();
   if (m.id !== 'main' || !isFree(st) || m.w < 100) return;
   for (const z in ZONES) {
@@ -233,6 +233,12 @@ function buildEast(m, st) {
     }
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('buildEast', …)
+function buildEast(...a) {
+  return Ext.catena('buildEast', buildEastBase, this, a);
+}
+
 // le zone si costruiscono prima che il gioco libero applichi tagli, detriti e costruzioni
 {
   Ext.on('applyFree:prima', function (m, st) {
@@ -477,7 +483,7 @@ function fishCast(fx, fy) {
   AU.play('water');
   return true;
 }
-function fishPull() {
+function fishPullBase() {
   const f = G.fish;
   G.fish = null;
   if (f.st !== 'bite') {
@@ -503,6 +509,12 @@ function fishPull() {
   st.free.fished = (st.free.fished || 0) + 1;
   if (id === 'salmerino') UI.toast("Il Salmerino d'oro! Nella Valle ne parleranno per giorni.");
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('fishPull', …)
+function fishPull(...a) {
+  return Ext.catena('fishPull', fishPullBase, this, a);
+}
+
 function fishTick(dt) {
   const f = G.fish;
   if (!f) return;
@@ -550,11 +562,10 @@ function drawFish() {
   ctx.restore();
 }
 {
-  const _dg = drawGuide;
-  drawGuide = function () {
-    _dg();
+  Ext.avvolgi('drawGuide', function (prossimo) {
+    prossimo();
     if (G.mode === 'game' && G.map && G.map.id === 'main') drawFish();
-  };
+  });
 }
 
 // ---------- i nuovi abitanti ----------
@@ -1101,7 +1112,7 @@ async function _resMorning(st) {
 }
 
 // ---------- grafica ----------
-function genEspArt() {
+function genEspArtBase() {
   const wood = rp('#8a5a32'),
     woodD = rp('#5a3a1e'),
     stone = rp('#8a877d'),
@@ -1205,13 +1216,17 @@ function genEspArt() {
   });
 }
 
+// catena: altri file la avvolgono con Ext.avvolgi('genEspArt', …)
+function genEspArt(...a) {
+  return Ext.catena('genEspArt', genEspArtBase, this, a);
+}
+
 // la canna si trova al banco di Agatha da quando il Lago è aperto
 {
-  const _si = shopItems;
-  shopItems = function () {
-    const L = _si();
+  Ext.avvolgi('shopItems', function (prossimo) {
+    const L = prossimo();
     return isFree() && zoneOpen('lago') && !countItem('canna') ? [...L, 'canna'] : L;
-  };
+  });
 }
 // la guida delle novità di questa fase (chi ha già fatto la guida della Valle vede solo questa)
 GUIDES.push({

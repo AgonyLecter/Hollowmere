@@ -58,9 +58,8 @@ async function coopToggle(pid) {
 }
 // nel ponte, accanto a ogni amico: il permesso
 {
-  const _tm = travelMenu;
-  travelMenu = async function () {
-    const r = await _tm();
+  Ext.avvolgi('travelMenu', async function (prossimo) {
+    const r = await prossimo();
     const box = $('#mbox');
     if (!r || !UI.modalOpen || !box) return r;
     const st = myHome(),
@@ -88,14 +87,13 @@ async function coopToggle(pid) {
       h.after(p);
     }
     return r;
-  };
+  });
 }
 
 // ---------- in visita: sei un costruttore fidato? ----------
 {
-  const _sv = startVisit;
-  startVisit = async function (pid) {
-    await _sv(pid);
+  Ext.avvolgi('startVisit', async function (prossimo, pid) {
+    await prossimo(pid);
     if (!G.visit || !NET.ok) return;
     const me = G.home.pid;
     try {
@@ -110,17 +108,16 @@ async function coopToggle(pid) {
       rete(e, 'coop');
     }
     UI.hud();
-  };
+  });
 }
 // la modalità costruzione si apre anche in visita, se hai il permesso (solo all'aperto)
 {
-  const _bo = bmOpen;
-  bmOpen = function () {
+  Ext.avvolgi('bmOpen', function (prossimo) {
     if (G.visit && G.visit.coop && G.map.id === 'main') {
       const v = G.visit;
       G.visit = null;
       try {
-        _bo();
+        prossimo();
       } finally {
         G.visit = v;
       }
@@ -129,14 +126,13 @@ async function coopToggle(pid) {
       }
       return;
     }
-    return _bo();
-  };
+    return prossimo();
+  });
 }
 {
-  const _ba = bmAction;
-  bmAction = function () {
+  Ext.avvolgi('bmAction', function (prossimo) {
     const v = G.visit;
-    if (!(v && v.coop)) return _ba();
+    if (!(v && v.coop)) return prossimo();
     const b = G.bm,
       o = bmTarget(b.x, b.y),
       me = G.home.pid;
@@ -147,34 +143,32 @@ async function coopToggle(pid) {
     // chi piazza resta scritto sulla costruzione
     const keys = new Set(Object.keys(G.st.free.built)),
       wasCarry = !!b.carry;
-    _ba();
+    prossimo();
     if (!wasCarry && !b.carry)
       for (const k in G.st.free.built) if (!keys.has(k) && !G.st.free.built[k].by) G.st.free.built[k].by = me;
-  };
+  });
 }
 // le regole di bmHome guardano G.visit: in visita con permesso, la modalità resta aperta
 {
-  const _up = updatePlayer;
-  updatePlayer = function (dt) {
+  Ext.avvolgi('updatePlayer', function (prossimo, dt) {
     const v = G.visit;
     if (G.bm && v && v.coop) {
       G.visit = null;
       try {
-        _up(dt);
+        prossimo(dt);
       } finally {
         G.visit = v;
       }
       return;
     }
-    return _up(dt);
-  };
+    return prossimo(dt);
+  });
 }
 // zappare e seminare da ospite fidato
 {
-  const _va = visitAct;
-  visitAct = function (fx, fy) {
+  Ext.avvolgi('visitAct', function (prossimo, fx, fy) {
     const v = G.visit;
-    if (!(v && v.coop)) return _va(fx, fy);
+    if (!(v && v.coop)) return prossimo(fx, fy);
     const st = G.st,
       m = G.map,
       it = selItem(),
@@ -207,8 +201,8 @@ async function coopToggle(pid) {
       UI.toast(`Il raccolto è di ${v.name}: lascialo a lui.`);
       return true;
     }
-    return _va(fx, fy);
-  };
+    return prossimo(fx, fy);
+  });
 }
 
 // ---------- il padrone applica quello che fanno gli amici ----------
@@ -217,9 +211,8 @@ function coopRekey(st, from, to) {
   for (const r of st.free.residents || []) if (r.house === from) r.house = to;
 }
 {
-  const _ia = inboxApply;
-  inboxApply = function (a) {
-    if (!a || !/^c(build|del|move|tile|till|plant)$/.test(a.t)) return _ia(a);
+  Ext.avvolgi('inboxApply', function (prossimo, a) {
+    if (!a || !/^c(build|del|move|tile|till|plant)$/.test(a.t)) return prossimo(a);
     const st = myHome();
     if (!st || !isFree(st)) return;
     const f = (st.mpFriends || []).find(x => x.pid === a.from);
@@ -281,7 +274,7 @@ function coopRekey(st, from, to) {
       }, 700);
     }
     NET.save(st);
-  };
+  });
 }
 GUIDES.push({
   id: 'coop',
@@ -390,18 +383,17 @@ async function coopWhy(owner, name) {
     return '';
   }
 }
-startVisit = (_ =>
-  async function (pid) {
-    await _(pid);
-    if (!G.visit || !NET.ok) return;
-    const v = G.visit;
-    if (!v.coop && (await coopHas(pid))) {
-      v.coop = true;
-      UI.toast(`${v.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto.`);
-    }
-    if (!v.coop) v.why = await coopWhy(pid, v.name);
-    UI.hud();
-  })(startVisit);
+Ext.avvolgi('startVisit', async function (prossimo, pid) {
+  await prossimo(pid);
+  if (!G.visit || !NET.ok) return;
+  const v = G.visit;
+  if (!v.coop && (await coopHas(pid))) {
+    v.coop = true;
+    UI.toast(`${v.name} ti ha dato il permesso: qui puoi costruire. Tocca 🔨 in alto.`);
+  }
+  if (!v.coop) v.why = await coopWhy(pid, v.name);
+  UI.hud();
+});
 coopCheck = async function () {
   const v = G.visit;
   if (!v || !NET.ok) return;
@@ -464,13 +456,12 @@ async function friendsRepair(st) {
   NET.save(st);
 }
 {
-  const _tm = travelMenu;
-  travelMenu = async function () {
-    const r = await _tm();
+  Ext.avvolgi('travelMenu', async function (prossimo) {
+    const r = await prossimo();
     const st = myHome();
     if (st && isFree(st)) friendsRepair(st);
     return r;
-  };
+  });
 }
 // quando si dà il permesso: l'identità dell'amico si legge subito, e si avvisa se il suo codice non esiste più
 coopToggle = async function (pid) {

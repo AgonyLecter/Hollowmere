@@ -175,7 +175,7 @@ GUIDES.push({
 // ---------- la pietra del villaggio, in piazza ----------
 // una lapide di pietra con la targa d'ottone: dice il rango del villaggio e apre il registro
 const PIETRA_AT = [38, 17];
-function genPietraArt() {
+function genPietraArtBase() {
   IMG.pietra = SP(14, 24, P => {
     P.body(
       10,
@@ -191,6 +191,12 @@ function genPietraArt() {
     P.rect(3, 44, 22, 4, rp('#6a6760'));
   });
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genPietraArt', …)
+function genPietraArt(...a) {
+  return Ext.catena('genPietraArt', genPietraArtBase, this, a);
+}
+
 {
   Ext.on('applyFree', function (m, st) {
     if (m.id !== 'main' || !isFree(st)) return;

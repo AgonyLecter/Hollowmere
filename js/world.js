@@ -585,7 +585,7 @@ function buildBarn(st) {
   m.doors.push({ tx: 4, ty: 7, to: 'main', x: 58, y: 31, dir: 0 });
   return m;
 }
-function rebuildMaps() {
+function rebuildMapsBase() {
   const st = G.st;
   applySeasonLooks();
   if (typeof FREEIMG !== 'undefined' && FREEIMG.trees)
@@ -610,6 +610,11 @@ function rebuildMaps() {
   applyLook(G.maps.house, st);
   spawnFarmAnimals();
   if (G.map) G.map = G.maps[G.map.id];
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('rebuildMaps', …)
+function rebuildMaps(...a) {
+  return Ext.catena('rebuildMaps', rebuildMapsBase, this, a);
 }
 
 // ---------- strato di terreno pre-disegnato (tile, bordi d'erba, rive, macchie, ombre) ----------
@@ -1101,7 +1106,7 @@ function setPos(e, tx, ty, dir) {
   e.y = ty * 16 + 14;
   if (dir != null) e.dir = dir;
 }
-function updatePlayer(dt) {
+function updatePlayerBase(dt) {
   const p = G.player,
     m = G.map;
   let mx = 0,
@@ -1204,6 +1209,12 @@ function updatePlayer(dt) {
     }
   if (IN.takeAct()) doAction();
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('updatePlayer', …)
+function updatePlayer(...a) {
+  return Ext.catena('updatePlayer', updatePlayerBase, this, a);
+}
+
 function bump([tx, ty]) {
   const p = G.player;
   if (p.bumpT > 0) return;
@@ -1237,7 +1248,7 @@ function walkPlayer(tx, ty) {
     G.player.autoRes = res;
   });
 }
-function updateHorse(dt) {
+function updateHorseBase(dt) {
   const h = G.horse;
   if (!h.on) return;
   if (G.map.id !== 'main') {
@@ -1290,7 +1301,13 @@ function updateHorse(dt) {
     caught();
   }
 }
-function spawnHorse(tx, ty, speed) {
+
+// catena: altri file la avvolgono con Ext.avvolgi('updateHorse', …)
+function updateHorse(...a) {
+  return Ext.catena('updateHorse', updateHorseBase, this, a);
+}
+
+function spawnHorseBase(tx, ty, speed) {
   const h = G.horse;
   h.on = true;
   setPos(h, tx, ty);
@@ -1301,8 +1318,14 @@ function spawnHorse(tx, ty, speed) {
   G.chase = true;
   AU.setMode('inseguimento');
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('spawnHorse', …)
+function spawnHorse(...a) {
+  return Ext.catena('spawnHorse', spawnHorseBase, this, a);
+}
+
 // ---------- camera ----------
-function updateCam(dt) {
+function updateCamBase(dt) {
   const m = G.map,
     p = G.player;
   let cx = p.x - VW / 2,
@@ -1314,6 +1337,12 @@ function updateCam(dt) {
   G.cam.x = cx;
   G.cam.y = cy;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('updateCam', …)
+function updateCam(...a) {
+  return Ext.catena('updateCam', updateCamBase, this, a);
+}
+
 // ---------- render ----------
 const [LC, LX] = mk(MAXW, H);
 const SHADOW = (() => {
@@ -1432,7 +1461,7 @@ function drawClouds(cx, cy) {
       ctx.drawImage(CLOUD, Math.round(X), Math.round(Y));
   ctx.globalAlpha = 1;
 }
-function atmosphere(m) {
+function atmosphereBase(m) {
   const st = G.st,
     t = st.time,
     wx = st.weather || 'sereno',
@@ -1499,6 +1528,12 @@ function atmosphere(m) {
     ctx.globalCompositeOperation = 'source-over';
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('atmosphere', …)
+function atmosphere(...a) {
+  return Ext.catena('atmosphere', atmosphereBase, this, a);
+}
+
 // testo a capo entro una larghezza massima (in unità di gioco)
 function wrapText(t, maxW) {
   const out = [];
@@ -1735,7 +1770,7 @@ function drawSprite(key, e) {
   ctx.drawImage(SHADOW, Math.round(e.x - 7), Math.round(e.y - 3));
   drawSpr(ctx, key, e, Math.round(e.x), Math.round(e.y));
 }
-function darkLevel() {
+function darkLevelBase() {
   const st = G.st,
     t = st.time,
     m = G.map;
@@ -1753,6 +1788,12 @@ function darkLevel() {
   d += G.horror * 0.07;
   return clamp(d, 0, 0.94);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('darkLevel', …)
+function darkLevel(...a) {
+  return Ext.catena('darkLevel', darkLevelBase, this, a);
+}
+
 function render() {
   const m = G.map;
   ctx.setTransform(RS, 0, 0, RS, 0, 0);
@@ -2145,7 +2186,7 @@ function postFX() {
   }
 }
 // ---------- particelle ----------
-function updParts(dt) {
+function updPartsBase(dt) {
   const m = G.map;
   if (!m) return;
   if (!m.interior && G.mode !== 'boot') {
@@ -2279,7 +2320,13 @@ function updParts(dt) {
   }
   G.floats = G.floats.filter(f => f.t2 < (f.life || 1.4));
 }
-function drawParts() {
+
+// catena: altri file la avvolgono con Ext.avvolgi('updParts', …)
+function updParts(...a) {
+  return Ext.catena('updParts', updPartsBase, this, a);
+}
+
+function drawPartsBase() {
   for (const p of G.parts) {
     if (p.k === 'leaf') {
       ctx.fillStyle = p.c;
@@ -2347,6 +2394,12 @@ function drawParts() {
     }
   }
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('drawParts', …)
+function drawParts(...a) {
+  return Ext.catena('drawParts', drawPartsBase, this, a);
+}
+
 function burst(k, x, y, n, c) {
   for (let i = 0; i < n; i++)
     G.parts.push({

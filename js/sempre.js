@@ -631,7 +631,7 @@ function tragTick(dt) {
     tragTick(dt);
   });
 }
-function tragHTML(st) {
+function tragHTMLBase(st) {
   const T = fx6(st).trag,
     got = TRAG.filter(t => T[t[0]]).length;
   return (
@@ -648,6 +648,12 @@ function tragHTML(st) {
     ).join('')
   );
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('tragHTML', …)
+function tragHTML(...a) {
+  return Ext.catena('tragHTML', tragHTMLBase, this, a);
+}
+
 // una scheda nuova nel menu di pausa
 {
   const _p = UI.pause.bind(UI);
@@ -998,9 +1004,8 @@ Object.assign(EGG_EXTRA, {
   }
 });
 {
-  const _mg = mineGo;
-  mineGo = async function (f) {
-    await _mg(f);
+  Ext.avvolgi('mineGo', async function (prossimo, f) {
+    await prossimo(f);
     if (f === 13 && !G.st.flags.egg_tredici) {
       G.cut++;
       try {
@@ -1013,11 +1018,10 @@ Object.assign(EGG_EXTRA, {
         G.cut--;
       }
     }
-  };
+  });
 }
 {
-  const _fp = fishPull;
-  fishPull = function () {
+  Ext.avvolgi('fishPull', function (prossimo) {
     const f = G.fish,
       st = G.st;
     if (f && f.st === 'bite' && !st.flags.egg_stivale && Math.random() < 0.04) {
@@ -1034,13 +1038,12 @@ Object.assign(EGG_EXTRA, {
       })();
       return;
     }
-    return _fp();
-  };
+    return prossimo();
+  });
 }
 {
-  const _fs = freeStart;
-  freeStart = async function (e) {
-    await _fs(e);
+  Ext.avvolgi('freeStart', async function (prossimo, e) {
+    await prossimo(e);
     const st = G.st;
     if (/^elias$/i.test((st.name || '').trim()) && !st.flags.egg_omonimo) {
       G.cut++;
@@ -1053,7 +1056,7 @@ Object.assign(EGG_EXTRA, {
         G.cut--;
       }
     }
-  };
+  });
 }
 {
   const _sc = ACT.scare;
@@ -1127,7 +1130,7 @@ Object.assign(EGG_EXTRA, {
 }
 
 // ================= GRAFICA =================
-function genSempreArt() {
+function genSempreArtBase() {
   // il museo: il disegno è in grafica.js (ART2)
   IMG.museo = ART2.museo();
   const I = (id, fn) => {
@@ -1170,6 +1173,12 @@ function genSempreArt() {
   c.s = 2;
   FREEIMG.w_stella = c;
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('genSempreArt', …)
+function genSempreArt(...a) {
+  return Ext.catena('genSempreArt', genSempreArtBase, this, a);
+}
+
 // le curiosità nascoste non si vedono nella lista finché non le trovi; il resto è nel menu ☰ → Traguardi
 GUIDES.push({
   id: 'sempre',

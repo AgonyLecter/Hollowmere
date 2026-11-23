@@ -469,7 +469,7 @@ function drawFest(m) {
       }
     }
 }
-function genFestArt() {
+function genFestArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
     fn(P);
@@ -569,4 +569,9 @@ function genFestArt() {
     P.rect(15, 6, 2, 12, rp('#f8f0d0'));
     P.ellipse(16, 4, 1.6, 2.4, rp('#ffd060'), { amb: 0.95, edge: false });
   });
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genFestArt', …)
+function genFestArt(...a) {
+  return Ext.catena('genFestArt', genFestArtBase, this, a);
 }

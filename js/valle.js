@@ -143,15 +143,14 @@ ACT.albo = () => {
   });
 }
 {
-  const _va = visitAct;
-  visitAct = function (fx, fy) {
+  Ext.avvolgi('visitAct', function (prossimo, fx, fy) {
     const o = G.map.objAt(fx, fy);
     if (o && o.act === 'albo') {
       alboMenu('news');
       return true;
     }
-    return _va(fx, fy);
-  };
+    return prossimo(fx, fy);
+  });
 }
 const albo = () => G.map && G.map.id === 'main' && G.map.objs.find(o => o.act === 'albo');
 
@@ -376,9 +375,8 @@ function alboDraw(st) {
 
 // il ponte porta all'albo; la lista "Villaggi vicini" diventa la scorciatoia ai primi online
 {
-  const _tm = travelMenu;
-  travelMenu = async function () {
-    const r = await _tm();
+  Ext.avvolgi('travelMenu', async function (prossimo) {
+    const r = await prossimo();
     const box = $('#mbox');
     if (!r || !UI.modalOpen || !box || !box.querySelector('#frAdd')) return r;
     const h = [...box.querySelectorAll('h3')].find(h => /Villaggi vicini/.test(h.textContent));
@@ -393,7 +391,7 @@ function alboDraw(st) {
       };
     }
     return r;
-  };
+  });
 }
 
 // ---------- la guida ----------
@@ -527,7 +525,7 @@ function tourPick(st) {
     };
   return null;
 }
-function tourTick(dt) {
+function tourTickBase(dt) {
   const st = homeSt(),
     el = $('#tour');
   if (G.mode !== 'game' || !st || !isFree(st)) {
@@ -553,6 +551,12 @@ function tourTick(dt) {
   const g = tourPick(st);
   if (g) tourStart(g);
 }
+
+// catena: altri file la avvolgono con Ext.avvolgi('tourTick', …)
+function tourTick(...a) {
+  return Ext.catena('tourTick', tourTickBase, this, a);
+}
+
 {
   Ext.on('mpTick', function (dt) {
     tourTick(dt);
@@ -560,8 +564,7 @@ function tourTick(dt) {
 }
 // freccia: la guida indica la tappa (anche se la freccia degli obiettivi è spenta); dalle case indica l'uscita
 {
-  const _gt = guideTarget;
-  guideTarget = function () {
+  Ext.avvolgi('guideTarget', function (prossimo) {
     const s = tourStep();
     if (s && s.at) {
       const m = G.map;
@@ -571,17 +574,16 @@ function tourTick(dt) {
       }
       return s.at();
     }
-    return _gt();
-  };
+    return prossimo();
+  });
 }
 {
-  const _dg = drawGuide;
-  drawGuide = function () {
+  Ext.avvolgi('drawGuide', function (prossimo) {
     const s = tourStep(),
       on = G.guideOn;
     if (s && s.at) G.guideOn = true;
     try {
-      _dg();
+      prossimo();
     } finally {
       G.guideOn = on;
     }
@@ -599,11 +601,11 @@ function tourTick(dt) {
     ctx.fillRect(X - 1, Y - 7, 2, 6);
     ctx.fillRect(X - 1, Y, 2, 2);
     ctx.restore();
-  };
+  });
 }
 
 // ---------- grafica: la bacheca comune (due caselle, tettoia, lanterna) ----------
-function genValleArt() {
+function genValleArtBase() {
   const wood = rp('#8a5a32'),
     woodD = rp('#5a3a1e'),
     cream = rp('#efe2c2'),
@@ -646,4 +648,9 @@ function genValleArt() {
     P.rect(58, 30, 7, 9, rp('#3a3a3a'));
     P.rect(59, 32, 5, 5, rp('#ffd86a'), { spec: 1 });
   });
+}
+
+// catena: altri file la avvolgono con Ext.avvolgi('genValleArt', …)
+function genValleArt(...a) {
+  return Ext.catena('genValleArt', genValleArtBase, this, a);
 }
