@@ -3150,7 +3150,7 @@ function promptInfo() {
     return {
       x: e.x,
       y: e.y - (a.kind === 'mucca' ? 30 : 18),
-      t: a.kind === 'mucca' && a.prod ? 'Mungi ' + a.name : a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
+      t: a.pet ? a.name + ' ♥' : 'Accarezza ' + a.name
     };
   }
   if (sc && sc.k === 'critter') {

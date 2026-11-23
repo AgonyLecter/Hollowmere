@@ -502,7 +502,7 @@ const Wiki = {
     ${Object.entries(D.ANIMALS)
       .map(
         ([k, a]) =>
-          `<tr><td>${big(animalImg[k], 32)}</td><td><b>${esc(a.n)}</b></td><td>${it(a.home)}</td><td>${a.cap}</td><td>${a.cost}</td><td>${it(a.prod)} <span class="small">${a.mode === 'milk' ? '(si munge)' : a.mode === 'shear' ? '(si tosa)' : '(raccogli a terra)'}</span></td></tr>`
+          `<tr><td>${big(animalImg[k], 32)}</td><td><b>${esc(a.n)}</b></td><td>${it(a.home)}</td><td>${a.cap}</td><td>${a.cost}</td><td>${it(a.prod)} <span class="small">(lo prendi in ${esc(ITEMS[a.home] ? ITEMS[a.home].n.toLowerCase() : 'casa sua')})</span></td></tr>`
       )
       .join('')}</table>
     <h3>Le api</h3>

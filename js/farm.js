@@ -439,6 +439,7 @@ function aimScelta() {
   }
   if (m.id === 'main' && isFree(st) && G.fanimals)
     for (const e of G.fanimals) {
+      if (e.dentro) continue;
       const d = Math.hypot(e.x - ax, e.y - ay);
       if (d < 18) C.push({ k: 'animal', r: e, d });
     }

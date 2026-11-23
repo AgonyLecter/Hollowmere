@@ -257,34 +257,84 @@ function animalsOf(k) {
   return (G.st.free.animals || []).filter(a => a.home === k);
 }
 
-// ---------- menu dell'edificio ----------
+// ---------- quello che gli animali lasciano in casa ----------
+// Uova, latte, lana: ogni mattina finiscono dentro la loro casa (b.dentro = { id: quanti }) e si prendono
+// dalla sua schermata, scegliendo cosa e quanto. Niente più uova a terra tra le zampe delle galline.
+function dentroDi(k, st = G.st) {
+  const b = st.free.built[k];
+  b.dentro = b.dentro || {};
+  // salvataggi di prima: latte e lana pronti stavano sulla bestia, adesso entrano in casa
+  if (!b.dentroV) {
+    b.dentroV = 1;
+    for (const a of (st.free.animals || []).filter(a => a.home === k)) {
+      const A = ANIMALS[a.kind];
+      if (A && A.mode !== 'ground' && a.prod) b.dentro[A.prod] = (b.dentro[A.prod] || 0) + 1;
+    }
+  }
+  return b.dentro;
+}
+const dentroTot = b => Object.values(b.dentro || {}).reduce((n, v) => n + v, 0);
+// prendi n di un prodotto: quello che non entra nello zaino resta in casa
+function prendiDentro(k, id, n) {
+  const D = dentroDi(k);
+  let preso = 0;
+  while (preso < n && D[id] > 0 && addItemBase(id, 1)) {
+    D[id]--;
+    preso++;
+  }
+  if (!D[id]) delete D[id];
+  if (!preso) {
+    UI.toast('Lo zaino è pieno!', 'bad');
+    return 0;
+  }
+  Ext.run('ottieni', id, preso);
+  // chi passa di lì commenta (le stesse reazioni di quando si mungeva e si tosava a mano)
+  const A = Object.values(ANIMALS).find(A => A.prod === id);
+  if (A && A.mode !== 'ground') Dialoghi.evento(A.mode === 'shear' ? 'tosatura' : 'mungitura', { item: id });
+  // le pecore a cui hai preso la lana restano tosate fino alla prossima
+  let c = preso;
+  for (const a of animalsOf(k))
+    if (c > 0 && ANIMALS[a.kind].prod === id && a.prod) {
+      a.prod = false;
+      c--;
+    }
+  AU.play('pick');
+  UI.toast(`Hai preso: ${ITEMS[id].n}${preso > 1 ? ' ×' + preso : ''}.`);
+  return preso;
+}
+
+// ---------- la schermata della casa degli animali ----------
 function barnMenu(k) {
   const st = G.st,
     b = st.free.built[k],
     kinds = kindsFor(b.id),
     cap = capFor(b.id),
     L = animalsOf(k),
+    D = dentroDi(k),
     win = seasonOf() === 1;
   b.hay = b.hay || 0;
-  const hayN = countItem('fieno');
-  const verb = a => {
-    const A = ANIMALS[a.kind];
-    return A.mode === 'milk'
-      ? a.prod
-        ? ' Pronta da mungere.'
-        : ' Munta.'
-      : A.mode === 'shear'
-        ? a.prod
-          ? ' La lana è lunga: tosala!'
-          : ' Tosata.'
-        : '';
-  };
+  const hayN = countItem('fieno'),
+    cuori = a => '♥'.repeat(Math.round(a.love / 2)) + '♡'.repeat(5 - Math.round(a.love / 2)),
+    prodotti = Object.keys(D).filter(id => D[id] > 0 && ITEMS[id]);
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>${ITEMS[b.id].n}</h2><p class="small">${L.length}/${cap} bestie · Fieno nella mangiatoia: ${b.hay} · ${win ? "<b>D'inverno non si pascola: serve fieno.</b>" : 'Fuori stagione fredda pascolano da sole.'}</p>` +
-      L.map(
-        a =>
-          `<div class="mrow"><canvas data-a="${a.kind}" width="32" height="32"></canvas><span><b>${esc(a.name)}</b> <span class="small">(${ANIMALS[a.kind].n.toLowerCase()})</span> <span class="hearts">${'♥'.repeat(Math.round(a.love / 2))}${'♡'.repeat(5 - Math.round(a.love / 2))}</span><br><span class="small">${a.pet ? 'Accarezzata oggi.' : "Non l'hai ancora accarezzata oggi."}${a.hungry ? ' Ha fame!' : ''}${verb(a)}</span></span></div>`
-      ).join('') +
+    `<button class="btn mclose" data-close>✕</button><h2>${ITEMS[b.id].n}</h2>` +
+      `<p class="small">${L.length}/${cap} bestie · Fieno nella mangiatoia: ${b.hay} · ${win ? "<b>D'inverno non si pascola: serve fieno.</b>" : 'Di giorno pascolano fuori, la sera rientrano.'}</p>` +
+      `<h3>In casa</h3>` +
+      (prodotti.length
+        ? prodotti
+            .map(
+              id =>
+                `<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span><b>${esc(ITEMS[id].n)}</b> ×${D[id]}</span><button class="btn" data-p="${id}" data-n="1">Prendi 1</button><button class="btn" data-p="${id}" data-n="${D[id]}">Prendi tutto</button></div>`
+            )
+            .join('')
+        : `<p class="small">Per ora niente: ${L.length ? 'ogni mattina, se stanno bene, lasciano qualcosa qui.' : 'prima servono le bestie.'}</p>`) +
+      `<h3>Le bestie</h3>` +
+      (L.length
+        ? L.map(
+            a =>
+              `<div class="mrow"><canvas data-a="${a.kind}" width="32" height="32"></canvas><span><b>${esc(a.name)}</b> <span class="small">(${ANIMALS[a.kind].n.toLowerCase()})</span> <span class="hearts">${cuori(a)}</span><br><span class="small">${a.pet ? 'Accarezzata oggi.' : "Non l'hai ancora accarezzata oggi."}${a.hungry ? ' Ha fame!' : ''}</span></span></div>`
+          ).join('')
+        : '<p class="small">Nessuna, per ora.</p>') +
       `<p>${hayN ? `<button class="btn" data-h="1">Metti fieno (${hayN})</button> ` : ''}${
         L.length < cap
           ? kinds
@@ -295,98 +345,126 @@ function barnMenu(k) {
               .join(' ')
           : ''
       }</p>` +
-      `<p class="small">Accarezza le bestie ogni giorno: più ti vogliono bene, più producono. ${kinds
-        .map(kk => {
-          const A = ANIMALS[kk];
-          return A.mode === 'ground'
-            ? `${A.pl[0].toUpperCase() + A.pl.slice(1)}: le uova le trovi a terra vicino a casa loro, la mattina.`
-            : A.mode === 'milk'
-              ? `${A.pl[0].toUpperCase() + A.pl.slice(1)}: quando sono pronte hanno un secchio sopra la testa, avvicinati e premi A/E.`
-              : `${A.pl[0].toUpperCase() + A.pl.slice(1)}: quando la lana è lunga hanno le forbici sopra la testa, avvicinati e premi A/E.`;
-        })
-        .join(' ')}</p>`
+      `<p class="small">Accarezzale ogni giorno (fuori, di giorno): più ti vogliono bene, più spesso lasciano ${kinds
+        .map(kk => SG[ANIMALS[kk].prod] || ITEMS[ANIMALS[kk].prod].n.toLowerCase())
+        .join(' o ')} in casa.</p>`
   );
-  $('#mbox')
-    .querySelectorAll('canvas[data-a]')
-    .forEach(c => {
-      const x = c.getContext('2d');
-      x.imageSmoothingEnabled = false;
-      const im = animalImg(c.dataset.a, false, 0),
-        h = (im.height * 32) / im.width;
-      x.drawImage(im, 0, 32 - h, 32, h);
-    });
-  const h = $('#mbox').querySelector('[data-h]');
+  const box = $('#mbox');
+  box.querySelectorAll('canvas[data-a]').forEach(c => {
+    const x = c.getContext('2d');
+    x.imageSmoothingEnabled = false;
+    const im = animalImg(c.dataset.a, false, 0),
+      h = (im.height * 32) / im.width;
+    x.drawImage(im, 0, 32 - h, 32, h);
+  });
+  box.querySelectorAll('canvas[data-i]').forEach(c => {
+    if (ICON[c.dataset.i]) c.getContext('2d').drawImage(ICON[c.dataset.i], 0, 0);
+  });
+  const ancora = () => {
+    UI._mclose = null;
+    const y = box.scrollTop;
+    barnMenu(k);
+    box.scrollTop = y;
+  };
+  box.querySelectorAll('[data-p]').forEach(
+    bt =>
+      (bt.onclick = () => {
+        prendiDentro(k, bt.dataset.p, +bt.dataset.n);
+        ancora();
+      })
+  );
+  const h = box.querySelector('[data-h]');
   if (h)
     h.onclick = () => {
       const n = countItem('fieno');
       removeItem('fieno', n);
       b.hay += n;
       AU.play('pick');
-      UI._mclose = null;
-      barnMenu(k);
+      ancora();
     };
-  $('#mbox')
-    .querySelectorAll('[data-buy]')
-    .forEach(
-      by =>
-        (by.onclick = () => {
-          const kind = by.dataset.buy,
-            A = ANIMALS[kind];
-          if (st.money < A.cost || animalsOf(k).length >= cap) return;
-          st.money -= A.cost;
-          const used = new Set((st.free.animals || []).map(a => a.name)),
-            nm = [...ANAMES, ...ANAMES2].find(n => !used.has(n)) || A.n;
-          (st.free.animals = st.free.animals || []).push({
-            kind,
-            name: nm,
-            home: k,
-            love: 2,
-            pet: false,
-            prod: false,
-            hungry: false
-          });
-          AU.play('coin');
-          UI.hud();
-          UI.toast(`${nm} è arrivata. Agatha l'ha portata fin qui con una corda e molta pazienza.`);
-          spawnFarmAnimals();
-          UI._mclose = null;
-          barnMenu(k);
-        })
-    );
+  box.querySelectorAll('[data-buy]').forEach(
+    by =>
+      (by.onclick = () => {
+        const kind = by.dataset.buy,
+          A = ANIMALS[kind];
+        if (st.money < A.cost || animalsOf(k).length >= cap) return;
+        st.money -= A.cost;
+        const used = new Set((st.free.animals || []).map(a => a.name)),
+          nm = [...ANAMES, ...ANAMES2].find(n => !used.has(n)) || A.n;
+        (st.free.animals = st.free.animals || []).push({
+          kind,
+          name: nm,
+          home: k,
+          love: 2,
+          pet: false,
+          prod: false,
+          hungry: false
+        });
+        AU.play('coin');
+        UI.hud();
+        UI.toast(`${nm} è arrivata. Agatha l'ha portata fin qui con una corda e molta pazienza.`);
+        spawnFarmAnimals();
+        ancora();
+      })
+  );
 }
 
 // ---------- vita degli animali ----------
+// Di giorno pascolano attorno alla loro casa; la sera (o col buio) tornano alla porta ed entrano; la mattina
+// escono. Dentro non si vedono e non si toccano.
+const ANIM_ESCONO = 6 * 60 + 30,
+  ANIM_RIENTRANO = 19 * 60 + 30;
+const animSera = () => {
+  const t = G.st.time;
+  return t >= ANIM_RIENTRANO || t < ANIM_ESCONO;
+};
 function spawnFarmAnimals() {
   const st = G.st;
   G.fanimals = [];
   if (!isFree(st)) return;
+  const sera = animSera();
   for (const a of st.free.animals || []) {
     const b = st.free.built[a.home];
     if (!b) continue;
-    const [ax, ay] = a.home.split(',').map(Number);
+    const [ax, ay] = a.home.split(',').map(Number),
+      px = ax * 16 + 8,
+      py = (ay + 1) * 16 + 4; // la porta, sul lato basso della casa
     G.fanimals.push({
       a,
-      x: (ax + (Math.random() * 4 - 2)) * 16 + 8,
-      y: (ay + 1.6 + Math.random() * 1.5) * 16,
-      hx: ax * 16 + 8,
+      x: sera ? px : (ax + (Math.random() * 4 - 2)) * 16 + 8,
+      y: sera ? py : (ay + 1.6 + Math.random() * 1.5) * 16,
+      px,
+      py,
+      hx: px,
       hy: (ay + 2) * 16,
       dir: 1,
       t: Math.random() * 3,
       f: 0,
-      st: 'idle'
+      st: 'idle',
+      dentro: sera
     });
   }
 }
 function animalsTick(dt) {
   if (!G.fanimals || G.map.id !== 'main') return;
-  const night = G.night > 0.5;
+  const sera = animSera();
   for (const e of G.fanimals) {
     e.t -= dt;
-    if (night) {
-      e.st = 'sleep';
-      continue;
+    if (sera) {
+      if (e.dentro) continue;
+      // verso la porta, poi dentro
+      e.tx = e.px;
+      e.ty = e.py;
+      e.st = 'move';
+    } else if (e.dentro) {
+      // la mattina escono uno alla volta (ognuno col suo attimo)
+      if (e.t > 0) continue;
+      e.dentro = false;
+      e.x = e.px;
+      e.y = e.py;
+      e.st = 'idle';
+      e.t = 0.5;
     }
-    if (e.st === 'sleep') e.st = 'idle';
     if (e.st === 'idle' && e.t <= 0) {
       e.t = 2 + Math.random() * 4;
       e.tx = e.hx + (Math.random() - 0.5) * 80;
@@ -398,13 +476,18 @@ function animalsTick(dt) {
         dy = e.ty - e.y,
         d = Math.hypot(dx, dy);
       if (d < 2) {
+        if (sera) {
+          e.dentro = true;
+          e.t = Math.random() * 6;
+        }
         e.st = 'idle';
         continue;
       }
-      const sp = e.a.kind === 'mucca' ? 12 : 18,
+      const sp = (e.a.kind === 'mucca' ? 12 : 18) * (sera ? 1.6 : 1),
         nx = e.x + (dx / d) * sp * dt,
         ny = e.y + (dy / d) * sp * dt;
-      if (G.map.solid(Math.floor(nx / 16), Math.floor((ny - 3) / 16))) {
+      // rientrando non si fermano per un ostacolo: scivolano verso la porta
+      if (!sera && G.map.solid(Math.floor(nx / 16), Math.floor((ny - 3) / 16))) {
         e.st = 'idle';
         e.t = 1;
         continue;
@@ -417,8 +500,8 @@ function animalsTick(dt) {
   }
 }
 function drawFarmAnimal(e) {
+  if (e.dentro) return;
   const a = e.a,
-    A = ANIMALS[a.kind] || ANIMALS.gallina,
     im = animalImg(a.kind, e.st === 'move', e.f),
     w = iw(im),
     h = ih(im),
@@ -437,56 +520,13 @@ function drawFarmAnimal(e) {
     ctx.drawImage(img, -w / 2, Y - h, w, h);
     ctx.restore();
   } else ctx.drawImage(img, X - w / 2, Y - h, w, h);
-  if (e.st === 'sleep' && Math.floor(G.t * 1.5 + e.hx) % 3 === 0) {
-    ctx.fillStyle = '#fff';
-    ctx.font = '8px "Pixelify Sans",monospace';
-    ctx.fillText('z', X + 4, Y - h - 2);
-  }
-  if (A.mode === 'milk' && a.prod && e.st !== 'sleep') {
-    ctx.fillStyle = '#fbfbf6';
-    ctx.fillRect(X - 1, Y - h - 6, 3, 4);
-    ctx.fillStyle = '#2a1a10';
-    ctx.fillRect(X - 1, Y - h - 7, 3, 1);
-  }
-  if (A.mode === 'shear' && a.prod && e.st !== 'sleep') {
-    const yy = Y - h - 7;
-    ctx.fillStyle = '#c8ccd4';
-    ctx.fillRect(X - 2, yy, 1, 4);
-    ctx.fillRect(X + 1, yy, 1, 4);
-    ctx.fillStyle = '#c83a2a';
-    ctx.fillRect(X - 3, yy + 3, 2, 2);
-    ctx.fillRect(X + 1, yy + 3, 2, 2);
-  }
 }
+// davanti a una bestia: una carezza (i prodotti si prendono in casa loro)
 function animalAct(ax, ay) {
-  const e = (G.fanimals || []).find(e => Math.hypot(e.x - ax, e.y - ay) < 18);
+  const e = (G.fanimals || []).find(e => !e.dentro && Math.hypot(e.x - ax, e.y - ay) < 18);
   if (!e) return false;
   const a = e.a,
-    A = ANIMALS[a.kind] || ANIMALS.gallina;
-  if (A.mode !== 'ground' && a.prod) {
-    if (!addItem(A.prod, 1)) return true;
-    a.prod = false;
-    Dialoghi.evento(A.mode === 'shear' ? 'tosatura' : 'mungitura', { item: A.prod });
-    AU.play('pick');
-    floatText('+1 ' + ITEMS[A.prod].n, e.x, e.y - 24);
-    if (A.mode === 'shear')
-      for (let i = 0; i < 8; i++)
-        G.parts.push({
-          k: 'snowbit',
-          x: e.x,
-          y: e.y - 10,
-          vx: (Math.random() - 0.5) * 30,
-          vy: -10 - Math.random() * 20,
-          t: 0,
-          life: 0.6
-        });
-    if (!a.pet) {
-      a.pet = true;
-      a.love = Math.min(10, a.love + 1);
-    }
-    return true;
-  }
-  const snd = { gallina: 'cluck', anatra: 'cluck' }[a.kind] || 'ok',
+    snd = { gallina: 'cluck', anatra: 'cluck' }[a.kind] || 'ok',
     voc =
       {
         gallina: 'chioccia contenta',
@@ -509,7 +549,27 @@ function animalAct(ax, ay) {
   }
   return true;
 }
-// ogni mattina: si mangia (pascolo o fieno), si produce, l'affetto cresce o cala
+// sopra la casa, quando dentro c'è qualcosa da prendere: il prodotto in una nuvoletta
+Ext.on('drawWorldExtras', m => {
+  const st = G.st;
+  if (!m || m.id !== 'main' || !isFree(st) || !st.free.animals) return;
+  for (const k in st.free.built) {
+    const b = st.free.built[k];
+    if (!kindsFor(b.id).length || !dentroTot(b) || !AIMG[b.id]) continue;
+    const id = Object.keys(b.dentro).find(i => b.dentro[i] > 0 && ICON[i]);
+    if (!id) continue;
+    const [ax, ay] = k.split(',').map(Number),
+      { x0, w } = bldFoot(b.id, ax, ay),
+      X = Math.round((x0 + w / 2) * 16),
+      Y = Math.round((ay + 1) * 16 - ih(AIMG[b.id]) - 6 + Math.sin(G.t * 3) * 1.5);
+    ctx.fillStyle = 'rgba(20,12,8,.55)';
+    ctx.fillRect(X - 7, Y - 7, 14, 14);
+    ctx.fillStyle = '#f4ead0';
+    ctx.fillRect(X - 6, Y - 6, 12, 12);
+    ctx.drawImage(ICON[id], X - 6, Y - 6, 12, 12);
+  }
+});
+// ogni mattina: si mangia (pascolo o fieno), si produce (in casa), l'affetto cresce o cala
 function animalsMorning(st) {
   if (!isFree(st) || !st.free.animals) return;
   const win = seasonOf(st) === 1;
@@ -517,6 +577,7 @@ function animalsMorning(st) {
     const b = st.free.built[a.home];
     if (!b) continue;
     b.hay = b.hay || 0;
+    dentroDi(a.home, st);
     const A = ANIMALS[a.kind] || ANIMALS.gallina;
     let fed = true;
     if (win) {
@@ -528,20 +589,8 @@ function animalsMorning(st) {
     a.pet = false;
     const chance = (fed ? 0.55 + a.love * 0.045 : 0) * (A.mode === 'shear' ? 0.6 : 1);
     if (Math.random() < chance) {
-      if (A.mode !== 'ground') a.prod = true;
-      else {
-        const [ax, ay] = a.home.split(',').map(Number),
-          t = A.prod === 'uovo' ? 'uovo' : 'w_' + A.prod;
-        for (let i = 0; i < 8; i++) {
-          const x = ax - 2 + Math.floor(Math.random() * 5),
-            y = ay + 1 + Math.floor(Math.random() * 2),
-            k = fkey(x, y);
-          if (!st.free.debris[k] && !st.free.built[k] && !st.farm[k]) {
-            st.free.debris[k] = t;
-            break;
-          }
-        }
-      }
+      b.dentro[A.prod] = (b.dentro[A.prod] || 0) + 1;
+      a.prod = true;
     }
   }
 }

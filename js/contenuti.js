@@ -337,14 +337,11 @@ function animalImg(kind, moving, f) {
         const p = G.player,
           ax = p.x + DIRV[p.dir][0] * 14,
           ay = p.y + DIRV[p.dir][1] * 14,
-          e = G.fanimals.find(e => Math.hypot(e.x - ax, e.y - ay) < 18);
+          e = G.fanimals.find(e => !e.dentro && Math.hypot(e.x - ax, e.y - ay) < 18);
         if (e) {
-          const a = e.a,
-            A = ANIMALS[a.kind];
-          if (A) {
-            if (A.mode !== 'ground' && a.prod) q.t = (A.mode === 'milk' ? 'Mungi ' : 'Tosa ') + a.name;
+          const a = e.a;
+          if (ANIMALS[a.kind])
             q.y = e.y - (a.kind === 'mucca' || a.kind === 'capra' || a.kind === 'pecora' ? 28 : 18);
-          }
         }
       }
     } catch (e) {}
