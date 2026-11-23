@@ -13,6 +13,10 @@ async function rispondi(page, scegli) {
       opts: [...document.querySelectorAll('#dchoices button')].map(b => b.textContent)
     }));
     if (!s.cut && !s.busy) return true;
+    if (!s.opts.length && (await page.evaluate(() => UI.modalOpen && !UI.dlgOpen))) {
+      await page.evaluate(() => UI.close());
+      continue;
+    }
     if (s.opts.length) {
       const k = scegli
         ? Math.max(
@@ -201,7 +205,9 @@ module.exports = async function (t, { browser }) {
       if (b.length) {
         await sceltaPronta();
         b[b.length - 1].click();
-      } else UI.advance();
+      } else if (UI.modalOpen && !UI.dlgOpen)
+        UI.close(); // una finestra che non c'entra (una novità…)
+      else UI.advance();
       await new Promise(r => setTimeout(r, 100));
     }
     Math.random = window.__r;
@@ -212,10 +218,11 @@ module.exports = async function (t, { browser }) {
     };
   });
   t.true('bussando, Brom esce sulla soglia', scena.uscito);
-  t.true('la chiacchiera alla porta finisce', scena.finita);
+  t.true('la chiacchiera alla porta finisce' + (scena.finita ? '' : ' (' + scena.dove + ')'), scena.finita);
   await page.waitForTimeout(1500);
   t.true('poi Brom rientra in casa', await page.evaluate(() => NPC('brom').hidden && !NPC('brom').script));
   // bussando di nuovo e di nuovo: risponde male, e non esce
+  await rispondi(page);
   await page.waitForFunction(() => NPC('brom').hidden && !G.cut && !UI.busy(), null, { timeout: 15000 });
   const seccato = await page.evaluate(async () => {
     G.st.friends.brom = 0;
