@@ -30,8 +30,8 @@ const LAMPS = [
   [51, 15],
   [51, 23],
   [38, 23],
-  [45, 26],
-  [44, 38],
+  [46, 26], // a lato del sentiero che scende alla piazza, non in mezzo
+  [43, 38],
   [29, 17],
   [11, 18]
 ];

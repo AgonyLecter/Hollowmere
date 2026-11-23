@@ -47,6 +47,8 @@ class GMap {
     return this.hit[x + ',' + y];
   }
 }
+// decorazioni basse (zucche, fiori, mucchi di foglie): ci si passa sopra, ma si possono ancora guardare e usare
+const BASSI = new Set(['pumpkin', 'hydr', 'sunflower', 'leaves']);
 // crea un oggetto ancorato al tile (tx,ty): immagine centrata e poggiata sul fondo del tile
 function OB(kind, tx, ty, img, o = {}) {
   const w = img ? iw(img) : 16,
@@ -62,6 +64,10 @@ function OB(kind, tx, ty, img, o = {}) {
     sy: (ty + 1) * 16 - 1,
     solid: [[tx, ty]]
   };
+  if (BASSI.has(kind)) {
+    b.solid = [];
+    b.hits = [[tx, ty]];
+  }
   return Object.assign(b, o);
 }
 const FARM = { x0: 5, y0: 13, x1: 21, y1: 33 };
@@ -1860,10 +1866,10 @@ function render() {
         const [ox, oy] = swingOffset();
         G.player.x += ox;
         G.player.y += oy;
-        drawSprite('player', G.player);
+        if (swingK() >= 0 && ICON[G.toolA.id]) disegnaPresa();
+        else drawSprite('player', G.player);
         G.player.x -= ox;
         G.player.y -= oy;
-        drawToolAnim();
       }
     } else if (e.prey) drawSprite('prey', G.prey);
     else if (e.coach) drawCoach();

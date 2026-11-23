@@ -328,6 +328,25 @@ const NOVITA = [
         t: 'E la Valle si vede più da vicino: tutto è più grande e dettagliato, i campi arati hanno i bordi tondi e sembrano un orto vero, i sentieri curvano nel prato.'
       }
     ]
+  },
+  {
+    id: 'stile',
+    v: 39,
+    n: 'Braccia, inquadratura e un vestito nuovo',
+    steps: [
+      {
+        t: 'L’inquadratura la scegli tu: in ☰ → Opzioni c’è il cursore <b>Inquadratura</b>, da lontano a vicino. Sul computer anche i tasti <b>+</b> e <b>−</b>, sul telefono due dita sullo schermo.'
+      },
+      {
+        t: 'Quando usi un attrezzo si muove tutto il corpo: le braccia caricano sopra la testa e colpiscono, l’annaffiatoio si inclina per versare, la falce spazza bassa.'
+      },
+      {
+        t: 'In piazza si passa meglio: zucche, fiori e mucchi di foglie si possono calpestare, e i lampioni stanno a lato del sentiero, non in mezzo.'
+      },
+      {
+        t: 'Menù, zaino, dialoghi e banco da lavoro hanno un vestito nuovo: cornici di legno con gli angolari di ferro, bottoni in rilievo, caselle incavate.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

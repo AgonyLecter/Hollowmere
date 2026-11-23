@@ -502,7 +502,7 @@ const UI = {
         .join('');
     if (tab === 'lore') body = loreHTML();
     if (tab === 'opz')
-      body = `<p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p><label><input type="checkbox" id="gd" ${G.guideOn ? 'checked' : ''}> Indicatore dell'obiettivo (freccia)</label></p><p><button class="btn" id="fs">Schermo intero</button></p>`;
+      body = `<p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p>Inquadratura <span class="small">(lontano ↔ vicino · tasti + e −, o due dita)</span> <input type="range" id="vz" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step=".05" value="${ZOOM}"></p><p><label><input type="checkbox" id="gd" ${G.guideOn ? 'checked' : ''}> Indicatore dell'obiettivo (freccia)</label></p><p><button class="btn" id="fs">Schermo intero</button></p>`;
     if (tab === 'save')
       body = `<p>Il gioco si salva da solo ogni mattina. ${NET.ok ? 'I salvataggi sono custoditi nella Valle (online).' : 'Sei offline: il salvataggio resta su questo dispositivo.'}</p><p>Il tuo codice: <b style="font-size:1.3em;letter-spacing:.1em">${esc(st.pid || '—')}</b>${NET.key(st.pid) ? `<br>Chiave di recupero: <b style="letter-spacing:.1em">${esc(NET.key(st.pid))}</b>` : ''}<br><span class="small">Da un altro dispositivo usa "Carica da codice" con codice e chiave. Non dare la chiave a nessuno: chi ce l'ha può usare il tuo salvataggio.</span></p><p class="small">${netDiag()}</p><p><button class="btn" id="sq">Salva ed esci al menu</button> <button class="btn" id="sNow">Salva adesso</button></p>`;
     this.open(
@@ -541,6 +541,7 @@ const UI = {
         AU.play('blip');
         LS.set('hm_vol', JSON.stringify(AU.vol));
       };
+      $('#vz').oninput = e => impostaZoom(e.target.value, true);
       $('#fs').onclick = goFull;
       $('#gd').onchange = e => {
         G.guideOn = e.target.checked;
