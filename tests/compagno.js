@@ -93,10 +93,16 @@ module.exports = async function (t, { browser }) {
     m.add(OB('debris', 22, 20, FREEIMG.ramo, { act: 'debris', dt: 'ramo', solid: [], hits: [[22, 20]] }));
     const n0 = countItem('legna');
     G.comp.aiuto = 0;
+    compTick(0.05);
+    const p1 = G.comp.preda ? G.comp.preda.dt + '@' + G.comp.preda.tx + ',' + G.comp.preda.ty : 'nessuna';
     for (let i = 0; i < 200; i++) compTick(0.05);
-    return { preso: countItem('legna') - n0, sparito: !st.free.debris[k] };
+    return {
+      preso: countItem('legna') - n0,
+      sparito: !st.free.debris[k],
+      prima: p1
+    };
   });
-  t.true('ti porta il ramo che trova', g.preso >= 1 && g.sparito);
+  t.true('ti porta il ramo che trova vicino a te', g.preso >= 1 && g.sparito && g.prima === 'ramo@22,20');
   t.eq('compagno: nessun errore', errors.join('\n'), '');
   await page.close();
 };

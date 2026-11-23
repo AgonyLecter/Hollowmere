@@ -420,7 +420,7 @@ function farmAct(tx, ty) {
 // Vince il più vicino al punto in cui guardi, con un piccolo vantaggio alle persone: così un gatto o un sasso
 // accanto a qualcuno non ti impediscono di parlarci, e una persona accanto a un sasso non ti impedisce di romperlo.
 // Con un attrezzo in mano conta solo l'attrezzo: niente carezze a bestie, gatti e compagno (basta una casella
-// vuota per coccolarli), e con le persone parli solo se le hai proprio davanti.
+// vuota per coccolarli), e con le persone parli solo se le hai proprio davanti (non di lato).
 // La usano sia il tasto azione sia il fumetto sopra la testa, che quindi dicono sempre la stessa cosa.
 const AIM_TILE = ['debris', 'tree', 'pine', 'ceppo', 'log', 'rock', 'built', 'bush'];
 function aimScelta() {
@@ -439,7 +439,7 @@ function aimScelta() {
     const [nx, ny] = ptile(n),
       d = Math.hypot(n.x - ax, n.y - ay),
       davanti = nx === fx && ny === fy;
-    if (attrezzo ? davanti : d < 18 || davanti)
+    if (attrezzo ? davanti || d < 10 : d < 18 || davanti)
       C.push({ k: 'npc', r: n, d: Math.min(d, davanti ? 6 : d) - 3 });
   }
   if (!attrezzo && m.id === 'main' && isFree(st) && G.fanimals)

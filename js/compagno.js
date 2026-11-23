@@ -369,7 +369,7 @@ function compTick(dt) {
     c.aiuto -= dt;
     if (!c.preda && c.aiuto <= 0) {
       c.aiuto = 18 + Math.random() * 12;
-      c.preda = compCercaPreda(c);
+      c.preda = compCercaPreda();
     }
     if (c.preda) {
       const o = c.preda;
@@ -449,15 +449,16 @@ function compTick(dt) {
   }
   if (c.st !== 'sleep' || c.map !== 'house' || p.modo === 'segui') c.st = 'sit';
 }
-// rami, sassi, erbacce ed erbe spontanee vicino: il compagno li va a prendere
-function compCercaPreda(c) {
+// rami, sassi, erbacce ed erbe spontanee vicino a te: il compagno li va a prendere
+function compCercaPreda() {
   if (G.map.id !== 'main' || G.visit) return null;
+  const pl = G.player;
   let best = null,
     bd = 6 * 16;
   for (const o of G.map.objs) {
     if (o.kind !== 'debris' || !o.dt) continue;
     if (!(o.dt === 'ramo' || o.dt === 'sasso' || o.dt === 'erbaccia' || o.dt.startsWith('w_'))) continue;
-    const d = Math.hypot(o.tx * 16 + 8 - c.x, o.ty * 16 + 12 - c.y);
+    const d = Math.hypot(o.tx * 16 + 8 - pl.x, o.ty * 16 + 12 - pl.y);
     if (d < bd) {
       bd = d;
       best = o;
