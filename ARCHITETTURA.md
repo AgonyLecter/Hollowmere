@@ -105,3 +105,9 @@ di lettere: ogni lettera è un colore (`S` pelle, `R` capelli, `e` occhi, `o` co
 Nel gioco (`grafica.js`) chi ha `mano: 1` nell'aspetto usa la testa a mano: le lettere si ricolorano con pelle,
 capelli, occhi e labbra scelti; il ritratto è la stessa testa ingrandita 3 volte, con le espressioni.
 Corpo, vestiti, passi e braccia con gli attrezzi restano del motore a parti, nello stesso stile.
+
+## Lo stile unico (`js/stile.js`)
+Alla fine del caricamento (punto `arte`) un filtro porta ogni immagine dell'ambiente (IMG, AIMG, FREEIMG) al
+linguaggio dell'Albero dei Morti: grana di 1 pixel per unità di gioco, una tavolozza cupa unica (`STILE_PAL`),
+luce di luna sui bordi in alto, contorno scuro. Un disegno nuovo nasce già coerente: basta disegnarlo come
+gli altri (a 2×) e il filtro lo uniforma. Si escludono interfaccia, terreno, personaggi e i disegni già fatti a mano.
