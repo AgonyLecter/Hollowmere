@@ -182,6 +182,11 @@ module.exports = async function (t, { browser }) {
   });
   t.true('Brom risulta in casa', casa.inCasa);
   t.eq('il taccuino dice dove si trova', casa.dove, 'in casa');
+  // prima di bussare la scena dev'essere libera: i dialoghi ora si mettono in fila, e la domanda
+  // «Bussi?» aspetterebbe il suo turno dietro un dialogo rimasto aperto (lo si scrive, se c'era)
+  const aperto = await page.evaluate(() => (UI.dlgOpen ? document.querySelector('#dtext').textContent : ''));
+  if (aperto) console.log('    (prima di bussare era aperto: «' + aperto.slice(0, 80) + '»)');
+  await rispondi(page);
   await page.evaluate(() => {
     const _r = Math.random;
     window.__r = _r;
