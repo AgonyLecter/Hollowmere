@@ -82,3 +82,84 @@ osoRRRRRRRRRrRRoso
 ....osrrrrrrrso...
 .....ossSSSsso....
 .......osSso......
+# ---------- VOLTI: righe 9-17 della testa di fronte (sotto la frangia). Ognuno si combina con ogni acconciatura.
+@sprite volto_giovane 18x9
+oSoSrrSSSSSSrrSoSo
+oSoSSeeSSSSeeSSoSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqqSSSSo..
+..osSSSSSSSSSSso..
+...osSSSmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_donna 18x9
+oSoSSrrSSSSrrSSoSo
+oSorreeSSSSeerroSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqSSSSSo..
+..osSSSSSSSSSSso..
+...osSSmmmmSSso...
+....oosSmmSSoo....
+......osSSso......
+@sprite volto_anziano 18x9
+oSoSrrrSSSSrrrSoSo
+oSosSeeSSSSeesSoSo
+osoSsssSSSSsssSoso
+.ooSSSSSqSSSSSSoo.
+..osSSSSqqSSSSso..
+..osqSSSSSSSSqso..
+...osSSmmmmSSso...
+....oosssSSssoo...
+......osSSso......
+@sprite volto_anziana 18x9
+oSoSSrrSSSSrrSSoSo
+oSoSqeeSSSSeeqSoSo
+osoSSssSSSSssSSoso
+.ooSnSSSqSSSSnSoo.
+..oSnSSSqqSSSnSo..
+..osSqSSSSSSqSso..
+...osSSsmmsSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_bambino 18x9
+oSoSSrSSSSSSrSSoSo
+oSoSeeeSSSSeeeSoSo
+osoSeleSSSSeleSoso
+.ooSeeeSSSSeeeSoo.
+..onSSSSSqSSSSno..
+..osSSSSSSSSSSso..
+...osSSSmmSSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_robusto 18x9
+oSorrrrSSSSrrrroSo
+oSoSseeSSSSeesSoSo
+osoSSssSSSSssSSoso
+.ooSSSSqqqqSSSSoo.
+..oSSSSqSSqSSSSo..
+..osSSSSSSSSSSso..
+..osSSSmmmmSSSso..
+..oosSSSSSSSSsoo..
+....oossSSssoo....
+@sprite volto_frate 18x9
+oSoSSrrSSSSrrSSoSo
+oSoSsssSSSSsssSoSo
+osoSseeSSSSeesSoso
+.ooSSSSSqSSSSSSoo.
+..oSSSSSqqSSSSSo..
+..osSSSSSSSSSSso..
+...osSSmmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_sinistro 18x9
+oSorrrSSSSSSrrroSo
+oSoSsrreSSerrsSoSo
+osoSsSSSSSSSSsSoso
+.oosSSSSqqSSSSsoo.
+..osSSSSqqqSSSso..
+..ossSSSSSSSSsso..
+...osSmmmmmSSso...
+....oossSSssoo....
+......osSSso......

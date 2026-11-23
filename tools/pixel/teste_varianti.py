@@ -14,7 +14,9 @@ from studio import leggi, componi
 
 QUI = os.path.dirname(__file__)
 pal, ombra, sprites = leggi(os.path.join(QUI, 'teste.pxs'))
-base = {sp['nome'].split('_')[1]: componi(sp, ombra, []) for sp in sprites}  # giu, lato, su
+TESTE = {sp['nome'].split('_')[1]: componi(sp, ombra, []) for sp in sprites if sp['nome'].startswith('testa_')}
+VOLTI = {sp['nome'].split('_')[1]: componi(sp, ombra, []) for sp in sprites if sp['nome'].startswith('volto_')}
+base = dict(TESTE)  # giu, lato, su: si cambia la testa di fronte per ogni volto
 W, SU, GIU = 18, 3, 5
 CAPELLI = set('Rrh')
 
@@ -106,10 +108,15 @@ def raccolti(d):
 VARIANTI = {'short': lambda d: tela(base[d]), 'bald': rasati, 'messy': spettinati, 'long': lunghi, 'bun': raccolti}
 righe = ['# GENERATO da teste_varianti.py: non modificare (si modifica teste.pxs)', '@tavolozza']
 righe += [f'{k} {v}' for k, v in pal.items()]
-for stile, f in VARIANTI.items():
-    for d in ('giu', 'lato', 'su'):
-        g = f(d)
-        righe.append(f'@sprite {stile}_{d} {W}x{len(g)}')
-        righe += [''.join(r) for r in g]
+n = 0
+for volto, faccia in VOLTI.items():
+    # la testa di fronte con questo volto: capelli e fronte (righe 0-8) della testa disegnata, poi il volto
+    base['giu'] = TESTE['giu'][:9] + faccia
+    for stile, f in VARIANTI.items():
+        for d in ('giu', 'lato', 'su'):
+            g = f(d)
+            righe.append(f'@sprite {volto}_{stile}_{d} {W}x{len(g)}')
+            righe += [''.join(r) for r in g]
+            n += 1
 open(os.path.join(QUI, 'teste_tutte.pxs'), 'w').write('\n'.join(righe) + '\n')
-print('scritto teste_tutte.pxs:', len(VARIANTI) * 3, 'teste')
+print('scritto teste_tutte.pxs:', n, 'teste')

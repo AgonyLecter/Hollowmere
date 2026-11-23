@@ -171,6 +171,9 @@ const GX = (() => {
       R: R.hr[3],
       r: R.hr[1],
       h: R.hr[4],
+      g: [74, 66, 70],
+      X: (R.beard || R.hr)[3],
+      x: (R.beard || R.hr)[1],
       e: h2r(mix(L.eye || '#4a3a2a', '#120a10', 0.55)),
       l: [244, 238, 228],
       m: h2r(L.lip || mix(r2h(R.sk[1]), '#a0403a', 0.4)),
@@ -178,11 +181,70 @@ const GX = (() => {
       O: [18, 12, 14]
     };
   }
+  // i tratti che cambiano la griglia: la barba (dalla riga sopra la bocca in giù, la bocca resta) e il volto vuoto
+  function trattiMano(T, L) {
+    T = segniMano(T, L);
+    if (!L.beard && !L.faceless) return T;
+    let yb = T.findIndex(r => r.includes('m'));
+    if (yb < 0) yb = T.length - 6;
+    return T.map((r, y) =>
+      [...r]
+        .map(ch => {
+          if (L.faceless && 'elmnq'.includes(ch)) return 'S';
+          if (L.beard && y >= yb - 1 && 'SsHnq'.includes(ch)) return ch === 's' || ch === 'q' ? 'x' : 'X';
+          return ch;
+        })
+        .join('')
+    );
+  }
+  // segni personali sul volto: lentiggini, occhialini (montatura di ferro), cicatrice
+  function segniMano(T, L) {
+    if (!L.lentiggini && !L.occhiali && !L.cicatrice) return T;
+    const G = T.map(r => [...r]),
+      w = G[0].length,
+      pelle = (x, y) => G[y] && 'SsHn'.includes(G[y][x]),
+      occhi = [];
+    G.forEach((r, y) => r.forEach((ch, x) => 'el'.includes(ch) && occhi.push([x, y])));
+    if (!occhi.length) return T; // di spalle: niente volto
+    const lati = [occhi.filter(o => o[0] < w / 2), occhi.filter(o => o[0] >= w / 2)].filter(l => l.length);
+    for (const l of lati) {
+      const xs = l.map(o => o[0]),
+        ys = l.map(o => o[1]),
+        x0 = Math.min(...xs) - 1,
+        x1 = Math.max(...xs) + 1,
+        y0 = Math.min(...ys) - 1,
+        y1 = Math.max(...ys) + 1;
+      if (L.occhiali)
+        for (let y = y0; y <= y1; y++)
+          for (let x = x0; x <= x1; x++)
+            if ((y === y0 || y === y1 || x === x0 || x === x1) && pelle(x, y)) G[y][x] = 'g';
+      if (L.lentiggini)
+        for (const [dx, dy] of [
+          [0, 2],
+          [2, 2],
+          [1, 3]
+        ]) {
+          const x = (x0 + x1) / 2 + dx - 1,
+            y = y1 + dy - 1;
+          if (pelle(Math.round(x), y)) G[y][Math.round(x)] = 'q';
+        }
+    }
+    if (L.occhiali && lati.length === 2) {
+      const y = Math.min(...occhi.map(o => o[1])) - 1;
+      for (let x = Math.max(...lati[0].map(o => o[0])) + 2; x < Math.min(...lati[1].map(o => o[0])) - 1; x++)
+        if (pelle(x, y)) G[y][x] = 'g';
+    }
+    if (L.cicatrice && lati.length) {
+      const [ex, ey] = lati[0][0];
+      for (let k = 0; k < 3; k++) if (pelle(ex - 1 + k, ey + 2 + k)) G[ey + 2 + k][ex - 1 + k] = 'q';
+    }
+    return G.map(r => r.join(''));
+  }
   // il ritratto di chi ha la testa a mano: la stessa testa ingrandita 3 volte a pixel interi, con le spalle
   function ritrattoMano(L, mood) {
     const R = ramps(L),
       C = coloriMano(L, R),
-      T = TESTE_MANO.sprite[(L.style || 'short') + '_giu'],
+      T = trattiMano(TESTE_MANO.sprite[(L.volto || 'giovane') + '_' + (L.style || 'short') + '_giu'], L),
       Z = 3,
       w = T[0].length,
       [c, x] = mk(64, 64),
@@ -221,6 +283,26 @@ const GX = (() => {
         if (Y + Z > 64) continue;
         px(X0 + X * Z, Y, C[ch] || C.S, Z);
       }
+    // il cappello: la figura di fronte con e senza cappello; i pixel che cambiano sono il cappello, e si
+    // ingrandiscono sopra la testa del ritratto (vale per ogni cappello, anche quelli che verranno)
+    if (L.hat && L.hat !== 'none') {
+      const con = frame(L, 0, null, 0, false),
+        senza = frame(Object.assign({}, L, { hat: null }), 0, null, 0, false),
+        fx0 = Math.round(18 - w / 2),
+        fy0 = Math.round(14 + (L.kid ? 3 : 0) - 12);
+      for (let fy = 0; fy < 54; fy++)
+        for (let fx = 0; fx < 36; fx++) {
+          const i = (fy * 36 + fx) * 4,
+            a = con.d,
+            b = senza.d;
+          if (!a[i + 3] || (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2] && b[i + 3]))
+            continue;
+          const X = X0 + (fx - fx0) * Z,
+            Y = (fy - fy0 - y0) * Z - 2;
+          if (Y < -Z || Y >= 64) continue;
+          px(X, Y, [a[i], a[i + 1], a[i + 2]], Z);
+        }
+    }
     // le espressioni: si ridisegnano sopracciglia, occhi e bocca sul viso ingrandito
     if (mood && mood !== 'dark') {
       const occhi = [],
@@ -785,11 +867,11 @@ const GX = (() => {
       ry = 8.1,
       hcx = side ? cx + 0.4 : cx;
     // ---- testa disegnata a mano (tools/pixel/teste.pxs → js/teste_mano.js), ricolorata con l'aspetto scelto
-    const stileMano = (L.style || 'short') + '_',
+    const stileMano = (L.volto || 'giovane') + '_' + (L.style || 'short') + '_',
       aMano = L.mano && !!TESTE_MANO.sprite[stileMano + 'giu'];
     const testaMano = () => {
       // le griglie hanno 3 righe libere sopra (ciuffi, chignon): la cima della testa è alla riga 3
-      const T = TESTE_MANO.sprite[stileMano + (side ? 'lato' : back ? 'su' : 'giu')],
+      const T = trattiMano(TESTE_MANO.sprite[stileMano + (side ? 'lato' : back ? 'su' : 'giu')], L),
         h = T.length,
         w = T[0].length,
         X0 = Math.round(cx - w / 2),
@@ -1258,7 +1340,7 @@ const GX = (() => {
     P.outline();
     return P;
   }
-  return { MK, paint, frame, dk, ritrattoMano };
+  return { MK, paint, frame, dk, ritrattoMano, trattiMano };
 })();
 const heroFrame = GX.frame;
 // ---------- la presa dell'attrezzo ----------
@@ -2848,7 +2930,9 @@ const ART3 = {
   Ext.avvolgi('genPortrait', (prossimo, L, mood) => conOmbre(celLit, celPick, () => prossimo(L, mood)));
   // chi ha la testa disegnata a mano ha anche il ritratto a mano
   Ext.avvolgi('genPortrait', (prossimo, L, mood) =>
-    L.mano && TESTE_MANO.sprite[(L.style || 'short') + '_giu'] ? GX.ritrattoMano(L, mood) : prossimo(L, mood)
+    L.mano && TESTE_MANO.sprite[(L.volto || 'giovane') + '_' + (L.style || 'short') + '_giu']
+      ? GX.ritrattoMano(L, mood)
+      : prossimo(L, mood)
   );
 }
 

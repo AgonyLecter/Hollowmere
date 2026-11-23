@@ -3882,6 +3882,7 @@ const PLAYER_LOOKS = {
   // la nipote di Elias: camicia con le maniche arrotolate, fazzoletto al collo, gonna da lavoro e stivali
   f: {
     mano: 1,
+    volto: 'donna',
     skin: '#f0c39a',
     hair: '#8a3f1c',
     style: 'long',
