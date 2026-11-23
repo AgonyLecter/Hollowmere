@@ -8,7 +8,8 @@ const COSTUMI = {
   // l'Anziano: nero da predicatore, colletto bianco, cilindro, barba bianca
   ezekiel: {
     mano: 1,
-    volto: 'anziano',
+    volto: 'ezekiel',
+    skin: '#dcc0a6',
     robe: '#1e1a22',
     shirt: '#2a2530',
     cravat: '#ece6da',
@@ -18,7 +19,7 @@ const COSTUMI = {
   // la merciaia: cuffia, scialle prugna, gonna scura
   agatha: {
     mano: 1,
-    volto: 'anziana',
+    volto: 'agatha',
     cape: null,
     shawl: '#5e3444',
     dress: '#3e3440',
@@ -26,9 +27,9 @@ const COSTUMI = {
     hatCol: '#e4dccb'
   },
   // il frate campanaro: saio di lana grezza con la corda
-  lucius: { mano: 1, volto: 'frate', robe: '#3a3630', shirt: '#4a443a' },
+  lucius: { mano: 1, volto: 'lucius', skin: '#d6c0aa', robe: '#3a3630', shirt: '#4a443a' },
   // la bambina: scialle giallo (il suo colore), vestito marrone
-  clara: { mano: 1, volto: 'bambino', cape: null, shawl: '#c09a3a', dress: '#5e4230', shirt: '#e8dcc0' },
+  clara: { mano: 1, volto: 'clara', cape: null, shawl: '#c09a3a', dress: '#5e4230', shirt: '#e8dcc0' },
   // il fabbro: maniche arrotolate, grembiule di cuoio, stivali
   brom: {
     mano: 1,
@@ -43,7 +44,7 @@ const COSTUMI = {
   // il ragazzino: tricorno troppo grande, giacchetta, calzoni al ginocchio
   tobia: {
     mano: 1,
-    volto: 'bambino',
+    volto: 'tobia',
     lentiggini: 1,
     hat: 'tricorn',
     hatCol: '#3a3426',
@@ -58,6 +59,7 @@ const COSTUMI = {
   // il postino: giacca blu notte, tricorno, cravatta, stivali da viaggio
   ottavio: {
     mano: 1,
+    volto: 'ottavio',
     coat: '#2e3a4e',
     hat: 'tricorn',
     hatCol: '#1e2430',
@@ -69,11 +71,20 @@ const COSTUMI = {
     shoe: '#1a140e'
   },
   // la viaggiatrice: scialle grigio, abito scuro
-  irene: { mano: 1, volto: 'donna', shawl: '#3a3a44', dress: '#4e4438', shirt: '#cdbfa6' },
+  irene: {
+    mano: 1,
+    volto: 'irene',
+    lip: '#6a2a34',
+    skin: '#e2c4ac',
+    shawl: '#3a3a44',
+    dress: '#4e4438',
+    shirt: '#cdbfa6'
+  },
   // il mercante (e il cocchiere): giacca lunga nera, cilindro, cravatta, barba grigia
   mercante: {
     mano: 1,
-    volto: 'sinistro',
+    volto: 'mercante',
+    skin: '#cbb698',
     robe: null,
     coat: '#1e1a22',
     cravat: '#d8d0c0',
@@ -82,7 +93,7 @@ const COSTUMI = {
     boots: 1
   },
   // la bambina del pozzo: un azzurro che non si usa più
-  nove: { mano: 1, volto: 'bambino' }
+  nove: { mano: 1, volto: 'nove' }
 };
 for (const k in COSTUMI) if (LOOKS[k]) LOOKS[k] = Object.assign({}, LOOKS[k], COSTUMI[k]);
 LOOKS.cocchiere = LOOKS.mercante;
@@ -102,6 +113,10 @@ for (const r of RES_POOL) {
   const L = r.look;
   if (!L) continue;
   L.mano = 1;
+  // un'aria più cupa: le stoffe accese diventano lana tinta e lavata, la pelle un filo più pallida
+  for (const k of ['shirt', 'dress', 'vest', 'pants', 'hatCol', 'apron', 'shoe'])
+    if (L[k]) L[k] = mix(L[k], '#2a2228', k === 'shirt' ? 0.25 : 0.42);
+  if (L.skin) L.skin = mix(L.skin, '#d8c8c0', 0.15);
   L.volto = L.volto || VOLTO_RES[r.id] || (L.dress || L.lip ? 'donna' : 'giovane');
   Object.assign(L, SEGNI_RES[r.id] || {});
   if (L.dress) L.shawl = L.shawl || mix(L.dress, '#2a1e1a', 0.45);

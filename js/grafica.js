@@ -172,6 +172,9 @@ const GX = (() => {
       r: R.hr[1],
       h: R.hr[4],
       g: [74, 66, 70],
+      // occhiaie (un viola spento sulla pelle) e l'oro di un dente
+      u: h2r(mix(r2h(R.sk[2]), '#4a2a4a', 0.35)),
+      a: [216, 170, 72],
       X: (R.beard || R.hr)[3],
       x: (R.beard || R.hr)[1],
       e: h2r(mix(L.eye || '#4a3a2a', '#120a10', 0.55)),
@@ -190,8 +193,8 @@ const GX = (() => {
     return T.map((r, y) =>
       [...r]
         .map(ch => {
-          if (L.faceless && 'elmnq'.includes(ch)) return 'S';
-          if (L.beard && y >= yb - 1 && 'SsHnq'.includes(ch)) return ch === 's' || ch === 'q' ? 'x' : 'X';
+          if (L.faceless && 'elmnqua'.includes(ch)) return 'S';
+          if (L.beard && y >= yb - 1 && 'SsHnqu'.includes(ch)) return ch === 's' || ch === 'q' ? 'x' : 'X';
           return ch;
         })
         .join('')
