@@ -23,7 +23,8 @@ const SUITES = {
   gesti: require('./gesti'),
   contenitori: require('./contenitori'),
   animali: require('./animali'),
-  compagno: require('./compagno')
+  compagno: require('./compagno'),
+  faccende: require('./faccende')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),

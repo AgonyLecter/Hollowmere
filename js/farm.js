@@ -1018,6 +1018,7 @@ const ACT = {
 function choreDone() {
   const st = G.st;
   st.choreDone = true;
+  st.choreFatte = (st.choreFatte || 0) + 1;
   const c = CHORES[st.chore];
   st.money += c.pay;
   AU.play('coin');
@@ -1025,12 +1026,103 @@ function choreDone() {
   addQuiete(3);
   addFriend('ezekiel', 1);
 }
+// Le faccende storiche si completano con la loro azione (campana, foglie, pozzo, spaventapasseri). Le altre
+// (vedi le faccende della Valle in sempre.js) dicono come si contano, e il conto parte quando le accetti:
+//   n          quante volte
+//   fatto      un tipo di Ext 'fatto' ('annaffia', 'raccogli', 'albero', 'falcia')
+//   ottieni    gli oggetti che entrano nello zaino che contano (lista o funzione id → vero)
+//   misura     un numero della partita che cresce (pesci pescati, detriti tolti…): conta quanto sale
+//   luoghi     [[x, y, nome]] da raggiungere nel villaggio
+//   assoluto   la misura conta così com'è (non da quando l'hai accettata)
+//   ok(st)     se oggi si può proporre (hai le galline? il compagno?)
+//   valle      solo nel gioco libero
 const CHORES = {
   campana: { t: 'Suona la campana della cappella tra le 12:00 e le 13:00', pay: 60 },
   foglie: { t: 'Spazza le 4 cataste di foglie davanti alla cappella', pay: 50 },
   pozzo: { t: 'Prendi acqua dal pozzo e versala sulla tomba di Elias', pay: 45 },
   spaventa: { t: 'Rimetti il cappello allo spaventapasseri della tua fattoria', pay: 35 }
 };
+// la mattina una faccenda; nella Valle, finita quella, alla bacheca se ne prende un'altra (fino a CHORE_GIORNO)
+const CHORE_GIORNO = 3;
+function choreScegli(st, altra) {
+  if (!altra) st.choreFatte = 0;
+  const ks = Object.keys(CHORES).filter(
+    k => k !== st.lastChore && (!CHORES[k].valle || isFree(st)) && (!CHORES[k].ok || CHORES[k].ok(st))
+  );
+  st.chore = ks[(Math.random() * ks.length) | 0];
+  st.lastChore = st.chore;
+  st.choreOk = st.choreDone = false;
+  st.choreC = 0;
+  st.choreV = [];
+}
+function choreAccetta(st) {
+  const c = CHORES[st.chore];
+  st.choreOk = true;
+  st.choreC = 0;
+  st.choreV = [];
+  st.choreB = c && c.misura ? c.misura(st) : 0;
+}
+// a che punto sei: [fatti, quanti] (null per le faccende storiche, che non hanno un conto)
+function choreProg(st) {
+  const c = CHORES[st.chore];
+  if (!c || !c.n) return null;
+  const a = c.misura
+    ? c.misura(st) - (c.assoluto ? 0 : st.choreB || 0)
+    : c.luoghi
+      ? (st.choreV || []).length
+      : st.choreC || 0;
+  return [Math.min(c.n, Math.max(0, a)), c.n];
+}
+const choreText = st => {
+  const c = CHORES[st.chore],
+    p = choreProg(st);
+  return c ? c.t + (p ? ` (${p[0]}/${p[1]})` : '') : '';
+};
+function choreVerifica(st) {
+  const p = choreProg(st);
+  if (p && p[0] >= p[1] && st.choreOk && !st.choreDone) {
+    choreDone();
+    UI.quest();
+  }
+}
+const choreAttiva = () => {
+  const st = G.st;
+  return !G.visit && st && st.choreOk && !st.choreDone && CHORES[st.chore];
+};
+Ext.on('fatto', (tipo, n) => {
+  const c = choreAttiva();
+  if (!c || c.fatto !== tipo) return;
+  G.st.choreC = (G.st.choreC || 0) + n;
+  choreVerifica(G.st);
+});
+Ext.on('ottieni', (id, n) => {
+  const c = choreAttiva();
+  if (!c || !c.ottieni || !(typeof c.ottieni === 'function' ? c.ottieni(id) : c.ottieni.includes(id))) return;
+  G.st.choreC = (G.st.choreC || 0) + n;
+  choreVerifica(G.st);
+});
+// i conti della partita e i luoghi si controllano due volte al secondo
+{
+  let T = 0;
+  Ext.on('mpTick', dt => {
+    T -= dt;
+    if (T > 0) return;
+    T = 0.5;
+    const c = choreAttiva();
+    if (!c || !c.n) return;
+    const st = G.st;
+    if (c.luoghi && G.map && G.map.id === 'main') {
+      const [px, py] = ptile(G.player);
+      for (const [x, y, nome] of c.luoghi)
+        if (!st.choreV.includes(nome) && Math.abs(px - x) <= 2 && Math.abs(py - y) <= 2) {
+          st.choreV.push(nome);
+          AU.play('blip');
+          UI.toast(`${nome} ✓ (${st.choreV.length}/${c.luoghi.length})`);
+        }
+    }
+    choreVerifica(st);
+  });
+}
 ACT.leaves = o => {
   const st = G.st;
   st.leaves[o.li] = 1;

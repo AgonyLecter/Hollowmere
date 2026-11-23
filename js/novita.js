@@ -363,6 +363,28 @@ const NOVITA = [
         t: 'Gli attrezzi non si impilano più: ogni attrezzo ha il suo posto, anche quando ne hai due uguali.'
       }
     ]
+  },
+  {
+    id: 'compagno',
+    v: 41,
+    n: 'Un amico a quattro zampe',
+    steps: [
+      {
+        t: 'Pollaio, stalla e ovile hanno la loro schermata: vedi le bestie, ne compri altre e prendi quello che hanno lasciato in casa, <b>scegliendo tu</b> cosa (le uova di gallina o quelle d’anatra). Niente più uova a terra tra le zampe.'
+      },
+      {
+        t: 'Di giorno le bestie pascolano fuori; la sera tornano alla porta ed entrano, la mattina escono. Quando c’è qualcosa da prendere, sopra la casa compare il prodotto.'
+      },
+      {
+        t: 'Un giorno, davanti a casa, troverai <b>due randagi</b>: un cucciolo e un gattino. Uno può restare con te: scegli com’è e dagli un nome.'
+      },
+      {
+        t: 'Toccalo per la sua schermata: <b>Segui</b> (ti accompagna ovunque, ti porta rami, sassi ed erbe, e se sei sfinito ti tira su) o <b>Resta</b> (gira davanti a casa, la notte dorme nella cuccia, ti fa le feste e ti chiama se ha fame). Lì c’è anche la sua bottega: crocchette, ciotola, cuccia e giochi da mettere in casa.'
+      },
+      {
+        t: 'Alla bacheca le faccende del giorno sono molte di più: annaffiare, raccogliere, la legnaia, i muretti, la ronda, il recinto, la pesca per Agatha, le uova, il latte… Finita una, puoi prenderne un’altra (fino a tre al giorno).'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

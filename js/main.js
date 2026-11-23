@@ -480,11 +480,7 @@ function morningSetup() {
   if (F.ch3end && st.chapter < 4) st.chapter = 4;
   if (st.day >= 2) F.bridgeGone = 1;
   if (st.day >= 2 && !F.gotPaint) F.ezWait = 1;
-  const ks = Object.keys(CHORES).filter(k => k !== st.lastChore);
-  st.chore = ks[(Math.random() * ks.length) | 0];
-  st.lastChore = st.chore;
-  st.choreOk = false;
-  st.choreDone = false;
+  choreScegli(st);
   st.leaves = [0, 0, 0, 0];
   F.bucket = 0;
   F.barnDark = 0;

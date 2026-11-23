@@ -1415,7 +1415,7 @@ const QUESTS = [
   { s: () => G.erede, t: () => 'Insegui il forestiero', d: () => false, alarm: 1 },
   {
     s: st => st.choreOk && !st.choreDone,
-    t: st => 'Faccenda: ' + CHORES[st.chore].t,
+    t: st => 'Faccenda: ' + choreText(st),
     d: st => st.choreDone,
     free: 1
   }
