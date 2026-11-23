@@ -96,6 +96,21 @@ const scritture = async function (t, { ROOT }) {
       if (r.isWrite() && def[n] && def[n] !== f) L.push(`${n} (di ${def[n]}) ← ${f}`);
     }
   t.true('nessun file scrive le variabili di un altro' + (L.length ? ': ' + L.join(', ') : ''), !L.length);
+  // 7. Riferimenti all'indietro: nomi usati da un file ma dichiarati in un file caricato DOPO di lui.
+  // Finché ce ne sono, i file non possono diventare moduli JavaScript (partirebbero in un altro ordine).
+  // Il tetto (tests/toppe.json, «indietro») può solo scendere: vedi node tools/dipendenze.js.
+  const pos = Object.fromEntries(files.map((f, i) => [f, i])),
+    dietro = new Set();
+  for (const f of files)
+    for (const r of S[f].globalScope.through) {
+      const d = def[r.identifier.name];
+      if (d && pos[d] > pos[f]) dietro.add(f + '→' + r.identifier.name);
+    }
+  t.true(`riferimenti all'indietro: ${dietro.size} (tetto ${MAX.indietro})`, dietro.size <= MAX.indietro);
+  if (dietro.size < MAX.indietro)
+    console.log(
+      `    (i riferimenti all'indietro sono scesi a ${dietro.size}: abbassa il tetto in tests/toppe.json)`
+    );
 };
 const _toppe = module.exports;
 module.exports = async (t, o) => {

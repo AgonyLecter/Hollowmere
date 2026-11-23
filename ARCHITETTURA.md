@@ -49,7 +49,7 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
 
 ## Mappa dei file (in ordine di caricamento)
-- **Motore**: `core.js` (stato, input, effetti sonori, Ext), `musica.js` (la colonna sonora: brani scritti come dati —
+- **Motore**: `core.js` (stato, input, effetti sonori, Ext), `calendario.js` (giorni, stagioni, anni), `musica.js` (la colonna sonora: brani scritti come dati —
   temi in gradi della scala, accordi in numeri romani — strumenti sintetizzati, l'«ombra» che mette angoscia anche nei
   brani allegri; il brano lo sceglie `chooseMusic` in `main.js`), `art.js` (pixel art generata), `world.js` (mappe, rendering),
   `ui.js`, `net.js` (Firebase), `main.js` (avvio, ciclo, giorni), `update.js` (aggiornamenti automatici).
@@ -77,3 +77,15 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 
 ## Strumenti di manutenzione (`tools/`)
 Script usati per i lavori di pulizia (spostare funzioni, togliere toppe, convertirle in `Ext`). Non fanno parte del gioco.
+
+## Verso i moduli JavaScript (tappa 3)
+L'obiettivo è che ogni file diventi un modulo (`import`/`export`) invece di condividere tutto come nome globale.
+Per farlo senza cambiare l'ordine in cui il gioco parte, **ogni file deve usare solo file caricati prima di lui**.
+- `node tools/dipendenze.js` — per ogni file: quanti nomi definisce, quanti ne usa da altri e da chi è usato;
+  `--cicli` mostra i gruppi di file intrecciati.
+- `node tools/ordine_moduli.js` — simula l'avvio come moduli e conta le letture che si romperebbero.
+- Il test `toppe` controlla che nessun file scriva le variabili di un altro e che i **riferimenti all'indietro**
+  (nomi presi da un file caricato dopo) non aumentino: il tetto in `tests/toppe.json` può solo scendere.
+
+Come si toglie un riferimento all'indietro: si sposta la cosa usata in un file che viene prima (utilità pure,
+dati), oppure chi sta prima offre un punto di estensione (`Ext.run`/`Ext.avvolgi`) e chi sta dopo si iscrive.
