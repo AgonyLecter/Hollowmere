@@ -896,7 +896,7 @@ const GX = (() => {
   }
   return { MK, paint, frame, dk };
 })();
-heroFrame = GX.frame;
+const heroFrame = GX.frame;
 // ---------- la presa dell'attrezzo ----------
 // a = angolo del braccio nella vista di lato (0 avanti, π/2 giù, −π/2 su), in coordinate del fotogramma
 // (36×54, 2 px per unità). Di fronte e di spalle lo stesso gesto si vede solo in altezza.

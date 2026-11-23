@@ -1105,7 +1105,6 @@ function natIcon(spec) {
   return icon32(NAT_IC[k](...a));
 }
 // disegni della flora: icone, stadi delle piante, bustine, alberelli, piante selvatiche nel prato
-const NAT_FRUTTO_ALB = {};
 Ext.on('arte', () => {
   try {
     // le piante dell'orto usano le forme già disegnate in contenuti.js (CART)
