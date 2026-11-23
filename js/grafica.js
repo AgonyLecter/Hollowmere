@@ -2475,23 +2475,13 @@ const ART3 = {
 
 // ---------- ritratti: stesse espressioni, ombre a toni pieni come gli sprite ----------
 {
-  const _lit = lit,
-    _pick = pickI;
+  const _lit = lit;
   const celLit = (n, o) => {
     const v = _lit(n, o);
     return v < 0.4 ? 0.18 : v < 0.72 ? 0.5 : v < 0.95 ? 0.68 : 0.86;
   };
   const celPick = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
-  Ext.avvolgi('genPortrait', function (prossimo, L, mood) {
-    lit = celLit;
-    pickI = celPick;
-    try {
-      return prossimo(L, mood);
-    } finally {
-      lit = _lit;
-      pickI = _pick;
-    }
-  });
+  Ext.avvolgi('genPortrait', (prossimo, L, mood) => conOmbre(celLit, celPick, () => prossimo(L, mood)));
 }
 
 // ======================================================================
@@ -2501,25 +2491,15 @@ const ART3 = {
 
 // ---------- stile a toni pieni per tutte le immagini "a volume" (icone, cibi, colture, oggetti) ----------
 const CEL = (() => {
-  const _lit = lit,
-    _pick = pickI;
+  const _lit = lit;
   const cl = (n, o) => {
     const v = _lit(n, o);
     return v < 0.3 ? 0.17 : v < 0.56 ? 0.45 : v < 0.8 ? 0.62 : v < 1.02 ? 0.8 : 0.96;
   };
   const cp = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
   const run = f =>
-    function () {
-      const a = lit,
-        b = pickI;
-      lit = cl;
-      pickI = cp;
-      try {
-        return f.apply(this, arguments);
-      } finally {
-        lit = a;
-        pickI = b;
-      }
+    function (...a) {
+      return conOmbre(cl, cp, () => f.apply(this, a));
     };
   for (const name of [
     'genIconsHD',

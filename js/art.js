@@ -3895,7 +3895,8 @@ const LOOKS = {
   }
 };
 function setPlayerLook(g) {
-  if (typeof LOOK_SEASON !== 'undefined') LOOK_SEASON = -1;
+  // i vestiti di stagione vanno rifatti (relations.js, caricato dopo: qui si chiama solo a gioco avviato)
+  if (typeof rifaiVestiti === 'function') rifaiVestiti();
   LOOKS.player = PLAYER_LOOKS[g === 'f' ? 'f' : 'm'];
   delete SHEET.player;
   for (const k in PORT) if (k.startsWith('player|')) delete PORT[k];
@@ -4094,6 +4095,20 @@ function pickI(n, v, X, Y, nod) {
     i = Math.floor(f),
     fr = f - i;
   return Math.min(n - 1, i + (fr > (nod ? 0.5 : (X + Y) & 1 ? 0.74 : 0.6) ? 1 : 0));
+}
+// disegna con altre regole d'ombra (per esempio i toni pieni di grafica.js), poi rimette quelle di sempre.
+// Le regole si cambiano solo qui dentro: chi sta fuori passa le sue e la funzione che disegna.
+function conOmbre(nuovoLit, nuovoPick, disegna) {
+  const a = lit,
+    b = pickI;
+  lit = nuovoLit;
+  pickI = nuovoPick;
+  try {
+    return disegna();
+  } finally {
+    lit = a;
+    pickI = b;
+  }
 }
 const C = h => h2r(h);
 function genSheet(L) {

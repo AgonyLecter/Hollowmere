@@ -65,3 +65,40 @@ module.exports = async function (t, { ROOT }) {
     console.log(`    (le toppe sono scese a ${found.length}: abbassa il tetto in tests/toppe.json)`);
   if (process.env.TOPPE) console.log(found.join('\n'));
 };
+
+// 6. Scritture incrociate: un file non cambia le variabili dichiarate in un altro (con i moduli JavaScript
+// non sarà permesso). Chi deve cambiarle chiama una funzione del file che le possiede.
+const scritture = async function (t, { ROOT }) {
+  let escope, acorn;
+  try {
+    escope = require('eslint-scope');
+    acorn = require('acorn');
+  } catch (e) {
+    t.fail('serve eslint-scope (npm install)');
+    return;
+  }
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const files = [...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m => m[1]);
+  const def = {},
+    S = {};
+  for (const f of files) {
+    const ast = acorn.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'), {
+      ecmaVersion: 'latest',
+      ranges: true
+    });
+    S[f] = escope.analyze(ast, { ecmaVersion: 2022 });
+    for (const v of S[f].globalScope.variables) if (v.defs.length && !def[v.name]) def[v.name] = f;
+  }
+  const L = [];
+  for (const f of files)
+    for (const r of S[f].globalScope.through) {
+      const n = r.identifier.name;
+      if (r.isWrite() && def[n] && def[n] !== f) L.push(`${n} (di ${def[n]}) ← ${f}`);
+    }
+  t.true('nessun file scrive le variabili di un altro' + (L.length ? ': ' + L.join(', ') : ''), !L.length);
+};
+const _toppe = module.exports;
+module.exports = async (t, o) => {
+  await _toppe(t, o);
+  await scritture(t, o);
+};

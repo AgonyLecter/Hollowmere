@@ -111,6 +111,10 @@ let PRES = null,
   PRES_LAST = null,
   CHAT_OFF = null,
   INBOX_OFF = null;
+// la prossima posizione si manda subito (chi scrive in chat si vede fermo dov'è)
+function presenzaSubito() {
+  PRES_T = 0;
+}
 async function presenceJoin(village) {
   const st = G.st,
     me = (G.visit ? G.home : st).pid;

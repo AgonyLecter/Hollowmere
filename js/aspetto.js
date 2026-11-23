@@ -166,7 +166,7 @@ let AV_LAST = '';
   });
 }
 function avApply() {
-  LOOK_SEASON = -1;
+  rifaiVestiti();
   AV_LAST = '';
   applySeasonLooks();
 }

@@ -135,7 +135,7 @@ function chatEls() {
   inp.addEventListener('input', () => {
     const was = CHAT.typingT > performance.now();
     CHAT.typingT = inp.value ? performance.now() + 4000 : 0;
-    if (!was && CHAT.typingT) PRES_T = 0;
+    if (!was && CHAT.typingT) presenzaSubito();
   });
   return box;
 }
