@@ -89,3 +89,19 @@ Per farlo senza cambiare l'ordine in cui il gioco parte, **ogni file deve usare 
 
 Come si toglie un riferimento all'indietro: si sposta la cosa usata in un file che viene prima (utilità pure,
 dati), oppure chi sta prima offre un punto di estensione (`Ext.run`/`Ext.avvolgi`) e chi sta dopo si iscrive.
+
+## Pixel art disegnata a mano (`tools/pixel/`)
+Le teste del protagonista (e in futuro gli altri personaggi) sono disegnate a mano, pixel per pixel, come griglie
+di lettere: ogni lettera è un colore (`S` pelle, `R` capelli, `e` occhi, `o` contorno…).
+- `teste.pxs` — le teste a mano (capelli corti) di fronte, di fianco e di spalle. **Si modifica qui.**
+- `teste_varianti.py` — ricava le altre acconciature del menu Aspetto (lunghi, raccolti, spettinati, rasati) e
+  scrive `teste_tutte.pxs` (generato).
+- `studio.py` — disegna la tavola ingrandita con la griglia e la grandezza di gioco, controlla gli errori ed
+  esporta i dati per il gioco:
+  ```
+  python3 tools/pixel/teste_varianti.py
+  python3 tools/pixel/studio.py tools/pixel/teste_tutte.pxs --out tavola.png --js js/teste_mano.js --nome TESTE_MANO
+  ```
+Nel gioco (`grafica.js`) chi ha `mano: 1` nell'aspetto usa la testa a mano: le lettere si ricolorano con pelle,
+capelli, occhi e labbra scelti; il ritratto è la stessa testa ingrandita 3 volte, con le espressioni.
+Corpo, vestiti, passi e braccia con gli attrezzi restano del motore a parti, nello stesso stile.

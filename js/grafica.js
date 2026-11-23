@@ -153,10 +153,141 @@ const GX = (() => {
       vest: r(L.vest),
       coat: r(L.coat),
       cravat: r(L.cravat || '#e8e0cc'),
-      shawl: r(L.shawl)
+      shawl: r(L.shawl),
+      calze: r(L.calze)
     };
     RC.set(L, R);
     return R;
+  }
+  // i colori delle lettere delle teste a mano, presi dall'aspetto del personaggio
+  const r2h = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+  function coloriMano(L, R) {
+    return {
+      S: R.sk[3],
+      s: R.sk[2],
+      H: R.sk[4],
+      q: R.sk[1],
+      n: h2r(mix(r2h(R.sk[3]), '#e06a5a', 0.35)),
+      R: R.hr[3],
+      r: R.hr[1],
+      h: R.hr[4],
+      e: h2r(mix(L.eye || '#4a3a2a', '#120a10', 0.55)),
+      l: [244, 238, 228],
+      m: h2r(L.lip || mix(r2h(R.sk[1]), '#a0403a', 0.4)),
+      o: [30, 20, 24],
+      O: [18, 12, 14]
+    };
+  }
+  // il ritratto di chi ha la testa a mano: la stessa testa ingrandita 3 volte a pixel interi, con le spalle
+  function ritrattoMano(L, mood) {
+    const R = ramps(L),
+      C = coloriMano(L, R),
+      T = TESTE_MANO.sprite[(L.style || 'short') + '_giu'],
+      Z = 3,
+      w = T[0].length,
+      [c, x] = mk(64, 64),
+      dark = mood === 'dark',
+      col = v => (dark ? v.map(k => k * 0.7) : v),
+      px = (X, Y, v, s = 1) => {
+        x.fillStyle = r2h(col(v));
+        x.fillRect(X, Y, s, s);
+      };
+    // le spalle: la camicia, il gilet o il vestito sopra, il fazzoletto al collo
+    const top = R.vest || R.dress || R.coat || R.robe || R.sh;
+    for (let Y = 50; Y < 64; Y++) {
+      const half = Math.min(29, 15 + (Y - 50) * 2.2);
+      for (let X = Math.round(32 - half); X < Math.round(32 + half); X++) {
+        const d = Math.abs(X + 0.5 - 32),
+          bordo = d > half - 1.5 || Y === 50;
+        let v = d < 7 - (Y - 50) * 0.2 && (R.vest || R.dress) ? R.sh[3] : top[X < 32 ? 3 : 2];
+        if (bordo) v = [30, 20, 24];
+        px(X, Y, v);
+      }
+    }
+    if (L.cravat) {
+      const cr = ramps(L).cravat;
+      for (let Y = 50; Y < 56; Y++)
+        for (let X = 28; X < 36; X++)
+          if (Math.abs(X + 0.5 - 32) < 5 - (Y - 50) * 0.7) px(X, Y, cr[X < 32 ? 3 : 2]);
+    }
+    // la testa (dalla riga 1: le prime due righe libere servono solo ai ciuffi più alti)
+    const y0 = 1,
+      X0 = Math.round(32 - (w * Z) / 2);
+    for (let y = y0; y < T.length; y++)
+      for (let X = 0; X < w; X++) {
+        const ch = T[y][X];
+        if (ch === '.') continue;
+        const Y = (y - y0) * Z - 2;
+        if (Y + Z > 64) continue;
+        px(X0 + X * Z, Y, C[ch] || C.S, Z);
+      }
+    // le espressioni: si ridisegnano sopracciglia, occhi e bocca sul viso ingrandito
+    if (mood && mood !== 'dark') {
+      const occhi = [],
+        bocca = [];
+      for (let y = 0; y < T.length; y++)
+        for (let X = 0; X < w; X++) {
+          if (T[y][X] === 'e' && !'el'.includes(T[y - 1][X])) occhi.push([X, y]);
+          if (T[y][X] === 'm') bocca.push([X, y]);
+        }
+      const at = (X, y) => [X0 + X * Z, (y - y0) * Z - 2],
+        pelle = C.S,
+        dentro = X => X > w / 2 - 1 && X < w / 2;
+      const occhiSx = occhi.filter(([X]) => X < w / 2),
+        occhiDx = occhi.filter(([X]) => X >= w / 2);
+      for (const gruppo of [occhiSx, occhiDx]) {
+        if (!gruppo.length) continue;
+        const xs = gruppo.map(g => g[0]),
+          x0 = Math.min(...xs),
+          x1 = Math.max(...xs),
+          y = gruppo[0][1],
+          interno = x0 < w / 2 ? x1 : x0,
+          esterno = x0 < w / 2 ? x0 : x1;
+        const [ix, iy] = at(interno, y),
+          [ex, ey] = at(esterno, y);
+        if (mood === 'stern') {
+          // sopracciglia aggrottate: una linea che scende verso il naso, sopra l'occhio
+          x.fillStyle = r2h(C.r);
+          x.fillRect(Math.min(ix, ex), ey - 3, Math.abs(ix - ex) + Z, 2);
+          x.fillRect(ix, iy - 1, Z, 1);
+        }
+        if (mood === 'sad') {
+          x.fillStyle = r2h(C.r);
+          x.fillRect(ix, iy - 5, Z, 2);
+          x.fillRect(ex, ey - 3, Z, 2);
+        }
+        if (mood === 'fear') {
+          // occhi spalancati: il bianco attorno alla pupilla
+          x.fillStyle = r2h(C.l);
+          x.fillRect(Math.min(ix, ex) - 1, iy - 2, Math.abs(ix - ex) + Z + 2, 2);
+        }
+      }
+      if (bocca.length) {
+        const xs = bocca.map(b => b[0]),
+          y = bocca[0][1],
+          [bx0, by] = at(Math.min(...xs), y),
+          [bx1] = at(Math.max(...xs), y),
+          larg = bx1 - bx0 + Z;
+        x.fillStyle = r2h(pelle);
+        x.fillRect(bx0 - 1, by - 1, larg + 2, Z + 2);
+        x.fillStyle = r2h(C.m);
+        if (mood === 'sad') {
+          x.fillRect(bx0 + 1, by, larg - 2, 2);
+          x.fillRect(bx0 - 1, by + 2, 2, 2);
+          x.fillRect(bx1 + Z - 1, by + 2, 2, 2);
+        } else if (mood === 'fear') {
+          x.fillStyle = r2h(C.O);
+          x.fillRect(bx0 + 1, by, larg - 2, Z + 1);
+        } else if (mood === 'stern') x.fillRect(bx0, by + 1, larg, 1);
+        else x.fillRect(bx0, by, larg, Z);
+      }
+    }
+    // ciglia della ragazza
+    if (L.lip)
+      for (let y = 1; y < T.length; y++)
+        for (let X = 0; X < w; X++)
+          if (T[y][X] === 'e' && !'el'.includes(T[y - 1][X])) px(X0 + X * Z, (y - 1 - y0) * Z - 2, C.r, Z);
+    return c;
   }
   const FR = [0, 1, 2, 1, 0, 1, 2, 2, 1, 0, 1, 1],
     fr = X => FR[(((X | 0) % 12) + 12) % 12];
@@ -217,24 +348,40 @@ const GX = (() => {
             mod: (X, Y, t) => (Y === 48 - Math.round(lift) && t < 4 ? 4 : t)
           });
           // stivali alti: il cuoio sale fino al polpaccio, con il risvolto chiaro
+          // calze al ginocchio sotto i calzoni (lo stivale, se c'è, le copre in basso)
+          if (L.calze)
+            paint(P, new MK().rect(lx - 2.5, legTop + 6, 5, 48 - Math.round(lift) - legTop - 6), R.calze, {
+              nc: 1,
+              mod: (X, Y, t) => (Y === legTop + 6 ? 2 : t)
+            });
           if (L.boots) {
-            const y0 = legTop + 6;
+            const y0 = legTop + (L.calze ? 9 : 6);
             paint(P, new MK().rect(lx - 2.5, y0, 5, 48 - Math.round(lift) - y0), R.shoe, {
               nc: 1,
               mod: (X, Y, t) => (Y === y0 ? 4 : t)
             });
           }
         }
-      if (L.boots && side)
+      if ((L.boots || L.calze) && side)
         for (const q of [-1, 1]) {
           const fx = cx + (q > 0 ? s : -s) * 4,
-            lift = Math.max(0, q > 0 ? c : -c) * 2;
-          paint(
-            P,
-            new MK().cap((cx + q * 0.4 + fx) / 2, (legTop + 47 - lift) / 2 + 1, fx, 47 - lift, 2.5, 2.3),
-            q > 0 ? R.shoe : dk(R.shoe, 0.8),
-            { nc: 1 }
-          );
+            lift = Math.max(0, q > 0 ? c : -c) * 2,
+            hx = cx + q * 0.4,
+            // punto della gamba a una certa altezza (la gamba va dall'anca al piede in linea retta)
+            at = k => [hx + (fx - hx) * k, legTop + 1 + (47 - lift - legTop - 1) * k];
+          if (L.calze) {
+            const [ax, ay] = at(0.45);
+            paint(P, new MK().cap(ax, ay, fx, 46 - lift, 2.0, 1.9), q > 0 ? R.calze : dk(R.calze, 0.8), {
+              nc: 1
+            });
+          }
+          if (L.boots) {
+            const [ax, ay] = at(L.calze ? 0.72 : 0.5);
+            paint(P, new MK().cap(ax, ay, fx, 46 - lift, 1.9, 1.8), q > 0 ? R.shoe : dk(R.shoe, 0.8), {
+              nc: 1,
+              mod: (X, Y, t) => (Y <= Math.round(ay) ? 4 : t)
+            });
+          }
         }
     };
     const shoesOnly = () => {
@@ -637,7 +784,44 @@ const GX = (() => {
     const rx = side ? 7.8 : 8.2,
       ry = 8.1,
       hcx = side ? cx + 0.4 : cx;
+    // ---- testa disegnata a mano (tools/pixel/teste.pxs → js/teste_mano.js), ricolorata con l'aspetto scelto
+    const stileMano = (L.style || 'short') + '_',
+      aMano = L.mano && !!TESTE_MANO.sprite[stileMano + 'giu'];
+    const testaMano = () => {
+      // le griglie hanno 3 righe libere sopra (ciuffi, chignon): la cima della testa è alla riga 3
+      const T = TESTE_MANO.sprite[stileMano + (side ? 'lato' : back ? 'su' : 'giu')],
+        h = T.length,
+        w = T[0].length,
+        X0 = Math.round(cx - w / 2),
+        Y0 = Math.round(cy - 12),
+        C = coloriMano(L, R),
+        vuoto = (x, y) => x < 0 || y < 0 || x >= w || y >= h || T[y][x] === '.';
+      // occhi chiusi: la riga alta dell'occhio diventa la linea delle ciglia, il resto pelle
+      const chiuso = new Set();
+      if (blink)
+        for (let x = 0; x < w; x++)
+          for (let y = 0; y < h; y++)
+            if ('el'.includes(T[y][x])) {
+              chiuso.add(x + ',' + y + ',' + (y === 0 || !'el'.includes(T[y - 1][x]) ? 'r' : 'S'));
+            }
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+          let ch = T[y][x];
+          if (ch === '.') continue;
+          // il contorno esterno lo mette P.outline(), come per il resto della figura
+          if (ch === 'o' && (vuoto(x - 1, y) || vuoto(x + 1, y) || vuoto(x, y - 1) || vuoto(x, y + 1)))
+            continue;
+          if (blink && 'el'.includes(ch)) ch = chiuso.has(x + ',' + y + ',r') ? 'r' : 'S';
+          P.set(X0 + x, Y0 + y, C[ch] || C.S);
+        }
+      // la ragazza (ha il colore delle labbra): ciglia sopra l'occhio aperto
+      if (L.lip && !blink && !back)
+        for (let y = 1; y < h; y++)
+          for (let x = 0; x < w; x++)
+            if (T[y][x] === 'e' && !'el'.includes(T[y - 1][x])) P.set(X0 + x, Y0 + y - 1, C.r);
+    };
     const head = () => {
+      if (aMano) return testaMano();
       const M = new MK().ell(hcx, cy, rx, ry);
       paint(P, M, R.sk, {
         sw: 2,
@@ -650,6 +834,7 @@ const GX = (() => {
       if (side) P.set(Math.floor(hcx + rx), cy + 3, R.sk[3]);
     }; // naso
     const ears = () => {
+      if (aMano) return;
       if (L.hideEars || (hasHat && L.hat === 'bonnet')) return;
       if (side)
         paint(P, new MK().ell(cx - 1.2, cy + 2, 1.4, 2), R.sk, {
@@ -665,6 +850,7 @@ const GX = (() => {
           paint(P, new MK().ell(cx + q * (rx + 0.1), cy + 2, 1.2, 1.8), R.sk, { base: 2, nc: 1 });
     };
     const face = () => {
+      if (aMano) return;
       if (L.faceless || back) return;
       const ey = cy + 1,
         eye = C(L.eye || '#3a5a7a'),
@@ -723,6 +909,7 @@ const GX = (() => {
       }
     };
     const beard = () => {
+      if (aMano) return;
       if (!L.beard || back) return;
       const bx = side ? cx + 3 : cx;
       paint(
@@ -755,6 +942,7 @@ const GX = (() => {
       return t;
     };
     const hairBack = () => {
+      if (aMano) return;
       if (L.style !== 'long' || side) return;
       const t0 = cy - 1,
         b0 = cy + (back ? 19 : 17);
@@ -772,6 +960,7 @@ const GX = (() => {
       );
     };
     const hair = () => {
+      if (aMano) return;
       const st = L.style,
         HR = R.hr;
       if (st === 'bald') {
@@ -1069,7 +1258,7 @@ const GX = (() => {
     P.outline();
     return P;
   }
-  return { MK, paint, frame, dk };
+  return { MK, paint, frame, dk, ritrattoMano };
 })();
 const heroFrame = GX.frame;
 // ---------- la presa dell'attrezzo ----------
@@ -2657,6 +2846,10 @@ const ART3 = {
   };
   const celPick = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
   Ext.avvolgi('genPortrait', (prossimo, L, mood) => conOmbre(celLit, celPick, () => prossimo(L, mood)));
+  // chi ha la testa disegnata a mano ha anche il ritratto a mano
+  Ext.avvolgi('genPortrait', (prossimo, L, mood) =>
+    L.mano && TESTE_MANO.sprite[(L.style || 'short') + '_giu'] ? GX.ritrattoMano(L, mood) : prossimo(L, mood)
+  );
 }
 
 // ======================================================================

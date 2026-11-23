@@ -3862,25 +3862,36 @@ function genObjects(...a) {
 }
 
 const PLAYER_LOOKS = {
+  // il nipote di Elias: giovane contadino di fine Settecento (testa disegnata a mano, tools/pixel/teste.pxs)
   m: {
-    skin: '#f0c39a',
+    mano: 1,
+    skin: '#eab48a',
     hair: '#6b3e1f',
     style: 'short',
     eye: '#4a6a3a',
     shirt: '#e9dcc0',
-    vest: '#4f6fa8',
-    pants: '#5a4632',
+    rolled: 1,
+    cravat: '#8a3a3a',
+    vest: '#5a4632',
+    pants: '#4a5a3e',
+    calze: '#e9dcc0',
+    boots: 1,
     shoe: '#3a2616',
     belt: '#3a2414'
   },
+  // la nipote di Elias: camicia con le maniche arrotolate, fazzoletto al collo, gonna da lavoro e stivali
   f: {
-    skin: '#f4cba4',
+    mano: 1,
+    skin: '#f0c39a',
     hair: '#8a3f1c',
     style: 'long',
     eye: '#3a5a8a',
     shirt: '#efe2c6',
-    dress: '#4f6fa8',
+    rolled: 1,
+    cravat: '#8a3a3a',
+    dress: '#6a4a36',
     pants: '#e0b890',
+    boots: 1,
     shoe: '#3a2616',
     lip: '#b85450'
   }

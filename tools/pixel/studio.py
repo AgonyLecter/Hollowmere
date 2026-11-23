@@ -3,7 +3,8 @@
 
 Gli sprite si scrivono a mano in file .pxs: una tavolozza (una lettera = un colore) e una o più griglie.
 
-    python3 tools/pixel/studio.py FILE.pxs [--out tavola.png] [--js uscita.js]
+    python3 tools/pixel/studio.py FILE.pxs [--out tavola.png] [--js uscita.js --nome NOME]
+    (con --js che finisce in .js si scrive un file del gioco: const NOME = {tavolozza, sprite})
 
 Formato .pxs
     # commento
@@ -164,7 +165,12 @@ def main():
     if '--js' in a:
         js = a[a.index('--js') + 1]
         dati = {'tavolozza': pal, 'sprite': {n: g for n, g in fatti}}
-        open(js, 'w', encoding='utf8').write(json.dumps(dati, ensure_ascii=False, indent=1))
+        testo = json.dumps(dati, ensure_ascii=False, indent=1)
+        if js.endswith('.js'):
+            nome = a[a.index('--nome') + 1] if '--nome' in a else 'PIXEL'
+            testo = ("'use strict';\n// Generato da tools/pixel/studio.py a partire da " + src.split('/')[-1] +
+                     ": non modificare a mano, si rifà con lo studio.\n" + f'const {nome} = ' + testo + ';\n')
+        open(js, 'w', encoding='utf8').write(testo)
         print('dati:', js)
     for p in problemi:
         print('!', p)
