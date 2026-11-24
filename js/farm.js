@@ -260,6 +260,10 @@ function harvest(tx, ty, f) {
     UI.toast("La zucca ha una faccia. Non l'hai intagliata tu.", 'bad');
   }
 }
+// le aiuole dentro la serra stanno in st.farm con la x spostata oltre SERRA_OX (fuori da ogni mappa): così crescono di
+// notte, si salvano e viaggiano nel cooperativo come gli altri campi. Pioggia, cambio di stagione e Ombre le saltano.
+const SERRA_OX = 1000;
+const chiaveSerra = k => parseInt(k, 10) >= SERRA_OX;
 function inFarm(x, y) {
   return x >= FARM.x0 && x <= FARM.x1 && y >= FARM.y0 && y <= FARM.y1;
 }

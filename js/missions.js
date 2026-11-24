@@ -421,7 +421,8 @@ function lightNear(x, y) {
 }
 function shadowTick(dt) {
   const st = G.st;
-  if (!st || !isFree(st) || G.visit || G.mode !== 'game' || G.map.id !== 'main' || G.cut) {
+  // anche in visita da un amico (multiplayer): lì seguono solo te, non toccano i suoi campi né le sue bestie
+  if (!st || !isFree(st) || G.mode !== 'game' || G.map.id !== 'main' || G.cut) {
     return;
   }
   const t = st.time,
@@ -433,16 +434,23 @@ function shadowTick(dt) {
     }
     return;
   }
-  if (G.shadows.length < Math.round(2 + shadowRate() * 1.5) && Math.random() < dt * 0.04 * shadowRate()) {
+  const tetto = G.visit ? Math.round(1 + shadowRate() * 0.5) : Math.round(2 + shadowRate() * 1.5);
+  if (G.shadows.length < tetto && Math.random() < dt * (G.visit ? 0.025 : 0.04) * shadowRate()) {
     const side = Math.random() < 0.5,
       x = (side ? 4 : 59) * 16,
       y = (8 + Math.random() * 32) * 16;
-    const crops = Object.keys(st.farm).filter(k => st.farm[k].c && !st.farm[k].c.dead),
+    const crops = Object.keys(st.farm).filter(k => !chiaveSerra(k) && st.farm[k].c && !st.farm[k].c.dead),
       homes = Object.keys(st.free.built).filter(k => /pollaio|stalla/.test(st.free.built[k].id));
-    const pool = [...crops, ...crops, ...homes];
+    const pool = G.visit ? [] : [...crops, ...crops, ...homes];
     const tk = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
     G.shadows.push({ x, y, tk, dir: side ? 2 : 1, anim: 0, moving: true, a: 0 });
-    if (!G.st.flags.shadowTip) {
+    if (G.visit && !G.home.flags.shadowTipMp) {
+      G.home.flags.shadowTipMp = 1;
+      UI.toast(
+        'Anche qui, di notte, escono le Ombre. Stai vicino alle luci, o scacciale con un colpo d’attrezzo.',
+        'bad'
+      );
+    } else if (!G.st.flags.shadowTip) {
       G.st.flags.shadowTip = 1;
       UI.toast('Qualcosa esce dal bosco. Non ha faccia. Le luci la tengono lontana.', 'bad');
     }
@@ -475,23 +483,36 @@ function shadowTick(dt) {
     s.y += (dy / d) * sp * dt;
     s.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : dy < 0 ? 3 : 0;
     if (s.fear > 2.5) s.gone = 1;
-    if (Math.hypot(p.x - s.x, p.y - s.y) < 13) {
+    // un colpo d'attrezzo verso un'Ombra vicina la disperde senza danno; se ti tocca perdi un po' di energia
+    const A = G.toolA,
+      colpita =
+        A &&
+        G.t - A.t0 < 0.25 &&
+        Math.hypot(p.x + DIRV[A.dir][0] * 14 - s.x, p.y + DIRV[A.dir][1] * 14 - 6 - (s.y - 8)) < 20,
+      tocca = !colpita && Math.hypot(p.x - s.x, p.y - s.y) < 13;
+    if (colpita || tocca) {
       s.gone = 1;
       s.hit = 1;
       AU.play('whisper');
-      G.shake = 2;
-      st.energy = Math.max(0, st.energy - 4);
-      UI.hud();
-      for (const m of missionsFor(st))
-        if (m.tipo === 'ombre' && mstate(st, m.id).acc && !mstate(st, m.id).done) {
-          const ms = mstate(st, m.id);
-          ms.k = (ms.k || 0) + 1;
-          if (ms.k === (m.n || 3))
-            UI.toast(`Hai scacciato abbastanza Ombre. Torna da ${NAMES[m.npc] || "chi te l'ha chiesto"}.`);
-          UI.quest();
-        }
+      if (colpita) floatText('Svanita', s.x, s.y - 26, '#bfb8d8');
+      else {
+        G.shake = 2;
+        st.energy = Math.max(0, st.energy - 4);
+        UI.hud();
+      }
+      // la missione «scaccia le Ombre» è del tuo villaggio, non di quello che visiti
+      if (!G.visit)
+        for (const m of missionsFor(st))
+          if (m.tipo === 'ombre' && mstate(st, m.id).acc && !mstate(st, m.id).done) {
+            const ms = mstate(st, m.id);
+            ms.k = (ms.k || 0) + 1;
+            if (ms.k === (m.n || 3))
+              UI.toast(`Hai scacciato abbastanza Ombre. Torna da ${NAMES[m.npc] || "chi te l'ha chiesto"}.`);
+            UI.quest();
+          }
+      continue;
     }
-    if (s.tk && d < 6 && !L) {
+    if (s.tk && d < 6 && !L && !G.visit) {
       const f = st.farm[s.tk];
       if (f && f.c && !f.c.dead) {
         f.c = null;
@@ -535,7 +556,7 @@ function shadowNightRaid(st) {
     .map(k => k.split(',').map(Number));
   const exposed = Object.keys(st.farm).filter(k => {
     const f = st.farm[k];
-    if (!f.c || f.c.dead) return false;
+    if (!f.c || f.c.dead || chiaveSerra(k)) return false;
     const [x, y] = k.split(',').map(Number);
     return !lit.some(([a, b]) => Math.abs(a - x) <= 4 && Math.abs(b - y) <= 4);
   });

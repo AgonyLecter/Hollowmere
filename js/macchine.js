@@ -265,7 +265,9 @@ function craftMenu(cat, staz = 'banco') {
     has = c => Object.entries(c).every(([k, n]) => countItem(k) >= n);
   const L = CRAFTS.filter(r => r.cat === cat);
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>${S.n}</h2><div class="tabs">${Object.entries(S.cats)
+    `<button class="btn mclose" data-close>✕</button><h2>${S.n}</h2><div class="staz staz-${staz}"><i></i><i></i><i></i></div><div class="tabs">${Object.entries(
+      S.cats
+    )
       .map(([k, n]) => `<button class="btn ${k === cat ? 'on' : ''}" data-cat="${k}">${n}</button>`)
       .join(
         ''
@@ -517,7 +519,7 @@ function macGui(k, b) {
         ? ` <span class="small">· livello ${b.lv || 1}/3</span> <button class="btn mac-liv" data-liv>Migliora…</button>`
         : ''
     }</h2>
-    <div class="mac">
+    <div class="mac tema-${b.id}"><i class="mac-orn"></i>
       <div class="mac-sx">${slot('in')}${M.fuel ? `<div class="mac-fuoco"><div class="mac-fiamma"><b></b></div></div>${slot('f')}` : ''}</div>
       <div class="mac-freccia"><div class="mac-barra"><b></b></div><span class="mac-t"></span></div>
       ${slot('o', 'mac-out')}
@@ -586,6 +588,7 @@ function macAggiorna() {
     lav = m.t0 != null,
     firma = [m.i, m.in, m.f, m.o, m.on, lav].join('|');
   box.querySelector('.mac-barra b').style.width = (pr.p * 100).toFixed(1) + '%';
+  box.querySelector('.mac').classList.toggle('lav', lav);
   box.querySelector('.mac-t').textContent = lav ? macMin(pr.rest) : '';
   const fi = box.querySelector('.mac-fiamma');
   if (fi) {
@@ -716,7 +719,7 @@ function apiGui(k, b) {
           : ` Con 2 aiuole fiorite ne farebbero 2 vasetti (ne hai ${fiori}).`);
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}</h2>
-    <div class="mac">
+    <div class="mac tema-apiario${b.ready || inverno ? '' : ' lav'}"><i class="mac-orn"></i>
       <div class="mac-sx"><div class="islot mslot pieno mac-fisso" title="Alveare"><canvas width="32" height="32" data-ic="apiario"></canvas><i></i></div>
       <div class="mac-api">${'<b></b>'.repeat(Math.min(3, fiori))}</div></div>
       <div class="mac-freccia"><div class="mac-barra"><b style="width:${(p * 100).toFixed(0)}%"></b></div><span class="mac-t">${b.ready ? 'pronto' : inverno ? 'in letargo' : giorni === 1 ? 'domani' : giorni + ' giorni'}</span></div>
@@ -769,11 +772,12 @@ function machinesMorning(st) {
     }
   }
 }
-// sopra le macchine: il fumetto con quello che è pronto, e mentre lavorano una barretta sottile che si riempie
+// sopra le macchine: il sigillo con quello che è pronto; mentre lavorano il quadrante (world.js) e, da vicino, il tempo
 function drawMachines(m) {
   if (m.id !== 'main' || !isFree() || G.visit) return;
   const st = G.st,
     bob = Math.round(Math.sin(G.t * 4));
+  let eti = null; // l'etichetta col tempo: solo sulla macchina più vicina
   for (const o of m.objs) {
     if (o.kind !== 'built') continue;
     const b = st.free.built[o.bk];
@@ -788,31 +792,31 @@ function drawMachines(m) {
             : ITEMS[b.id] && ITEMS[b.id].tree && b.fruit > 0
               ? ITEMS[b.id].tree
               : null;
-    const X = o.tx * 16 + 8;
-    if (mac && mm.t0 != null && !out) {
-      const p = macProg(b).p,
-        w = 14,
-        x0 = Math.round(X - w / 2),
-        y0 = Math.round(o.dy - 5);
-      ctx.fillStyle = '#2a1406';
-      ctx.fillRect(x0 - 1, y0 - 1, w + 2, 4);
-      ctx.fillStyle = '#5a3a20';
-      ctx.fillRect(x0, y0, w, 2);
-      const f = Math.max(1, Math.round(w * p));
-      ctx.fillStyle = '#f0a040';
-      ctx.fillRect(x0, y0, f, 2);
-      ctx.fillStyle = '#ffe08a';
-      ctx.fillRect(x0, y0, f, 1);
+    const X = o.tx * 16 + 8,
+      Y = o.dy - 6 + bob,
+      p = G.player,
+      dist = Math.hypot(p.x - X, p.y - (o.ty * 16 + 8));
+    if (out) {
+      drawSigillo(X, Y - 2, ICON[out]);
+      continue;
     }
-    if (!out) continue;
-    const Y = o.dy - 6 + bob;
-    ctx.fillStyle = '#2a1406';
-    ctx.fillRect(X - 5, Y - 6, 11, 10);
-    ctx.fillStyle = '#f6d98a';
-    ctx.fillRect(X - 4, Y - 5, 9, 8);
-    const ic = ICON[out];
-    if (ic) ctx.drawImage(ic, X - 4, Y - 5, 8, 8);
+    // al lavoro: il quadrante, e da vicino quanto manca
+    let prog = null,
+      testo = '';
+    if (mac && mm.t0 != null) {
+      const pr = macProg(b);
+      prog = pr.p;
+      testo = ITEMS[MACH[b.id].out(mm.i)].n + ' · ' + macMin(pr.rest);
+    } else if (b.id === 'apiario' && seasonOf() !== 1) {
+      const g = 3 - Math.min(2, b.t || 0);
+      prog = Math.min(1, (b.t || 0) / 3);
+      testo = 'Miele · ' + (g === 1 ? 'domani' : g + ' giorni');
+    }
+    if (prog == null) continue;
+    drawQuadrante(X, Y, prog);
+    if (dist < 44 && (!eti || dist < eti.d)) eti = { d: dist, X, Y: Y - 9, testo };
   }
+  if (eti && !G.cut && !UI.busy()) drawEtichetta(eti.X, eti.Y, eti.testo);
 }
 // alberi da frutto
 const FTC = new Map();

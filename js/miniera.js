@@ -441,12 +441,6 @@ function mineAct(fx, fy) {
       return true;
     }
     if (!useEnergy(skLv('racc') >= 2 ? 1 : 2)) return true;
-    if (o.ladder && !o.eco) {
-      // la pietra della scala suona vuota al primo colpo
-      o.eco = 1;
-      AU.play('door', 0.6);
-      floatText('Toc… suona vuota', fx * 16 + 8, fy * 16 - 8, '#bfe3ff');
-    }
     o.hp -= goldTools() ? 2 : 1;
     const rx = fx * 16 + 8,
       ry = fy * 16 + 12;
@@ -548,25 +542,6 @@ function mineTick(dt) {
 {
   Ext.on('drawWorldExtras', function (m) {
     if (m.id !== 'miniera') return;
-    // dalla pietra che nasconde la scala sale uno spiffero d'aria fredda: si vede solo da vicino
-    const p = G.player;
-    for (const o of m.objs) {
-      if (o.act !== 'mrock' || !o.ladder) continue;
-      const X = o.tx * 16 + 8,
-        Y = o.ty * 16 + 12,
-        d = Math.hypot(p.x - X, p.y - Y);
-      if (d > 110) continue;
-      const vis = Math.min(1, (110 - d) / 60);
-      for (let i = 0; i < 9; i++) {
-        const ph = (G.t * 0.35 + i / 9) % 1,
-          x = X - 6 + ((i * 5) % 12) + Math.sin(ph * 6 + i) * 2,
-          y = Y - ph * 22;
-        ctx.globalAlpha = vis * (1 - ph) * 0.8;
-        ctx.fillStyle = i % 2 ? '#d8f0ff' : '#a8d0f0';
-        ctx.fillRect(x, y, 1.5, 1.5);
-      }
-      ctx.globalAlpha = 1;
-    }
     for (const s of G.mshad || []) {
       drawShadow(s);
       if (s.hitT && G.t - s.hitT < 0.2) {
@@ -771,7 +746,7 @@ GUIDES.push({
         zoneOpen('collina') ? { x: MINE_IN[0] * 16 + 16, y: MINE_IN[1] * 16 + 4, l: 'La miniera' } : null
     },
     {
-      t: 'Ogni piano è diverso. Scava le rocce: più scendi, più trovi ferro, quarzo, rame, nichel, oro, ametiste e diamanti. Una pietra nasconde la <b>scala per scendere</b>: avvicinati e cerca lo spiffero d’aria fredda che sale dalle sue crepe. Al primo colpo, suona vuota.'
+      t: 'Ogni piano è diverso. Scava le rocce: più scendi, più trovi ferro, quarzo, rame, nichel, oro, ametiste e diamanti. Una delle pietre nasconde la <b>scala per scendere</b>: quale, sta a te scoprirlo.'
     },
     {
       t: "Dal piano 3 ci sono le <b>Ombre</b>: se ti toccano perdi energia. Un colpo d'attrezzo le scaccia; la luce delle torce le rallenta. Ogni 5 piani l'<b>ascensore</b> ricorda la strada. Il fondo non c'è."

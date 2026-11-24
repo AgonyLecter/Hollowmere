@@ -362,3 +362,100 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .toast{animation:avviso .42s cubic-bezier(.3,1.6,.5,1)}
 @keyframes avviso{from{opacity:0;transform:translateY(calc(-8*var(--u))) scaleX(.8)}60%{opacity:1;transform:translateY(calc(1*var(--u))) scaleX(1.02)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){#mbox,#mbox>*,.toast,#modal{animation:none}}
+/* ================= OGNI MACCHINA HA IL SUO CORPO =================
+   La schermata della macchina (.mac) prende l'aspetto della macchina vera: la fornace di pietra con la bocca che
+   arde, il forno a cupola, il barattolo di vetro, la botte a doghe, la macina che gira… La barra si riempie di quello
+   che la macchina fa (--pieno) e .lav accende le animazioni mentre lavora. Le trame sono piccoli SVG a pixel. */
+.mac[class*=tema-]{position:relative;margin-top:calc(14*var(--u));padding:calc(10*var(--u)) calc(14*var(--u));image-rendering:pixelated;--vuoto:#1c1418;--pieno:linear-gradient(#fffbe0,#f6d98a 40%,#e0a040);--testo:#f0e0c0}
+.mac[class*=tema-] .mac-barra{background:var(--vuoto)}
+.mac[class*=tema-] .mac-barra b{background:var(--pieno)}
+.mac[class*=tema-] .mac-t{color:var(--testo);text-shadow:0 var(--u) 0 #07050a}
+.mac[class*=tema-] .mslot{box-shadow:inset 0 0 0 var(--u) #07050a,0 0 0 var(--u) rgba(255,230,190,.18)}
+.mac-orn{display:none}
+.mac[class*=tema-] .mac-orn{display:block;position:absolute;pointer-events:none}
+.mac[class*=tema-]>*{position:relative;z-index:1}
+.mac[class*=tema-]>.mac-orn{z-index:0}
+
+/* fornace: pietra scura a mattoni, la cappa sopra, la bocca che arde dietro la freccia */
+.tema-fornace{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' shape-rendering='crispEdges'%3E%3Crect width='16' height='8' fill='%233a2a30'/%3E%3Crect y='3' width='16' height='1' fill='%231c1418'/%3E%3Crect y='7' width='16' height='1' fill='%231c1418'/%3E%3Crect x='5' width='1' height='3' fill='%231c1418'/%3E%3Crect x='13' y='4' width='1' height='3' fill='%231c1418'/%3E%3Crect x='1' y='0' width='3' height='1' fill='%234a3a40'/%3E%3Crect x='8' y='4' width='4' height='1' fill='%234a3a40'/%3E%3C/svg%3E") 0 0/calc(32*var(--u)) calc(16*var(--u));box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(-4*var(--u)) 0 #1c1418,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#fff2a0,#ffb040 40%,#e05a18);--vuoto:#120a0a}
+.tema-fornace .mac-orn{left:18%;right:18%;top:calc(-12*var(--u));height:calc(12*var(--u));background:#2a1e24;clip-path:polygon(12% 100%,30% 0,70% 0,88% 100%);box-shadow:inset 0 calc(2*var(--u)) 0 #4a3a40}
+.tema-fornace .mac-freccia{padding:calc(6*var(--u)) calc(5*var(--u)) calc(3*var(--u));background:radial-gradient(ellipse at 50% 90%,#7a2a10,#2a0e08 70%);border-radius:50% 50% 0 0/40% 40% 0 0;box-shadow:inset 0 0 0 var(--u) #07050a}
+.tema-fornace.lav .mac-freccia{animation:temaBrace 1.1s steps(3) infinite}
+@keyframes temaBrace{50%{background:radial-gradient(ellipse at 50% 90%,#a84018,#3a1208 72%)}}
+
+/* forno a legna: cupola di mattoni rossi, la bocca ad arco con le braci */
+.tema-fornoalegna{border-radius:48% 48% calc(3*var(--u)) calc(3*var(--u))/62% 62% calc(3*var(--u)) calc(3*var(--u));padding-top:calc(22*var(--u));background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' shape-rendering='crispEdges'%3E%3Crect width='16' height='8' fill='%237c3a22'/%3E%3Crect y='3' width='16' height='1' fill='%233a1a10'/%3E%3Crect y='7' width='16' height='1' fill='%233a1a10'/%3E%3Crect x='7' width='1' height='3' fill='%233a1a10'/%3E%3Crect x='15' y='4' width='1' height='3' fill='%233a1a10'/%3E%3Crect x='1' y='0' width='4' height='1' fill='%239a4a2a'/%3E%3Crect x='9' y='4' width='3' height='1' fill='%235a2414'/%3E%3C/svg%3E") 0 0/calc(32*var(--u)) calc(16*var(--u));box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(5*var(--u)) 0 rgba(255,200,140,.08),0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#f0d8a0,#c89048 50%,#7a4a20);--vuoto:#1a0c08}
+.tema-fornoalegna .mac-freccia{padding:calc(7*var(--u)) calc(6*var(--u)) calc(3*var(--u));background:radial-gradient(ellipse at 50% 100%,#c8501a,#3a1208 55%,#140806 80%);border-radius:50% 50% 0 0/60% 60% 0 0;box-shadow:inset 0 0 0 var(--u) #07050a}
+.tema-fornoalegna.lav .mac-freccia{animation:temaBrace 1.4s steps(3) infinite}
+.tema-fornoalegna .mac-orn{left:calc(50% - 7*var(--u));top:calc(-9*var(--u));width:calc(14*var(--u));height:calc(10*var(--u));background:#5a2414;box-shadow:inset 0 0 0 var(--u) #07050a}
+.tema-fornoalegna.lav .mac-orn::after{content:'';position:absolute;left:30%;bottom:100%;width:40%;height:calc(10*var(--u));background:radial-gradient(circle,rgba(200,190,180,.5),transparent 70%);animation:temaFumo 2.4s linear infinite}
+@keyframes temaFumo{from{transform:translateY(0) scale(.6);opacity:.8}to{transform:translateY(calc(-10*var(--u))) scale(1.4);opacity:0}}
+
+/* barattolo: vetro verdastro con i riflessi, coperchio di stoffa legato con lo spago */
+.tema-barattolo{border-radius:calc(10*var(--u)) calc(10*var(--u)) calc(14*var(--u)) calc(14*var(--u));background:linear-gradient(90deg,rgba(255,255,255,.1) 6%,transparent 10% 82%,rgba(255,255,255,.06) 86%),linear-gradient(#3e5a5e,#24383c);box-shadow:inset 0 0 0 var(--u) #07050a,inset calc(2*var(--u)) 0 0 rgba(200,235,230,.25),inset 0 calc(-6*var(--u)) 0 rgba(120,40,30,.35),0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#e08070,#b0261e 50%,#7c1512);--vuoto:rgba(10,20,22,.7)}
+.tema-barattolo .mac-orn{left:12%;right:12%;top:calc(-11*var(--u));height:calc(12*var(--u));background:repeating-linear-gradient(45deg,#c0baa8 0 calc(2*var(--u)),#a89e88 calc(2*var(--u)) calc(4*var(--u)));clip-path:polygon(0 20%,100% 20%,96% 100%,4% 100%);box-shadow:inset 0 calc(-3*var(--u)) 0 #6a4a30}
+.tema-barattolo .mac-orn::after{content:'';position:absolute;left:0;right:0;bottom:calc(3*var(--u));height:var(--u);background:#4a3222}
+.tema-barattolo .mac-t{color:#e8f4f0}
+
+/* botte: doghe di legno, i cerchi di ferro, la spina al centro che gocciola */
+.tema-botte{border-radius:28%/50%;padding:calc(12*var(--u)) calc(22*var(--u));background:linear-gradient(transparent 14%,#1c1418 14% 19%,#3a3a44 19% 21%,transparent 21% 79%,#3a3a44 79% 81%,#1c1418 81% 86%,transparent 86%),repeating-linear-gradient(90deg,#6a4a30 0 calc(11*var(--u)),#4a3222 calc(11*var(--u)) calc(12*var(--u)),#2e2016 calc(12*var(--u)) calc(13*var(--u))),#6a4a30;box-shadow:inset 0 0 0 var(--u) #07050a,inset calc(10*var(--u)) 0 calc(8*var(--u)) rgba(0,0,0,.35),inset calc(-10*var(--u)) 0 calc(8*var(--u)) rgba(0,0,0,.35),0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#d07090,#8a2048 50%,#4a0a28);--vuoto:#1c1014}
+.tema-botte .mac-orn{left:calc(50% - 3*var(--u));bottom:calc(2*var(--u));width:calc(6*var(--u));height:calc(5*var(--u));background:#8a6a44;box-shadow:inset 0 0 0 var(--u) #07050a}
+.tema-botte.lav .mac-orn::after{content:'';position:absolute;left:calc(2*var(--u));top:100%;width:calc(2*var(--u));height:calc(2*var(--u));background:#8a2048;animation:temaGoccia 1.6s ease-in infinite}
+@keyframes temaGoccia{0%{transform:translateY(0);opacity:1}80%{transform:translateY(calc(8*var(--u)));opacity:1}100%{transform:translateY(calc(9*var(--u)));opacity:0}}
+
+/* mulino e frantoio: pietra, la macina tonda che gira mentre lavora */
+.tema-mulino,.tema-frantoio{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Crect width='12' height='12' fill='%2355545a'/%3E%3Crect x='2' y='1' width='3' height='1' fill='%23747270'/%3E%3Crect x='8' y='6' width='2' height='1' fill='%23747270'/%3E%3Crect x='5' y='9' width='1' height='1' fill='%233a3a44'/%3E%3Crect x='1' y='7' width='1' height='2' fill='%233a3a44'/%3E%3Crect x='10' y='2' width='1' height='1' fill='%233a3a44'/%3E%3C/svg%3E") 0 0/calc(24*var(--u)) calc(24*var(--u));border-radius:calc(6*var(--u));box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(2*var(--u)) 0 #9a968a,inset 0 calc(-3*var(--u)) 0 #24242c,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#fffbf0,#e8dcc0 50%,#c0baa8);--vuoto:#24242c}
+.tema-mulino .mac-orn,.tema-frantoio .mac-orn{left:calc(50% - 13*var(--u));top:calc(-13*var(--u));width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;background:repeating-conic-gradient(#74726e 0 10deg,#55545a 10deg 20deg);box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 0 0 calc(4*var(--u)) #3a3a44}
+.tema-mulino .mac-orn::after,.tema-frantoio .mac-orn::after{content:'';position:absolute;inset:38%;border-radius:50%;background:#2a1e24;box-shadow:0 0 0 var(--u) #07050a}
+.tema-mulino.lav .mac-orn,.tema-frantoio.lav .mac-orn{animation:temaGira 3s steps(12) infinite}
+@keyframes temaGira{to{transform:rotate(360deg)}}
+.tema-mulino .mac-freccia,.tema-frantoio .mac-freccia{margin-top:calc(10*var(--u))}
+.tema-frantoio{--pieno:linear-gradient(#e8d070,#a89a28 50%,#606a36);border-radius:calc(4*var(--u)) calc(4*var(--u)) 40% 40%/calc(4*var(--u)) calc(4*var(--u)) 30% 30%}
+
+/* essiccatoio: graticcio di legno, il sole pallido sopra */
+.tema-essiccatoio{background:repeating-linear-gradient(90deg,transparent 0 calc(9*var(--u)),#2e2016 calc(9*var(--u)) calc(10*var(--u))),repeating-linear-gradient(transparent 0 calc(9*var(--u)),#4a3222 calc(9*var(--u)) calc(11*var(--u)),#2e2016 calc(11*var(--u)) calc(12*var(--u))),#8a6a44;box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 0 0 calc(4*var(--u)) #4a3222,inset 0 0 0 calc(5*var(--u)) #07050a,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#d8aa48,#b05a22 50%,#5a1e10);--vuoto:#2e2016}
+.tema-essiccatoio .mac-orn{right:calc(6*var(--u));top:calc(-10*var(--u));width:calc(12*var(--u));height:calc(12*var(--u));border-radius:50%;background:radial-gradient(circle,#ffd070 40%,#c8862e 60%,transparent 64%)}
+.tema-essiccatoio.lav .mac-orn{animation:temaPulsa 2s ease-in-out infinite}
+@keyframes temaPulsa{50%{filter:brightness(1.25)}}
+
+/* zangola: legno chiaro a doghe, il cerchio di ferro, la panna */
+.tema-zangola{border-radius:calc(4*var(--u)) calc(4*var(--u)) calc(10*var(--u)) calc(10*var(--u));background:linear-gradient(transparent 46%,#1c1418 46% 50%,#3a3a44 50% 54%,transparent 54%),repeating-linear-gradient(90deg,#a88a5e 0 calc(9*var(--u)),#8a6a44 calc(9*var(--u)) calc(10*var(--u)),#4a3222 calc(10*var(--u)) calc(11*var(--u)));box-shadow:inset 0 0 0 var(--u) #07050a,inset calc(6*var(--u)) 0 calc(6*var(--u)) rgba(0,0,0,.25),0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#fffbe8,#f0e0a8 50%,#d8c070);--vuoto:#2e2016}
+.tema-zangola .mac-orn{left:calc(50% - var(--u));top:calc(-16*var(--u));width:calc(3*var(--u));height:calc(18*var(--u));background:#6a4a30;box-shadow:inset var(--u) 0 0 #8a6a44,0 0 0 var(--u) #07050a}
+.tema-zangola.lav .mac-orn{animation:temaSbatti .6s ease-in-out infinite}
+@keyframes temaSbatti{50%{transform:translateY(calc(4*var(--u)))}}
+
+/* alambicco: rame martellato coi chiodi, la serpentina, le gocce */
+.tema-alambicco{border-radius:calc(14*var(--u)) calc(14*var(--u)) calc(4*var(--u)) calc(4*var(--u));background:radial-gradient(circle at 8% 14%,#e8a868 0 calc(1*var(--u)),transparent calc(1.2*var(--u))) 0 0/calc(14*var(--u)) calc(14*var(--u)),radial-gradient(ellipse at 30% 20%,#d8884a,#a8562a 45%,#5a2a14 90%);box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(-3*var(--u)) 0 #3a1a0c,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#f8f0e0,#d8e8f0 50%,#8ab0c8);--vuoto:#2a1208}
+.tema-alambicco .mac-orn{right:calc(-8*var(--u));top:calc(-10*var(--u));width:calc(16*var(--u));height:calc(28*var(--u));border:calc(2*var(--u)) solid #a8562a;border-left:none;border-radius:0 calc(8*var(--u)) calc(8*var(--u)) 0;box-shadow:calc(var(--u)) 0 0 #07050a}
+.tema-alambicco.lav .mac-orn::after{content:'';position:absolute;right:calc(-1*var(--u));bottom:calc(-4*var(--u));width:calc(2*var(--u));height:calc(2*var(--u));background:#d8e8f0;animation:temaGoccia 1.2s ease-in infinite}
+
+/* seminatrice: ferro verniciato e chiodato, la ruota */
+.tema-seminatrice{background:radial-gradient(circle,#8a8a70 0 calc(.9*var(--u)),transparent calc(1.1*var(--u))) calc(4*var(--u)) calc(4*var(--u))/calc(12*var(--u)) calc(12*var(--u)),linear-gradient(#44522c,#2e3a22);box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(2*var(--u)) 0 #606a36,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#d8aa48,#8a6a44);--vuoto:#141e12}
+.tema-seminatrice .mac-orn{left:calc(-6*var(--u));bottom:calc(-8*var(--u));width:calc(18*var(--u));height:calc(18*var(--u));border-radius:50%;background:repeating-conic-gradient(#2a1e24 0 12deg,transparent 12deg 45deg);box-shadow:inset 0 0 0 calc(2*var(--u)) #4a3222,0 0 0 var(--u) #07050a}
+.tema-seminatrice.lav .mac-orn{animation:temaGira 2s steps(8) infinite}
+
+/* compostiera: cassa di assi, la terra nera che fuma piano */
+.tema-compostiera{background:linear-gradient(transparent 78%,#1e1410 78%),repeating-linear-gradient(transparent 0 calc(10*var(--u)),#2e2016 calc(10*var(--u)) calc(11*var(--u)),#07050a calc(11*var(--u)) calc(12*var(--u))),#5a4028;box-shadow:inset 0 0 0 var(--u) #07050a,inset calc(4*var(--u)) 0 0 #4a3222,inset calc(-4*var(--u)) 0 0 #4a3222,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#5a4028,#2e2016);--vuoto:#140c08}
+.tema-compostiera.lav .mac-orn{left:30%;top:calc(-8*var(--u));width:40%;height:calc(10*var(--u));background:radial-gradient(ellipse,rgba(180,170,150,.35),transparent 70%);animation:temaFumo 3s linear infinite}
+
+/* apiario: il favo, le api che girano */
+.tema-apiario{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='14' shape-rendering='crispEdges'%3E%3Crect width='12' height='14' fill='%23c8862e'/%3E%3Cpath d='M3 0h6v1H3zM2 1h1v2H2zM9 1h1v2H9zM1 3h1v2H1zM10 3h1v2h-1zM2 5h1v2H2zM9 5h1v2H9zM3 7h6v1H3zM0 7h1v1H0zM11 7h1v1h-1zM0 8h1v6H0zM11 8h1v6h-1zM3 13h6v1H3z' fill='%235a3418'/%3E%3Crect x='4' y='2' width='3' height='1' fill='%23d8aa48'/%3E%3C/svg%3E") 0 0/calc(24*var(--u)) calc(28*var(--u));box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 0 0 calc(3*var(--u)) #5a3418,0 calc(2*var(--u)) 0 #07050a;--pieno:linear-gradient(#ffe08a,#d8aa48 50%,#a86a18);--vuoto:#3a2010}
+.tema-apiario .mac-t{color:#fff0c0}
+.tema-apiario.lav .mac-orn{left:20%;top:calc(-8*var(--u));width:calc(5*var(--u));height:calc(4*var(--u));background:linear-gradient(90deg,#ffd070 0 33%,#1c1418 33% 55%,#ffd070 55%);border-radius:40%;box-shadow:0 0 0 calc(.5*var(--u)) #07050a,calc(34*var(--u)) calc(5*var(--u)) 0 #d8aa48,calc(62*var(--u)) calc(-2*var(--u)) 0 #ffd070;animation:temaApi 2.2s ease-in-out infinite}
+@keyframes temaApi{25%{transform:translate(calc(6*var(--u)),calc(-3*var(--u)))}50%{transform:translate(calc(12*var(--u)),calc(1*var(--u)))}75%{transform:translate(calc(5*var(--u)),calc(3*var(--u)))}}
+
+/* le stazioni di lavoro: un'insegna sotto il titolo */
+.staz{position:relative;height:calc(28*var(--u));margin:0 0 calc(4*var(--u));overflow:hidden;image-rendering:pixelated}
+.staz-banco{background:linear-gradient(transparent 62%,#2e2016 62% 66%,transparent 66%),repeating-linear-gradient(90deg,#8a6a44 0 calc(30*var(--u)),#6a4a30 calc(30*var(--u)) calc(31*var(--u)),#4a3222 calc(31*var(--u)) calc(32*var(--u))),#8a6a44;box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(2*var(--u)) 0 #a88a5e}
+.staz-banco i{position:absolute;bottom:38%;width:calc(3*var(--u));height:calc(14*var(--u));background:#4a3222;box-shadow:0 0 0 var(--u) #07050a}
+.staz-banco i:nth-child(1){left:22%;transform:rotate(-30deg)}
+.staz-banco i:nth-child(1)::after{content:'';position:absolute;top:calc(-2*var(--u));left:calc(-3*var(--u));width:calc(9*var(--u));height:calc(4*var(--u));background:#55545a;box-shadow:0 0 0 var(--u) #07050a}
+.staz-banco i:nth-child(2){left:50%;height:calc(10*var(--u));width:calc(10*var(--u));background:#c0baa8;transform:rotate(8deg)}
+.staz-banco i:nth-child(3){left:74%;transform:rotate(24deg)}
+.staz-banco i:nth-child(3)::after{content:'';position:absolute;top:calc(-3*var(--u));left:calc(-1*var(--u));width:calc(5*var(--u));height:calc(5*var(--u));background:#74726e;box-shadow:0 0 0 var(--u) #07050a}
+.staz-incudine{background:radial-gradient(ellipse at 50% 120%,#5a1e10,#1c1418 60%);box-shadow:inset 0 0 0 var(--u) #07050a,inset 0 calc(2*var(--u)) 0 #3a2a30}
+.staz-incudine i:nth-child(1){position:absolute;left:calc(50% - 22*var(--u));top:calc(8*var(--u));width:calc(44*var(--u));height:calc(10*var(--u));background:linear-gradient(#74726e,#3a3a44 40%,#24242c);clip-path:polygon(0 0,100% 0,100% 40%,78% 60%,70% 100%,30% 100%,22% 60%,0 30%,-0% 0)}
+.staz-incudine i:nth-child(2){position:absolute;left:calc(50% - 9*var(--u));top:calc(18*var(--u));width:calc(18*var(--u));height:calc(10*var(--u));background:#4a3222;box-shadow:inset 0 calc(2*var(--u)) 0 #2e2016}
+.staz-incudine i:nth-child(3){position:absolute;left:calc(50% + 4*var(--u));top:calc(6*var(--u));width:calc(2*var(--u));height:calc(2*var(--u));background:#ffd070;box-shadow:calc(-8*var(--u)) calc(-3*var(--u)) 0 #ffb040,calc(6*var(--u)) calc(-4*var(--u)) 0 #fff2a0,calc(-2*var(--u)) calc(-6*var(--u)) 0 #e05a18;animation:temaScintille 1.4s steps(4) infinite}
+@keyframes temaScintille{0%{transform:translateY(0);opacity:1}60%{opacity:1}100%{transform:translateY(calc(-6*var(--u)));opacity:0}}
+@media (prefers-reduced-motion:reduce){.mac[class*=tema-] .mac-orn,.mac[class*=tema-] .mac-orn::after,.mac[class*=tema-] .mac-freccia,.staz i{animation:none!important}}

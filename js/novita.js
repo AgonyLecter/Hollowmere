@@ -166,7 +166,7 @@ const NOVITA = [
     n: 'Piccole cose sistemate',
     steps: [
       {
-        t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: avvicinati e cerca lo spiffero d’aria fredda che sale dalle crepe. Al primo colpo di piccone, quella pietra suona vuota.'
+        t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: quale, sta a te scoprirlo.'
       },
       {
         t: 'Adesso si può mangiare anche in miniera e quando sei ospite nel villaggio di un amico. E gli avvisi uguali non si accumulano più sullo schermo.'
@@ -444,6 +444,25 @@ const NOVITA = [
       },
       {
         t: "E d'inverno la neve si posa davvero sui tetti, sui comignoli e sui davanzali, invece di velare le case."
+      }
+    ]
+  },
+  {
+    id: 'serra_macchine',
+    v: 46,
+    n: 'Serra, macchine, orto e notte',
+    steps: [
+      {
+        t: "La <b>serra</b> ha il suo interno: toccala per entrare. Sotto i vetri ci sono le aiuole rialzate: semina, annaffia e raccogli in ogni stagione, e al cambio di stagione lì dentro non muore niente. La pioggia non entra: annaffia tu. Al banco accanto alla porta la migliori, un'aiuola in più per livello."
+      },
+      {
+        t: 'Ogni macchina adesso ha la sua faccia: la fornace di pietra con la bocca che arde, il forno a cupola, il barattolo di vetro, la botte a doghe, la macina che gira, l’alambicco di rame, il favo dell’apiario. E tutte le colture dell’orto, dalla rapa allo zafferano, sono disegnate di nuovo, stadio per stadio.'
+      },
+      {
+        t: 'Quello che aspetta ha un <b>orologino</b> sopra: lo spicchio d’oro si riempie con le notti della pianta o col lavoro della macchina, e avvicinandoti leggi quanto manca («Lingotto · 58 min»). Quando è pronto compare un sigillo d’oro con quello che raccogli.'
+      },
+      {
+        t: 'Di notte le <b>Ombre</b> escono anche quando sei da un amico: lì seguono solo te, ti rubano un po’ di energia se ti toccano, e un colpo d’attrezzo le disperde. In miniera, invece, la pietra che nasconde la scala non si tradisce più: cercala tu.'
       }
     ]
   }
