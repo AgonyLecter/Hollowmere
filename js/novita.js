@@ -433,6 +433,19 @@ const NOVITA = [
         t: 'E la pala non ferma più il gioco quando fai un vialetto.'
       }
     ]
+  },
+  {
+    id: 'interfaccia',
+    v: 45,
+    n: 'I pulsanti prendono vita',
+    steps: [
+      {
+        t: "Premi un pulsante: si abbassa, torna su con una molla e lascia un'onda di luce. Il pulsante A è una moneta d'oro, il joystick un disco di ferro inciso, ❄ una sfera di ghiaccio."
+      },
+      {
+        t: "E d'inverno la neve si posa davvero sui tetti, sui comignoli e sui davanzali, invece di velare le case."
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

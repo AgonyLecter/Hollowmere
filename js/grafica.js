@@ -5405,20 +5405,7 @@ addEventListener('keydown', e => {
   b.id = 'bSnow';
   b.textContent = '❄';
   b.title = 'Tocca: palla di neve · Tieni premuto: pupazzo (Q / G)';
-  Object.assign(b.style, {
-    position: 'absolute',
-    right: 'calc(70*var(--u))',
-    bottom: 'calc(70*var(--u))',
-    width: 'calc(28*var(--u))',
-    height: 'calc(28*var(--u))',
-    borderRadius: '50%',
-    border: '0',
-    background: 'radial-gradient(circle at 35% 30%,#ffffff,#b8d4f0 50%,#5a7aa8 90%)',
-    color: '#2a4a7a',
-    fontSize: 'calc(14*var(--u))',
-    display: 'none',
-    pointerEvents: 'auto'
-  });
+  b.style.display = 'none'; // l'aspetto è in style.css (#bSnow)
   let ht = null,
     long = false;
   b.addEventListener('pointerdown', e => {
