@@ -6,7 +6,7 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none
 .hide{display:none!important}
 button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
 /* ====== stile dell'interfaccia: legno scuro, ottone, pergamena ====== */
-:root{--ink:#120b10;--wood:#2a1911;--wood2:#4a2e1c;--bronze:#7a5428;--gold:#d9a646;--gold2:#f6d98a;--parchC:#ead8ae;--txt:#2a1a10;--parch:none;--parchD:none;--cornice:none;--pozzo:none;--pozzoSel:none;--tasto:none;--tastoSu:none;--tastoGiu:none}
+:root{--ink:#0a0608;--wood:#1e1416;--wood2:#2e2226;--bronze:#5a4a48;--gold:#c8a060;--gold2:#e8d6a8;--parchC:#d6c296;--txt:#1e120e;--parch:none;--parchD:none;--cornice:none;--pozzo:none;--pozzoSel:none;--tasto:none;--tastoSu:none;--tastoGiu:none}
 .dark{background:linear-gradient(rgba(34,22,20,.9),rgba(16,10,12,.9));color:#f1e2bf;
  box-shadow:inset 0 0 0 var(--u) rgba(246,217,138,.45),inset 0 calc(2*var(--u)) 0 rgba(0,0,0,.35),0 0 0 var(--u) #1e1006,0 0 0 calc(2.5*var(--u)) #6e4626,calc(-.5*var(--u)) calc(-.5*var(--u)) 0 calc(2.5*var(--u)) #b8844a,calc(.5*var(--u)) calc(.5*var(--u)) 0 calc(2.5*var(--u)) #2e1a0a,0 0 0 calc(3.5*var(--u)) #140a06,0 calc(3*var(--u)) 0 calc(3.5*var(--u)) rgba(0,0,0,.35)}
 .panel{background:var(--parch),var(--parchC);background-size:calc(64*var(--u));background-clip:padding-box;image-rendering:pixelated;color:var(--txt);
