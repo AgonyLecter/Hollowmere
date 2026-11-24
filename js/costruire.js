@@ -1440,16 +1440,3 @@ Ext.on('freeMorning', st => {
       if (![...ox].some(o => x >= o && x < o + SERRA_W)) delete st.farm[k];
     }
 });
-GUIDES.push({
-  id: 'serra_dentro',
-  v: 43,
-  n: 'Dentro la serra',
-  steps: [
-    {
-      t: 'La <b>serra</b> adesso ha il suo interno: toccala per entrare. Sotto i vetri ci sono le aiuole: semina, annaffia e raccogli come nei campi, in ogni stagione. Al cambio di stagione lì dentro non muore niente.'
-    },
-    {
-      t: 'La pioggia non entra: annaffia tu. Al banco accanto alla porta migliori la serra: a ogni livello un’aiuola in più (fino a 4, 32 zolle).'
-    }
-  ]
-});

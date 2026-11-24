@@ -265,7 +265,9 @@ function craftMenu(cat, staz = 'banco') {
     has = c => Object.entries(c).every(([k, n]) => countItem(k) >= n);
   const L = CRAFTS.filter(r => r.cat === cat);
   UI.open(
-    `<button class="btn mclose" data-close>✕</button><h2>${S.n}</h2><div class="tabs">${Object.entries(S.cats)
+    `<button class="btn mclose" data-close>✕</button><h2>${S.n}</h2><div class="staz staz-${staz}"><i></i><i></i><i></i></div><div class="tabs">${Object.entries(
+      S.cats
+    )
       .map(([k, n]) => `<button class="btn ${k === cat ? 'on' : ''}" data-cat="${k}">${n}</button>`)
       .join(
         ''
@@ -517,7 +519,7 @@ function macGui(k, b) {
         ? ` <span class="small">· livello ${b.lv || 1}/3</span> <button class="btn mac-liv" data-liv>Migliora…</button>`
         : ''
     }</h2>
-    <div class="mac">
+    <div class="mac tema-${b.id}"><i class="mac-orn"></i>
       <div class="mac-sx">${slot('in')}${M.fuel ? `<div class="mac-fuoco"><div class="mac-fiamma"><b></b></div></div>${slot('f')}` : ''}</div>
       <div class="mac-freccia"><div class="mac-barra"><b></b></div><span class="mac-t"></span></div>
       ${slot('o', 'mac-out')}
@@ -586,6 +588,7 @@ function macAggiorna() {
     lav = m.t0 != null,
     firma = [m.i, m.in, m.f, m.o, m.on, lav].join('|');
   box.querySelector('.mac-barra b').style.width = (pr.p * 100).toFixed(1) + '%';
+  box.querySelector('.mac').classList.toggle('lav', lav);
   box.querySelector('.mac-t').textContent = lav ? macMin(pr.rest) : '';
   const fi = box.querySelector('.mac-fiamma');
   if (fi) {
@@ -716,7 +719,7 @@ function apiGui(k, b) {
           : ` Con 2 aiuole fiorite ne farebbero 2 vasetti (ne hai ${fiori}).`);
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>${esc(ITEMS[b.id].n)}</h2>
-    <div class="mac">
+    <div class="mac tema-apiario${b.ready || inverno ? '' : ' lav'}"><i class="mac-orn"></i>
       <div class="mac-sx"><div class="islot mslot pieno mac-fisso" title="Alveare"><canvas width="32" height="32" data-ic="apiario"></canvas><i></i></div>
       <div class="mac-api">${'<b></b>'.repeat(Math.min(3, fiori))}</div></div>
       <div class="mac-freccia"><div class="mac-barra"><b style="width:${(p * 100).toFixed(0)}%"></b></div><span class="mac-t">${b.ready ? 'pronto' : inverno ? 'in letargo' : giorni === 1 ? 'domani' : giorni + ' giorni'}</span></div>
