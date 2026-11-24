@@ -166,7 +166,7 @@ const NOVITA = [
     n: 'Piccole cose sistemate',
     steps: [
       {
-        t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: avvicinati e cerca lo spiffero d’aria fredda che sale dalle crepe. Al primo colpo di piccone, quella pietra suona vuota.'
+        t: 'In miniera la scala per scendere si nasconde sempre sotto una pietra: quale, sta a te scoprirlo.'
       },
       {
         t: 'Adesso si può mangiare anche in miniera e quando sei ospite nel villaggio di un amico. E gli avvisi uguali non si accumulano più sullo schermo.'

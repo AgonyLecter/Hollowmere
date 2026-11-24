@@ -47,6 +47,7 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `posta:intercetta` (`Ext.intercetta('posta', a)`) | un messaggio dalla posta (`visite/<pid>`); chi lo gestisce restituisce `true` |
 | `mira` | chi o cosa si può toccare davanti al giocatore (`C`, `ax`, `ay`, `m`): si aggiunge `{ k: 'ext', d, act(), fumetto() }` a `C` |
 | `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
+| `vaiMappa` (`Ext.intercetta('vaiMappa', id, x, y, dir)`) | cambiare mappa da un file caricato prima di `main.js` (restituisce la promessa di `goMap`) |
 
 ## Mappa dei file (in ordine di caricamento)
 - **Motore**: `core.js` (stato, input, effetti sonori, Ext), `calendario.js` (giorni, stagioni, anni), `musica.js` (la colonna sonora: brani scritti come dati —
@@ -55,8 +56,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   `ui.js`, `net.js` (Firebase), `main.js` (avvio, ciclo, giorni), `update.js` (aggiornamenti automatici).
 - **Storia**: `farm.js`, `npc.js`, `life.js`, `story.js`, `cine.js`, `ambient.js`, `relations.js`, `feste.js`.
 - **La Valle (gioco libero)**: `free.js`, `animals.js`, `build.js`, `garden.js`, `macchine.js` (abilità, macchine,
-  alberi da frutto), `trade.js`, `anim.js`, `valle.js`, `espansione.js` (rango, zone, nuovi abitanti), `costruire.js`,
-  `miniera.js`, `sempre.js` (museo, traguardi, eventi), `rango.js`, `vita.js` (giornate e chiacchiere degli abitanti),
+  alberi da frutto), `trade.js`, `anim.js`, `valle.js`, `espansione.js` (rango, zone, nuovi abitanti), `costruire.js` (anche l’interno della serra: aiuole in `st.farm` con la x oltre `SERRA_OX`),
+  `miniera.js` (la scala per scendere è sotto una pietra qualunque: nessun aiuto visivo), `sempre.js` (museo, traguardi, eventi), `rango.js`, `vita.js` (giornate e chiacchiere degli abitanti),
   `aspetto.js`, `zaino.js` (zaino, casse e la riparazione dei contenitori), `compagno.js` (il cane o il gatto:
   adozione, Segui/Resta, bottega), `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
 - **Multiplayer**: `mp.js`, `missions.js`, `chat.js`, `coop.js`, `scambi.js`, `postino.js`, `coop_vivo.js`.

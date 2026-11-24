@@ -522,7 +522,7 @@ Object.assign(ITEMS, {
     n: 'Serra',
     t: 'place',
     size: [4, 3],
-    d: "Le zolle intorno alla serra non sentono le stagioni: si semina tutto, tutto l'anno, e niente appassisce al cambio."
+    d: "Dentro, sotto i vetri, le aiuole non sentono le stagioni: si semina tutto, tutto l'anno, e niente muore al cambio. Toccala per entrare."
   },
   mulino: {
     n: 'Mulino',
@@ -553,7 +553,7 @@ CRAFTS.push(
 );
 Object.assign(BIG_BUILT, { serra: 40, mulino: 35, silos: 25, pozzogrande: 22 });
 const FUNC = {
-  serra: { lv: ['raggio 2 intorno', 'raggio 3', 'raggio 4'], r: lv => 1 + lv },
+  serra: { lv: ['2 aiuole dentro (16 zolle)', '3 aiuole (24 zolle)', '4 aiuole (32 zolle)'] },
   mulino: {
     lv: ['una macinata ogni ora', 'una ogni mezz’ora', 'una ogni quarto d’ora'],
     cap: lv => [10, 25, 60][lv - 1]
@@ -575,16 +575,9 @@ function funcArea(k, b) {
     r = FUNC[b.id].r(fLv(b));
   return [x0 - r, y0 - r, x0 + w - 1 + r, ay + r];
 }
-function inSerra(x, y, st) {
-  st = st || G.st;
-  if (!st || !isFree(st)) return false;
-  for (const k in st.free.built) {
-    const b = st.free.built[k];
-    if (b.id !== 'serra') continue;
-    const [a, c, d, e] = funcArea(k, b);
-    if (x >= a && x <= d && y >= c && y <= e) return true;
-  }
-  return false;
+// protetto dalle stagioni: solo dentro la serra (le aiuole, oltre SERRA_OX, o la mappa della serra)
+function inSerra(x, y) {
+  return x >= SERRA_OX || !!(G.map && G.map.id === 'serra');
 }
 const MILL = { mais: [1, 2], patata: [2, 1], castagne: [1, 1] }; // [quanti ne servono, quanta farina danno]
 // il mulino è una macchina come la fornace (macchine.js): macina una porzione alla volta, più svelto ai livelli alti
@@ -622,7 +615,7 @@ function funcMenu(k) {
     body = `<p>Nel silos: <b>${b.hay || 0}</b> / ${cap} fieno.</p><p class="small">D'inverno, ogni mattina, riempie le mangiatoie di tutti i pollai e le stalle.</p>${h ? `<p><button class="btn" data-silo="1">Metti il fieno (${Math.min(h, cap - (b.hay || 0))})</button></p>` : ''}`;
   }
   if (b.id === 'serra')
-    body = `<p class="small">Area protetta: ${F.lv[lv - 1]}. Lì si semina fuori stagione e al cambio di stagione non appassisce niente.</p>`;
+    body = `<p class="small">Adesso: ${F.lv[lv - 1]}. Sotto i vetri si semina fuori stagione e al cambio di stagione non muore niente. Pioggia qui non ne arriva: le aiuole vanno annaffiate.</p>`;
   if (b.id === 'pozzogrande')
     body = `<p class="small">Ogni mattina bagna tutte le zolle nel ${F.lv[lv - 1]}.</p>`;
   UI.open(
@@ -723,6 +716,7 @@ function funcMenu(k) {
         !(it && it.id === PLACE_TOOL[o.bid])
       ) {
         if (MACH[o.bid]) macGui(o.bk, st.free.built[o.bk]);
+        else if (o.bid === 'serra') serraEntra(o.bk);
         else funcMenu(o.bk);
         return true;
       }
@@ -1165,6 +1159,297 @@ GUIDES.push({
     },
     {
       t: '«Sposta» solleva un mobile e lo rimette dove scegli; «Togli» lo rimette nello zaino. Se mai restassi incastrat{o|a} dentro un mobile, il gioco ti libera da solo.'
+    }
+  ]
+});
+
+// ================= DENTRO LA SERRA =================
+// Toccando la serra si entra: una stanza di vetro e ferro con le aiuole di terra (2, 3 o 4 secondo il livello),
+// dove si semina, si annaffia e si raccoglie come fuori, in ogni stagione. Il banco accanto alla porta la migliora.
+// Le zolle stanno in st.farm con la x spostata di b.ox (oltre SERRA_OX, farm.js): crescono di notte con le altre,
+// si salvano e viaggiano nel cooperativo; pioggia, cambio di stagione e Ombre non le toccano.
+const SERRA_W = 14,
+  SERRA_H = 11,
+  SERRA_AIUOLE = [
+    [2, 3],
+    [8, 3],
+    [2, 6],
+    [8, 6]
+  ]; // angolo in alto a sinistra di ogni aiuola (4×2 zolle)
+function serraZolle(lv) {
+  const L = [];
+  for (const [x0, y0] of SERRA_AIUOLE.slice(0, lv + 1))
+    for (let y = y0; y < y0 + 2; y++) for (let x = x0; x < x0 + 4; x++) L.push([x, y]);
+  return L;
+}
+// ogni serra ha la sua fascia di chiavi; le zolle che mancano (anche dopo un miglioramento) si preparano
+function serraPrepara(st, k) {
+  const b = st.free.built[k];
+  if (!b || b.id !== 'serra') return null;
+  if (!b.ox) {
+    const usati = Object.values(st.free.built)
+      .filter(q => q.id === 'serra' && q.ox)
+      .map(q => q.ox);
+    let ox = SERRA_OX;
+    while (usati.includes(ox)) ox += 20;
+    b.ox = ox;
+  }
+  for (const [x, y] of serraZolle(fLv(b))) {
+    const fk = b.ox + x + ',' + y;
+    if (!st.farm[fk]) st.farm[fk] = { w: false, c: null };
+  }
+  return b;
+}
+function buildSerra(st, k) {
+  const b = serraPrepara(st, k);
+  if (!b) return null;
+  const m = new GMap('serra', SERRA_W, SERRA_H, { interior: 1, name: 'Serra' });
+  m.fill(0, 0, SERRA_W - 1, 0, 8);
+  m.fill(0, 1, SERRA_W - 1, 1, 9);
+  m.fill(0, 2, SERRA_W - 1, SERRA_H - 1, 7);
+  m.serraK = k;
+  m.ox = b.ox;
+  const deco = (id, x, y, img, o = {}) =>
+    img && m.add(OB(id, x, y, img, Object.assign({ solid: [], hits: [] }, o)));
+  // vasi e piante lungo i vetri, lanterne appese
+  for (const [x, y] of [
+    [0, 2],
+    [13, 2],
+    [0, 5],
+    [13, 5],
+    [0, 8],
+    [13, 8],
+    [6, 2],
+    [7, 2]
+  ])
+    deco('pianta', x, y, FREEIMG.pianta, { solid: [[x, y]] });
+  for (const [x, y] of [
+    [3, 1],
+    [10, 1]
+  ]) {
+    deco('lanterna', x, y, IMG.lantern);
+    m.lights.push({ x: x * 16 + 8, y: y * 16 + 4, r: 60, fire: 1 });
+  }
+  // il banco del giardiniere: si migliora la serra
+  m.add(
+    OB('serrabanco', 11, 9, FREEIMG.tavolino || IMG.table, {
+      act: 'serrabanco',
+      bk: k,
+      solid: [[11, 9]],
+      hits: [[11, 9]]
+    })
+  );
+  if (FREEIMG.irrigatore) deco('irrigatore', 1, 9, FREEIMG.irrigatore);
+  const [ax, ay] = k.split(',').map(Number);
+  m.add({
+    kind: 'mat',
+    tx: 7,
+    ty: SERRA_H - 1,
+    img: IMG.mat,
+    dx: 7 * 16,
+    dy: (SERRA_H - 1) * 16 + 4,
+    sy: -1,
+    solid: [],
+    hits: [],
+    deco: 1
+  });
+  m.doors.push({ tx: 7, ty: SERRA_H - 1, to: 'main', x: ax, y: ay + 1, dir: 0 });
+  addExits(m);
+  buildGround(m);
+  return m;
+}
+async function serraEntra(k) {
+  const st = G.st;
+  st.free.serraIn = k;
+  const m = buildSerra(st, k);
+  if (!m) return;
+  G.maps.serra = m;
+  await Ext.intercetta('vaiMappa', 'serra', 7, SERRA_H - 2, 3);
+  if (!st.flags.serraDentro) {
+    st.flags.serraDentro = 1;
+    UI.toast("Sotto i vetri fa tiepido: qui si semina tutto l'anno. La pioggia non entra, annaffia tu.");
+  }
+}
+ACT.serrabanco = o => funcMenu(o.bk);
+PROMPT.serrabanco = 'Migliora';
+// la mappa della serra si rifà con le altre (anche se si è salvato là dentro)
+Ext.avvolgi('rebuildMaps', function (prossimo, ...a) {
+  const r = prossimo(...a),
+    st = G.st,
+    k = st && st.free && st.free.serraIn;
+  if (k && st.free.built[k]) {
+    G.maps.serra = buildSerra(st, k);
+    if (G.map && G.map.id === 'serra') G.map = G.maps.serra;
+  } else if (G.map && G.map.id === 'serra') {
+    G.map = G.maps.main;
+    G.st.map = 'main';
+  }
+  return r;
+});
+// le zolle di questa serra viste con le coordinate della stanza
+function serraVista(m) {
+  const st = G.st,
+    V = {};
+  for (const k in st.farm) {
+    if (!chiaveSerra(k)) continue;
+    const [x, y] = k.split(',').map(Number);
+    if (x >= m.ox && x < m.ox + SERRA_W) V[x - m.ox + ',' + y] = st.farm[k];
+  }
+  return V;
+}
+// fa lavorare il codice dei campi (che usa st.farm e le coordinate della mappa) sulle zolle della serra
+function serraCon(m, fn) {
+  const st = G.st,
+    vero = st.farm,
+    V = serraVista(m),
+    prima = new Set(Object.keys(V));
+  st.farm = V;
+  try {
+    return fn();
+  } finally {
+    st.farm = vero;
+    for (const k of new Set([...prima, ...Object.keys(V)])) {
+      const [x, y] = k.split(',').map(Number),
+        fk = m.ox + x + ',' + y;
+      if (V[k]) vero[fk] = V[k];
+      else delete vero[fk];
+    }
+  }
+}
+Ext.avvolgi('doAction', function (prossimo, ...a) {
+  const m = G.map;
+  if (!m || m.id !== 'serra' || G.cut || UI.busy()) return prossimo(...a);
+  const [fx, fy] = frontTile(),
+    fk = m.ox + fx + ',' + fy,
+    f = G.st.farm[fk];
+  if (!f) return prossimo(...a);
+  if (G.visit) {
+    // ospite: come nei campi, si annaffia e basta
+    const it = selItem();
+    if (it && it.id === 'can' && !f.w) {
+      if (!useEnergy(1)) return;
+      f.w = true;
+      AU.play('water');
+      burst('water', fx * 16 + 8, fy * 16 + 4, 10);
+      G.visit.watered++;
+      MP.act(G.visit.pid, { t: 'water', k: fk, day: G.st.day, from: G.home.name });
+      if (f.c) Ext.run('fatto', 'annaffia', 1);
+    } else UI.toast(`Sei nella serra di ${G.visit.name}: puoi annaffiare.`);
+    return;
+  }
+  serraCon(m, () => farmAct(fx, fy));
+});
+// il disegno: le zolle sul pavimento, i vetri, le piante (in ordine di profondità) e i segni sopra le piante
+Ext.on('sopraTerreno', m => {
+  if (m.id !== 'serra') return;
+  const V = serraVista(m);
+  for (const k in V) {
+    const [x, y] = k.split(',').map(Number),
+      f = V[k],
+      vicina = (dx, dy) => (V[x + dx + ',' + (y + dy)] ? 1 : 0),
+      bordi = vicina(0, -1) | (vicina(1, 0) << 1) | (vicina(0, 1) << 2) | (vicina(-1, 0) << 3);
+    ctx.drawImage(T.zolla[f.w ? 1 : 0][hsh(x, y) % 3][bordi], x * 16, y * 16, 16, 16);
+  }
+  // le pareti di vetro: telaio di ferro nero, lastre verdastre con il riflesso della luna
+  for (let x = 0; x < SERRA_W; x++) {
+    const X = x * 16;
+    ctx.fillStyle = '#10141a';
+    ctx.fillRect(X, 0, 16, 32);
+    ctx.fillStyle = 'rgba(120,170,150,.28)';
+    ctx.fillRect(X + 2, 2, 12, 13);
+    ctx.fillRect(X + 2, 17, 12, 13);
+    ctx.fillStyle = 'rgba(200,230,240,.18)';
+    ctx.fillRect(X + 3, 3 + (x % 3), 2, 6);
+    ctx.fillRect(X + 4, 19 + (x % 2), 1, 5);
+    ctx.fillStyle = '#2a2e36';
+    ctx.fillRect(X + 7, 2, 1, 28);
+  }
+  ctx.fillStyle = '#2a2e36';
+  ctx.fillRect(0, 30, SERRA_W * 16, 2);
+  // i bordi di legno delle aiuole rialzate
+  const lv = fLv(G.st.free.built[m.serraK] || {});
+  for (const [x0, y0] of SERRA_AIUOLE.slice(0, lv + 1)) {
+    const X = x0 * 16 - 2,
+      Y = y0 * 16 - 2,
+      W = 4 * 16 + 4,
+      H = 2 * 16 + 4;
+    ctx.fillStyle = '#07050a';
+    ctx.fillRect(X - 1, Y - 1, W + 2, H + 3);
+    ctx.fillStyle = '#4a3222';
+    ctx.fillRect(X, Y, W, 2);
+    ctx.fillRect(X, Y + H - 2, W, 3);
+    ctx.fillRect(X, Y, 2, H);
+    ctx.fillRect(X + W - 2, Y, 2, H);
+    ctx.fillStyle = '#6a4a30';
+    ctx.fillRect(X, Y, W, 1);
+    ctx.fillStyle = '#2e2016';
+    ctx.fillRect(X, Y + H, W, 1);
+    for (let i = 1; i < 4; i++) ctx.fillRect(X + i * 17, Y + H - 2, 1, 3); // le giunte delle assi
+  }
+  // il vialetto di mattoni verso la porta e qualche foglia caduta
+  ctx.fillStyle = 'rgba(90,40,30,.35)';
+  ctx.fillRect(6 * 16 + 4, 2 * 16, 24, (SERRA_H - 2) * 16);
+  for (let i = 0; i < 14; i++) {
+    const h = hsh(i * 7, i * 3);
+    ctx.fillStyle = i % 3 ? 'rgba(68,82,44,.7)' : 'rgba(138,52,24,.6)';
+    ctx.fillRect(16 + (h % 180), 40 + ((h >> 4) % 120), 2, 1);
+  }
+});
+// la luce che filtra dai vetri: fasci verdastri inclinati
+Ext.on('drawWorldExtras', m => {
+  if (m.id !== 'serra') return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 4; i++) {
+    const x = 20 + i * 52 + Math.sin(G.t * 0.3 + i) * 2;
+    ctx.fillStyle = 'rgba(70,110,80,.05)';
+    ctx.beginPath();
+    ctx.moveTo(x, 30);
+    ctx.lineTo(x + 14, 30);
+    ctx.lineTo(x + 54, SERRA_H * 16);
+    ctx.lineTo(x + 30, SERRA_H * 16);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+});
+Ext.on('listaMondo', (list, m) => {
+  if (m.id !== 'serra') return;
+  const V = serraVista(m);
+  for (const k in V) {
+    const f = V[k];
+    if (!f.c) continue;
+    const [x, y] = k.split(',').map(Number),
+      img = cropImg(f);
+    list.push({ img, dx: x * 16, dy: y * 16 + 15 - ih(img), sy: y * 16 + 6, crop: f });
+  }
+});
+Ext.on('drawWorldExtras', m => {
+  if (m.id !== 'serra' || G.mode !== 'game') return;
+  serraCon(m, () => drawCropMarks({ id: 'main' }, 0, 0, SERRA_W - 1, SERRA_H - 1));
+});
+// al mattino: le zolle vuote non si richiudono e quelle di una serra tolta spariscono
+Ext.on('freeMorning', st => {
+  if (!st || !isFree(st)) return;
+  const ox = new Set();
+  for (const k in st.free.built)
+    if (st.free.built[k].id === 'serra' && serraPrepara(st, k)) ox.add(st.free.built[k].ox);
+  for (const k in st.farm)
+    if (chiaveSerra(k)) {
+      const x = parseInt(k, 10);
+      if (![...ox].some(o => x >= o && x < o + SERRA_W)) delete st.farm[k];
+    }
+});
+GUIDES.push({
+  id: 'serra_dentro',
+  v: 43,
+  n: 'Dentro la serra',
+  steps: [
+    {
+      t: 'La <b>serra</b> adesso ha il suo interno: toccala per entrare. Sotto i vetri ci sono le aiuole: semina, annaffia e raccogli come nei campi, in ogni stagione. Al cambio di stagione lì dentro non muore niente.'
+    },
+    {
+      t: 'La pioggia non entra: annaffia tu. Al banco accanto alla porta migliori la serra: a ogni livello un’aiuola in più (fino a 4, 32 zolle).'
     }
   ]
 });

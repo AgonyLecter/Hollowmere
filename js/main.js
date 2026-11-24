@@ -511,7 +511,7 @@ function morningSetup() {
     if (s === 2 && st.weather === 'nebbia') st.weather = 'pioggia';
     F.bridgeGone = 0;
   }
-  if (st.weather === 'pioggia') for (const k in st.farm) st.farm[k].w = true;
+  if (st.weather === 'pioggia') for (const k in st.farm) if (!chiaveSerra(k)) st.farm[k].w = true;
   if (H2(st) && F.ch2day && st.day >= F.ch2day + 1) F.page2avail = 1;
   st.bread = 4 + (hearts('clara') >= 3 ? 2 : 0) + (hearts('clara') >= 6 ? 2 : 0);
   st.demand = ['rapa', 'patata', 'zucca'][Math.floor(Math.random() * 3)];
@@ -817,6 +817,8 @@ async function gameOver() {
   spawnHorse(44, 40, 60);
   G.cut--;
 }
+// punto di estensione: i file caricati prima di main.js cambiano mappa con Ext.intercetta('vaiMappa', id, x, y, dir)
+Ext.on('vaiMappa', (id, tx, ty, dir, quick) => goMap(id, tx, ty, dir, quick));
 async function goMap(id, tx, ty, dir = 0, quick) {
   G.cut++;
   try {
