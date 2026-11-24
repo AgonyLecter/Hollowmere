@@ -418,10 +418,17 @@ function compVita(c, p, dP, dt) {
   }
   // fuori: un'attività alla volta
   if (c.t <= 0 || !c.att) {
+    // un'attività diversa dalle ultime due (le giornate sono varie); il sole solo nel primo pomeriggio
     const ora = G.st.time,
       sole = ora >= 14 * 60 && ora < 17 * 60,
-      r = Math.random();
-    c.att = sole && r < 0.3 ? 'sole' : r < 0.45 ? 'giro' : r < 0.7 ? 'caccia' : r < 0.88 ? 'gioca' : 'annusa';
+      ultime = (c.ultime = c.ultime || []),
+      pesi = { giro: 3, caccia: 3, gioca: 2, annusa: 1.5, sole: sole ? 3 : 0 },
+      scelte = Object.keys(pesi).filter(a => pesi[a] && !ultime.includes(a)),
+      tot = scelte.reduce((t, a) => t + pesi[a], 0);
+    let r = Math.random() * tot;
+    c.att = scelte.find(a => (r -= pesi[a]) < 0) || scelte[0];
+    ultime.push(c.att);
+    if (ultime.length > 2) ultime.shift();
     c.t = { sole: 14, giro: 7, caccia: 6, gioca: 4, annusa: 4 }[c.att] + Math.random() * 4;
     c.dest = compPuntoLibero(m);
     c.fase = 0;
@@ -457,11 +464,14 @@ function compVita(c, p, dP, dt) {
       }
       return null;
     case 'gioca': {
-      // le corse matte: un cerchio stretto, velocissimo, poi un altro
+      // le corse matte: corre nel suo punto, poi un cerchio stretto velocissimo (spostato verso casa: resta nella zona)
+      if (c.fase === 0) {
+        if (Math.hypot(dx - c.x, dy - c.y) > 3) return [dx, dy, 60];
+        c.fase = 1;
+      }
       const a = G.t * 7,
-        cx = c.giocoX || ((c.giocoX = c.x), c.x),
-        cy = c.giocoY || ((c.giocoY = c.y), c.y);
-      if (c.t < 0.3) c.giocoX = c.giocoY = 0;
+        cx = dx + (COMP_CASA[0] * 16 + 8 - dx) * 0.2,
+        cy = dy + (COMP_CASA[1] * 16 + 12 - dy) * 0.2;
       return [cx + Math.cos(a) * 14, cy + Math.sin(a) * 7, 110];
     }
   }
