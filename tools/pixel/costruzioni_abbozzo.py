@@ -331,6 +331,92 @@ T.put(10, 21, 'x'); T.put(20, 21, 'y')
 edera(T, 7, 24, 35, 2)
 A['pozzogrande'] = chiudi(T, scuri='kKcBbwIiLmM')
 
+# ---------------------------------------------------------------- museo 112x112: sala gotica con la torre dell'orologio
+def ogiva(T, x, y, w, h, accesa=True, vetro=None):
+    """finestra stretta ad arco acuto: cornice di pietra scura, vetri piombati"""
+    cx = x + (w - 1) / 2
+    for yy in range(y - 2, y + h + 1):
+        for xx in range(x - 1, x + w + 1):
+            if yy < y + w / 2:  # l'arco acuto
+                if abs(xx - cx) > (yy - (y - 2)) * .9:
+                    continue
+            ch = 'X' if xx in (x - 1, x + w) or yy in (y - 2, y + h) else None
+            if ch is None:
+                if vetro:
+                    ch = vetro[(xx + yy) % len(vetro)]
+                else:
+                    ch = ('9' if (xx - x) < w / 2 else '8') if accesa else 't'
+                if (yy - y) % 4 == 3 or xx == round(cx) and w > 3:
+                    ch = 'X'  # il piombo
+            T.put(xx, yy, ch)
+    rett(T, x - 1, y + h + 1, x + w + 1, y + h + 2, 'M')
+
+
+T = Tela(112, 112, 8)
+pietre(T, 4, 104, 108, 112, chiare=True)
+for k in range(4):  # la scalinata
+    rett(T, 44 - k * 2, 104 + k * 2, 68 + k * 2, 106 + k * 2, 'M' if k % 2 else 'Q')
+# le due ali
+pietre(T, 8, 52, 46, 104)
+pietre(T, 66, 52, 104, 104)
+tetto(T, 5, 49, 52, 24, cx=27)
+tetto(T, 63, 107, 52, 24, cx=85)
+for x0 in (14, 24, 34, 72, 82, 92):
+    ogiva(T, x0, 62, 4, 16, accesa=(x0 % 20 != 4))
+for x0 in (16, 26, 84, 94):  # le finestrine nei timpani
+    pass
+ogiva(T, 26, 38, 3, 6); ogiva(T, 84, 38, 3, 6, accesa=False)
+# i contrafforti a gradoni
+for x0 in (8, 42, 66, 100):
+    for y in range(56, 104):
+        sp = 4 if y > 84 else 3 if y > 70 else 2
+        for x in range(x0, x0 + sp):
+            T.put(x, y, 'i' if x == x0 + sp - 1 else 'I')
+    T.put(x0, 55, 'L'); T.put(x0 + 1, 55, 'I')
+# la torre al centro, con la guglia e l'orologio
+pietre(T, 46, 22, 66, 104)
+for y in range(22, 104):
+    T.put(46, y, 'i'); T.put(65, y, 'X')
+tetto(T, 43, 69, 22, 0, cx=56, muschio=False)
+T.put(56, 0, 'K')
+for x in (43, 68):  # i pinnacoli agli angoli della torre
+    for y in range(14, 22):
+        T.put(x, y, 'K' if y > 16 else 'k')
+T.ell(56, 31, 5.5, 5.5, 'QqQ')
+for a in range(12):  # le ore
+    T.put(56 + math.cos(a / 12 * 6.283) * 4.6, 31 + math.sin(a / 12 * 6.283) * 4.6, 'X')
+for k in range(4):  # le lancette ferme sulla mezzanotte meno cinque
+    T.put(56, 31 - k, 'X')
+    if k < 3:
+        T.put(56 - k * .7, 31 - k * .7, 'X')
+T.put(56, 31, '2')
+ogiva(T, 54, 42, 4, 8)
+# il rosone sopra il portale: vetri rossi e ambra
+T.ell(56, 60, 5, 5, 'XXX')
+for a in range(8):
+    for r in (1.5, 3):
+        T.put(56 + math.cos(a / 8 * 6.283) * r, 60 + math.sin(a / 8 * 6.283) * r, '3' if a % 2 else '8')
+T.put(56, 60, '9')
+# il portale ad arco acuto, a strombo, con la porta di legno chiodata
+for k, ch in enumerate('IiX'):
+    for yy in range(74 + k, 104):
+        for xx in range(48 + k * 2, 64 - k * 2):
+            if yy < 74 + k + 8 and abs(xx - 55.5) > (yy - 74 - k) * .9 + .5:
+                continue
+            T.put(xx, yy, ch)
+for yy in range(84, 104):
+    for xx in range(52, 60):
+        T.put(xx, yy, 'B' if (xx - 52) % 3 else 'b')
+for xx in range(52, 60, 2):
+    T.put(xx, 88, 'K'); T.put(xx, 98, 'K')
+T.put(58, 94, '8')  # l'anello di ferro
+lanterna(T, 46, 84); lanterna(T, 66, 84)
+# i doccioni agli angoli delle ali
+for x, d in ((6, -1), (48, 1), (64, -1), (106, 1)):
+    T.put(x, 52, 'K'); T.put(x + d, 51, 'K'); T.put(x + d, 52, 'k')
+edera(T, 10, 70, 104, 1); edera(T, 102, 60, 104, 3); edera(T, 64, 86, 104, 2)
+A['museo'] = chiudi(T)
+
 QUI = os.path.dirname(__file__)
 righe = ['# Le costruzioni della Valle. Generato da costruzioni_abbozzo.py.', '@tavolozza', PAL]
 for k, T in A.items():

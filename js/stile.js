@@ -215,6 +215,26 @@ Ext.on('arte', () => {
     segnala(e, 'stile');
   }
 });
+// la grafica che si disegna più tardi, la prima volta che serve (la Valle, la miniera, il museo, gli edifici
+// del banco...): passa dallo stesso filtro appena è pronta. Le immagini già trattate restano come sono.
+for (const nome of [
+  'genCostrArt',
+  'genEspArt',
+  'genMineArt',
+  'genPietraArt',
+  'genSempreArt',
+  'genValleArt',
+  'genAspettoArt'
+])
+  Ext.avvolgi(nome, function (prossimo, ...a) {
+    const r = prossimo(...a);
+    try {
+      stileTutto();
+    } catch (e) {
+      segnala(e, 'stile');
+    }
+    return r;
+  });
 
 // ---------- i personaggi: lo stesso linguaggio, alla loro grana (i volti disegnati a mano restano leggibili) ----------
 // tavolozza dell'albero più i toni di pelle, capelli e occhi; contorno scuro; luce di luna in alto

@@ -4809,6 +4809,12 @@ Ext.avvolgi('genCostrArt', function (prossimo, ...a) {
   for (const k of ['serra', 'mulino', 'silos', 'pozzogrande']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
   return r;
 });
+// il museo gotico, con la torre dell'orologio: si disegna la prima volta che serve (genSempreArt)
+Ext.avvolgi('genSempreArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  IMG.museo = daGriglia(COSTRUZIONI_MANO, 'museo');
+  return r;
+});
 // le canne alte della riva si disegnano quando si apre la Valle (genEspArt): lì prendono il loro posto
 Ext.avvolgi('genEspArt', function (prossimo, ...a) {
   const r = prossimo(...a);
