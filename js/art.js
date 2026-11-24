@@ -4595,24 +4595,24 @@ function makeCornici() {
       [c, x] = mk(N, N);
     srand(77);
     P(x, '#140a06', 0, 0, N, N);
-    P(x, '#6e4626', 1, 1, N - 2, N - 2);
+    P(x, '#2a1c18', 1, 1, N - 2, N - 2);
     // venature lungo il legno: orizzontali sopra e sotto, verticali ai lati
     for (let i = 0; i < 140; i++) {
       const v = ri(1, N - 2),
         t = ri(2, 7),
-        col = ['#5a381c', '#80542e', '#63401f', '#8a5e34'][ri(0, 3)];
+        col = ['#1e1410', '#3a2820', '#241814', '#44302a'][ri(0, 3)];
       if (rnd() < 0.5) P(x, col, v, rnd() < 0.5 ? t : N - 1 - t, ri(2, 5), 1);
       else P(x, col, rnd() < 0.5 ? t : N - 1 - t, v, 1, ri(2, 5));
     }
     // rilievo: luce in alto a sinistra, ombra in basso a destra
-    P(x, '#b8844a', 1, 1, N - 2, 1);
-    P(x, '#b8844a', 1, 1, 1, N - 2);
-    P(x, '#94663a', 2, 2, N - 4, 1);
-    P(x, '#94663a', 2, 2, 1, N - 4);
-    P(x, '#2e1a0a', 1, N - 2, N - 2, 1);
-    P(x, '#2e1a0a', N - 2, 1, 1, N - 2);
-    P(x, '#46290f', 2, N - 3, N - 4, 1);
-    P(x, '#46290f', N - 3, 2, 1, N - 4);
+    P(x, '#6a6470', 1, 1, N - 2, 1);
+    P(x, '#6a6470', 1, 1, 1, N - 2);
+    P(x, '#4a4450', 2, 2, N - 4, 1);
+    P(x, '#4a4450', 2, 2, 1, N - 4);
+    P(x, '#0e0a0c', 1, N - 2, N - 2, 1);
+    P(x, '#0e0a0c', N - 2, 1, 1, N - 2);
+    P(x, '#18121a', 2, N - 3, N - 4, 1);
+    P(x, '#18121a', N - 3, 2, 1, N - 4);
     // il bordo interno: solco scuro, filo d'ottone, poi la pergamena
     const ring = (o, col) => {
       P(x, col, o, o, N - 2 * o, 1);
@@ -4620,12 +4620,12 @@ function makeCornici() {
       P(x, col, o, o, 1, N - 2 * o);
       P(x, col, N - 1 - o, o, 1, N - 2 * o);
     };
-    ring(8, '#1e1006');
-    ring(9, '#d9a646');
-    P(x, '#f6d98a', 9, 9, N - 18, 1);
-    P(x, '#f6d98a', 9, 9, 1, N - 18);
-    ring(10, '#5a3a1a');
-    P(x, '#ead8ae', F, F, N - 2 * F, N - 2 * F);
+    ring(8, '#0a0608');
+    ring(9, '#8a8890');
+    P(x, '#c8cad2', 9, 9, N - 18, 1);
+    P(x, '#c8cad2', 9, 9, 1, N - 18);
+    ring(10, '#2a2024');
+    P(x, '#cbb88e', F, F, N - 2 * F, N - 2 * F);
     // angolari di ferro con la borchia
     for (const [sx, sy] of [
       [0, 0],
@@ -4643,8 +4643,8 @@ function makeCornici() {
       Q(0, 0, 7, 1, '#7a7680');
       Q(0, 0, 1, 7, '#7a7680');
       Q(2, 2, 3, 3, '#1a1414');
-      Q(2, 2, 2, 2, '#d9a646');
-      Q(2, 2, 1, 1, '#fff0b8');
+      Q(2, 2, 2, 2, '#8a1418');
+      Q(2, 2, 1, 1, '#e05a40');
     }
     set('--cornice', c);
   }
@@ -4663,8 +4663,8 @@ function makeCornici() {
     P(x, lume, 6, 2, 1, 4);
     return c;
   };
-  set('--pozzo', pozzo('#3a2618', '#24160e', 'rgba(255,220,160,.16)'));
-  set('--pozzoSel', pozzo('#7a5430', '#4a2e18', 'rgba(255,236,170,.55)'));
+  set('--pozzo', pozzo('#241c22', '#140e14', 'rgba(170,190,200,.14)'));
+  set('--pozzoSel', pozzo('#4a3a3e', '#2a2026', 'rgba(255,210,140,.5)'));
   // bottone 12×12, fetta 4: la tavoletta ha uno spessore sotto (2 px) che sparisce quando la premi
   const tasto = (alto, basso, luce, bordo, premuto) => {
     const [c, x] = mk(12, 12);
@@ -4682,17 +4682,17 @@ function makeCornici() {
     }
     return c;
   };
-  set('--tasto', tasto('#6e4628', '#4a2e1a', '#a8743e', '#140a06'));
-  set('--tastoSu', tasto('#8a5a32', '#5a381e', '#e8c07a', '#d9a646'));
-  set('--tastoGiu', tasto('#4a2e1a', '#3a2414', '#6a4424', '#140a06', true));
+  set('--tasto', tasto('#3a3240', '#24202a', '#6a6478', '#07050a'));
+  set('--tastoSu', tasto('#4e4048', '#2e262e', '#d8a860', '#b8843a'));
+  set('--tastoGiu', tasto('#24202a', '#1a161e', '#3a3440', '#07050a', true));
 }
 function makeParch() {
   const [c, x] = mk(64, 64);
   srand(31);
-  x.fillStyle = '#ead8ae';
+  x.fillStyle = '#d6c296';
   x.fillRect(0, 0, 64, 64);
   for (let i = 0; i < 900; i++) {
-    x.fillStyle = ['#e2cea0', '#efdfb8', '#dcc694', '#f2e4c0'][ri(0, 3)];
+    x.fillStyle = ['#ccb688', '#dccaa0', '#c4ac7e', '#e0d0a8'][ri(0, 3)];
     x.fillRect(ri(0, 63), ri(0, 63), 1, 1);
   }
   for (let i = 0; i < 14; i++) {
@@ -4703,8 +4703,8 @@ function makeParch() {
   }
   for (let i = 0; i < 4; i++) {
     const g = x.createRadialGradient(ri(0, 64), ri(0, 64), 0, 32, 32, ri(6, 14));
-    g.addColorStop(0, 'rgba(160,110,50,.1)');
-    g.addColorStop(1, 'rgba(160,110,50,0)');
+    g.addColorStop(0, 'rgba(110,70,30,.16)');
+    g.addColorStop(1, 'rgba(110,70,30,0)');
     x.fillStyle = g;
     x.fillRect(0, 0, 64, 64);
   }

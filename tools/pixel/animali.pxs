@@ -1,0 +1,215 @@
+# Gli animali della fattoria. Generato da animali_abbozzo.py.
+@tavolozza
+o #07050a
+J #8aa0a8
+j #5a6a74
+l #e8dcc0
+L #c0baa8
+m #9a968a
+n #74726e
+s #55545a
+X #0e090c
+K #1c1418
+k #2a1e24
+c #3a2a30
+b #4a3222
+B #6a4a30
+w #8a6a44
+R #b0261e
+r #7c1512
+g #d8aa48
+p #b88a6a
+P #8a5a4a
+t #3e5a6e
+T #2a3a52
+y #c8862e
+Y #8a3418
+@sprite gallina0 12x12
+.......oRo..
+..o...oRRRo.
+.ojo..occoo.
+ojKo..oXXgyo
+oKcjoooKcoYo
+.oKcjjjXKro.
+.ocKnKKXXo..
+.oXXKKnKXo..
+..oXXXXXo...
+...ooyoyo...
+....oyoyo...
+...oYyYyYo..
+@sprite gallina1 12x12
+.......oRo..
+..o...oRRRo.
+.ojo..occoo.
+ojKo..oXXgyo
+oKcjoooKcoYo
+.oKcjjjXKro.
+.ocKnKKXXo..
+.oXXKKnKXo..
+..oXXXXXo...
+...oyooyo...
+...oyo.oyo..
+..oYyYoYyYo.
+@sprite gallina2 12x12
+............
+..o.........
+.ojo........
+ojKo........
+oKcjoooo...o
+.oKcjjjjoooR
+.ocKnKKKjRRR
+.oXXKKnKccco
+..oXXXXXoXXg
+...ooyoyoooo
+....oyoyo.or
+...oYyYyYo.o
+@sprite anatra0 12x10
+........ooo.
+.......ojjjo
+.......oKTXy
+..ooooooKKoY
+.oJJJJJJKloo
+oJnnnnnnKKo.
+ommsssssnmo.
+.ommmmmmmo..
+..oooyoyo...
+....oyYyYo..
+@sprite anatra1 12x10
+........ooo.
+.......ojjjo
+.......oKTXy
+..ooooooKKoY
+.oJJJJJJKloo
+oJnnnnnnKKo.
+ommsssssnmo.
+.ommmmmmmo..
+..ooyoooyo..
+...oyYooyYo.
+@sprite mucca0 24x17
+.................oo...on
+................onmo.omo
+...ooo...........ooLooLo
+.oowwwooooooooooooooLLo.
+ojwBBBllllwwwwwwwwwwjjo.
+oBBBBLLLLLLBBBBBBbbbblo.
+oBBBBLLLLLLBbBbBBBbBbXjo
+oBbBBBLLLLBBBBBBBBbbKblo
+oBbbbBBBBBbBLLLBBBbbKKlo
+oBoobbbbbbbbmmmbbbbooKKo
+oBooKoBboooooooKoBbo.oPP
+jKooKoBbooPPo.oKoBbo..oo
+oKooKoBbo.oo..oKoBbo....
+.o.ocowbo.....ocowbo....
+...oKoBbo.....oKoBbo....
+...oKoBbo.....oKoBbo....
+...oXXXXo.....oXXXXo....
+@sprite mucca1 24x17
+.................oo...on
+................onmo.omo
+...ooo...........ooLooLo
+.oowwwooooooooooooooLLo.
+ojwBBBllllwwwwwwwwwwjjo.
+oBBBBLLLLLLBBBBBBbbbblo.
+oBBBBLLLLLLBbBbBBBbBbXjo
+oBbBBBLLLLBBBBBBBBbbKblo
+oBbbbBBBBBbBLLLBBBbbKKlo
+oBoobbbbbbbbmmmbbbbooKKo
+oBooKBboooooooKooBbo.oPP
+jKooKBbo.oPPooKooBbo..oo
+oKooKBbo..oo.oKooBbo....
+.o.oKwbo.....ocooBwo....
+...oKBbo.....oKooBbo....
+....oBbo.....oKo.oBjo...
+....oXXo.....oXXooXXo...
+@sprite capra0 17x15
+..........ommoo..
+.........onoonno.
+.o........o.ojjo.
+ojo........ojkgXo
+oKooooooooojKKkco
+.ojjjjjjjjjckKKKo
+.oKkkkkkkkkkkcoKo
+.oKKkkkkkkkkkKjo.
+..oKKkkkkkkkKoKXo
+...oKKKKKKKKcooo.
+...oKcKoKoKKco...
+...oKco.o.oKco...
+...oKco...oKco...
+...oKco...oKco...
+...onno...onno...
+@sprite capra1 17x15
+..........ommoo..
+.........onoonno.
+.o........o.ojjo.
+ojo........ojkgXo
+oKooooooooojKKkco
+.ojjjjjjjjjckKKKo
+.oKkkkkkkkkkkcoKo
+.oKKkkkkkkkkkKjo.
+..oKKkkkkkkkKoKXo
+...oKKKKKKKKcooo.
+...oKoKoKoKoco...
+...ocoo.ooKoco...
+...oco...oKoco...
+...ocjo..oKoojo..
+...onno..onoono..
+@sprite pecora0 18x14
+..................
+....ooooooo..oo...
+..oolllllllooLlo..
+.ollLLLLLmLllLcjo.
+olLLLmLLLLLLXKkkjo
+lmLLLLLLmLLLLLKLXo
+nLLLmLLLLLLmLLKKko
+oLLLLLLmLLLLLLlKKo
+onLmLLLLLLmLLLmoKP
+ommnLLmLLLLmnmo.oo
+.oommLmmnmmKoco...
+...onmcommoKoco...
+...oKocooooKoco...
+...oXoXo..oXoXo...
+@sprite pecora1 18x14
+..................
+....ooooooo..oo...
+..oolllllllooLlo..
+.ollLLLLLmLllLcjo.
+olLLLmLLLLLLXKkkjo
+lmLLLLLLmLLLLLKLXo
+nLLLmLLLLLLmLLKKko
+oLLLLLLmLLLLLLlKKo
+onLmLLLLLLmLLLmoKP
+ommnLLmLLLLmnmo.oo
+.oommLmmnmmooco...
+...onmoommKooco...
+....oco.ooKo.ojo..
+....oXo..oXo.oXo..
+@sprite tosata0 18x14
+..................
+..................
+..............oo..
+....oooooooooojjo.
+.ooojjjjjjjjXjkkjo
+ojjjPPPPPPPPPpKLXo
+.obPPPPPPPPPPPKKko
+.obbPPPPPPPPPPoKKo
+..obbPPPPPPPPbooKj
+...obbbbbbbbbco.oo
+...oKocooooKoco...
+...oKoco..oKoco...
+...oKoco..oKoco...
+...oXoXo..oXoXo...
+@sprite tosata1 18x14
+..................
+..................
+..............oo..
+....oooooooooojjo.
+.ooojjjjjjjjXjkkjo
+ojjjPPPPPPPPPpKLXo
+.obPPPPPPPPPPPKKko
+.obbPPPPPPPPPPoKKo
+..obbPPPPPPPPbooKj
+...obbbbbbbbbco.oo
+...oKcooooKooco...
+...oKco..oKooco...
+....oco..oKo.ojo..
+....oXo..oXo.oXo..

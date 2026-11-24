@@ -1,4 +1,17 @@
 'use strict';
+// Uno sprite disegnato a mano (tools/pixel/*.pxs → js/*_mano.js): {tavolozza, sprite} → canvas, un pixel per lettera.
+function daGriglia(D, nome) {
+  const g = D.sprite[nome],
+    [c, x] = mk(g[0].length, g.length);
+  g.forEach((riga, Y) =>
+    [...riga].forEach((ch, X) => {
+      if (ch === '.') return;
+      x.fillStyle = D.tavolozza[ch];
+      x.fillRect(X, Y, 1, 1);
+    })
+  );
+  return c;
+}
 // ================= GRAFICA: ritocco del comparto visivo =================
 // Solo aspetto: personaggi ridisegnati in pixel art "a mano", edifici ridipinti, luce.
 // Non cambia logica, dimensioni delle immagini, collisioni o salvataggi: sostituisce
@@ -3827,15 +3840,7 @@ const TOOLS = {
     }
     // gli attrezzi disegnati a mano (tools/pixel/attrezzi.pxs → js/attrezzi_mano.js) prendono il loro posto
     for (const k in ATTREZZI_MANO.sprite) {
-      const g = ATTREZZI_MANO.sprite[k],
-        [c, x] = mk(g[0].length, g.length);
-      g.forEach((r, Y) =>
-        [...r].forEach((ch, X) => {
-          if (ch === '.') return;
-          x.fillStyle = ATTREZZI_MANO.tavolozza[ch];
-          x.fillRect(X, Y, 1, 1);
-        })
-      );
+      const c = daGriglia(ATTREZZI_MANO, k);
       c.s = 2;
       ICON[k] = c;
     }
@@ -4737,48 +4742,33 @@ const HOG = (() => {
 // il collo mozzato e le narici nel disegno, per i bagliori della notte.
 const HORSEMAN = Object.keys(CAVALIERE_MANO.sprite)
   .filter(n => n.startsWith('galoppo'))
-  .map(n => {
-    const g = CAVALIERE_MANO.sprite[n],
-      [c, x] = mk(g[0].length, g.length);
-    g.forEach((r, Y) =>
-      [...r].forEach((ch, X) => {
-        if (ch === '.') return;
-        x.fillStyle = CAVALIERE_MANO.tavolozza[ch];
-        x.fillRect(X, Y, 1, 1);
-      })
-    );
-    return c;
-  });
+  .map(n => daGriglia(CAVALIERE_MANO, n));
 // lo spavento: il Cavaliere che s'impenna verso il giocatore (tools/pixel/spavento.pxs → js/spavento_mano.js)
-const SPAVENTO = (() => {
-  const g = SPAVENTO_MANO.sprite.spavento,
-    [c, x] = mk(g[0].length, g.length);
-  g.forEach((r, Y) =>
-    [...r].forEach((ch, X) => {
-      if (ch === '.') return;
-      x.fillStyle = SPAVENTO_MANO.tavolozza[ch];
-      x.fillRect(X, Y, 1, 1);
-    })
-  );
-  return c;
-})();
+const SPAVENTO = daGriglia(SPAVENTO_MANO, 'spavento');
 // l'Albero dei Morti disegnato a mano (tools/pixel/albero.pxs → js/albero_mano.js), stessa misura di prima
 {
   Ext.avvolgi('genWoodArt', function (prossimo, ...a) {
     const r = prossimo(...a);
-    const g = ALBERO_MANO.sprite.albero,
-      [c, x] = mk(g[0].length, g.length);
-    g.forEach((riga, Y) =>
-      [...riga].forEach((ch, X) => {
-        if (ch === '.') return;
-        x.fillStyle = ALBERO_MANO.tavolozza[ch];
-        x.fillRect(X, Y, 1, 1);
-      })
-    );
-    IMG.albero = c;
+    IMG.albero = daGriglia(ALBERO_MANO, 'albero');
     return r;
   });
 }
+// gli animali della fattoria disegnati a mano (tools/pixel/animali.pxs → js/animali_mano.js), di profilo verso
+// destra: la gallina ha 3 fotogrammi (il terzo becca), gli altri 2 di passo
+Ext.on('arte', () => {
+  const serie = base =>
+    Object.keys(ANIMALI_MANO.sprite)
+      .filter(n => n.replace(/\d+$/, '') === base)
+      .map(n => daGriglia(ANIMALI_MANO, n));
+  CRIT.chicken = serie('gallina');
+  Object.assign(AIMG, {
+    anatra: serie('anatra'),
+    mucca: serie('mucca'),
+    capra: serie('capra'),
+    pecora: serie('pecora'),
+    pecoraTosata: serie('tosata')
+  });
+});
 const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
   Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {

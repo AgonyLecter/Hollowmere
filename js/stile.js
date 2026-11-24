@@ -162,6 +162,27 @@ function stileMondo(im) {
 function stileIcona(im) {
   if (!im || !im.getContext || im._stile) return im;
   stilePersonaggio(im);
+  // un alone chiaro e tenue attorno alla sagoma: sul fondo scuro delle caselle l'icona si stacca
+  {
+    const x = im.getContext('2d'),
+      W = im.width,
+      H = im.height,
+      img = x.getImageData(0, 0, W, H),
+      d = img.data,
+      pieno = (X, Y) => X >= 0 && Y >= 0 && X < W && Y < H && d[(Y * W + X) * 4 + 3] > 127,
+      alone = [];
+    for (let Y = 0; Y < H; Y++)
+      for (let X = 0; X < W; X++)
+        if (!pieno(X, Y) && (pieno(X - 1, Y) || pieno(X + 1, Y) || pieno(X, Y - 1) || pieno(X, Y + 1)))
+          alone.push((Y * W + X) * 4);
+    for (const i of alone) {
+      d[i] = 200;
+      d[i + 1] = 184;
+      d[i + 2] = 150;
+      d[i + 3] = 70;
+    }
+    x.putImageData(img, 0, 0);
+  }
   im._stile = 1;
   return im;
 }
@@ -268,3 +289,71 @@ Ext.on('foglioPersonaggio', c => {
   }
 });
 Ext.avvolgi('genPortrait', (prossimo, L, mood) => stilePersonaggio(prossimo(L, mood)));
+
+// ---------- il terreno: stessa grana dell'albero (ogni blocco 2×2 un solo pixel) e stessa tavolozza ----------
+// La tela del terreno resta a 2× (il gioco la legge così): si uniforma solo il contenuto, blocco per blocco.
+function stileTerreno(c) {
+  const x = c.getContext('2d'),
+    W = c.width,
+    H = c.height,
+    img = x.getImageData(0, 0, W, H),
+    d = img.data,
+    cache = new Map(),
+    vicino = k => {
+      let v = cache.get(k);
+      if (v) return v;
+      const r = k >> 16,
+        g = (k >> 8) & 255,
+        b = k & 255;
+      let best = 1e9;
+      for (const p of STILE_PAL) {
+        const e = (p[0] - r) ** 2 * 0.3 + (p[1] - g) ** 2 * 0.59 + (p[2] - b) ** 2 * 0.11;
+        if (e < best) ((best = e), (v = p));
+      }
+      cache.set(k, v);
+      return v;
+    };
+  for (let Y = 0; Y + 1 < H; Y += 2)
+    for (let X = 0; X + 1 < W; X += 2) {
+      // il colore del blocco: la media dei quattro (sul prato le differenze sono piccole), poi la tavolozza
+      let r = 0,
+        g = 0,
+        b = 0,
+        n = 0;
+      for (const [dx, dy] of [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ]) {
+        const i = ((Y + dy) * W + X + dx) * 4;
+        if (d[i + 3] < 128) continue;
+        r += d[i];
+        g += d[i + 1];
+        b += d[i + 2];
+        n++;
+      }
+      if (!n) continue;
+      const p = vicino(((r / n) << 16) | ((g / n) << 8) | (b / n));
+      for (const [dx, dy] of [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ]) {
+        const i = ((Y + dy) * W + X + dx) * 4;
+        if (d[i + 3] < 128) continue;
+        d[i] = p[0];
+        d[i + 1] = p[1];
+        d[i + 2] = p[2];
+      }
+    }
+  x.putImageData(img, 0, 0);
+}
+Ext.on('terreno', m => {
+  try {
+    if (!m.interior && m.ground) stileTerreno(m.ground);
+  } catch (e) {
+    segnala(e, 'stile');
+  }
+});
