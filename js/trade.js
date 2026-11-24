@@ -32,7 +32,8 @@ function veinOf(pid) {
   for (const c of String(pid || 'HM')) h = (h * 131 + c.charCodeAt(0)) >>> 0;
   const L = Object.keys(RARE),
     a = L[h % 4],
-    b = L[((h >> 3) % 3) + (L.indexOf(a) <= (h >> 3) % 3 ? 1 : 0)];
+    // >>> e non >>: h arriva fino a 2^32, e lo spostamento con il segno lo renderebbe negativo (indice fuori)
+    b = L[((h >>> 3) % 3) + (L.indexOf(a) <= (h >>> 3) % 3 ? 1 : 0)];
   return [a, b === a ? L[(L.indexOf(a) + 1) % 4] : b];
 }
 function rareDrop(o) {

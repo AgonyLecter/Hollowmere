@@ -203,6 +203,18 @@ module.exports = async function (t, { browser }) {
   t.eq('in piazza ogni oggetto si raggiunge', pz.chiusi.join(','), '');
   t.true('il centro della piazza resta libero (feste, falò)', pz.centro);
   t.true('gli ingressi della piazza sono liberi', pz.ingressi);
+  // la vena di minerali rari: per ogni identificativo di giocatore, due minerali che esistono e diversi
+  // (prima, per identificativi con il numero sopra 2^31, il secondo minerale risultava «niente»)
+  const vene = await page.evaluate(() => {
+    const rotte = [];
+    for (let i = 0; i < 20000 && rotte.length < 3; i++) {
+      const pid = 'p' + i.toString(36) + (i * 7919).toString(16),
+        V = veinOf(pid);
+      if (V.length !== 2 || V.some(k => !RARE[k]) || V[0] === V[1]) rotte.push(pid + ' ' + JSON.stringify(V));
+    }
+    return rotte;
+  });
+  t.eq('ogni villaggio ha due minerali rari veri e diversi', vene.join(' ; '), '');
   t.eq('economia: nessun errore', errors.join('\n'), '');
   await page.close();
 };
