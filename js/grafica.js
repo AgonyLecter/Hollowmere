@@ -5415,22 +5415,34 @@ addEventListener('keydown', e => {
     ht = setTimeout(() => {
       long = true;
       playerSnowman();
+      G.st.flags.neveTieni = 1;
     }, 450);
   });
   b.addEventListener('pointerup', e => {
     e.preventDefault();
     e.stopPropagation();
     clearTimeout(ht);
-    if (!long) playerThrow();
+    if (!long) {
+      playerThrow();
+      G.st.flags.neveTocca = 1;
+    }
   });
   addEventListener('load', () => {
     const t = document.getElementById('touch');
     if (t) t.appendChild(b);
   });
   if (document.getElementById('touch')) document.getElementById('touch').appendChild(b);
+  // la prima volta che compare si spiega; l'etichetta sotto resta finché non hai provato tutte e due le cose
   setInterval(() => {
-    const on = IN.touch && canSnowPlay();
+    const on = IN.touch && canSnowPlay(),
+      F = G.st && G.st.flags;
     b.style.display = on ? 'block' : 'none';
+    if (!on || !F) return;
+    tip(
+      'tipNeve',
+      '❄ La neve! Tocca il pulsante per lanciare una palla di neve, tienilo premuto per fare un pupazzo.'
+    );
+    b.classList.toggle('nuovo', !(F.neveTocca && F.neveTieni));
   }, 500);
 }
 

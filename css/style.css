@@ -339,3 +339,4 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #efill::after{content:'';position:absolute;left:0;right:0;height:40%;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0));animation:liquido 2.8s linear infinite}
 @keyframes liquido{from{top:110%}to{top:-50%}}
 @media (prefers-reduced-motion:reduce){#bA,.slot.sel,#efill::after{animation:none}.onda,.scintilla{display:none}}
+#bSnow.nuovo::after{content:'tocca: palla · tieni: pupazzo';position:absolute;left:50%;bottom:calc(100% + 5*var(--u));transform:translateX(-50%);white-space:nowrap;font-size:calc(6*var(--u));color:#e8f4ff;background:rgba(16,26,42,.8);padding:calc(1*var(--u)) calc(4*var(--u));box-shadow:0 0 0 var(--u) rgba(184,212,240,.6);text-shadow:0 var(--u) 0 #000;pointer-events:none;animation:tin .4s}
