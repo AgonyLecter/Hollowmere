@@ -8,7 +8,8 @@
 Scrive natura.pxs; poi:
     python3 tools/pixel/studio.py tools/pixel/natura.pxs --js js/natura_mano.js --nome NATURA_MANO
 """
-import os, math, random
+import os, math
+from tela import Tela
 
 PAL = """o #07050a
 X #0e090c
@@ -43,48 +44,6 @@ t #1a3028
 u #26463a
 v #3a5e4c
 x #5a7a68"""
-
-
-class Tela:
-    def __init__(s, w, h, seme):
-        s.w, s.h = w, h
-        s.G = [['.'] * w for _ in range(h)]
-        s.rnd = random.Random(seme)
-
-    def put(s, x, y, ch, solo_vuoto=False):
-        x, y = int(math.floor(x)), int(math.floor(y))
-        if 0 <= x < s.w and 0 <= y < s.h and (not solo_vuoto or s.G[y][x] == '.'):
-            s.G[y][x] = ch
-
-    def get(s, x, y):
-        x, y = int(math.floor(x)), int(math.floor(y))
-        return s.G[y][x] if 0 <= x < s.w and 0 <= y < s.h else '.'
-
-    def disco(s, cx, cy, r, ch, solo_vuoto=False):
-        for y in range(int(cy - r - 1), int(cy + r + 2)):
-            for x in range(int(cx - r - 1), int(cx + r + 2)):
-                if (x + .5 - cx) ** 2 + (y + .5 - cy) ** 2 <= r * r:
-                    s.put(x, y, ch, solo_vuoto)
-
-    def luna(s, scuri, chiaro='J', medio='j'):
-        N = [r[:] for r in s.G]
-        for y in range(s.h):
-            for x in range(s.w):
-                if s.G[y][x] in scuri and s.get(x, y - 1) == '.':
-                    N[y][x] = chiaro if s.get(x - 1, y) != '.' and s.get(x + 1, y) != '.' else medio
-        s.G = N
-
-    def contorno(s):
-        N = [r[:] for r in s.G]
-        for y in range(s.h):
-            for x in range(s.w):
-                if s.G[y][x] == '.' and any(s.get(x + a, y + b) not in '.o' for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                    N[y][x] = 'o'
-        s.G = N
-        return s
-
-    def righe(s):
-        return [''.join(r) for r in s.G]
 
 
 # ================================================================ alberi

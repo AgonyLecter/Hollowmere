@@ -1,0 +1,314 @@
+# Le piccole cose della natura. Generato da minori_abbozzo.py.
+@tavolozza
+o #07050a
+X #0e090c
+K #1c1418
+k #2a1e24
+c #3a2a30
+b #2e2016
+B #4a3222
+w #6a4a30
+W #8a6a44
+h #a88a5e
+J #8aa0a8
+j #5a6a74
+1 #4a0a0c
+2 #7c1512
+3 #b0261e
+4 #5a1e10
+5 #8a3418
+6 #b05a22
+7 #c8862e
+8 #d8aa48
+9 #ffd070
+a #141e12
+d #1e2a18
+e #2e3a22
+f #44522c
+g #606a36
+i #24242c
+I #3a3a44
+L #55545a
+m #74726e
+M #9a968a
+q #e8dcc0
+Q #c0baa8
+p #5a3a52
+P #8a6a8a
+r #b8a8c8
+t #3e5a6e
+@sprite ceppo 16x14
+................
+................
+...oooooooooo...
+..ohhhhhhhhhho..
+.ohWWWWWWWWBWho.
+.owwWwwwBwwWWwo.
+.oKwBwwwwwwwwXo.
+.oKKXKKXKKXKKXo.
+ojKKXKKXKKXKKXo.
+oKfKXKKXKKXKKXjo
+okegXKKXKKXKKkKo
+jKKXXXXXXXXXkKko
+XXXkooooooooXXXj
+oooo........oooo
+@sprite ceppoB 16x14
+................
+.....oooooo.....
+...oo889888oo...
+..ohh677767hho..
+.ohWW666666BWho.
+.owwWwwwBwwWWwo.
+.oKwBwwwwwwwwXo.
+.oKKXKKXKKXKKXo.
+ojKKXKKXKKXKKXo.
+oKfKXKKXKKXKKXjo
+okegXKKXKKXKKkKo
+jKKXXXXXXXXXkKko
+XXXkooooooooXXXj
+oooo........oooo
+@sprite ceppoH 16x14
+................
+................
+...oooooooooo...
+..ohhhXXXXhhho..
+.ohWXXccXXXXWho.
+.owwXXXX63XXWwo.
+.oKwBwXXXXwwwXo.
+.oKKXKKXKKXKKXo.
+ojKKXKKXKKXKKXo.
+oKfKXKKXKKXKKXjo
+okegXKKXKKXKKkKo
+jKKXXXXXXXXXkKko
+XXXkooooooooXXXj
+oooo........oooo
+@sprite erba0 14x15
+..............
+.........W....
+.........h....
+W.......W.....
+h.......h.h...
+...h......h...
+h..h...h..h...
+h..h...h..h...
+.h.h...hh.W...
+.W.W...Wh..W..
+.W.W..W.W..W..
+.W.W..W.W..W..
+.w.w..w.W..w..
+.w.w..w.w..w..
+.bbbbbbbbbbbb.
+@sprite erba1 14x15
+..............
+..............
+..............
+..........h...
+..W.....W.h...
+..h.....h.h...
+..........h...
+..h.....h.h...
+..h..h..h.W...
+..h..h..h.W...
+..W..W..W.W...
+..W..W..W.w...
+..w..W..w.w...
+..w..w..w.w...
+.bbbbbbbbbbbb.
+@sprite erba2 14x15
+......f....f..
+......g....g..
+..............
+g.....gg...g..
+g..g..g.g..g..
+g..g..g.g..g..
+g..g..g.g..g..
+g..g..g.g..g..
+.f.g..f.f..f..
+.f.f..f.f..f..
+.f.f..f.f..f..
+.f.f..f.f..f..
+.e.e..e.e..e..
+.e.e..e.e..e..
+.dddddddddddd.
+@sprite fungo0 11x9
+...........
+...........
+..ooo......
+.oqqqo.....
+oqMMMqoooo.
+oMoQMoqqqqo
+.ooQMoMQMo.
+..oQMooQMo.
+..oQMooQMo.
+@sprite fungo1 11x9
+...........
+...........
+..oooo.....
+.o666qo..o.
+o65q556ooqo
+o4oQMooq6o.
+.ooQMo4556o
+..oQMooQMo.
+..oQMooQMo.
+@sprite sasso0 15x11
+...............
+......ooo......
+....oofggooo...
+...oggLLLfMMo..
+..oMLLLLLLIIMo.
+.oMLLLLiLLIIIo.
+.oLLLLLiLLIIIo.
+.oLLLLLLiLIIIMo
+oMILLLLLLLIIIo.
+.oIIIIIIIIIIo..
+..oooooooooo...
+@sprite sasso1 15x11
+...............
+...............
+.....ooooo.....
+....ogfggfo....
+...ogLLLLLMo...
+..oMLLLiLLIMo..
+.oMLLLLiLLIIMo.
+.oLLLLLLiLIIIo.
+.oILLLLLLLIIo..
+.oIIIIIIIIIIo..
+..oooooooooo...
+@sprite sasso2 15x11
+...............
+...............
+...............
+......oooo.....
+....oofggfoo...
+...oggLiLLMMo..
+..oMLLLiLLIIMo.
+.oMLLLLLiLIIIo.
+.oLLLLLLLLIIIMo
+oMIIIIIIIIIIIIo
+.ooooooooooooo.
+@sprite tronco 32x13
+................................
+................................
+..oooooooooooooo................
+.ojJJJgfJgffJfJjooooooooooooooo.
+.oKKKKKKKKKKKKfgJfgfJgJJJJJhhhho
+ojKKkKKKKKXKKKKKXKKKKKXKKKKWWWWo
+oKKKKKKXK77KKXKKKK777KKKKXKWWWwo
+oXKKKKKKK55KKKKKXK555KXKKKKWWBWo
+oXKKXKKXKKKKKXKKKKKXKKKKKXKWWWWo
+.oXKXKKKKKXKKKKKXKKKKKXKKKKwWWWo
+.oXXXXXXXXXXXXXXXXXXXXXXXXXwwwwo
+..ooooooooooooooooooooooooooooo.
+................................
+@sprite canna0 10x17
+....oeoo..
+....oBoeo.
+..o.oBoBo.
+.oeooboBo.
+.oBoofobo.
+.oBooeoeo.
+.obooeoeo.
+.oeooeoeo.
+.ofoofofo.
+.oeooefffo
+.oeoffoeo.
+.oeooeoeo.
+.offofofo.
+.ofooeoeo.
+.oeooeoeo.
+.oeooeoeo.
+.ofoofofo.
+@sprite canna1 10x17
+..........
+...o......
+..oeo.o...
+..oBooeo..
+..oBooBo..
+..obooBo..
+..oeoobo..
+..oeooeo..
+.oofoofo..
+offeooeo..
+.ooffoeo..
+..oeooeo..
+..ofoffo..
+..oeoofo..
+..oeooeo..
+..oeooeo..
+..ofoofo..
+@sprite canne 12x18
+............
+.....oo.....
+....ogBo....
+....ofBo.oo.
+....ofo.ofBo
+..ooggo.ogBo
+.oBofofoofo.
+ofBofofoffo.
+ogoogogogogo
+ofoofofofofo
+.ofofofofofo
+.ogogogogogo
+.ofofofofofo
+.ofofofofofo
+.ogogogogogo
+.ofofofofofo
+.ofofofofofo
+.ogogogogogo
+@sprite girasole 11x24
+...........
+...........
+..ooooooo..
+.o6888888o.
+..o777B77oo
+.o877BbB786
+.o77BXwbB7o
+..o77XXX7o.
+..o777X77o.
+...ooeooo6o
+..o6oeo..o.
+...oofo....
+.o..oeo....
+ogo.oeo....
+oegoofo....
+.oegoeo....
+..oooeo..o.
+....ofooogo
+....oeoggo.
+....oeoeeo.
+....ofooo..
+....oeo....
+....oeo....
+....ofo....
+@sprite ninfea 11x6
+...ooooo...
+.oogqgggoo.
+oggQqQeeggo
+geff8foooo.
+oeeeffggggo
+.ooeeeeeoo.
+@sprite ortensia 15x13
+...............
+...............
+...............
+......oooo.....
+...ooofrrfoo...
+..orrgePPpgfo..
+.ofPPpeppprrfo.
+ofepppeeeePPpfo
+odrrPrrPeepppeo
+odPPpPPperrPedo
+.oppppppePPpdo.
+..oddddeepppo..
+...ooodddooo...
+@sprite foglie 16x10
+................
+................
+.....o..........
+....o6oooooo....
+..oo77377776oo..
+.o773666666377o.
+o73666666366667o
+o56666636666663o
+o55663666666365o
+.o6355455435456o

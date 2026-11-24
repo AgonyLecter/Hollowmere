@@ -4775,6 +4775,35 @@ Ext.on('arte', () => {
   IMG.pine = serie(NATURA_MANO, 'pino', { canopyH: 40 });
   IMG.bush = daGriglia(NATURA_MANO, 'cespuglio');
   IMG.bushR = daGriglia(NATURA_MANO, 'cespuglioR');
+  // le piccole cose (minori.pxs → minori_mano.js): prendono il posto delle vecchie e ne tengono l'altezza della chioma
+  const alPosto = (vecchia, nome) =>
+    Object.assign(
+      daGriglia(MINORI_MANO, nome),
+      vecchia && vecchia.canopyH ? { canopyH: vecchia.canopyH } : {}
+    );
+  Object.assign(IMG, {
+    stump: alPosto(IMG.stump, 'ceppo'),
+    stumpB: alPosto(IMG.stumpB, 'ceppoB'),
+    stumpH: alPosto(IMG.stumpH, 'ceppoH'),
+    log: alPosto(IMG.log, 'tronco'),
+    sunflower: alPosto(IMG.sunflower, 'girasole'),
+    lily: alPosto(IMG.lily, 'ninfea'),
+    hydr: alPosto(IMG.hydr, 'ortensia'),
+    leaves: alPosto(IMG.leaves, 'foglie')
+  });
+  for (const [k, nome, n] of [
+    ['tuft', 'erba', 3],
+    ['mush', 'fungo', 2],
+    ['rock', 'sasso', 3],
+    ['reed', 'canna', 2]
+  ])
+    IMG[k] = Array.from({ length: n }, (_, i) => alPosto(IMG[k] && IMG[k][i], nome + i));
+});
+// le canne alte della riva si disegnano quando si apre la Valle (genEspArt): lì prendono il loro posto
+Ext.avvolgi('genEspArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  IMG.canne = daGriglia(MINORI_MANO, 'canne');
+  return r;
 });
 const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
