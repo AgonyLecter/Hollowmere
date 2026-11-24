@@ -1003,8 +1003,10 @@ async function freeStartBase(ending) {
     G.npcs = G.npcs.filter(n => !n.clone);
     st.quiete = 100;
     while (st.inv.length < 20) st.inv.push(null);
+    // gli oggetti della storia restano solo se sono ricordi (il nastro, le chiavi, la lanterna, il mantello):
+    // nella Valle si ripongono nella cassa del nonno (ricordi.js)
     st.inv = st.inv.map(s =>
-      s && (ITEMS[s.id].t === 'key' || (ITEMS[s.id].t === 'bad' && s.id !== 'nastro')) ? null : s
+      s && !ITEMS[s.id].ricordo && (ITEMS[s.id].t === 'key' || ITEMS[s.id].t === 'bad') ? null : s
     );
     morningSetup();
     rebuildMaps();

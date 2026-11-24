@@ -41,24 +41,26 @@ const ITEMS = {
   fagioli: { n: 'Fagioli', t: 'crop', v: 32 },
   cavolo: { n: 'Cavolo nero', t: 'crop', v: 210 },
   bacche: { n: 'Bacche rosse', t: 'bad', d: 'Il colore cattivo. Andrebbero seppellite.' },
-  nastro: { n: 'Nastro rosso', t: 'bad', d: 'Morbido. Bellissimo. Proibito.' },
+  nastro: { n: 'Nastro rosso', t: 'bad', ricordo: 1, d: 'Morbido. Bellissimo. Proibito.' },
   focaccia: { n: 'Focaccia di zucca', t: 'gift', d: 'Per il ceppo, al tramonto. Non mangiarla.' },
   vernice: {
     n: 'Vernice gialla',
     t: 'key',
     d: 'Per i pali grigi del recinto. Avvicinati a un palo e usalo.'
   },
-  key: { n: 'Chiave della cassa', t: 'key', d: 'La chiave della cassa del nonno, in casa.' },
-  keyI: { n: 'Chiave del fienile', t: 'key', d: "Fredda. Apre il fienile rosso dell'Anziano." },
+  key: { n: 'Chiave della cassa', t: 'key', ricordo: 1, d: 'La chiave della cassa del nonno, in casa.' },
+  keyI: { n: 'Chiave del fienile', t: 'key', ricordo: 1, d: "Fredda. Apre il fienile rosso dell'Anziano." },
   lanterna: {
     n: 'Lanterna di Clara',
     t: 'key',
+    ricordo: 1,
     d: "Una luce gialla, piccola. Nel bosco è l'unica che conta.",
     use: 'La lanterna è pronta. Si accenderà da sola, quando passerai il Varco.'
   },
   mantello: {
     n: 'Mantello giallo',
     t: 'key',
+    ricordo: 1,
     d: 'Un dono del villaggio. Il giallo non protegge: segna.',
     use: 'Lo pieghi tra le mani. Il giallo non protegge: segna. Non lo indossi. Non ancora.'
   },
@@ -910,6 +912,8 @@ const ACT = {
     if (o[c] && o[c][1]) await rest(o[c][1], true);
   },
   chest: async o => {
+    // nella Valle è la cassa dei ricordi (ricordi.js)
+    if (Ext.intercetta('cassaNonno', o)) return;
     const F = G.st.flags;
     if (F.openedChest) return narr('La cassa del nonno. Vuota, a parte un odore di tabacco e di terra.');
     if (!F.gotChestKey)
