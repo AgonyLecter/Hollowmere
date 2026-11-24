@@ -168,10 +168,16 @@ def gatto(S, f):
         pass
     T.luna('BLb', chiaro='J', medio='L')
     # il collare dopo la luna (resta del suo colore)
-    if f != 3:
+    if f != 3 and not S.get('randagio'):
         collare(T, S, hx - 1.4, hy + 2.4)
     T.contorno()
     return T
+
+
+# il gatto nero del paese: randagio, senza collare, un po' spelacchiato, gli occhi gialli
+GATTO_PAESE = dict(nome='gatto del paese', B='#1c1820', b='#0c0a10', L='#34303c', J='#5a5468', W='#26222c', M='#1c1820',
+                   K='#0c0a10', e='#e8c030', p='#0c0a10', n='#4a3a44', i='#3a2a3a', C='#1c1820', c='#0c0a10',
+                   G='#1c1820', g='#0c0a10', randagio=1)
 
 
 # ================================================================ il cane 26x20
@@ -248,8 +254,10 @@ for kind, fn in (('gatto', gatto), ('cane', cane)):
             righe.append(f'@sprite {kind}{s}_{f} {T.w}x{T.h}')
             righe += T.righe()
         open(os.path.join(QUI, 'compagni', f'{kind}{s}.pxs'), 'w').write('\n'.join(righe) + '\n')
+DATI['paese'] = {'tavolozza': tavolozza(GATTO_PAESE), 'sprite': {f'f{f}': gatto(GATTO_PAESE, f).righe() for f in range(4)}}
 js = ("'use strict';\n// Generato da tools/pixel/compagni_abbozzo.py: non modificare a mano, si rifà con l'abbozzo.\n"
-      "// COMPAGNI_MANO[kind][manto] = {tavolozza, sprite: {f0..f3}} (passo, passo, seduto, sdraiato)\n"
+      "// COMPAGNI_MANO[kind][manto] = {tavolozza, sprite: {f0..f3}} (passo, passo, seduto, sdraiato);\n"
+      "// COMPAGNI_MANO.paese: il gatto nero randagio del paese, stesse pose\n"
       'const COMPAGNI_MANO = ' + json.dumps(DATI, indent=1) + ';\n')
 open(os.path.join(QUI, '..', '..', 'js', 'compagni_mano.js'), 'w').write(js)
 print('scritti compagni/*.pxs e js/compagni_mano.js')

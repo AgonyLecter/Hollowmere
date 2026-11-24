@@ -4740,23 +4740,14 @@ const SPAVENTO = daGriglia(SPAVENTO_MANO, 'spavento');
     return r;
   });
 }
-// Alla fine del caricamento (dopo contenuti.js, che rifà anatra, capra e pecora) gli sprite disegnati a mano
-// prendono il posto di quelli generati. Animali (tools/pixel/animali.pxs → js/animali_mano.js), di profilo verso
-// destra: la gallina ha 3 fotogrammi (il terzo becca), gli altri 2 di passo. Natura (natura.pxs → natura_mano.js):
-// 5 alberi per stagione, 3 pini, 2 cespugli, alla stessa misura di prima.
+// Alla fine del caricamento gli sprite disegnati a mano prendono il posto di quelli generati. Natura
+// (natura.pxs → natura_mano.js): 5 alberi per stagione, 3 pini, 2 cespugli, alla stessa misura di prima.
+// (Gli animali: bestiario.js.)
 Ext.on('arte', () => {
   const serie = (D, base, prop) =>
     Object.keys(D.sprite)
       .filter(n => n.replace(/\d+$/, '') === base)
       .map(n => Object.assign(daGriglia(D, n), prop));
-  CRIT.chicken = serie(ANIMALI_MANO, 'gallina');
-  Object.assign(AIMG, {
-    anatra: serie(ANIMALI_MANO, 'anatra'),
-    mucca: serie(ANIMALI_MANO, 'mucca'),
-    capra: serie(ANIMALI_MANO, 'capra'),
-    pecora: serie(ANIMALI_MANO, 'pecora'),
-    pecoraTosata: serie(ANIMALI_MANO, 'tosata')
-  });
   for (const st of [0, 1, 2, 3]) FREEIMG.trees[st] = serie(NATURA_MANO, `albero${st}_`, { canopyH: 44 });
   IMG.tree = FREEIMG.trees[0];
   IMG.pine = serie(NATURA_MANO, 'pino', { canopyH: 40 });

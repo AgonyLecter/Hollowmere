@@ -1,6 +1,7 @@
 'use strict';
 // Generato da tools/pixel/compagni_abbozzo.py: non modificare a mano, si rifà con l'abbozzo.
-// COMPAGNI_MANO[kind][manto] = {tavolozza, sprite: {f0..f3}} (passo, passo, seduto, sdraiato)
+// COMPAGNI_MANO[kind][manto] = {tavolozza, sprite: {f0..f3}} (passo, passo, seduto, sdraiato);
+// COMPAGNI_MANO.paese: il gatto nero randagio del paese, stesse pose
 const COMPAGNI_MANO = {
  "gatto": [
   {
@@ -869,5 +870,109 @@ const COMPAGNI_MANO = {
     ]
    }
   }
- ]
+ ],
+ "paese": {
+  "tavolozza": {
+   "o": "#07050a",
+   "X": "#0c0806",
+   "Z": "#3a1418",
+   "B": "#1c1820",
+   "b": "#0c0a10",
+   "L": "#34303c",
+   "J": "#5a5468",
+   "W": "#26222c",
+   "M": "#1c1820",
+   "K": "#0c0a10",
+   "e": "#e8c030",
+   "p": "#0c0a10",
+   "n": "#4a3a44",
+   "i": "#3a2a3a",
+   "C": "#1c1820",
+   "c": "#0c0a10",
+   "G": "#1c1820",
+   "g": "#0c0a10"
+  },
+  "sprite": {
+   "f0": [
+    "ooo.............o...o...",
+    "LJLo...........oLo.oLo..",
+    "BBo...........oLiooLio..",
+    "oBLo..........obiJJbio..",
+    ".oBLo.........oLBBBBBLo.",
+    ".oBBLo........oBBBBepBno",
+    "..oBBo........obBBBepWo.",
+    "..oBBoooooooooobbBBBBZo.",
+    "..oBBJJJJJJJJJJBbbbbbo..",
+    "..oBLBBBBBBBBBBBWWWoo...",
+    "..oBbBBBBBBBBBBWbWWWo...",
+    "...obbbBBBBBBBBBbbbo....",
+    "....obbbbbbbbbbbbbo.....",
+    "....obboBboooobBbo......",
+    "....obboBbo..obBbo......",
+    "....obboBboo.obBbo......",
+    "....obbLoBJLo.oBbLo.....",
+    ".....ooo.ooo...ooo......"
+   ],
+   "f1": [
+    "oo..............o...o...",
+    "LLo............oLo.oLo..",
+    "BBo...........oLiooLio..",
+    "BBoo..........obiJJbio..",
+    "oBJLo.........oLBBBBBLo.",
+    ".oBBo.........oBBBBepBno",
+    "..oBLo........obBBBepWo.",
+    "..oBBoooooooooobbBBBBZo.",
+    "..oBBJJJJJJJJJJBbbbbbo..",
+    "..oBLBBBBBBBBBBBWWWoo...",
+    "..oBbBBBBBBBBBBWbWWWo...",
+    "...obbbBBBBBBBBBbbbo....",
+    "....oobbbbbbbbbbBbo.....",
+    "......oBboooobbooBLo....",
+    ".....oLbbo.oLbo.oBbo....",
+    ".....oBbbooobbo.oBboo...",
+    ".....oBbBJLobbLo.oBJLo..",
+    "......ooooo.ooo...ooo..."
+   ],
+   "f2": [
+    "............oLo.oLo.....",
+    "...........oLiooLio.....",
+    "...........obiJJbio.....",
+    "...........oLBBBBBLo....",
+    "...........oBBBBepBno...",
+    "...........obBBBepWo....",
+    ".........ooobbBBBBZo....",
+    ".......ooLJJLbbbbbo.....",
+    "......oLJLBBBBWWoo......",
+    ".....oLBBBBBBWWWWo......",
+    ".....oBBLBBBBbWWWo......",
+    "....oLBBBBBBBbbWbo......",
+    "....obBBbBBBBBbbbo......",
+    ".....obBbbBBBBbbbo......",
+    "....oobbBbbBBBbbbo......",
+    "...oLJBbbbbbbBbbbo......",
+    "...oBBBBBbboBBbbbLo.....",
+    "....ooooooo.oooooo......"
+   ],
+   "f3": [
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "...............o...o....",
+    "..............oLo.oLo...",
+    ".....o........oiLooiLo..",
+    "...ooLooooooooLibJJibo..",
+    "..oLJBJJJJJJJJLLBBBBLo..",
+    ".oLBBBBBLBBBBBLBBBbbBno.",
+    ".oBBBBBBBBBBBBbbBBBBWWo.",
+    ".obBBBBBBBBBBBBbbBBBWZo.",
+    ".obbBBBBbBBBBBBBbbbboo..",
+    "..obbbbbbbBBBBBBWWWWo...",
+    "..obbbbbbbBBBBBBbbbbo...",
+    "..obbbbbbbbbbbbBBBoo....",
+    "...ooooooooooooooo......"
+   ]
+  }
+ }
 };
