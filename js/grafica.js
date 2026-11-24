@@ -4799,6 +4799,16 @@ Ext.on('arte', () => {
   ])
     IMG[k] = Array.from({ length: n }, (_, i) => alPosto(IMG[k] && IMG[k][i], nome + i));
 });
+// le costruzioni della Valle disegnate a mano (costruzioni.pxs → costruzioni_mano.js): pollaio, stalla e ovile
+// sono pronti alla fine del caricamento, serra, mulino, silos e pozzo si disegnano la prima volta che servono
+Ext.on('arte', () => {
+  for (const k of ['pollaio', 'stalla', 'ovile']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
+});
+Ext.avvolgi('genCostrArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  for (const k of ['serra', 'mulino', 'silos', 'pozzogrande']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
+  return r;
+});
 // le canne alte della riva si disegnano quando si apre la Valle (genEspArt): lì prendono il loro posto
 Ext.avvolgi('genEspArt', function (prossimo, ...a) {
   const r = prossimo(...a);
