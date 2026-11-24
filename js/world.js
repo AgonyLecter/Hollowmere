@@ -684,7 +684,7 @@ function pratoRumore(x, y, sc, seme) {
     a1 = r(x0, y0 + 1) + (r(x0 + 1, y0 + 1) - r(x0, y0 + 1)) * u;
   return a0 + (a1 - a0) * v;
 }
-function pratoVivo(m, x) {
+function pratoVivo(m, x, Z = { x0: 0, y0: 0, x1: m.w, y1: m.h }) {
   const s = pratoStagione(),
     // colori delle zone asciutte e di quelle fitte, per stagione (autunno, inverno, primavera, estate)
     secco = ['#b0a04a', '#a8a890', '#9ec25a', '#c2bc5a'][s],
@@ -705,18 +705,42 @@ function pratoVivo(m, x) {
         NC[k] = pratoRumore(a * 16, b * 16, 72, 1) * 0.65 + pratoRumore(a * 16, b * 16, 21, 2) * 0.35;
       return NC[k];
     },
-    // i pezzi dello stesso colore (e trasparenza) si raccolgono e si dipingono in un colpo solo
+    // i pezzi dello stesso colore (e trasparenza) si raccolgono e si dipingono in un colpo solo, a blocchi fissi
+    // di 8×8 piastrelle: un pezzo ridipinto usa gli stessi tracciati del tutto e viene uguale al pixel
     B = new Map(),
     R = (col, a, X, Y, w, h) => {
       const k = col + '|' + a;
       let p = B.get(k);
       if (!p) B.set(k, (p = new Path2D()));
-      p.rect(X, Y, w, h);
+      // sulla griglia dei pixel (mezza unità): niente sfumature ai bordi, e un pezzo ridipinto viene uguale
+      const q = v => Math.round(v * 2) / 2;
+      p.rect(q(X), q(Y), Math.max(0.5, q(w)), Math.max(0.5, q(h)));
     };
-  for (let ty = 0; ty < m.h; ty++)
-    for (let tx = 0; tx < m.w; tx++) {
+  const BL = 8,
+    dipingi = () => {
+      // prima le macchie (trasparenti), poi i fili e i fiori; a pari trasparenza in un ordine fisso (per nome)
+      const ord = [...B.keys()].sort(
+        (a, b) => +a.split('|')[1] - +b.split('|')[1] || (a < b ? -1 : a > b ? 1 : 0)
+      );
+      for (const k of ord) {
+        const [col, a] = k.split('|');
+        x.globalAlpha = +a;
+        x.fillStyle = col;
+        x.fill(B.get(k));
+      }
+      x.globalAlpha = 1;
+      B.clear();
+    };
+  for (let by0 = Math.floor(Z.y0 / BL) * BL; by0 < Z.y1; by0 += BL)
+    for (let bx0 = Math.floor(Z.x0 / BL) * BL; bx0 < Z.x1; bx0 += BL) {
+      for (let ty = by0; ty < Math.min(m.h, by0 + BL); ty++)
+        for (let tx = bx0; tx < Math.min(m.w, bx0 + BL); tx++) pratoPiastrella(tx, ty);
+      dipingi();
+    }
+  function pratoPiastrella(tx, ty) {
+    {
       const g = m.g[ty * m.w + tx];
-      if (g !== 1 && g !== 12) continue;
+      if (g !== 1 && g !== 12) return;
       const X0 = tx * 16,
         Y0 = ty * 16;
       // macchie: a blocchetti di 2×2, solo dove il prato si discosta dalla media
@@ -770,15 +794,7 @@ function pratoVivo(m, x) {
         R('#f8e070', 1, fx, fy - 0.5, 0.5, 0.5);
       }
     }
-  // prima le macchie (trasparenti), poi i fili e i fiori
-  const ord = [...B.keys()].sort((a, b) => +a.split('|')[1] - +b.split('|')[1]);
-  for (const k of ord) {
-    const [col, a] = k.split('|');
-    x.globalAlpha = +a;
-    x.fillStyle = col;
-    x.fill(B.get(k));
   }
-  x.globalAlpha = 1;
 }
 // i ciuffi d'erba alta ondeggiano col vento (ognuno col suo tempo) e si piegano quando ci passi in mezzo
 function disegnaCiuffo(e) {
@@ -805,15 +821,33 @@ function disegnaCiuffo(e) {
 Ext.on('listaMondo', list => {
   for (const e of list) if (e.kind === 'tuft' && !e.disegna) e.disegna = disegnaCiuffo;
 });
-function buildGround(m) {
+// Il terreno di una mappa, disegnato una volta in m.ground. Con una zona ({x0, y0, x1, y1} in piastrelle) si
+// ridipinge solo quel pezzo (con due piastrelle di margine, perché bordi, sentieri e filtri guardano i vicini) e si
+// restituisce il pezzo, da incollare con incollaTerreno: così un colpo di pala non ridisegna tutta la mappa.
+// Tutto quello che si disegna dipende solo dalle coordinate, quindi il pezzo è identico allo stesso posto rifatto
+// per intero.
+function buildGround(m, zona) {
   const gw = m.w * 16,
-    gh = m.h * 16;
-  const [c, x] = mk2(gw, gh);
-  m.ground = c;
-  m.water = false;
-  m.shore = [];
-  for (let ty = 0; ty < m.h; ty++)
-    for (let tx = 0; tx < m.w; tx++) {
+    gh = m.h * 16,
+    Z = zona
+      ? {
+          x0: Math.max(0, zona.x0 - 2),
+          y0: Math.max(0, zona.y0 - 2),
+          x1: Math.min(m.w, zona.x1 + 2),
+          y1: Math.min(m.h, zona.y1 + 2)
+        }
+      : { x0: 0, y0: 0, x1: m.w, y1: m.h };
+  // il terreno si rilegge pixel per pixel (atmosfera, stile): tela nella memoria del processore, che disegna
+  // un pezzo e il tutto esattamente allo stesso modo
+  const [c, x] = mk2((Z.x1 - Z.x0) * 16, (Z.y1 - Z.y0) * 16, { willReadFrequently: true });
+  x.translate(-Z.x0 * 16, -Z.y0 * 16);
+  if (!zona) {
+    m.ground = c;
+    m.water = false;
+    m.shore = [];
+  }
+  for (let ty = Z.y0; ty < Z.y1; ty++)
+    for (let tx = Z.x0; tx < Z.x1; tx++) {
       const g = m.g[ty * m.w + tx];
       if (g === 3) {
         m.water = true;
@@ -826,13 +860,13 @@ function buildGround(m) {
       if (g === 1 && v >= 4 && pratoStagione() !== 0) v -= 4;
       x.drawImage(arr[v], tx * 16, ty * 16, 16, 16);
     }
-  if (!m.interior) pratoVivo(m, x);
+  if (!m.interior) pratoVivo(m, x, Z);
   const isG = (tx, ty) => {
     const g = m.get(tx, ty);
     return g === 1 || g === 12;
   };
-  for (let ty = 0; ty < m.h; ty++)
-    for (let tx = 0; tx < m.w; tx++) {
+  for (let ty = Z.y0; ty < Z.y1; ty++)
+    for (let tx = Z.x0; tx < Z.x1; tx++) {
       const g = m.get(tx, ty);
       if (g !== 2 && g !== 11) continue;
       const X0 = tx * 16,
@@ -899,8 +933,8 @@ function buildGround(m) {
     }
   // gli angoli dei sentieri che sporgono nel prato sono arrotondati
   const RA = 3.5;
-  for (let ty = 0; ty < m.h; ty++)
-    for (let tx = 0; tx < m.w; tx++) {
+  for (let ty = Z.y0; ty < Z.y1; ty++)
+    for (let tx = Z.x0; tx < Z.x1; tx++) {
       const g = m.get(tx, ty);
       if (g !== 2 && g !== 11) continue;
       for (const [sx, sy] of [
@@ -925,15 +959,15 @@ function buildGround(m) {
       }
     }
   if (m.water)
-    for (let ty = 0; ty < m.h; ty++)
-      for (let tx = 0; tx < m.w; tx++) {
+    for (let ty = Z.y0; ty < Z.y1; ty++)
+      for (let tx = Z.x0; tx < Z.x1; tx++) {
         if (m.get(tx, ty) !== 3) continue;
         const X0 = tx * 16,
           Y0 = ty * 16,
           n = m.get(tx, ty - 1),
           s = m.get(tx, ty + 1);
         if (n !== 3 && n !== 4) {
-          m.shore.push([tx, ty]);
+          if (!zona) m.shore.push([tx, ty]);
           for (let i = 0; i < 16; i++) {
             const k = 2 + (hsh(tx * 16 + i, 7) % 2);
             x.fillStyle = '#3a2716';
@@ -961,21 +995,16 @@ function buildGround(m) {
     }
   }
   // punto di estensione: ridipingere il terreno appena fatto (atmosfera.js: colori d'autunno, foglie cadute)
-  Ext.run('terreno', m, x);
+  Ext.run('terreno', m, x, Z);
   x.globalCompositeOperation = 'source-atop';
   if (!m.interior) {
-    srand(4242);
-    for (let i = 0; i < 90; i++) {
-      const bx = rnd() * gw,
-        by = rnd() * gh,
-        r = 24 + rnd() * 70,
-        dark = rnd() < 0.6;
-      const g = x.createRadialGradient(bx, by, 0, bx, by, r);
-      g.addColorStop(0, dark ? 'rgba(20,35,10,.14)' : 'rgba(255,235,160,.08)');
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = g;
-      x.fillRect(bx - r, by - r, r * 2, r * 2);
-    }
+    // le macchie larghe di luce e d'ombra: dipinte una volta su una tela piccola e stese su tutta la mappa.
+    // (Una sfumatura disegnata su un pezzo non torna uguale a quella disegnata sul tutto: il browser la puntina
+    // secondo il punto dello schermo. Un'immagine stesa, invece, torna sempre uguale.)
+    if (!zona || !m.macchie) m.macchie = macchiePrato(gw, gh);
+    x.imageSmoothingEnabled = true;
+    x.drawImage(m.macchie, 0, 0, gw, gh);
+    x.imageSmoothingEnabled = false;
   }
   x.fillStyle = 'rgba(12,18,8,.3)';
   for (const o of m.objs) {
@@ -1002,6 +1031,41 @@ function buildGround(m) {
     x.fill();
   }
   x.globalCompositeOperation = 'source-over';
+  return zona ? { c, x0: Z.x0, y0: Z.y0, zona } : c;
+}
+function macchiePrato(gw, gh) {
+  const K = 4,
+    [c, x] = mk(Math.ceil(gw / K), Math.ceil(gh / K));
+  x.scale(1 / K, 1 / K);
+  srand(4242);
+  for (let i = 0; i < 90; i++) {
+    const bx = rnd() * gw,
+      by = rnd() * gh,
+      r = 24 + rnd() * 70,
+      dark = rnd() < 0.6;
+    const g = x.createRadialGradient(bx, by, 0, bx, by, r);
+    g.addColorStop(0, dark ? 'rgba(20,35,10,.14)' : 'rgba(255,235,160,.08)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g;
+    x.fillRect(bx - r, by - r, r * 2, r * 2);
+  }
+  return c;
+}
+// incolla in m.ground un pezzo rifatto con buildGround(m, zona): solo la zona, senza il margine
+function incollaTerreno(m, pezzo) {
+  const S = m.ground.s || 1,
+    T = 16 * S,
+    z = pezzo.zona,
+    X0 = Math.max(0, z.x0),
+    Y0 = Math.max(0, z.y0),
+    w = (Math.min(m.w, z.x1) - X0) * T,
+    h = (Math.min(m.h, z.y1) - Y0) * T,
+    g = m.ground.getContext('2d');
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(X0 * T, Y0 * T, w, h);
+  g.drawImage(pezzo.c, (X0 - pezzo.x0) * T, (Y0 - pezzo.y0) * T, w, h, X0 * T, Y0 * T, w, h);
+  g.restore();
 }
 function freeNear(m, x, y) {
   if (!m.solid(x, y)) return [x, y];

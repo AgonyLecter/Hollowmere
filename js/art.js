@@ -599,8 +599,8 @@ function genBuilding(o) {
   return texturize(outline(c, '#22140c'), 0.08, Wd + rh);
 }
 // ---------- risoluzione doppia: ogni sprite del mondo è disegnato a 2× ----------
-function mk2(w, h) {
-  const [c, x] = mk(w * 2, h * 2);
+function mk2(w, h, opz) {
+  const [c, x] = mk(w * 2, h * 2, opz);
   x.scale(2, 2);
   c.s = 2;
   return [c, x];

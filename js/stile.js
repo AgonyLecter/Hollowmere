@@ -370,9 +370,9 @@ function stileTerreno(c) {
     }
   x.putImageData(img, 0, 0);
 }
-Ext.on('terreno', m => {
+Ext.on('terreno', (m, x) => {
   try {
-    if (!m.interior && m.ground) stileTerreno(m.ground);
+    if (!m.interior) stileTerreno(x.canvas);
   } catch (e) {
     segnala(e, 'stile');
   }

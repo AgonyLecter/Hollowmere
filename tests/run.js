@@ -26,12 +26,13 @@ const SUITES = {
   contenitori: require('./contenitori'),
   animali: require('./animali'),
   compagno: require('./compagno'),
-  faccende: require('./faccende')
+  faccende: require('./faccende'),
+  terreno: require('./terreno')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
   // --veloce: solo i controlli rapidi (circa un minuto), da usare mentre si lavora
-  VELOCI = ['sintassi', 'dati', 'impronta', 'toppe', 'fumo'],
+  VELOCI = ['sintassi', 'dati', 'impronta', 'toppe', 'fumo', 'terreno'],
   opz = (k, d) => {
     const a = args.find(a => a.startsWith('--' + k + '='));
     return a ? a.split('=')[1] : d;

@@ -451,27 +451,33 @@ function wiltImg(src) {
   return c;
 }
 // terreno di stagione: sopra lo strato già disegnato
-function seasonGround(m) {
+// la stagione sul terreno: su tutto m.ground, o su un pezzo rifatto da buildGround(m, zona)
+function seasonGround(m, pezzo) {
   if (m.id !== 'main' || !isFree()) return;
   const s = seasonOf();
   if (!s) return;
-  const c = m.ground,
-    x = c.getContext('2d');
+  const c = pezzo ? pezzo.c : m.ground,
+    x = c.getContext('2d'),
+    T = 16 * (c.s || 1),
+    W = m.w * T,
+    H = m.h * T;
+  x.save();
+  x.setTransform(1, 0, 0, 1, pezzo ? -pezzo.x0 * T : 0, pezzo ? -pezzo.y0 * T : 0);
   if (s === 1) {
     x.globalCompositeOperation = 'source-atop';
     x.fillStyle = 'rgba(236,242,250,.62)';
-    x.fillRect(0, 0, c.width, c.height);
+    x.fillRect(0, 0, W, H);
     srand(77);
     for (let i = 0; i < 2600; i++) {
       x.fillStyle = i % 3 ? 'rgba(255,255,255,.7)' : 'rgba(190,205,225,.6)';
-      x.fillRect(ri(0, c.width), ri(0, c.height), 2, 2);
+      x.fillRect(ri(0, W), ri(0, H), 2, 2);
     }
   } else {
     x.globalCompositeOperation = 'soft-light';
     x.fillStyle = s === 2 ? 'rgba(120,220,90,.55)' : 'rgba(170,220,70,.45)';
-    x.fillRect(0, 0, c.width, c.height);
+    x.fillRect(0, 0, W, H);
   }
-  x.globalCompositeOperation = 'source-over';
+  x.restore();
 }
 
 // ---------- stato del mondo libero: alberi tagliati, detriti, costruzioni ----------
