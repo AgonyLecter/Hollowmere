@@ -533,6 +533,8 @@ function applySeasonLooks(...a) {
 
 // ---------- la Valle di stagione: fiori, foglie, neve sui tetti ----------
 const SNOWC = new Map();
+// la neve vera: si posa solo dove c'è un bordo rivolto in alto (tetti, cornicioni, davanzali, rami), più spessa
+// in cima; il resto dell'edificio resta com'è (prima una velatura bianca sbiadiva mezza casa)
 function snowy(img) {
   if (SNOWC.has(img)) return SNOWC.get(img);
   const c = document.createElement('canvas');
@@ -541,19 +543,36 @@ function snowy(img) {
   c.s = img.s;
   if (img.canopyH) c.canopyH = img.canopyH;
   if (img.lights) c.lights = img.lights;
-  const x = c.getContext('2d');
+  const x = c.getContext('2d', { willReadFrequently: true });
   x.drawImage(img, 0, 0);
-  x.globalCompositeOperation = 'source-atop';
-  const g = x.createLinearGradient(0, 0, 0, c.height * 0.45);
-  g.addColorStop(0, 'rgba(244,248,255,.92)');
-  g.addColorStop(0.5, 'rgba(236,242,252,.55)');
-  g.addColorStop(1, 'rgba(236,242,252,0)');
-  x.fillStyle = g;
-  x.fillRect(0, 0, c.width, c.height * 0.45);
-  srand(c.width * 7 + c.height);
-  x.fillStyle = 'rgba(255,255,255,.9)';
-  for (let i = 0; i < c.width / 3; i++) x.fillRect(ri(0, c.width), ri(0, Math.floor(c.height * 0.3)), 2, 1);
-  x.globalCompositeOperation = 'source-over';
+  const W = c.width,
+    H = c.height,
+    S = img.s || 1,
+    D = x.getImageData(0, 0, W, H),
+    d = D.data,
+    pieno = (X, Y) => X >= 0 && Y >= 0 && X < W && Y < H && d[(Y * W + X) * 4 + 3] > 128,
+    neve = (X, Y, k) => {
+      const i = (Y * W + X) * 4;
+      d[i] += (244 - d[i]) * k;
+      d[i + 1] += (248 - d[i + 1]) * k;
+      d[i + 2] += (255 - d[i + 2]) * k;
+    },
+    spessore = Y => (Y < H * 0.5 ? 4 : 2) * S;
+  // dal basso in alto, così un bordo appena innevato non conta come vuoto per il pixel sotto
+  const bordi = [];
+  for (let Y = 0; Y < H; Y++)
+    for (let X = 0; X < W; X++) if (pieno(X, Y) && !pieno(X, Y - S)) bordi.push([X, Y]);
+  for (const [X, Y] of bordi) {
+    const n = spessore(Y);
+    for (let k = 0; k < n && pieno(X, Y + k); k++) neve(X, Y + k, k < n - S ? 0.92 : 0.55);
+  }
+  // un po' di neve fresca che luccica qua e là sui bordi
+  srand(W * 7 + H);
+  for (let i = 0; i < bordi.length / 9; i++) {
+    const [X, Y] = bordi[ri(0, bordi.length - 1)];
+    if (Y > 0) neve(X, Y, 1);
+  }
+  x.putImageData(D, 0, 0);
   SNOWC.set(img, c);
   return c;
 }

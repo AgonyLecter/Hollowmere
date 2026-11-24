@@ -132,7 +132,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
 #loading{z-index:9;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(8*var(--u));color:#f2d39b;background:radial-gradient(#1a1014,#000 70%);font-family:'Jacquard 12',serif;font-size:calc(30*var(--u))}
 #loading small{font-family:'Silkscreen','Pixelify Sans',monospace;font-size:calc(8*var(--u));letter-spacing:.3em;color:var(--gold);animation:flick 1.5s infinite}
-
 .gpick{display:flex;gap:calc(8*var(--u));align-items:center}
 #gprev{width:calc(36*var(--u));height:calc(54*var(--u));image-rendering:pixelated;background:radial-gradient(circle at 50% 40%,#6a5a7a,#2a2030);box-shadow:0 0 0 var(--u) #140a06,0 0 0 calc(2*var(--u)) var(--gold)}
 .gpick>div{flex:1}
@@ -143,7 +142,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .cslot i{position:absolute;right:calc(1*var(--u));bottom:0;font-style:normal;font-size:calc(7*var(--u));color:var(--gold2);text-shadow:1px 1px 0 #000}
 #hbrow{position:absolute;left:calc(-21*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(7*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto}
 #tmenu button.locked{opacity:.62}
-
 #tour{position:absolute;left:50%;bottom:calc(46*var(--u));transform:translateX(-50%);width:min(calc(220*var(--u)),46%);padding:calc(4*var(--u)) calc(7*var(--u));font-size:calc(8*var(--u));z-index:3;pointer-events:auto}
 #tour>b{display:flex;justify-content:space-between;font-size:calc(6.5*var(--u));color:var(--gold);letter-spacing:.14em;text-transform:uppercase}
 #tour p{margin:calc(2*var(--u)) 0 0;line-height:1.3}#tour b b,#tour p b{color:#f6d98a}
@@ -153,7 +151,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #bmbar>b{display:block;font-size:calc(6.5*var(--u));color:var(--gold);letter-spacing:.14em;text-transform:uppercase}#bmbar p{margin:calc(2*var(--u)) 0 0}#bmbar p b{color:#f6d98a}
 #bmbar .tb{text-align:center}#bmbar .btn{font-size:calc(7*var(--u));padding:calc(2*var(--u)) calc(5*var(--u))}
 @media (max-aspect-ratio:4/3){#bmbar{width:calc(100% - 12*var(--u));bottom:calc(70*var(--u))}}
-
 #bChat2{position:absolute;right:calc(-21*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(8*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto;color:#fff;border:0;padding:0}
 #bChat2 i{position:absolute;right:calc(-3*var(--u));top:calc(-3*var(--u));min-width:calc(8*var(--u));height:calc(8*var(--u));border-radius:calc(4*var(--u));background:#c8301a;color:#fff;font-size:calc(5.5*var(--u));font-style:normal;line-height:calc(8*var(--u));display:none}
 #bChat2.new i{display:block}#bChat2.new{animation:pulse .6s infinite alternate}
@@ -166,7 +163,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #chatfeed{position:absolute;left:calc(6*var(--u));bottom:calc(31*var(--u));width:min(calc(170*var(--u)),45%);pointer-events:none;z-index:3}
 #chatfeed p{margin:calc(1.5*var(--u)) 0 0;padding:calc(1.5*var(--u)) calc(4*var(--u));background:rgba(18,11,16,.78);color:#f1e2bf;font-size:calc(7*var(--u));box-shadow:0 0 0 var(--u) #07040a;animation:fin .3s;transition:opacity .6s;overflow-wrap:anywhere}
 #chatfeed p.out{opacity:0}
-
 .mcell{display:flex;flex-direction:column;align-items:center;gap:calc(1*var(--u));padding:calc(2*var(--u));background:rgba(90,58,30,.12);box-shadow:inset 0 0 0 var(--u) rgba(122,74,32,.35);text-align:center}
 .mcell.on{background:rgba(216,170,70,.22);box-shadow:inset 0 0 0 var(--u) rgba(200,150,40,.7)}.mcell canvas{width:calc(22*var(--u));height:calc(22*var(--u));image-rendering:pixelated}.mcell .btn{font-size:calc(6*var(--u));padding:calc(1*var(--u)) calc(3*var(--u))}
 #bmbar.top{bottom:auto;top:calc(38*var(--u))}
@@ -174,7 +170,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #rbadge{position:absolute;right:calc(6*var(--u));top:calc(53*var(--u));width:calc(92*var(--u));padding:calc(2.5*var(--u)) calc(5*var(--u));font-size:calc(6.5*var(--u));text-align:right;pointer-events:auto;cursor:pointer}
 #rbn{color:#f6d98a}#rbbar{height:calc(3*var(--u));margin-top:calc(1.5*var(--u));background:#2a1a10;box-shadow:inset 0 0 0 calc(.5*var(--u)) #07040a}#rbbar div{height:100%;background:linear-gradient(#f6d98a,#c8902a);transition:width .6s}
 #rbadge.up{animation:rbup .9s}@keyframes rbup{30%{box-shadow:0 0 0 var(--u) #07040a,0 0 0 calc(2*var(--u)) #f6d98a,0 0 calc(10*var(--u)) #f6d98a}}
-
 .btn.sw{border:0;border-image:none;width:calc(13*var(--u));height:calc(13*var(--u));padding:0;margin:calc(1*var(--u));box-shadow:0 0 0 var(--u) #140a06,inset 0 0 0 calc(.5*var(--u)) rgba(255,255,255,.25)}
 .btn.sw.on{box-shadow:0 0 0 var(--u) #140a06,0 0 0 calc(2.5*var(--u)) var(--gold)}
 .swi{display:inline-block;width:calc(8*var(--u));height:calc(8*var(--u));vertical-align:middle;box-shadow:0 0 0 calc(.5*var(--u)) #140a06}
@@ -184,7 +179,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 @media (max-aspect-ratio:4/3){.avbox{flex-direction:column;align-items:center}.avprev{position:static}}
 #vchip{position:absolute;left:50%;top:calc(6*var(--u));transform:translateX(-50%);padding:calc(2.5*var(--u)) calc(6*var(--u));font-size:calc(7*var(--u));text-align:center;max-width:min(calc(260*var(--u)),60%);pointer-events:none}#vchip b{color:#f6d98a}
 @media (max-aspect-ratio:4/3){#vchip{top:calc(30*var(--u))}}
-
 #mbox .igrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:calc(1.5*var(--u));margin:0 auto calc(1.5*var(--u));max-width:calc(258*var(--u))}
 .islot{position:relative;aspect-ratio:1;min-width:0;box-sizing:border-box;background:#2e1e13;border:calc(2*var(--u)) solid #07040a;border-image:var(--pozzo) 2 fill / calc(2*var(--u));cursor:pointer;touch-action:none;user-select:none}
 .islot canvas{position:absolute;inset:calc(-1*var(--u));width:calc(100% + 2*var(--u));height:calc(100% + 2*var(--u));image-rendering:pixelated;pointer-events:none}
@@ -203,7 +197,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #mbox .icap{font-size:calc(5.5*var(--u));letter-spacing:.1em;text-transform:uppercase;color:#7a3a10;max-width:calc(258*var(--u));margin:0 auto calc(.5*var(--u))}
 .ighost{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:99;image-rendering:pixelated;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
 #bInv{position:absolute;left:calc(-40*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(8*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto;color:#fff;border:0;padding:0}
-
 /* finestre sempre intere anche su telefono: niente scorrimento orizzontale, testi e titoli a capo */
 #mbox p,#mbox div,#mbox span,#mbox table{max-width:100%}
 #mbox h2{overflow-wrap:anywhere;padding-right:calc(22*var(--u))}
@@ -214,7 +207,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
  #mbox h2{font-size:calc(16*var(--u))}
  .tabs .btn{font-size:calc(7.5*var(--u));padding:calc(1.5*var(--u)) calc(4*var(--u))}
 }
-
 /* taccuino delle richieste */
 #mbox .ric{align-items:center}
 #mbox .ric.ok{background:rgba(120,170,80,.14)}
@@ -224,14 +216,12 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #mbox canvas.mini{width:calc(10*var(--u));height:calc(10*var(--u));vertical-align:middle;image-rendering:pixelated;margin-right:2px}
 #bRich.pronta{box-shadow:0 0 0 2px #8ad04a inset;animation:richPulse 1.6s ease-in-out infinite}
 @keyframes richPulse{50%{filter:brightness(1.25)}}
-
 /* la wiki del gioco (js/wiki.js) */
 #wiki{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:#160c08;pointer-events:auto}
 #wiki .wbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:6px 10px;background:#2a1810;color:#f6d070;font-family:Georgia,serif;font-size:15px}
 #wiki .wbar span{display:flex;flex-wrap:wrap;gap:6px}
 #wiki .wbar .btn{font-size:13px;padding:4px 10px}
 #wiki iframe{flex:1;width:100%;border:0;background:#fbf6ea}
-
 /* la Gazzetta della Valle (js/gazzetta.js): una bacheca di sughero */
 #gazzetta{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;pointer-events:auto;font-family:Georgia,'Times New Roman',serif;color:#2a1a10;
  background:radial-gradient(circle at 20% 30%,rgba(255,220,160,.18),transparent 40%),radial-gradient(circle at 80% 70%,rgba(90,50,20,.25),transparent 45%),repeating-radial-gradient(circle at 37% 61%,#b8844e 0 1px,#a87440 1px 3px,#c08c56 3px 4px),#a87442;
@@ -268,7 +258,6 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #mirino .tl{left:6%;top:8%;border-right:0;border-bottom:0}#mirino .tr{right:6%;top:8%;border-left:0;border-bottom:0}
 #mirino .bl{left:6%;bottom:14%;border-right:0;border-top:0}#mirino .br{right:6%;bottom:14%;border-left:0;border-top:0}
 #mirino .mr-bar{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;pointer-events:auto;background:rgba(30,16,8,.75);color:#ffe8b8;padding:6px 10px;font:14px Georgia,serif;border-radius:4px}
-
 .gz-sbiadita{cursor:default;padding:26px 12px;text-align:center;font-style:italic;color:#7a5a3a;background:#efe4c8}
 .gz-mod{font:italic 12px Georgia,serif;color:#8a6a4a}
 .gz-post textarea{width:100%;box-sizing:border-box;font:15px 'Segoe Script','Bradley Hand','Comic Sans MS',cursive;padding:6px;border:1px solid #b89a6a;background:#fffaf0;resize:vertical}
@@ -303,3 +292,51 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 /* la missione comune (pannello 👥) */
 .ins-barra{height:calc(6*var(--u));background:#6e5236;box-shadow:inset 0 0 0 var(--u) #3a2414;margin:calc(2*var(--u)) 0}
 .ins-barra b{display:block;height:100%;background:linear-gradient(#fff2a0,#e8b040)}
+/* ================= INTERFACCIA VIVA: profondità e movimento =================
+   Ogni pulsante ha un labbro scuro sotto, la luce sul bordo alto e un'ombra morbida: premuto si abbassa (.giu, messo
+   da interfaccia.js anche sul telefono), rilasciato torna su con una molla (.su) e dal punto toccato parte un'onda
+   di luce (.onda). Il pulsante A è una moneta d'oro coniata, il joystick un disco di ferro inciso, ❄ una sfera di
+   ghiaccio. */
+.btn,#tmenu button,.ib,#bInv,#bChat2{box-shadow:0 calc(2*var(--u)) 0 #07040a,0 calc(3.5*var(--u)) calc(3*var(--u)) rgba(0,0,0,.45);transition:transform .07s ease-out,box-shadow .07s ease-out,filter .12s;overflow:visible}
+.btn::after,.ib::after,#bInv::after,#bChat2::after{content:'';position:absolute;left:0;right:0;top:0;height:35%;background:linear-gradient(rgba(255,236,190,.16),rgba(255,236,190,0));pointer-events:none}
+#tmenu button{background-image:linear-gradient(rgba(255,236,190,.14),rgba(255,236,190,0) 40%)}
+.btn.giu,#tmenu button.giu,.ib.giu,#bInv.giu,#bChat2.giu{transform:translateY(calc(2*var(--u)));box-shadow:0 0 0 #07040a,0 var(--u) var(--u) rgba(0,0,0,.5);filter:brightness(1.18)}
+#bInv.giu,#bChat2.giu{transform:translateY(calc(-50% + 2*var(--u)))}
+.btn.su,#tmenu button.su,.ib.su{animation:molla .32s cubic-bezier(.3,1.8,.5,1)}
+@keyframes molla{0%{transform:translateY(calc(2*var(--u)))}55%{transform:translateY(calc(-1.5*var(--u)))}100%{transform:none}}
+.onda{position:absolute;width:calc(6*var(--u));height:calc(6*var(--u));margin:calc(-3*var(--u)) 0 0 calc(-3*var(--u));border-radius:50%;pointer-events:none;background:radial-gradient(rgba(255,230,150,.9),rgba(255,200,90,.35) 45%,rgba(255,200,90,0) 70%);animation:onda .45s ease-out forwards;z-index:3}
+@keyframes onda{to{transform:scale(7);opacity:0}}
+.scintilla{position:absolute;width:calc(2*var(--u));height:calc(2*var(--u));background:#ffe7a0;box-shadow:0 0 calc(3*var(--u)) #ffb840;pointer-events:none;animation:scintilla .55s ease-out forwards;z-index:3}
+@keyframes scintilla{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+/* il pulsante A: una moneta d'oro coniata, con l'anello inciso e il respiro della luce */
+#bA{background:radial-gradient(circle at 34% 28%,#fffbe0 0,#fff0b0 8%,#f0c860 24%,#c8902e 52%,#8a5a18 74%,#4a2a08 100%);box-shadow:0 0 0 calc(1.5*var(--u)) #1c0e04,inset 0 0 0 calc(3*var(--u)) rgba(80,40,6,.55),inset 0 0 0 calc(4*var(--u)) rgba(255,230,150,.45),inset 0 calc(-3*var(--u)) calc(4*var(--u)) rgba(40,18,2,.55),0 calc(4*var(--u)) 0 #1c0e04,0 calc(6*var(--u)) calc(6*var(--u)) rgba(0,0,0,.55);text-shadow:0 var(--u) 0 rgba(255,240,190,.7),0 calc(-.5*var(--u)) 0 rgba(60,24,4,.6);transition:transform .07s,box-shadow .07s;animation:respiro 3.2s ease-in-out infinite;overflow:visible}
+#bA::before{content:'';position:absolute;inset:calc(-4*var(--u));border-radius:50%;box-shadow:0 0 calc(10*var(--u)) rgba(255,200,90,.35);opacity:.6;pointer-events:none}
+@keyframes respiro{50%{filter:brightness(1.1) drop-shadow(0 0 calc(4*var(--u)) rgba(255,200,90,.45))}}
+#bA.giu,#bA:active{transform:translateY(calc(3*var(--u))) scale(.94);box-shadow:0 0 0 calc(1.5*var(--u)) #1c0e04,inset 0 0 0 calc(3*var(--u)) rgba(80,40,6,.6),inset 0 calc(3*var(--u)) calc(5*var(--u)) rgba(40,18,2,.6),0 var(--u) 0 #1c0e04;filter:brightness(1.15);animation:none}
+#bA.su{animation:mollaA .38s cubic-bezier(.3,1.9,.5,1)}
+@keyframes mollaA{0%{transform:translateY(calc(3*var(--u))) scale(.94)}55%{transform:translateY(calc(-2*var(--u))) scale(1.05)}100%{transform:none}}
+/* il joystick: disco di ferro con la rosa dei venti incisa; la manopola, una sfera d'oro con la sua ombra */
+#joy{background:radial-gradient(circle,rgba(0,0,0,0) 38%,rgba(10,6,10,.35) 39%,rgba(10,6,10,.35) 41%,rgba(0,0,0,0) 42%),conic-gradient(from -4deg,rgba(232,200,120,.5) 0 8deg,rgba(0,0,0,0) 8deg 90deg,rgba(232,200,120,.5) 90deg 98deg,rgba(0,0,0,0) 98deg 180deg,rgba(232,200,120,.5) 180deg 188deg,rgba(0,0,0,0) 188deg 270deg,rgba(232,200,120,.5) 270deg 278deg,rgba(0,0,0,0) 278deg),radial-gradient(circle at 50% 42%,rgba(60,48,58,.55),rgba(14,8,12,.72) 70%);box-shadow:0 0 0 calc(1.5*var(--u)) #140a06,0 0 0 calc(3*var(--u)) rgba(200,160,96,.75),0 0 0 calc(4*var(--u)) #140a06,inset 0 calc(3*var(--u)) calc(6*var(--u)) rgba(0,0,0,.7),0 calc(4*var(--u)) calc(6*var(--u)) rgba(0,0,0,.45);transition:box-shadow .15s}
+#joy.on{box-shadow:0 0 0 calc(1.5*var(--u)) #140a06,0 0 0 calc(3*var(--u)) #f6d98a,0 0 0 calc(4*var(--u)) #140a06,inset 0 calc(3*var(--u)) calc(6*var(--u)) rgba(0,0,0,.7),0 0 calc(12*var(--u)) rgba(246,200,100,.45)}
+#knob{background:radial-gradient(circle at 34% 28%,#fffbe0 0,#fff0b0 10%,#e8b850 34%,#a8701e 66%,#4a2a08 100%);box-shadow:0 0 0 var(--u) #1c0e04,inset 0 calc(-2*var(--u)) calc(3*var(--u)) rgba(40,18,2,.5),0 calc(4*var(--u)) calc(4*var(--u)) rgba(0,0,0,.6)}
+#joy.on #knob{box-shadow:0 0 0 var(--u) #1c0e04,inset 0 calc(-2*var(--u)) calc(3*var(--u)) rgba(40,18,2,.5),0 calc(6*var(--u)) calc(6*var(--u)) rgba(0,0,0,.55),0 0 calc(8*var(--u)) rgba(255,210,110,.6)}
+/* ❄: una sfera di ghiaccio smerigliato; premuta, brina */
+#bSnow{position:absolute;right:calc(70*var(--u));bottom:calc(70*var(--u));width:calc(28*var(--u));height:calc(28*var(--u));border-radius:50%;border:0;pointer-events:auto;color:#2a4a7a;font-size:calc(14*var(--u));background:radial-gradient(circle at 34% 28%,#ffffff 0,#e8f4ff 14%,#b8d4f0 40%,#6a8ab8 78%,#2a3a5a 100%);box-shadow:0 0 0 calc(1.5*var(--u)) #101a2a,inset 0 0 0 calc(2*var(--u)) rgba(255,255,255,.35),inset 0 calc(-3*var(--u)) calc(4*var(--u)) rgba(20,40,80,.45),0 calc(3*var(--u)) 0 #101a2a,0 calc(5*var(--u)) calc(6*var(--u)) rgba(0,0,0,.5),0 0 calc(8*var(--u)) rgba(180,220,255,.35);text-shadow:0 0 calc(4*var(--u)) #fff;transition:transform .07s,box-shadow .07s;overflow:visible}
+#bSnow.giu{transform:translateY(calc(2*var(--u))) scale(.93);box-shadow:0 0 0 calc(1.5*var(--u)) #101a2a,inset 0 calc(3*var(--u)) calc(5*var(--u)) rgba(20,40,80,.5),0 var(--u) 0 #101a2a,0 0 calc(14*var(--u)) rgba(200,235,255,.8)}
+#bSnow.su{animation:mollaA .38s cubic-bezier(.3,1.9,.5,1)}
+#bSnow .onda{background:radial-gradient(rgba(255,255,255,.95),rgba(190,225,255,.4) 45%,rgba(190,225,255,0) 70%)}
+#bSnow .scintilla{background:#fff;box-shadow:0 0 calc(3*var(--u)) #9ad0ff}
+/* la barra degli attrezzi: la casella scelta salta e tremola come una candela; le altre si sollevano al passaggio */
+.slot{transition:transform .12s ease-out,filter .12s;box-shadow:0 calc(1.5*var(--u)) 0 #07040a}
+.slot:hover{transform:translateY(calc(-1*var(--u)));filter:brightness(1.12)}
+.slot.sel:hover{transform:translateY(calc(-2*var(--u)))}
+.slot.sel{animation:scelto .34s cubic-bezier(.3,1.8,.5,1),candela 2.6s ease-in-out .34s infinite}
+@keyframes scelto{0%{transform:translateY(calc(1*var(--u))) scale(.9)}60%{transform:translateY(calc(-4*var(--u))) scale(1.08)}100%{transform:translateY(calc(-2*var(--u)))}}
+@keyframes candela{0%,100%{box-shadow:0 0 0 var(--u) var(--gold2),0 0 calc(6*var(--u)) rgba(246,200,100,.6)}40%{box-shadow:0 0 0 var(--u) var(--gold2),0 0 calc(9*var(--u)) rgba(255,190,80,.75)}55%{box-shadow:0 0 0 var(--u) var(--gold2),0 0 calc(5*var(--u)) rgba(246,200,100,.5)}}
+.slot.giu{transform:translateY(calc(1*var(--u))) scale(.94)}
+/* l'energia: un riflesso che scorre, come un liquido */
+#efill{overflow:hidden}
+#efill::after{content:'';position:absolute;left:0;right:0;height:40%;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0));animation:liquido 2.8s linear infinite}
+@keyframes liquido{from{top:110%}to{top:-50%}}
+@media (prefers-reduced-motion:reduce){#bA,.slot.sel,#efill::after{animation:none}.onda,.scintilla{display:none}}
+#bSnow.nuovo::after{content:'tocca: palla · tieni: pupazzo';position:absolute;left:50%;bottom:calc(100% + 5*var(--u));transform:translateX(-50%);white-space:nowrap;font-size:calc(6*var(--u));color:#e8f4ff;background:rgba(16,26,42,.8);padding:calc(1*var(--u)) calc(4*var(--u));box-shadow:0 0 0 var(--u) rgba(184,212,240,.6);text-shadow:0 var(--u) 0 #000;pointer-events:none;animation:tin .4s}
