@@ -417,6 +417,56 @@ for x, d in ((6, -1), (48, 1), (64, -1), (106, 1)):
 edera(T, 10, 70, 104, 1); edera(T, 102, 60, 104, 3); edera(T, 64, 86, 104, 2)
 A['museo'] = chiudi(T)
 
+# ---------------------------------------------------------------- statua 14x28: l'angelo che piange, pietra e muschio
+T = Tela(14, 28, 9)
+pietre(T, 2, 23, 12, 28, chiare=True)  # il basamento
+rett(T, 1, 22, 13, 24, 'M')
+# le ali chiuse e alte dietro le spalle, le punte sopra la testa
+T.poli([(6, 12), (2, 2), (0, 5), (1, 15), (4, 18)], 'mLI')
+T.poli([(8, 12), (12, 2), (14, 5), (13, 15), (10, 18)], 'LII')
+for y in range(5, 15, 2):  # le penne
+    T.put(2, y, 'I'); T.put(11, y + 1, 'i')
+# la veste che si allarga fino ai piedi, con le pieghe
+T.poli([(5, 12), (9, 12), (11, 22), (3, 22)], 'MmL')
+for y in range(14, 22, 2):
+    T.put(5 + (y % 4 == 0), y, 'L'); T.put(8, y + 1, 'L')
+# il capo chino, staccato dalle ali da un filo d'ombra, il volto nascosto fra le mani
+T.ell(7, 8.5, 2.9, 2.9, 'iii')
+T.ell(7, 8.5, 2.1, 2.2, 'MmL')
+T.put(6, 10, 'M'); T.put(7, 10, 'M'); T.put(8, 10, 'm'); T.put(6, 11, 'm'); T.put(8, 11, 'L')  # le mani
+T.put(7, 11, 'j')  # una lacrima scura che cola sulla pietra
+for x, y in ((6, 6), (3, 3), (12, 4), (4, 21), (10, 20), (2, 25), (11, 26)):
+    T.put(x, y, 'f' if (x + y) % 2 else 'g')  # il muschio
+A['statua'] = chiudi(T, scuri='mLIM')
+
+
+# ---------------------------------------------------------------- fontana 24x20, 2 fotogrammi: vasca di pietra, doccione, acqua nera
+def fontana(f):
+    T = Tela(24, 20, 10)
+    T.ell(12, 15, 11, 4, 'MmL')  # il bordo della vasca
+    T.ell(12, 14.6, 9, 2.6, 'tTt')  # l'acqua
+    for y in range(15, 20):
+        for x in range(1, 23):
+            if T.get(x, y) in 'MmL' and y > 15:
+                T.put(x, y, 'L' if (x + (y // 2)) % 6 else 'i')
+    rett(T, 10, 5, 14, 14, 'L'); rett(T, 10, 5, 11, 14, 'm')  # il pilastro
+    T.ell(12, 5.5, 3, 2.4, 'mLI')  # il doccione: la testa del demone, girata verso la vasca
+    T.put(11, 5, 'X'); T.put(13, 5, '3')  # un occhio vuoto, uno rosso
+    T.put(10, 3, 'L'); T.put(9, 2, 'm'); T.put(14, 3, 'L'); T.put(15, 2, 'm')  # le corna
+    T.put(14, 7, 'X'); T.put(15, 7, 'X')  # la bocca aperta
+    # il getto dalla bocca e le gocce, alternate fra i due fotogrammi
+    for k in range(8):  # il getto che esce di lato dalla bocca e cade nella vasca
+        t = k / 7
+        T.put(15 + t * 4, 7 + t * t * 6, 'y' if (k + f) % 2 else 'x')
+    for x, y in ((18, 13), (20, 14), (16, 14)) if f else ((19, 14), (17, 13), (21, 14)):
+        T.put(x, y, 'y')  # i cerchi dove cade
+    T.put(4, 13, 'f'); T.put(20, 14, 'g')
+    return chiudi(T, scuri='mLIM')
+
+
+for f in range(2):
+    A[f'fontana{f}'] = fontana(f)
+
 QUI = os.path.dirname(__file__)
 righe = ['# Le costruzioni della Valle. Generato da costruzioni_abbozzo.py.', '@tavolozza', PAL]
 for k, T in A.items():

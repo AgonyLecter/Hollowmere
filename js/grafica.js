@@ -4803,6 +4803,9 @@ Ext.on('arte', () => {
 // sono pronti alla fine del caricamento, serra, mulino, silos e pozzo si disegnano la prima volta che servono
 Ext.on('arte', () => {
   for (const k of ['pollaio', 'stalla', 'ovile']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
+  // le decorazioni di pietra della Valle: l'angelo che piange e la fontana col doccione
+  FREEIMG.statua = daGriglia(COSTRUZIONI_MANO, 'statua');
+  FREEIMG.fontana = [0, 1].map(f => daGriglia(COSTRUZIONI_MANO, 'fontana' + f));
 });
 Ext.avvolgi('genCostrArt', function (prossimo, ...a) {
   const r = prossimo(...a);
