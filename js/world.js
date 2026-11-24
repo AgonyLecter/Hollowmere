@@ -1682,6 +1682,91 @@ function drawDrop(X, Y, bad) {
   ctx.fillStyle = bad ? '#ffe0b0' : '#d8f0ff';
   ctx.fillRect(X - 1, Y - 1, 1, 2);
 }
+// ---------- il timer unico: lo stesso segno per tutto quello che aspetta ----------
+// Il quadrante: un orologino di ferro col quadrante di pergamena; lo spicchio d'oro si riempie come una lancetta
+// (p da 0 a 1). Il sigillo: quando è pronto, un tondo d'oro con l'icona di quello che si raccoglie.
+// L'etichetta: avvicinandosi, il nome e il tempo che manca. Li usano colture, macchine, apiario e alberi da frutto.
+function drawQuadrante(X, Y, p, a = 1) {
+  if (a <= 0.03) return;
+  X = Math.round(X);
+  Y = Math.round(Y);
+  ctx.globalAlpha = a;
+  ctx.fillStyle = '#07050a';
+  ctx.fillRect(X - 4, Y - 6, 9, 11);
+  ctx.fillRect(X - 5, Y - 5, 11, 9);
+  ctx.fillStyle = '#3a3a44';
+  ctx.fillRect(X - 3, Y - 5, 7, 9);
+  ctx.fillRect(X - 4, Y - 4, 9, 7);
+  ctx.fillStyle = '#e8dcc0';
+  ctx.fillRect(X - 2, Y - 4, 5, 7);
+  ctx.fillRect(X - 3, Y - 3, 7, 5);
+  // lo spicchio d'oro: si accende pixel per pixel in senso orario a partire dalle 12
+  const lim = Math.max(0, Math.min(1, p)) * Math.PI * 2;
+  for (let dy = -3; dy <= 2; dy++)
+    for (let dx = -3; dx <= 3; dx++) {
+      if ((Math.abs(dx) === 3 && (dy === -3 || dy === 2)) || Math.hypot(dx, dy + 0.5) > 3.3) continue;
+      let ang = Math.atan2(dx, -(dy + 0.5));
+      if (ang < 0) ang += Math.PI * 2;
+      if (ang <= lim && (dx || dy + 0.5)) {
+        ctx.fillStyle = dy < 0 ? '#d8aa48' : '#c8862e';
+        ctx.fillRect(X + dx, Y + dy, 1, 1);
+      }
+    }
+  // la lancetta e il perno
+  const hx = Math.round(Math.sin(lim) * 2.4),
+    hy = Math.round(-Math.cos(lim) * 2.4);
+  ctx.fillStyle = '#1c1418';
+  ctx.fillRect(X, Y - 1, 1, 1);
+  ctx.fillRect(X + Math.round(hx / 2), Y - 1 + Math.round(hy / 2), 1, 1);
+  ctx.fillRect(X + hx, Y - 1 + hy, 1, 1);
+  // l'anello per appenderlo
+  ctx.fillStyle = '#74726e';
+  ctx.fillRect(X, Y - 7, 1, 1);
+  ctx.globalAlpha = 1;
+}
+function drawSigillo(X, Y, icona, a = 1) {
+  if (a <= 0.03) return;
+  X = Math.round(X);
+  Y = Math.round(Y);
+  const lu = 0.5 + 0.5 * Math.sin(G.t * 3);
+  ctx.globalAlpha = a * (0.25 + 0.25 * lu);
+  ctx.fillStyle = '#ffd070';
+  ctx.fillRect(X - 7, Y - 6, 15, 13);
+  ctx.globalAlpha = a;
+  ctx.fillStyle = '#07050a';
+  ctx.fillRect(X - 5, Y - 7, 11, 15);
+  ctx.fillRect(X - 6, Y - 6, 13, 13);
+  ctx.fillRect(X - 1, Y + 8, 3, 1);
+  ctx.fillRect(X, Y + 9, 1, 1);
+  ctx.fillStyle = '#8a5a20';
+  ctx.fillRect(X - 4, Y - 6, 9, 13);
+  ctx.fillRect(X - 5, Y - 5, 11, 11);
+  ctx.fillStyle = '#d8aa48';
+  ctx.fillRect(X - 4, Y - 5, 9, 11);
+  ctx.fillRect(X - 5, Y - 4, 11, 9);
+  ctx.fillStyle = '#ffd070';
+  ctx.fillRect(X - 3, Y - 6, 7, 1);
+  ctx.fillRect(X - 5, Y - 3, 1, 5);
+  ctx.fillStyle = '#c8862e';
+  ctx.fillRect(X - 3, Y + 6, 7, 1);
+  if (icona) ctx.drawImage(icona, X - 4, Y - 4, 9, 9);
+  ctx.globalAlpha = 1;
+}
+function drawEtichetta(X, Y, t, brutta) {
+  ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
+  ctx.textAlign = 'center';
+  const w = Math.ceil(ctx.measureText(t).width) + 8,
+    bx = Math.round(X - w / 2),
+    by = Math.round(Y - 11);
+  ctx.fillStyle = '#07040a';
+  ctx.fillRect(bx - 1, by - 1, w + 2, 13);
+  ctx.fillStyle = 'rgba(28,18,22,.94)';
+  ctx.fillRect(bx, by, w, 11);
+  ctx.fillStyle = 'rgba(217,166,70,.7)';
+  ctx.fillRect(bx, by, w, 1);
+  ctx.fillStyle = brutta ? '#ffb0a0' : '#f6e6c0';
+  ctx.fillText(t, X, by + 8.5);
+}
 function drawCropMarks(m, tx0, ty0, tx1, ty1) {
   if (m.id !== 'main' || G.mode !== 'game') return;
   const fm = G.st.farm,
@@ -1704,6 +1789,7 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
       Y = Math.round(Math.min(top, y * 16 + 6) - 3 + bob);
     if (calm && x === fx && y === fy) focus = { f, X, Y: Y - 8 };
     if (c.dead) continue;
+    const d = Math.hypot(p.x - X, p.y - (y * 16 + 8)) / 16;
     if (cropStage(c) === 3) {
       if (Math.random() < 0.05)
         G.parts.push({
@@ -1716,79 +1802,32 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
           life: 0.6,
           c: '#fff3a0'
         });
-      const bx = X - 4,
-        by = Y - 8;
-      ctx.fillStyle = '#2a1406';
-      ctx.fillRect(bx - 1, by - 1, 11, 10);
-      ctx.fillRect(X - 1, by + 9, 3, 1);
-      ctx.fillRect(X, by + 10, 1, 1);
-      ctx.fillStyle = '#f6d98a';
-      ctx.fillRect(bx, by, 9, 8);
-      ctx.fillRect(X, by + 8, 1, 1);
-      ctx.fillStyle = '#fffbe0';
-      ctx.fillRect(bx, by, 9, 1);
-      ctx.fillRect(bx, by, 1, 8);
-      ctx.fillStyle = '#3a7a1a';
-      ctx.fillRect(bx + 2, by + 4, 1, 1);
-      ctx.fillRect(bx + 3, by + 5, 1, 1);
-      ctx.fillRect(bx + 4, by + 4, 1, 1);
-      ctx.fillRect(bx + 5, by + 3, 1, 1);
-      ctx.fillRect(bx + 6, by + 2, 1, 1);
+      // il sigillo d'oro col raccolto: pieno da vicino, più tenue da lontano
+      drawSigillo(X, Y - 5, ICON[c.t], d < 5 ? 1 : 0.6);
       continue;
     }
-    const d = Math.hypot(p.x - X, p.y - (y * 16 + 8)) / 16;
-    let a = d < 3.5 ? 0.92 : d < 6 ? ((6 - d) / 2.5) * 0.92 : 0;
-    if (hold) a = Math.max(a, 0.92);
-    const n = CROPS[c.t].days,
-      pw = n * 4 + 1,
-      px = Math.round(X - pw / 2),
-      py = Y - 5;
-    if (a > 0.03) {
+    let a = d < 3.5 ? 0.95 : d < 6 ? ((6 - d) / 2.5) * 0.95 : 0;
+    if (hold) a = Math.max(a, 0.95);
+    // il quadrante: le notti passate, e mezza in più se oggi è già bagnata
+    const n = CROPS[c.t].days;
+    drawQuadrante(X, Y - 3, (c.a + (f.w ? 0.5 : 0)) / n, a);
+    if (f.f && a > 0.03) {
       ctx.globalAlpha = a;
-      ctx.fillStyle = '#1a0f08';
-      ctx.fillRect(px - 1, py - 1, pw + 2, 7);
-      ctx.fillStyle = '#3a2a1c';
-      ctx.fillRect(px, py, pw, 5);
-      const pul = 0.55 + 0.45 * Math.sin(G.t * 5);
-      for (let i = 0; i < n; i++) {
-        const sx = px + 1 + i * 4;
-        if (i < c.a) {
-          ctx.fillStyle = '#7cc240';
-          ctx.fillRect(sx, py + 1, 3, 3);
-          ctx.fillStyle = '#d8f6a0';
-          ctx.fillRect(sx, py + 1, 3, 1);
-        } else if (i === c.a && f.w) {
-          ctx.fillStyle = `rgba(106,184,240,${pul.toFixed(2)})`;
-          ctx.fillRect(sx, py + 1, 3, 3);
-        } else {
-          ctx.fillStyle = '#21160e';
-          ctx.fillRect(sx, py + 1, 3, 3);
-        }
-      }
-      if (f.f) {
-        ctx.fillStyle = '#e8c23a';
-        ctx.fillRect(px - 1, py - 2, 2, 2);
-      }
+      ctx.fillStyle = '#e8c23a';
+      ctx.fillRect(X - 6, Y - 9, 2, 2);
       ctx.globalAlpha = 1;
     }
-    if (!f.w) drawDrop(a > 0.03 ? px + pw + 4 : X, a > 0.03 ? py + 2 : Y - 2, cropWilt(f));
+    if (!f.w) drawDrop(a > 0.03 ? X + 9 : X, a > 0.03 ? Y - 3 : Y - 2, cropWilt(f));
   }
-  if (focus && !(focus.f.c && !focus.f.c.dead && cropStage(focus.f.c) === 3)) {
+  if (focus) {
     const c = focus.f.c,
-      t = CROPS[c.t].n + ' · ' + cropStatus(focus.f);
-    ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
-    ctx.textAlign = 'center';
-    const w = Math.ceil(ctx.measureText(t).width) + 8,
-      bx = Math.round(focus.X - w / 2),
-      by = focus.Y - 11;
-    ctx.fillStyle = '#07040a';
-    ctx.fillRect(bx - 1, by - 1, w + 2, 13);
-    ctx.fillStyle = 'rgba(28,18,22,.94)';
-    ctx.fillRect(bx, by, w, 11);
-    ctx.fillStyle = 'rgba(217,166,70,.7)';
-    ctx.fillRect(bx, by, w, 1);
-    ctx.fillStyle = c.dead || cropWilt(focus.f) ? '#ffb0a0' : '#f6e6c0';
-    ctx.fillText(t, focus.X, by + 8.5);
+      pronta = c && !c.dead && cropStage(c) === 3;
+    drawEtichetta(
+      focus.X,
+      focus.Y - (pronta ? 6 : 0),
+      CROPS[c.t].n + ' · ' + cropStatus(focus.f),
+      c.dead || cropWilt(focus.f)
+    );
   }
   drawPops();
 }

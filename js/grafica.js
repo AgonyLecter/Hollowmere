@@ -4777,40 +4777,6 @@ Ext.on('arte', () => {
   ])
     IMG[k] = Array.from({ length: n }, (_, i) => alPosto(IMG[k] && IMG[k][i], nome + i));
 });
-// le colture disegnate a mano (colture.pxs → colture_mano.js): 4 stadi ciascuna, la pianta secca e la zucca
-// intagliata. Sono a 1× (un pixel per unità di gioco): l'appassita si ricava qui, piegata di 2 verso terra.
-function colturaAppassita(src) {
-  const [c, x] = mk(src.width, src.height);
-  x.drawImage(src, 0, 2);
-  const d = x.getImageData(0, 0, c.width, c.height),
-    a = d.data;
-  for (let i = 0; i < a.length; i += 4) {
-    if (!a[i + 3]) continue;
-    const L = (a[i] * 0.3 + a[i + 1] * 0.59 + a[i + 2] * 0.11) / 255;
-    a[i] = a[i] * 0.35 + 175 * L * 0.75;
-    a[i + 1] = a[i + 1] * 0.35 + 130 * L * 0.75;
-    a[i + 2] = a[i + 2] * 0.35 + 60 * L * 0.65;
-  }
-  x.putImageData(d, 0, 0);
-  c.top = Math.min(c.height, (src.top || 0) + 2);
-  return c;
-}
-Ext.on('arte', () => {
-  const D = COLTURE_MANO,
-    img = nome => {
-      const c = daGriglia(D, nome);
-      c.top = imgTop(c);
-      return c;
-    };
-  const ids = [...new Set(Object.keys(D.sprite).map(n => n.replace(/\d+$/, '')))];
-  for (const id of ids) {
-    if (!CROPS[id]) continue;
-    CROPIMG[id] = [0, 1, 2, 3].map(s => img(id + s));
-    CROPW[id] = CROPIMG[id].map(colturaAppassita);
-  }
-  CROPIMG.dead = img('secca');
-  CROPIMG.zuccaFace = img('zuccaFace');
-});
 // le costruzioni della Valle disegnate a mano (costruzioni.pxs → costruzioni_mano.js): pollaio, stalla e ovile
 // sono pronti alla fine del caricamento, serra, mulino, silos e pozzo si disegnano la prima volta che servono
 Ext.on('arte', () => {
