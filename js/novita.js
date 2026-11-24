@@ -401,6 +401,22 @@ const NOVITA = [
         t: 'E la notte, a Hollowmere, è verde come l’acqua di uno stagno. Le lanterne e le finestre accese sono le uniche isole calde. Non allontanarti troppo dalla luce.'
       }
     ]
+  },
+  {
+    id: 'gotico',
+    v: 43,
+    n: 'Hollowmere ridisegnata a mano',
+    steps: [
+      {
+        t: 'La Valle è stata ridisegnata a mano, pixel per pixel: gli abitanti hanno volti e abiti di fine Settecento, le case sono gotiche, con l’edera e le lanterne, e la cappella ha il suo rosone.'
+      },
+      {
+        t: 'Gli alberi sono contorti e cambiano davvero con le stagioni: ruggine d’autunno, nudi e innevati d’inverno. Anche pini, rovi e animali della fattoria sono nuovi.'
+      },
+      {
+        t: 'E quando la notte senti un galoppo... adesso lo vedi bene, il Cavaliere. Il mantello rosso, la spada che gocciola. Non guardarlo troppo a lungo.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
