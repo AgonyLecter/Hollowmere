@@ -1182,12 +1182,15 @@ function genDeco(...a) {
 // ---------- animali: fotogrammi rivolti a destra (la sinistra è specchiata) ----------
 const CRIT = {};
 function critFrames(w, h, n, fn) {
-  return Array.from({ length: n }, (_, f) => {
+  const L = Array.from({ length: n }, (_, f) => {
     const P = new PX(w, h);
     fn(P, f);
     P.outline();
     return pxCanvas(P);
   });
+  // punto di estensione: i fotogrammi sono pronti (stile.js li porta allo stile del gioco)
+  Ext.run('fotogrammiFatti', L);
+  return L;
 }
 function genCrittersBase() {
   const wh = ramp6('#f2ece0'),
@@ -4233,6 +4236,8 @@ function genSheet(L) {
     x.drawImage(c, f * CW, 2 * CHH, CW, CHH, (CCOLS - 1 - f) * CW, CHH, CW, CHH);
   }
   x.restore();
+  // punto di estensione: il foglio è pronto (stile.js lo porta allo stile del gioco)
+  Ext.run('foglioPersonaggio', c);
   return c;
 }
 // riga del foglio per direzione di gioco (0 giù,1 sinistra,2 destra,3 su)

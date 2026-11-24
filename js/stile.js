@@ -151,28 +151,42 @@ function stileAlbero(src, opz = {}) {
 }
 // le immagini da non toccare: sovrapposizioni dello schermo e disegni già fatti a mano
 const STILE_ESCLUSI = new Set(['vignette', 'grain', 'spavento', 'horse', 'albero']);
-function stileTutto() {
-  const fatto = new WeakMap(),
-    tratta = im => {
-      if (!im || !im.getContext || (im.s || 1) !== 2) return im;
-      if (!fatto.has(im)) fatto.set(im, stileAlbero(im));
-      return fatto.get(im);
-    },
-    passa = obj => {
-      for (const k of Object.keys(obj)) {
-        if (STILE_ESCLUSI.has(k)) continue;
-        const v = obj[k];
-        if (Array.isArray(v))
-          for (let i = 0; i < v.length; i++) v[i] = Array.isArray(v[i]) ? v[i] : tratta(v[i]);
-        else if (v && v.getContext) obj[k] = tratta(v);
-        else if (v && typeof v === 'object' && !v.getContext && Object.values(v).some(x => x && x.getContext))
-          passa(v); // per esempio FREEIMG.trees = { stagione: [alberi] }
-      }
-    };
-  passa(IMG);
-  passa(AIMG);
-  if (typeof FREEIMG !== 'undefined') passa(FREEIMG);
+// stile del mondo (grana grossa) per ciò che è a 2×; ogni immagine si tratta una volta sola
+const STILE_FATTO = new WeakMap();
+function stileMondo(im) {
+  if (!im || !im.getContext || (im.s || 1) !== 2) return im;
+  if (!STILE_FATTO.has(im)) STILE_FATTO.set(im, stileAlbero(im));
+  return STILE_FATTO.get(im);
 }
+// stile dell'interfaccia (icone dello zaino): stessa tavolozza e contorno, grana fine per restare leggibili
+function stileIcona(im) {
+  if (!im || !im.getContext || im._stile) return im;
+  stilePersonaggio(im);
+  im._stile = 1;
+  return im;
+}
+// passa un contenitore di immagini (oggetti e liste annidati) e sostituisce ogni immagine con quella in stile
+function stilePassa(obj, f) {
+  for (const k of Object.keys(obj)) {
+    if (STILE_ESCLUSI.has(k)) continue;
+    const v = obj[k];
+    if (!v) continue;
+    if (v.getContext) obj[k] = f(v);
+    else if (typeof v === 'object') stilePassa(v, f);
+  }
+}
+function stileTutto() {
+  for (const C of [IMG, AIMG, FREEIMG, CROPIMG, CRIT, PC_IMG, FAUNA_IMG]) stilePassa(C, stileMondo);
+  stilePassa(ICON, stileIcona);
+}
+// i fotogrammi fatti più tardi (il cane e il gatto del compagno, i bestiolini nuovi)
+Ext.on('fotogrammiFatti', L => {
+  try {
+    for (let i = 0; i < L.length; i++) L[i] = stileMondo(L[i]);
+  } catch (e) {
+    segnala(e, 'stile');
+  }
+});
 Ext.on('arte', () => {
   try {
     stileTutto();
@@ -180,3 +194,77 @@ Ext.on('arte', () => {
     segnala(e, 'stile');
   }
 });
+
+// ---------- i personaggi: lo stesso linguaggio, alla loro grana (i volti disegnati a mano restano leggibili) ----------
+// tavolozza dell'albero più i toni di pelle, capelli e occhi; contorno scuro; luce di luna in alto
+const STILE_PAL_PG = STILE_PAL.concat(
+  [
+    '#f2cca6',
+    '#e2b48c',
+    '#c8946e',
+    '#a87458',
+    '#845642',
+    '#5e3a30', // pelle
+    '#d8b050',
+    '#a8783a',
+    '#d8d4cc',
+    '#8a8680',
+    '#1a1416',
+    '#8a3a1c',
+    '#5a3a22', // capelli
+    '#3a5a8a',
+    '#3a6a3a',
+    '#6a2a34',
+    '#ece6da',
+    '#c8c0b0' // occhi, labbra, camicie e colletti
+  ].map(h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)])
+);
+function stilePersonaggio(c) {
+  const x = c.getContext('2d'),
+    W = c.width,
+    H = c.height,
+    img = x.getImageData(0, 0, W, H),
+    d = img.data,
+    cache = new Map(),
+    vicino = k => {
+      let v = cache.get(k);
+      if (v) return v;
+      const r = k >> 16,
+        g = (k >> 8) & 255,
+        b = k & 255;
+      let best = 1e9;
+      for (const p of STILE_PAL_PG) {
+        const e = (p[0] - r) ** 2 * 0.3 + (p[1] - g) ** 2 * 0.59 + (p[2] - b) ** 2 * 0.11;
+        if (e < best) ((best = e), (v = p));
+      }
+      cache.set(k, v);
+      return v;
+    },
+    pieno = (X, Y) => X >= 0 && Y >= 0 && X < W && Y < H && d[(Y * W + X) * 4 + 3] > 127;
+  const o = new Uint8ClampedArray(d);
+  for (let Y = 0; Y < H; Y++)
+    for (let X = 0; X < W; X++) {
+      const i = (Y * W + X) * 4;
+      if (d[i + 3] < 128) continue;
+      // il contorno (un pixel pieno con il vuoto accanto, già molto scuro) diventa il nero dell'albero
+      const lum = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11,
+        bordo = !pieno(X - 1, Y) || !pieno(X + 1, Y) || !pieno(X, Y - 1) || !pieno(X, Y + 1);
+      let p = bordo && lum < 70 ? [7, 5, 10] : vicino((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
+      // la luce di luna: il primo pixel colorato sotto il contorno in alto
+      if (!bordo && !pieno(X, Y - 2) && lum < 170) p = p.map((v, k) => v + ([138, 160, 168][k] - v) * 0.35);
+      o[i] = p[0];
+      o[i + 1] = p[1];
+      o[i + 2] = p[2];
+    }
+  d.set(o);
+  x.putImageData(img, 0, 0);
+  return c;
+}
+Ext.on('foglioPersonaggio', c => {
+  try {
+    stilePersonaggio(c);
+  } catch (e) {
+    segnala(e, 'stile');
+  }
+});
+Ext.avvolgi('genPortrait', (prossimo, L, mood) => stilePersonaggio(prossimo(L, mood)));

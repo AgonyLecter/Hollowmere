@@ -27,9 +27,16 @@ const COSTUMI = {
     hatCol: '#e4dccb'
   },
   // il frate campanaro: saio di lana grezza con la corda
-  lucius: { mano: 1, volto: 'lucius', skin: '#d6c0aa', robe: '#3a3630', shirt: '#4a443a' },
+  lucius: { hood: '#3a3028', mano: 1, volto: 'lucius', skin: '#d6c0aa', robe: '#3a3630', shirt: '#4a443a' },
   // la bambina: scialle giallo (il suo colore), vestito marrone
-  clara: { mano: 1, volto: 'clara', cape: null, shawl: '#c09a3a', dress: '#5e4230', shirt: '#e8dcc0' },
+  clara: {
+    cape: '#7a1a1e',
+    capeLen: 12,
+    mano: 1,
+    volto: 'clara',
+    dress: '#5e4230',
+    shirt: '#e8dcc0'
+  },
   // il fabbro: maniche arrotolate, grembiule di cuoio, stivali
   brom: {
     mano: 1,
@@ -72,6 +79,7 @@ const COSTUMI = {
   },
   // la viaggiatrice: scialle grigio, abito scuro
   irene: {
+    velo: '#141016',
     mano: 1,
     volto: 'irene',
     lip: '#6a2a34',
@@ -82,6 +90,7 @@ const COSTUMI = {
   },
   // il mercante (e il cocchiere): giacca lunga nera, cilindro, cravatta, barba grigia
   mercante: {
+    sfilacciato: 1,
     mano: 1,
     volto: 'mercante',
     skin: '#cbb698',
@@ -93,7 +102,7 @@ const COSTUMI = {
     boots: 1
   },
   // la bambina del pozzo: un azzurro che non si usa più
-  nove: { mano: 1, volto: 'nove' }
+  nove: { aura: 1, mano: 1, volto: 'nove' }
 };
 for (const k in COSTUMI) if (LOOKS[k]) LOOKS[k] = Object.assign({}, LOOKS[k], COSTUMI[k]);
 LOOKS.cocchiere = LOOKS.mercante;

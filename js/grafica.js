@@ -154,7 +154,8 @@ const GX = (() => {
       coat: r(L.coat),
       cravat: r(L.cravat || '#e8e0cc'),
       shawl: r(L.shawl),
-      calze: r(L.calze)
+      calze: r(L.calze),
+      hood: r(L.hood || L.velo)
     };
     RC.set(L, R);
     return R;
@@ -286,11 +287,11 @@ const GX = (() => {
         if (Y + Z > 64) continue;
         px(X0 + X * Z, Y, C[ch] || C.S, Z);
       }
-    // il cappello: la figura di fronte con e senza cappello; i pixel che cambiano sono il cappello, e si
+    // cappello, cappuccio, velo: la figura di fronte con e senza; i pixel che cambiano sono il capo, e si
     // ingrandiscono sopra la testa del ritratto (vale per ogni cappello, anche quelli che verranno)
-    if (L.hat && L.hat !== 'none') {
+    if ((L.hat && L.hat !== 'none') || L.hood || L.velo) {
       const con = frame(L, 0, null, 0, false),
-        senza = frame(Object.assign({}, L, { hat: null }), 0, null, 0, false),
+        senza = frame(Object.assign({}, L, { hat: null, hood: null, velo: null }), 0, null, 0, false),
         fx0 = Math.round(18 - w / 2),
         fy0 = Math.round(14 + (L.kid ? 3 : 0) - 12);
       for (let fy = 0; fy < 54; fy++)
@@ -571,6 +572,8 @@ const GX = (() => {
           if (front && ax < apre(Y)) return false;
           if (side && Y > legTop && X > cx + 1) return false;
           if (back && Y > legTop + 1 && ax < 0.7) return false;
+          // sfilacciato: l'orlo a brandelli, di lunghezze diverse
+          if (L.sfilacciato) return Y <= bot - ((X * 7 + 3) % 5) + ((X * 3) % 2 ? 2 : 0);
           return Y <= bot - ((X + Math.floor((ph || 0) * 2)) % 4 === 0 ? 1 : 0);
         }
       );
@@ -899,6 +902,35 @@ const GX = (() => {
           if (blink && 'el'.includes(ch)) ch = chiuso.has(x + ',' + y + ',r') ? 'r' : 'S';
           P.set(X0 + x, Y0 + y, C[ch] || C.S);
         }
+      // il cappuccio (o il velo di pizzo nero): copre capelli e lati, il viso resta in un'apertura in ombra
+      if (L.hood || L.velo) {
+        const HR = R.hood,
+          ccx = X0 + w / 2,
+          ccy = Y0 + 3 + 9,
+          dentroTesta = (X, Y) => ((X + 0.5 - ccx) / 10.5) ** 2 + ((Y + 0.5 - ccy + 1) / 11.5) ** 2 <= 1,
+          viso = (X, Y) =>
+            !back &&
+            ((X + 0.5 - (ccx + (side ? 3 : 0))) / (side ? 4.5 : 5.2)) ** 2 +
+              ((Y + 0.5 - ccy - 2) / 6.5) ** 2 <=
+              1;
+        for (let Y = Y0; Y < Y0 + h + 4; Y++)
+          for (let X = X0 - 3; X < X0 + w + 3; X++) {
+            if (!dentroTesta(X, Y) || viso(X, Y)) continue;
+            if (L.velo && (X + Y) % 2 && Y > ccy) continue; // il pizzo lascia vedere sotto
+            const lato = X < ccx ? 3 : 2;
+            P.set(X, Y, HR[Y < ccy - 8 ? 4 : lato]);
+          }
+        // l'ombra del cappuccio sulla fronte e sugli occhi
+        if (L.hood && !back)
+          for (let Y = Y0; Y < Y0 + h; Y++)
+            for (let X = X0; X < X0 + w; X++)
+              if (viso(X, Y) && !viso(X, Y - 3) && P.has(X, Y)) {
+                const i = (Y * 36 + X) * 4;
+                P.d[i] *= 0.45;
+                P.d[i + 1] *= 0.42;
+                P.d[i + 2] *= 0.5;
+              }
+      }
       // la ragazza (ha il colore delle labbra): ciglia sopra l'occhio aperto
       if (L.lip && !blink && !back)
         for (let y = 1; y < h; y++)
@@ -1341,6 +1373,19 @@ const GX = (() => {
       hat();
     }
     P.outline();
+    // l'alone spettrale: chi ha «aura» ha il contorno chiaro e freddo, come una luce che viene da dentro
+    if (L.aura)
+      for (let i = 0; i < P.d.length; i += 4) {
+        const X = (i / 4) % W,
+          Y = (i / 4 / W) | 0;
+        if (!P.d[i + 3]) continue;
+        const vuoto = (a, b) => a < 0 || b < 0 || a >= W || b >= H || !P.d[(b * W + a) * 4 + 3];
+        if (vuoto(X - 1, Y) || vuoto(X + 1, Y) || vuoto(X, Y - 1) || vuoto(X, Y + 1)) {
+          P.d[i] = 150;
+          P.d[i + 1] = 210;
+          P.d[i + 2] = 225;
+        }
+      }
     return P;
   }
   return { MK, paint, frame, dk, ritrattoMano, trattiMano };
@@ -1383,6 +1428,7 @@ function framePresa(L, dir, a) {
     const [c, x] = mk(CW, CHH);
     c.s = 2;
     heroFrame(L, d, null, 0, false, a).put(x, 0, 0);
+    Ext.run('foglioPersonaggio', c);
     C[k] = c;
   }
   return C[k];
@@ -3778,6 +3824,20 @@ const TOOLS = {
       } catch (e) {
         console.error(e);
       }
+    }
+    // gli attrezzi disegnati a mano (tools/pixel/attrezzi.pxs → js/attrezzi_mano.js) prendono il loro posto
+    for (const k in ATTREZZI_MANO.sprite) {
+      const g = ATTREZZI_MANO.sprite[k],
+        [c, x] = mk(g[0].length, g.length);
+      g.forEach((r, Y) =>
+        [...r].forEach((ch, X) => {
+          if (ch === '.') return;
+          x.fillStyle = ATTREZZI_MANO.tavolozza[ch];
+          x.fillRect(X, Y, 1, 1);
+        })
+      );
+      c.s = 2;
+      ICON[k] = c;
     }
   };
   for (const name of ['genIconsHD', 'genFreeArt', 'genEspArt']) {
