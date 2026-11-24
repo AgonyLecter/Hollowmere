@@ -75,7 +75,6 @@ const LIKES = {
   brom: { patata: 2, zucca: 1, cavolo: 2, arrosto: 3, pane: 1 },
   tobia: { nastro: 3, zucca: 2, rapa: 1, torta: 3, pane: 2, zuppa: 1 }
 };
-const DAYN = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 function newState(name, g = 'm') {
   return {
     v: 1,

@@ -150,10 +150,229 @@ const GX = (() => {
       band: r(L.hatBand || '#8a6a3a'),
       belt: r(L.belt || '#3a2414'),
       gold: r('#d8a84a'),
-      vest: r(L.vest)
+      vest: r(L.vest),
+      coat: r(L.coat),
+      cravat: r(L.cravat || '#e8e0cc'),
+      shawl: r(L.shawl),
+      calze: r(L.calze)
     };
     RC.set(L, R);
     return R;
+  }
+  // i colori delle lettere delle teste a mano, presi dall'aspetto del personaggio
+  const r2h = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+  function coloriMano(L, R) {
+    return {
+      S: R.sk[3],
+      s: R.sk[2],
+      H: R.sk[4],
+      q: R.sk[1],
+      n: h2r(mix(r2h(R.sk[3]), '#e06a5a', 0.35)),
+      R: R.hr[3],
+      r: R.hr[1],
+      h: R.hr[4],
+      g: [74, 66, 70],
+      // occhiaie (un viola spento sulla pelle) e l'oro di un dente
+      u: h2r(mix(r2h(R.sk[2]), '#4a2a4a', 0.35)),
+      a: [216, 170, 72],
+      X: (R.beard || R.hr)[3],
+      x: (R.beard || R.hr)[1],
+      e: h2r(mix(L.eye || '#4a3a2a', '#120a10', 0.55)),
+      l: [244, 238, 228],
+      m: h2r(L.lip || mix(r2h(R.sk[1]), '#a0403a', 0.4)),
+      o: [30, 20, 24],
+      O: [18, 12, 14]
+    };
+  }
+  // i tratti che cambiano la griglia: la barba (dalla riga sopra la bocca in giù, la bocca resta) e il volto vuoto
+  function trattiMano(T, L) {
+    T = segniMano(T, L);
+    if (!L.beard && !L.faceless) return T;
+    let yb = T.findIndex(r => r.includes('m'));
+    if (yb < 0) yb = T.length - 6;
+    return T.map((r, y) =>
+      [...r]
+        .map(ch => {
+          if (L.faceless && 'elmnqua'.includes(ch)) return 'S';
+          if (L.beard && y >= yb - 1 && 'SsHnqu'.includes(ch)) return ch === 's' || ch === 'q' ? 'x' : 'X';
+          return ch;
+        })
+        .join('')
+    );
+  }
+  // segni personali sul volto: lentiggini, occhialini (montatura di ferro), cicatrice
+  function segniMano(T, L) {
+    if (!L.lentiggini && !L.occhiali && !L.cicatrice) return T;
+    const G = T.map(r => [...r]),
+      w = G[0].length,
+      pelle = (x, y) => G[y] && 'SsHn'.includes(G[y][x]),
+      occhi = [];
+    G.forEach((r, y) => r.forEach((ch, x) => 'el'.includes(ch) && occhi.push([x, y])));
+    if (!occhi.length) return T; // di spalle: niente volto
+    const lati = [occhi.filter(o => o[0] < w / 2), occhi.filter(o => o[0] >= w / 2)].filter(l => l.length);
+    for (const l of lati) {
+      const xs = l.map(o => o[0]),
+        ys = l.map(o => o[1]),
+        x0 = Math.min(...xs) - 1,
+        x1 = Math.max(...xs) + 1,
+        y0 = Math.min(...ys) - 1,
+        y1 = Math.max(...ys) + 1;
+      if (L.occhiali)
+        for (let y = y0; y <= y1; y++)
+          for (let x = x0; x <= x1; x++)
+            if ((y === y0 || y === y1 || x === x0 || x === x1) && pelle(x, y)) G[y][x] = 'g';
+      if (L.lentiggini)
+        for (const [dx, dy] of [
+          [0, 2],
+          [2, 2],
+          [1, 3]
+        ]) {
+          const x = (x0 + x1) / 2 + dx - 1,
+            y = y1 + dy - 1;
+          if (pelle(Math.round(x), y)) G[y][Math.round(x)] = 'q';
+        }
+    }
+    if (L.occhiali && lati.length === 2) {
+      const y = Math.min(...occhi.map(o => o[1])) - 1;
+      for (let x = Math.max(...lati[0].map(o => o[0])) + 2; x < Math.min(...lati[1].map(o => o[0])) - 1; x++)
+        if (pelle(x, y)) G[y][x] = 'g';
+    }
+    if (L.cicatrice && lati.length) {
+      const [ex, ey] = lati[0][0];
+      for (let k = 0; k < 3; k++) if (pelle(ex - 1 + k, ey + 2 + k)) G[ey + 2 + k][ex - 1 + k] = 'q';
+    }
+    return G.map(r => r.join(''));
+  }
+  // il ritratto di chi ha la testa a mano: la stessa testa ingrandita 3 volte a pixel interi, con le spalle
+  function ritrattoMano(L, mood) {
+    const R = ramps(L),
+      C = coloriMano(L, R),
+      T = trattiMano(TESTE_MANO.sprite[(L.volto || 'giovane') + '_' + (L.style || 'short') + '_giu'], L),
+      Z = 3,
+      w = T[0].length,
+      [c, x] = mk(64, 64),
+      dark = mood === 'dark',
+      col = v => (dark ? v.map(k => k * 0.7) : v),
+      px = (X, Y, v, s = 1) => {
+        x.fillStyle = r2h(col(v));
+        x.fillRect(X, Y, s, s);
+      };
+    // le spalle: la camicia, il gilet o il vestito sopra, il fazzoletto al collo
+    const top = R.vest || R.dress || R.coat || R.robe || R.sh;
+    for (let Y = 50; Y < 64; Y++) {
+      const half = Math.min(29, 15 + (Y - 50) * 2.2);
+      for (let X = Math.round(32 - half); X < Math.round(32 + half); X++) {
+        const d = Math.abs(X + 0.5 - 32),
+          bordo = d > half - 1.5 || Y === 50;
+        let v = d < 7 - (Y - 50) * 0.2 && (R.vest || R.dress) ? R.sh[3] : top[X < 32 ? 3 : 2];
+        if (bordo) v = [30, 20, 24];
+        px(X, Y, v);
+      }
+    }
+    if (L.cravat) {
+      const cr = ramps(L).cravat;
+      for (let Y = 50; Y < 56; Y++)
+        for (let X = 28; X < 36; X++)
+          if (Math.abs(X + 0.5 - 32) < 5 - (Y - 50) * 0.7) px(X, Y, cr[X < 32 ? 3 : 2]);
+    }
+    // la testa (dalla riga 1: le prime due righe libere servono solo ai ciuffi più alti)
+    const y0 = 1,
+      X0 = Math.round(32 - (w * Z) / 2);
+    for (let y = y0; y < T.length; y++)
+      for (let X = 0; X < w; X++) {
+        const ch = T[y][X];
+        if (ch === '.') continue;
+        const Y = (y - y0) * Z - 2;
+        if (Y + Z > 64) continue;
+        px(X0 + X * Z, Y, C[ch] || C.S, Z);
+      }
+    // il cappello: la figura di fronte con e senza cappello; i pixel che cambiano sono il cappello, e si
+    // ingrandiscono sopra la testa del ritratto (vale per ogni cappello, anche quelli che verranno)
+    if (L.hat && L.hat !== 'none') {
+      const con = frame(L, 0, null, 0, false),
+        senza = frame(Object.assign({}, L, { hat: null }), 0, null, 0, false),
+        fx0 = Math.round(18 - w / 2),
+        fy0 = Math.round(14 + (L.kid ? 3 : 0) - 12);
+      for (let fy = 0; fy < 54; fy++)
+        for (let fx = 0; fx < 36; fx++) {
+          const i = (fy * 36 + fx) * 4,
+            a = con.d,
+            b = senza.d;
+          if (!a[i + 3] || (a[i] === b[i] && a[i + 1] === b[i + 1] && a[i + 2] === b[i + 2] && b[i + 3]))
+            continue;
+          const X = X0 + (fx - fx0) * Z,
+            Y = (fy - fy0 - y0) * Z - 2;
+          if (Y < -Z || Y >= 64) continue;
+          px(X, Y, [a[i], a[i + 1], a[i + 2]], Z);
+        }
+    }
+    // le espressioni: si ridisegnano sopracciglia, occhi e bocca sul viso ingrandito
+    if (mood && mood !== 'dark') {
+      const occhi = [],
+        bocca = [];
+      for (let y = 0; y < T.length; y++)
+        for (let X = 0; X < w; X++) {
+          if (T[y][X] === 'e' && !'el'.includes(T[y - 1][X])) occhi.push([X, y]);
+          if (T[y][X] === 'm') bocca.push([X, y]);
+        }
+      const at = (X, y) => [X0 + X * Z, (y - y0) * Z - 2],
+        pelle = C.S,
+        dentro = X => X > w / 2 - 1 && X < w / 2;
+      const occhiSx = occhi.filter(([X]) => X < w / 2),
+        occhiDx = occhi.filter(([X]) => X >= w / 2);
+      for (const gruppo of [occhiSx, occhiDx]) {
+        if (!gruppo.length) continue;
+        const xs = gruppo.map(g => g[0]),
+          x0 = Math.min(...xs),
+          x1 = Math.max(...xs),
+          y = gruppo[0][1],
+          interno = x0 < w / 2 ? x1 : x0,
+          esterno = x0 < w / 2 ? x0 : x1;
+        const [ix, iy] = at(interno, y),
+          [ex, ey] = at(esterno, y);
+        if (mood === 'stern') {
+          // sopracciglia aggrottate: una linea che scende verso il naso, sopra l'occhio
+          x.fillStyle = r2h(C.r);
+          x.fillRect(Math.min(ix, ex), ey - 3, Math.abs(ix - ex) + Z, 2);
+          x.fillRect(ix, iy - 1, Z, 1);
+        }
+        if (mood === 'sad') {
+          x.fillStyle = r2h(C.r);
+          x.fillRect(ix, iy - 5, Z, 2);
+          x.fillRect(ex, ey - 3, Z, 2);
+        }
+        if (mood === 'fear') {
+          // occhi spalancati: il bianco attorno alla pupilla
+          x.fillStyle = r2h(C.l);
+          x.fillRect(Math.min(ix, ex) - 1, iy - 2, Math.abs(ix - ex) + Z + 2, 2);
+        }
+      }
+      if (bocca.length) {
+        const xs = bocca.map(b => b[0]),
+          y = bocca[0][1],
+          [bx0, by] = at(Math.min(...xs), y),
+          [bx1] = at(Math.max(...xs), y),
+          larg = bx1 - bx0 + Z;
+        x.fillStyle = r2h(pelle);
+        x.fillRect(bx0 - 1, by - 1, larg + 2, Z + 2);
+        x.fillStyle = r2h(C.m);
+        if (mood === 'sad') {
+          x.fillRect(bx0 + 1, by, larg - 2, 2);
+          x.fillRect(bx0 - 1, by + 2, 2, 2);
+          x.fillRect(bx1 + Z - 1, by + 2, 2, 2);
+        } else if (mood === 'fear') {
+          x.fillStyle = r2h(C.O);
+          x.fillRect(bx0 + 1, by, larg - 2, Z + 1);
+        } else if (mood === 'stern') x.fillRect(bx0, by + 1, larg, 1);
+        else x.fillRect(bx0, by, larg, Z);
+      }
+    }
+    // ciglia della ragazza
+    if (L.lip)
+      for (let y = 1; y < T.length; y++)
+        for (let X = 0; X < w; X++)
+          if (T[y][X] === 'e' && !'el'.includes(T[y - 1][X])) px(X0 + X * Z, (y - 1 - y0) * Z - 2, C.r, Z);
+    return c;
   }
   const FR = [0, 1, 2, 1, 0, 1, 2, 2, 1, 0, 1, 1],
     fr = X => FR[(((X | 0) % 12) + 12) % 12];
@@ -176,8 +395,8 @@ const GX = (() => {
       legTop = 36 + k,
       hw = 7 + wide;
     const sway = walk ? Math.sin(ph - 1) * 1.2 : br ? 0.5 : 0;
-    const top = L.robe ? R.robe : R.sh;
-    const hasHat = L.hat === 'tall' || L.hat === 'bonnet' || L.hat === 'cap';
+    const top = L.robe ? R.robe : L.coat ? R.coat : R.sh;
+    const hasHat = L.hat === 'tall' || L.hat === 'bonnet' || L.hat === 'cap' || L.hat === 'tricorn';
     const hairMod = (X, Y, t) => {
       const h = (X * 7 + 3) % 5;
       if (h === 0 && Y > cy - ry + 3) t--;
@@ -213,6 +432,41 @@ const GX = (() => {
           paint(P, new MK().rect(lx - 3 + (q > 0 ? 1 : 0), 48 - Math.round(lift), 6, 3), R.shoe, {
             mod: (X, Y, t) => (Y === 48 - Math.round(lift) && t < 4 ? 4 : t)
           });
+          // stivali alti: il cuoio sale fino al polpaccio, con il risvolto chiaro
+          // calze al ginocchio sotto i calzoni (lo stivale, se c'è, le copre in basso)
+          if (L.calze)
+            paint(P, new MK().rect(lx - 2.5, legTop + 6, 5, 48 - Math.round(lift) - legTop - 6), R.calze, {
+              nc: 1,
+              mod: (X, Y, t) => (Y === legTop + 6 ? 2 : t)
+            });
+          if (L.boots) {
+            const y0 = legTop + (L.calze ? 9 : 6);
+            paint(P, new MK().rect(lx - 2.5, y0, 5, 48 - Math.round(lift) - y0), R.shoe, {
+              nc: 1,
+              mod: (X, Y, t) => (Y === y0 ? 4 : t)
+            });
+          }
+        }
+      if ((L.boots || L.calze) && side)
+        for (const q of [-1, 1]) {
+          const fx = cx + (q > 0 ? s : -s) * 4,
+            lift = Math.max(0, q > 0 ? c : -c) * 2,
+            hx = cx + q * 0.4,
+            // punto della gamba a una certa altezza (la gamba va dall'anca al piede in linea retta)
+            at = k => [hx + (fx - hx) * k, legTop + 1 + (47 - lift - legTop - 1) * k];
+          if (L.calze) {
+            const [ax, ay] = at(0.45);
+            paint(P, new MK().cap(ax, ay, fx, 46 - lift, 2.0, 1.9), q > 0 ? R.calze : dk(R.calze, 0.8), {
+              nc: 1
+            });
+          }
+          if (L.boots) {
+            const [ax, ay] = at(L.calze ? 0.72 : 0.5);
+            paint(P, new MK().cap(ax, ay, fx, 46 - lift, 1.9, 1.8), q > 0 ? R.shoe : dk(R.shoe, 0.8), {
+              nc: 1,
+              mod: (X, Y, t) => (Y <= Math.round(ay) ? 4 : t)
+            });
+          }
         }
     };
     const shoesOnly = () => {
@@ -300,6 +554,93 @@ const GX = (() => {
         paint(P, VM, R.vest, { ck: 0.8 });
         if (front) for (const d of [6, 9]) P.set(cx + 2, tTop + d, R.gold[3]);
       }
+    };
+    // ---- finanziera: la giacca lunga fino al ginocchio, aperta davanti, con revers, bottoni e code dietro
+    const coat = () => {
+      if (!L.coat || L.robe) return;
+      const bot = legTop + 9,
+        cw = Y => (Y < legTop ? tw(Y) + 0.6 : tw(legTop - 1) + 0.6 + (Y - legTop) * 0.22),
+        apre = Y => (Y < tTop + 5 ? 1.2 + (Y - tTop) * 0.45 : 3.2 + (Y - tTop - 5) * 0.16);
+      const M = new MK().band(
+        tTop,
+        bot,
+        Y => cx + (Y > legTop && walk ? ((sway * (Y - legTop)) / 10) * (side ? 1 : 0.4) : 0),
+        cw,
+        (X, Y) => {
+          const ax = Math.abs(X + 0.5 - cx);
+          if (front && ax < apre(Y)) return false;
+          if (side && Y > legTop && X > cx + 1) return false;
+          if (back && Y > legTop + 1 && ax < 0.7) return false;
+          return Y <= bot - ((X + Math.floor((ph || 0) * 2)) % 4 === 0 ? 1 : 0);
+        }
+      );
+      paint(P, M, R.coat, {
+        mod: (X, Y, t) => (Y > legTop && (X - cx + 40) % 4 === 0 ? t - 1 : t)
+      });
+      if (front) {
+        for (let Y = tTop; Y < tTop + 7; Y++) {
+          const a = apre(Y),
+            xl = Math.floor(cx - a) - 1,
+            xr = Math.ceil(cx + a);
+          if (M.has(xl, Y)) P.set(xl, Y, R.coat[4]);
+          if (M.has(xr, Y)) P.set(xr, Y, R.coat[4]);
+        }
+        for (const d of [7, 10, 13]) {
+          const Y = tTop + d,
+            X = Math.floor(cx - apre(Y)) - 1;
+          if (M.has(X, Y)) P.set(X, Y, R.gold[3]);
+        }
+      }
+    };
+    // ---- cravatta a fiocco, bianca o del colore scelto
+    const cravat = () => {
+      if (!L.cravat || back) return;
+      const C2 = R.cravat;
+      if (side) {
+        P.set(cx + 2, tTop, C2[4]);
+        P.set(cx + 3, tTop, C2[3]);
+        P.set(cx + 2, tTop + 1, C2[3]);
+        P.set(cx + 3, tTop + 2, C2[2]);
+        return;
+      }
+      for (let X = cx - 2; X <= cx + 1; X++) P.set(X, tTop, C2[X < cx ? 4 : 3]);
+      P.set(cx - 1, tTop + 1, C2[2]);
+      P.set(cx, tTop + 1, C2[2]);
+      for (let X = cx - 2; X <= cx + 1; X++) P.set(X, tTop + 2, C2[X < cx ? 3 : 2]);
+      P.set(cx - 1, tTop + 3, C2[3]);
+      P.set(cx, tTop + 3, C2[2]);
+    };
+    // ---- scialle sulle spalle, con la frangia
+    const shawl = () => {
+      if (!L.shawl) return;
+      let M;
+      if (back)
+        M = new MK().band(
+          tTop - 1,
+          tTop + 12,
+          () => cx,
+          Y => hw + 1.2 - (Y - tTop) * 0.75
+        );
+      else if (side)
+        M = new MK().band(
+          tTop - 1,
+          tTop + 8,
+          () => cx - 1,
+          Y => 4.6 - (Y - tTop) * 0.3
+        );
+      else
+        M = new MK().band(
+          tTop - 1,
+          tTop + 9,
+          () => cx,
+          Y => (Y < tTop + 4 ? hw + 1.2 : hw + 1.2 - (Y - tTop - 4) * 1.7),
+          (X, Y) => !(Y < tTop + 3 && Math.abs(X + 0.5 - cx) < 2.6)
+        );
+      paint(P, M, R.shawl, { mod: (X, Y, t) => ((X + Y) % 4 === 0 ? t - 1 : t) });
+      // frangia: sul bordo basso, un pixel sì e uno no
+      M.each((X, Y) => {
+        if (!M.has(X, Y + 1) && X % 2 === 0) P.set(X, Y + 1, R.shawl[1]);
+      });
     };
     // ---- tonaca
     const robe = () => {
@@ -528,7 +869,44 @@ const GX = (() => {
     const rx = side ? 7.8 : 8.2,
       ry = 8.1,
       hcx = side ? cx + 0.4 : cx;
+    // ---- testa disegnata a mano (tools/pixel/teste.pxs → js/teste_mano.js), ricolorata con l'aspetto scelto
+    const stileMano = (L.volto || 'giovane') + '_' + (L.style || 'short') + '_',
+      aMano = L.mano && !!TESTE_MANO.sprite[stileMano + 'giu'];
+    const testaMano = () => {
+      // le griglie hanno 3 righe libere sopra (ciuffi, chignon): la cima della testa è alla riga 3
+      const T = trattiMano(TESTE_MANO.sprite[stileMano + (side ? 'lato' : back ? 'su' : 'giu')], L),
+        h = T.length,
+        w = T[0].length,
+        X0 = Math.round(cx - w / 2),
+        Y0 = Math.round(cy - 12),
+        C = coloriMano(L, R),
+        vuoto = (x, y) => x < 0 || y < 0 || x >= w || y >= h || T[y][x] === '.';
+      // occhi chiusi: la riga alta dell'occhio diventa la linea delle ciglia, il resto pelle
+      const chiuso = new Set();
+      if (blink)
+        for (let x = 0; x < w; x++)
+          for (let y = 0; y < h; y++)
+            if ('el'.includes(T[y][x])) {
+              chiuso.add(x + ',' + y + ',' + (y === 0 || !'el'.includes(T[y - 1][x]) ? 'r' : 'S'));
+            }
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+          let ch = T[y][x];
+          if (ch === '.') continue;
+          // il contorno esterno lo mette P.outline(), come per il resto della figura
+          if (ch === 'o' && (vuoto(x - 1, y) || vuoto(x + 1, y) || vuoto(x, y - 1) || vuoto(x, y + 1)))
+            continue;
+          if (blink && 'el'.includes(ch)) ch = chiuso.has(x + ',' + y + ',r') ? 'r' : 'S';
+          P.set(X0 + x, Y0 + y, C[ch] || C.S);
+        }
+      // la ragazza (ha il colore delle labbra): ciglia sopra l'occhio aperto
+      if (L.lip && !blink && !back)
+        for (let y = 1; y < h; y++)
+          for (let x = 0; x < w; x++)
+            if (T[y][x] === 'e' && !'el'.includes(T[y - 1][x])) P.set(X0 + x, Y0 + y - 1, C.r);
+    };
     const head = () => {
+      if (aMano) return testaMano();
       const M = new MK().ell(hcx, cy, rx, ry);
       paint(P, M, R.sk, {
         sw: 2,
@@ -541,6 +919,7 @@ const GX = (() => {
       if (side) P.set(Math.floor(hcx + rx), cy + 3, R.sk[3]);
     }; // naso
     const ears = () => {
+      if (aMano) return;
       if (L.hideEars || (hasHat && L.hat === 'bonnet')) return;
       if (side)
         paint(P, new MK().ell(cx - 1.2, cy + 2, 1.4, 2), R.sk, {
@@ -556,6 +935,7 @@ const GX = (() => {
           paint(P, new MK().ell(cx + q * (rx + 0.1), cy + 2, 1.2, 1.8), R.sk, { base: 2, nc: 1 });
     };
     const face = () => {
+      if (aMano) return;
       if (L.faceless || back) return;
       const ey = cy + 1,
         eye = C(L.eye || '#3a5a7a'),
@@ -614,6 +994,7 @@ const GX = (() => {
       }
     };
     const beard = () => {
+      if (aMano) return;
       if (!L.beard || back) return;
       const bx = side ? cx + 3 : cx;
       paint(
@@ -646,6 +1027,7 @@ const GX = (() => {
       return t;
     };
     const hairBack = () => {
+      if (aMano) return;
       if (L.style !== 'long' || side) return;
       const t0 = cy - 1,
         b0 = cy + (back ? 19 : 17);
@@ -663,6 +1045,7 @@ const GX = (() => {
       );
     };
     const hair = () => {
+      if (aMano) return;
       const st = L.style,
         HR = R.hr;
       if (st === 'bald') {
@@ -812,6 +1195,64 @@ const GX = (() => {
           for (let X = cx - 3; X <= cx + 2; X++) P.set(X, cy + 8, HC[2]);
         }
       }
+      if (L.hat === 'tricorn') {
+        // il tricorno: cupola bassa e tesa rialzata in tre punte, con il bordo chiaro
+        const TB = R.band;
+        paint(
+          P,
+          new MK().band(
+            cy - 12,
+            cy - 6,
+            () => cx,
+            Y => 5.6 - Math.max(0, cy - 10 - Y) * 0.8
+          ),
+          HC,
+          {
+            mod: (X, Y, t) => (Y === cy - 12 ? 4 : t)
+          }
+        );
+        if (side) {
+          const BM = new MK().fn(
+            (x0, y0) => {
+              const dx = x0 - (cx + 1.5),
+                su = dx < -5 ? (-5 - dx) * 0.9 : 0;
+              return (
+                Math.abs(dx) <= 9.5 &&
+                y0 >= cy - 7 - su - Math.abs(dx) * 0.08 &&
+                y0 <= cy - 5 + (dx > 6 ? 0 : 0)
+              );
+            },
+            cx - 9,
+            cy - 13,
+            cx + 12,
+            cy - 4
+          );
+          paint(P, BM, HC, { mod: (X, Y, t) => (!BM.has(X, Y - 1) ? 4 : t) });
+          BM.each((X, Y) => {
+            if (!BM.has(X, Y - 1)) P.set(X, Y, TB[3]);
+          });
+        } else {
+          const BM = new MK().fn(
+            (x0, y0) => {
+              const u = Math.abs(x0 - cx) / 10.5;
+              return u <= 1 && y0 >= cy - 7 - u * u * 4.5 && y0 <= cy - 4.5 - u * u * 3;
+            },
+            cx - 11,
+            cy - 13,
+            cx + 11,
+            cy - 4
+          );
+          paint(P, BM, HC, { mod: (X, Y, t) => (!BM.has(X, Y - 1) ? 4 : t) });
+          BM.each((X, Y) => {
+            if (!BM.has(X, Y - 1)) P.set(X, Y, TB[X < cx ? 4 : 3]);
+          });
+          // la punta davanti
+          if (front) {
+            P.set(cx - 1, cy - 4, HC[2]);
+            P.set(cx, cy - 4, HC[2]);
+          }
+        }
+      }
       if (L.hat === 'cap') {
         paint(
           P,
@@ -838,7 +1279,10 @@ const GX = (() => {
       torso();
       dress();
       apron();
+      coat();
       neck();
+      cravat();
+      shawl();
       // con le braccia alzate il braccio vicino passa davanti alla testa
       const alzato = presa != null && Math.sin(presa) < -0.35;
       if (!alzato) arm(0, false);
@@ -860,10 +1304,12 @@ const GX = (() => {
       robe();
       torso();
       dress();
+      coat();
       if (!maniDavanti) {
         arm(-1);
         arm(1);
       }
+      shawl();
       neck();
       head();
       ears();
@@ -879,10 +1325,13 @@ const GX = (() => {
       torso();
       dress();
       apron();
+      coat();
       cape();
       arm(-1);
       arm(1);
+      shawl();
       neck();
+      cravat();
       mantle();
       head();
       face();
@@ -894,7 +1343,7 @@ const GX = (() => {
     P.outline();
     return P;
   }
-  return { MK, paint, frame, dk };
+  return { MK, paint, frame, dk, ritrattoMano, trattiMano };
 })();
 const heroFrame = GX.frame;
 // ---------- la presa dell'attrezzo ----------
@@ -1351,41 +1800,52 @@ const VB = {
     w: 6,
     h: 5,
     roofH: 44,
-    wall: 'planks',
-    wc: '#c79a62',
-    roof: '#7f58a0',
+    wall: 'boards',
+    wc: '#7a6a58',
+    roof: '#34323c',
     win: [
       [12, 52],
       [70, 52]
     ],
     door: 2,
     chimney: 1,
-    shutter: '#4a6a3a',
-    curtain: '#e8dcc0'
+    shutter: '#3a2a22',
+    curtain: '#c8a870',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'punta',
+    abbaini: 1,
+    alza: 26
   },
   store: {
     w: 6,
     h: 5,
     roofH: 42,
     wall: 'planks',
-    wc: '#d9c49a',
-    roof: '#4c7c8c',
+    wc: '#8a7a62',
+    roof: '#4a3434',
     win: [
       [10, 52],
       [70, 52]
     ],
     door: 3,
-    shutter: '#2f5a6a',
+    shutter: '#2e2a26',
     sign: 1,
-    awning: '#b8402a'
+    awning: '#5a1a1e',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'doppia',
+    alza: 22
   },
   elder: {
     w: 6,
     h: 5,
     roofH: 42,
     wall: 'stone',
-    wc: '#6e6a64',
-    roof: '#3a3944',
+    wc: '#55524c',
+    roof: '#24222a',
     win: [
       [10, 52],
       [70, 52]
@@ -1394,91 +1854,120 @@ const VB = {
     chimney: 1,
     doorCol: '#2b2420',
     trim: '#9a968c',
-    moss: 1
+    moss: 1,
+    vine: 1,
+    tetto: 'doppia',
+    edera: 2,
+    alza: 24
   },
   barn: {
     w: 4,
     h: 6,
     roofH: 46,
     wall: 'boards',
-    wc: '#8a3026',
-    roof: '#4a3a32',
+    wc: '#5e1e1a',
+    roof: '#2a2420',
     win: [],
     door: 2,
-    doorCol: '#4a1a14',
-    barn: 1
+    doorCol: '#2e1410',
+    barn: 1,
+    moss: 1,
+    tetto: 'punta',
+    edera: 1,
+    alza: 14
   },
   cottage: {
     w: 5,
     h: 4,
     roofH: 30,
     wall: 'plaster',
-    wc: '#e6d3a6',
-    roof: '#d9a23a',
+    wc: '#b0a48c',
+    roof: '#6e6034',
     thatch: 1,
     win: [
       [8, 38],
       [58, 38]
     ],
     door: 2,
-    shutter: '#7a8a4a',
-    timber: '#5a3a22',
-    curtain: '#d88a8a'
+    shutter: '#3e4a30',
+    timber: '#33241a',
+    curtain: '#b87a6a',
+    vine: 1,
+    lantern: 1,
+    tetto: 'punta',
+    edera: 2,
+    alza: 18
   },
   forge: {
     w: 5,
     h: 4,
     roofH: 30,
     wall: 'stone',
-    wc: '#8a7a6a',
-    roof: '#5a483c',
+    wc: '#4e4a46',
+    roof: '#2a2420',
     win: [[8, 38]],
     door: 2,
     chimney: 1,
-    forge: 1
+    forge: 1,
+    moss: 1,
+    tetto: 'punta',
+    alza: 16
   },
   // la casetta dei nuovi abitanti: una casa piccola come il cottage e la fucina (stesse misure)
   casetta: {
     w: 5,
     h: 4,
     roofH: 30,
-    wall: 'plaster',
-    wc: '#e8d8b8',
-    roof: '#8a5a3a',
+    wall: 'boards',
+    wc: '#6e6254',
+    roof: '#3e3436',
     win: [
       [8, 38],
       [58, 38]
     ],
     door: 2,
     chimney: 1,
-    shutter: '#5a7a8a',
-    curtain: '#e8dcc0'
+    shutter: '#2e3a3e',
+    curtain: '#c8a870',
+    trim: '#8a8070',
+    lantern: 1,
+    moss: 1,
+    tetto: 'punta',
+    alza: 18
   },
   chapel: {
     w: 7,
     h: 7,
-    roofH: 50,
-    extra: 22,
+    roofH: 34,
+    extra: 40,
     wall: 'plaster',
-    wc: '#e8e0cc',
-    roof: '#585868',
+    wc: '#8a8476',
+    roof: '#2a2a34',
     win: [
       [12, 96],
       [90, 96]
     ],
     door: 3,
-    trim: '#f2ead6',
+    trim: '#b8b2a4',
     chapel: 1,
-    glass: '#3a2a5a'
+    glass: '#3a2a5a',
+    lancet: 1,
+    moss: 1,
+    tetto: 'punta',
+    abbaini: 1,
+    edera: 1,
+    alza: 16
   }
 };
 function genVillage(key) {
   const o = VB[key],
     B = BK,
     Wd = o.w * 16,
-    Hd = o.h * 16 + (o.extra || 0),
+    // alza: quanto più alto è il tetto gotico (le finestre e le luci scendono di altrettanto)
+    alza = o.alza || 0,
+    Hd = o.h * 16 + (o.extra || 0) + alza,
     r0 = (o.extra || 0) * 2,
-    rh = (o.roofH + (o.extra || 0)) * 2,
+    rh = (o.roofH + (o.extra || 0) + alza) * 2,
     PW = (Wd + 2) * 2,
     PH = Hd * 2,
     bx = 2;
@@ -1492,6 +1981,10 @@ function genVillage(key) {
     wy0 = rh - 4,
     wy1 = PH - 10;
   const shadeX = X => (X > wx1 - 26 ? -1 : 0);
+  // svuota un pixel (P.set con trasparenza mescola il colore, non cancella)
+  const svuota = (X, Y) => {
+    if (X >= 0 && Y >= 0 && X < P.w && Y < P.h) P.d[(Y * P.w + X) * 4 + 3] = 0;
+  };
   // muro
   if (o.wall === 'planks') B.planks(P, wx0, wy0, ww, wy1 - wy0, WR, { rowH: 9 });
   else if (o.wall === 'boards') B.boards(P, wx0, wy0, ww, wy1 - wy0, WR, { bw: 8 });
@@ -1515,10 +2008,17 @@ function genVillage(key) {
   }
   // lato in ombra
   for (let i = 0; i < 24; i++) B.dark(P, wx1 - 24 + i, wy0, 1, wy1 - wy0, 1 - i * 0.012);
+  // le colature della pioggia sotto la grondaia: il legno e la pietra anneriti dagli anni
+  for (let X = wx0 + 3; X < wx1 - 3; X += 2) {
+    const h = B.hh(X, 31) % 40;
+    if (B.hh(X, 17) % 3) continue;
+    for (let k = 0; k < h; k++) B.dark(P, X, wy0 + 2 + k, 1, 1, 0.82 + (k / h) * 0.16);
+  }
   B.plinth(P, bx + 2, PH - 10, Wd * 2 - 4, 10);
   // finestre e porta
   const lights = [];
-  for (const [wx, wy] of o.win) {
+  for (const [wx, wy0_] of o.win) {
+    const wy = wy0_ + alza;
     B.windowPX(P, (1 + wx) * 2, wy * 2, {
       trim: o.trim,
       shutter: o.shutter,
@@ -1527,11 +2027,24 @@ function genVillage(key) {
       flowers: !o.chapel
     });
     lights.push([wx, wy, 10, 10]);
+    if (o.lancet) {
+      // l'arco a sesto acuto sopra la finestra: cornice di pietra e vetro scuro
+      const X = (1 + wx) * 2,
+        Y = wy * 2,
+        ST = B.R6(o.trim || '#b8b2a4'),
+        VE = B.R6(o.glass || '#3a2a5a');
+      for (let k = 0; k < 12; k++) {
+        const hw = Math.round(11 * Math.sqrt(1 - (k / 12) ** 1.6));
+        B.F(P, X + 11 - hw - 2, Y - 1 - k, hw * 2 + 4, 1, B.tc(ST, k % 3 ? 3 : 2));
+        if (hw > 1) B.F(P, X + 11 - hw, Y - 1 - k, hw * 2, 1, B.tc(VE, k < 4 ? 2 : 3));
+      }
+      B.F(P, X + 10, Y - 12, 2, 12, B.tc(ST, 1));
+    }
   }
   if (o.barn) {
     // portone a X
     const D = B.R6(o.doorCol),
-      T = B.R6('#e8dcc0'),
+      T = B.R6('#8a7e6a'),
       X = bx + 20 * 2,
       Y = rh + 16;
     B.F(P, X, Y, 48, PH - 10 - Y, B.tc(D, 2));
@@ -1555,12 +2068,39 @@ function genVillage(key) {
   }
   if (o.door != null && !o.barn)
     B.doorPX(P, (bx / 2 + o.door * 16 + 2) * 2, (Hd - 21) * 2, { col: o.doorCol, trim: o.trim });
+  if (o.lantern && o.door != null) {
+    // la lanterna appesa al suo braccio di ferro, a destra della porta: vetro caldo, gabbia scura
+    const X = (bx / 2 + o.door * 16 + 2) * 2 + 30,
+      Y = (Hd - 21) * 2 - 2,
+      FE = C('#18141a');
+    B.F(P, X - 4, Y, 9, 2, FE);
+    B.F(P, X + 3, Y, 2, 6, FE);
+    B.F(P, X - 1, Y + 2, 7, 2, FE);
+    B.F(P, X, Y + 4, 5, 8, FE);
+    B.F(P, X + 1, Y + 5, 3, 6, C('#f0b850'));
+    B.S(P, X + 1, Y + 5, C('#fff0b0'));
+    B.F(P, X - 1, Y + 12, 7, 2, FE);
+  }
+  if (o.vine) {
+    // rampicanti secchi che salgono dal basso, con qualche foglia rossa
+    for (const v of [wx0 + 8, wx1 - 16]) {
+      let X = v;
+      for (let Y = wy1 - 2; Y > wy0 + 10 + (B.hh(v, 3) % 20); Y--) {
+        X += B.hh(X, Y) % 7 === 0 ? (B.hh(Y, X) % 2 ? 1 : -1) : 0;
+        B.S(P, X, Y, C('#2a2418'));
+        if (B.hh(X, Y) % 9 === 0) {
+          B.S(P, X + 1, Y, C(B.hh(Y, 5) % 2 ? '#6a1e16' : '#4a3a1e'));
+          B.S(P, X + 1, Y - 1, C('#2a2418'));
+        }
+      }
+    }
+  }
   if (o.awning) {
     const AR = B.R6(o.awning),
       WH = B.R6('#efe6d2');
     for (const [wx, wy] of o.win) {
       const X = (1 + wx) * 2 - 6,
-        Y = wy * 2 - 14;
+        Y = (wy + alza) * 2 - 14;
       for (let yy = 0; yy < 8; yy++)
         for (let xx = 0; xx < 32; xx++) {
           const st = Math.floor(xx / 4) % 2;
@@ -1575,7 +2115,7 @@ function genVillage(key) {
   }
   if (o.sign) {
     const W2 = B.R6('#6a4224'),
-      G = B.R6('#e8c23a'),
+      G = B.R6('#a88a3a'),
       X = (bx / 2 + 30) * 2,
       Y = rh + 4;
     B.F(P, X, Y, 72, 18, B.tc(W2, 1));
@@ -1591,7 +2131,7 @@ function genVillage(key) {
   }
   if (o.forge) {
     const X = (bx / 2 + 60) * 2,
-      Y = 78;
+      Y = 78 + alza * 2;
     B.F(P, X - 3, Y - 3, 22, 18, C('#2a2420'));
     for (let yy = 0; yy < 12; yy++)
       for (let xx = 0; xx < 16; xx++) {
@@ -1614,60 +2154,177 @@ function genVillage(key) {
     moss: o.moss || o.roof === '#4a3a32'
   });
   B.eave(P, bx, rh, Wd * 2, RR);
-  if (o.barn) {
-    const T = B.R6('#e8dcc0'),
-      hx = bx + 26 * 2,
-      hy = rh - 40;
-    B.F(P, hx - 3, hy - 3, 30, 26, B.tc(T, 1));
-    B.F(P, hx - 2, hy - 2, 28, 24, B.tc(T, 3));
-    B.F(P, hx - 2, hy - 2, 28, 1, B.tc(T, 5));
-    B.F(P, hx, hy, 24, 20, C('#1e120c'));
-    for (let i = 0; i < 24; i++) {
-      const h2 = 5 + (B.hh(i, 5) % 7);
-      B.F(P, hx + i, hy + 20 - h2, 1, h2, C(B.hh(i, 7) % 3 ? '#d8b048' : '#b8902a'));
-      if (B.hh(i, 9) % 3 === 0) B.S(P, hx + i, hy + 19 - h2, C('#f0d070'));
+  // il colmo vecchio s'incurva nel mezzo; qua e là manca una scandola
+  for (let X = bx; X < bx + Wd * 2; X++) {
+    const t = (X - bx) / (Wd * 2),
+      giu = Math.round(Math.sin(t * Math.PI) * 3 + (B.hh(X, 77) % 3 === 0 ? 1 : 0));
+    for (let Y = r0; Y < r0 + giu; Y++) svuota(X, Y);
+  }
+  for (let i = 0; i < Math.floor(Wd / 6); i++) {
+    const X = bx + 10 + (B.hh(i, 5) % (Wd * 2 - 30)),
+      Y = r0 + 10 + (B.hh(i, 9) % Math.max(4, rh - r0 - 24));
+    B.F(P, X, Y, 5, 3, C('#100c10'));
+    B.F(P, X, Y + 3, 5, 1, B.tc(RR, 1));
+  }
+  // ---- tetti gotici: frontoni ripidi verso chi guarda (uno o due), il resto del tetto si ritaglia
+  const punte = o.tetto === 'doppia' ? [bx + Wd * 0.5, bx + Wd * 1.5] : o.tetto === 'punta' ? [bx + Wd] : [];
+  const mezza = o.tetto === 'doppia' ? Wd * 0.5 + 2 : Wd + 2,
+    alto = r0 + (o.chapel ? 30 : 0),
+    falda = X => {
+      // la riga più alta del tetto in questa colonna (fuori dai frontoni: niente tetto)
+      let y = 1e9;
+      for (const px of punte) {
+        const d = Math.abs(X + 0.5 - px) / mezza;
+        if (d <= 1) y = Math.min(y, alto + d * (rh - alto));
+      }
+      return y;
+    };
+  if (punte.length) {
+    for (let X = 0; X < PW; X++) {
+      const yf = falda(X);
+      for (let Y = r0; Y < Math.min(rh, yf); Y++) svuota(X, Y);
     }
-    B.F(P, hx + 11, hy - 10, 2, 8, C('#3e3e46'));
-    B.F(P, hx + 8, hy - 11, 8, 2, C('#5a5a64'));
+    const WG = B.R6(shade(o.wc, -0.28)),
+      LEGNO = B.R6('#2a1e18');
+    for (const px of punte) {
+      // la parete del frontone dentro la falda, ad assi verticali
+      const banda = 9;
+      for (let Y = alto + banda + 4; Y < rh + 2; Y++) {
+        const hw = mezza * ((Y - alto) / (rh - alto)) - banda;
+        for (let X = Math.round(px - hw); X < Math.round(px + hw); X++)
+          B.S(P, X, Y, B.tc(WG, (X - Math.round(px)) % 5 === 0 ? 1 : X < px ? 3 : 2));
+        // il bordo intagliato: una cornice scura con i pendagli a merletto
+        for (const q of [-1, 1]) {
+          const X = Math.round(px + q * hw);
+          B.F(P, X - (q > 0 ? 0 : 2), Y, 3, 1, B.tc(LEGNO, 2));
+          if ((Y - alto) % 6 === 0) {
+            B.S(P, X - q * 3, Y + 1, B.tc(LEGNO, 2));
+            B.S(P, X - q * 3, Y + 2, B.tc(LEGNO, 1));
+          }
+        }
+      }
+      // la finestra a sesto acuto del frontone, accesa
+      const fy = Math.round(alto + (rh - alto) * 0.55),
+        fh = 16;
+      for (let k = 0; k < fh; k++) {
+        const hw = k < 6 ? Math.round(5 * Math.sqrt(k / 6)) : 5;
+        B.F(P, Math.round(px) - hw - 2, fy + k, hw * 2 + 4, 1, B.tc(LEGNO, 1));
+        if (hw > 1) B.F(P, Math.round(px) - hw, fy + k, hw * 2, 1, C(k < 4 ? '#ffe0a0' : '#d8963a'));
+      }
+      B.F(P, Math.round(px) - 1, fy + 2, 2, fh - 2, B.tc(LEGNO, 1));
+      B.F(P, Math.round(px) - 5, fy + 9, 10, 1, B.tc(LEGNO, 1));
+      // il pinnacolo di ferro in cima
+      B.F(P, Math.round(px) - 1, alto - 10, 2, 12, C('#141016'));
+      B.F(P, Math.round(px) - 2, alto - 12, 4, 3, C('#141016'));
+    }
+  }
+  // ---- abbaini sulle falde: piccoli frontoni con il vetro caldo
+  if (o.abbaini && punte.length === 1) {
+    const px = punte[0];
+    for (const q of [-1, 1]) {
+      const X = Math.round(px + q * mezza * 0.55),
+        Y = Math.round(falda(X)) + 10;
+      for (let k = 0; k < 12; k++) {
+        const hw = Math.min(7, Math.round(k * 0.9));
+        B.F(P, X - hw, Y + k, hw * 2, 1, B.tc(RR, k % 3 ? 2 : 1));
+      }
+      B.F(P, X - 3, Y + 6, 6, 7, C('#2a1e18'));
+      B.F(P, X - 2, Y + 7, 4, 5, C('#e0a048'));
+      B.S(P, X - 2, Y + 7, C('#fff0b0'));
+    }
+  }
+  // ---- la natura che si riprende la casa: edera dagli angoli, erbacce alla base
+  if (o.edera) {
+    for (const [x0, dir] of [
+      [wx0, 1],
+      [wx1, -1]
+    ]) {
+      if (o.edera === 1 && dir < 0) continue;
+      const larg = 30 + (B.hh(x0, 1) % 20);
+      for (let i = 0; i < larg; i++) {
+        const X = x0 + dir * i,
+          alt = (wy1 - wy0 + (rh - r0) * 0.6) * (1 - i / larg) ** 1.4;
+        for (let Y = wy1; Y > wy1 - alt; Y--) {
+          const h = B.hh(X * 3, Y * 7) % 100;
+          if (h < 55 && P.has(X, Y))
+            B.S(
+              P,
+              X,
+              Y,
+              C(h < 12 ? '#1a2414' : h < 30 ? '#2e3a22' : h < 45 ? '#3e4a2a' : h < 52 ? '#566236' : '#5a3a22')
+            );
+        }
+      }
+    }
+  }
+  for (let X = bx + 2; X < bx + Wd * 2 - 2; X++) {
+    const h = B.hh(X, 41) % 9;
+    if (h < 5) for (let k = 0; k < h; k++) B.S(P, X, PH - 10 - k, C(k > 2 ? '#566236' : '#33402a'));
   }
   let chim = null;
   if (o.chimney) {
-    const chx = (bx / 2 + Wd - 22) * 2;
-    B.chimney(P, chx, r0 + 6, 22);
-    chim = [bx / 2 + Wd - 22 + 3, o.extra || 0];
+    const chx = (bx / 2 + Wd - 22) * 2,
+      // con il tetto a punta il comignolo poggia sulla falda, non nel vuoto
+      cy0 = punte.length ? Math.max(r0 + 6, Math.round(falda(chx + 6)) - 18) : r0 + 6;
+    B.chimney(P, chx, cy0, 22);
+    chim = [bx / 2 + Wd - 22 + 3, Math.round(cy0 / 2) - 3];
   }
   if (o.chapel) {
     const cx = bx + Wd,
-      TW = B.R6('#e8e0cc'),
-      SR = B.R6('#4a4a58'),
-      G = B.R6('#e8c23a');
-    // torre
-    B.plaster(P, cx - 22, 16, 44, 96, TW, { cracks: 1, bricks: 0, shadeX: X => (X > cx + 14 ? -1 : 0) });
-    B.quoins(P, cx - 22, 20, 90, B.R6('#b8b2a4'), false);
-    B.quoins(P, cx + 21, 20, 90, B.R6('#b8b2a4'), true);
-    // cella campanaria
-    B.F(P, cx - 13, 30, 26, 30, C('#14141c'));
-    B.F(P, cx - 13, 30, 26, 2, B.tc(TW, 1));
-    for (let yy = 0; yy < 14; yy++) {
-      const w2 = Math.round(Math.sqrt(Math.max(0, 49 - (yy - 6) * (yy - 6) * 0.6)) * 1.1);
-      B.F(P, cx - w2, 38 + yy, w2 * 2, 1, B.tc(G, yy < 3 ? 5 : yy < 9 ? 3 : 2));
+      TW = B.R6(o.wc),
+      SR = B.R6('#2e2e3a'),
+      FE = C('#141016'),
+      bronzo = B.R6('#8a6a3a'),
+      tTop = 46;
+    // la torre: intonaco annerito, sale fino al tetto
+    B.plaster(P, cx - 22, tTop, 44, r0 + 44 - tTop, TW, {
+      cracks: 2,
+      bricks: 1,
+      shadeX: X => (X > cx + 12 ? -1 : 0)
+    });
+    B.quoins(P, cx - 22, tTop + 4, r0 + 38 - tTop, B.R6('#8a867c'), false);
+    B.quoins(P, cx + 21, tTop + 4, r0 + 38 - tTop, B.R6('#8a867c'), true);
+    // la cella campanaria a sesto acuto, con la campana di bronzo scuro
+    for (let k = 0; k < 30; k++) {
+      const hw = k < 8 ? Math.round(9 * Math.sqrt(k / 8)) : 9;
+      B.F(P, cx - hw, tTop + 8 + k, hw * 2, 1, C('#0c0a0e'));
     }
-    B.F(P, cx - 1, 52, 2, 4, B.tc(G, 1));
-    for (let yy = 30; yy < 60; yy += 5) B.F(P, cx - 13, yy, 26, 1, C('#2a2a34'));
-    // guglia
-    for (let yy = 0; yy < 18; yy++) {
-      const hw = 4 + yy * 1.5;
+    for (let yy = 0; yy < 12; yy++) {
+      const w2 = Math.round(Math.sqrt(Math.max(0, 36 - (yy - 5) * (yy - 5) * 0.5)));
+      B.F(P, cx - w2, tTop + 22 + yy, w2 * 2, 1, B.tc(bronzo, yy < 3 ? 4 : yy < 8 ? 3 : 2));
+    }
+    // la guglia: alta, d'ardesia scura, a file di scaglie; in cima la croce di ferro
+    for (let Y = 12; Y < tTop + 2; Y++) {
+      const hw = 1 + (Y - 12) * 0.78;
       for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++) {
-        const k = yy % 4;
-        let t = k === 3 ? 1 : X < cx ? 4 : 2;
-        if (k === 0) t++;
-        B.S(P, X, yy + 2, B.tc(SR, t));
+        let t = X < cx ? 3 : 2;
+        if ((Y - 12) % 5 === 0) t = 1;
+        else if ((X + Y) % 6 === 0) t++;
+        B.S(P, X, Y, B.tc(SR, t));
       }
     }
-    B.F(P, cx - 30, 19, 60, 2, B.tc(SR, 1));
-    B.F(P, cx - 1, 0, 2, 4, B.tc(G, 4));
+    B.F(P, cx - 28, tTop, 56, 3, B.tc(SR, 1));
+    B.F(P, cx - 1, 0, 3, 13, FE);
+    B.F(P, cx - 4, 3, 9, 3, FE);
     // rosone
-    const ry = 136;
+    // contrafforti di pietra ai lati e portale a sesto acuto sopra la porta
+    const PI = B.R6('#6a665e');
+    for (const X of [wx0 + 34, wx1 - 42]) {
+      B.F(P, X, rh + 4, 8, PH - 10 - rh - 4, B.tc(PI, 3));
+      B.F(P, X, rh + 4, 1, PH - 10 - rh - 4, B.tc(PI, 4));
+      B.F(P, X + 7, rh + 4, 1, PH - 10 - rh - 4, B.tc(PI, 1));
+      for (let Y = rh + 10; Y < PH - 10; Y += 12) B.F(P, X, Y, 8, 1, B.tc(PI, 1));
+    }
+    {
+      const X = (bx / 2 + o.door * 16 + 2) * 2 + 10,
+        Y = (Hd - 21) * 2;
+      for (let k = 0; k < 14; k++) {
+        const hw = Math.round(14 * Math.sqrt(1 - (k / 14) ** 1.5));
+        B.F(P, X - hw - 2, Y - 1 - k, hw * 2 + 4, 1, B.tc(PI, k % 3 ? 3 : 2));
+        if (hw > 2) B.F(P, X - hw + 1, Y - 1 - k, hw * 2 - 2, 1, C('#1a1214'));
+      }
+    }
+    const ry = r0 + 22; // il rosone sulla torre, sopra il tetto
     for (let yy = -16; yy <= 16; yy++)
       for (let xx = -16; xx <= 16; xx++) {
         const d = Math.hypot(xx, yy);
@@ -1675,10 +2332,10 @@ function genVillage(key) {
         const a = Math.atan2(yy, xx);
         let c;
         if (d > 14) c = B.tc(B.R6('#5a3b22'), 2);
-        else if (d < 4) c = C('#e8c23a');
+        else if (d < 4) c = C('#8a6a2a');
         else {
           const seg = Math.floor((a + Math.PI) / (Math.PI / 4));
-          c = C(['#c0303a', '#2a5aa8', '#e8c23a', '#3a8a4a'][seg % 4]);
+          c = C(['#6a1a22', '#2a3a5a', '#8a6a2a', '#2a4a32'][seg % 4]);
           if (Math.abs(((a + Math.PI) % (Math.PI / 4)) - Math.PI / 8) > Math.PI / 9 || d % 5 < 1)
             c = C('#2a1a10');
         }
@@ -1709,6 +2366,18 @@ const GB = (w, h, fn) => {
   fn(P, BK);
   P.outline();
   return pxCanvas(P);
+};
+// come GB, ma più alto di «alza» unità: sopra il disegno di sempre si aggiunge una cima gotica (cima(P, B, h0),
+// dove h0 è la riga in cui comincia il disegno di sempre)
+const GBalto = (w, h, alza, fn, cima) => {
+  const P = new PX(w * 2, h * 2);
+  srand(w * 31 + h);
+  fn(P, BK);
+  const Q = new PX(w * 2, (h + alza) * 2);
+  Q.d.set(P.d, alza * 2 * w * 2 * 4);
+  cima(Q, BK, alza * 2);
+  Q.outline();
+  return pxCanvas(Q);
 };
 // riempie una forma con colonne (cx,hw(Y)) restituendo una clip
 const clipBand = (cx, hwF) => (X, Y) => Math.abs(X + 0.5 - cx) <= hwF(Y);
@@ -1920,51 +2589,71 @@ const ART2 = {
   // il mulino a vento: una torre di pietra alta come il fienile del paese (64×96), tetto conico, porta ad arco.
   // Le pale girano: le disegna PALE a ogni fotogramma, alla stessa scala (MULINO_PALE dice dove stanno)
   mulino: () =>
-    GB(64, 96, (P, B) => {
-      const ST = B.R6('#9a968a'),
-        RF = B.R6('#6a3a2a'),
-        WD = B.R6('#8a5a32'),
-        CX = 64,
-        hwT = Y => 22 + (Y - 70) * 0.12;
-      B.stones(P, CX - 38, 70, 76, 116, ST, {
-        rh: 8,
-        bw: 12,
-        clip: clipBand(CX, hwT),
-        shadeX: X => {
-          const n = (X + 0.5 - CX) / 30;
-          return n < -0.6 ? 1 : n > 0.75 ? -2 : n > 0.35 ? -1 : 0;
-        },
-        moss: 1
-      });
-      B.F(P, CX - 38, 184, 76, 4, B.tc(ST, 1));
-      // due finestrelle una sopra l'altra
-      for (const y of [96, 126]) {
-        B.F(P, CX - 5, y, 10, 14, B.tc(WD, 1));
-        B.F(P, CX - 4, y + 1, 8, 12, C('#1e1410'));
-        B.F(P, CX - 1, y + 1, 2, 12, B.tc(WD, 3));
-      }
-      // porta ad arco, alta come quelle delle case del paese
-      for (let yy = 0; yy < 36; yy++) {
-        const hw = yy < 6 ? Math.round(Math.sqrt(36 - (6 - yy) * (6 - yy)) * 1.4) : 9;
-        B.F(P, CX - hw - 1, 150 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
-        if (yy > 0)
-          for (let xx = -hw + 1; xx < hw - 1; xx++)
-            B.S(P, CX + xx, 150 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
-      }
-      // tetto conico
-      for (let Y = 30; Y < 74; Y++) {
-        const h2 = 5 + (Y - 30) * 0.8;
-        for (let X = Math.round(CX - h2); X < Math.round(CX + h2); X++) {
-          const n = (X + 0.5 - CX) / h2;
-          let t = (Y - 30) % 5 === 4 ? 1 : 3;
-          if (n < -0.4) t++;
-          if (n > 0.4) t--;
-          if (n > 0.8) t--;
-          B.S(P, X, Y, B.tc(RF, t));
+    GBalto(
+      64,
+      96,
+      10,
+      (P, B) => {
+        const ST = B.R6('#9a968a'),
+          RF = B.R6('#6a3a2a'),
+          WD = B.R6('#8a5a32'),
+          CX = 64,
+          hwT = Y => 22 + (Y - 70) * 0.12;
+        B.stones(P, CX - 38, 70, 76, 116, ST, {
+          rh: 8,
+          bw: 12,
+          clip: clipBand(CX, hwT),
+          shadeX: X => {
+            const n = (X + 0.5 - CX) / 30;
+            return n < -0.6 ? 1 : n > 0.75 ? -2 : n > 0.35 ? -1 : 0;
+          },
+          moss: 1
+        });
+        B.F(P, CX - 38, 184, 76, 4, B.tc(ST, 1));
+        // due finestrelle una sopra l'altra
+        for (const y of [96, 126]) {
+          B.F(P, CX - 5, y, 10, 14, B.tc(WD, 1));
+          B.F(P, CX - 4, y + 1, 8, 12, C('#1e1410'));
+          B.F(P, CX - 1, y + 1, 2, 12, B.tc(WD, 3));
         }
+        // porta ad arco, alta come quelle delle case del paese
+        for (let yy = 0; yy < 36; yy++) {
+          const hw = yy < 6 ? Math.round(Math.sqrt(36 - (6 - yy) * (6 - yy)) * 1.4) : 9;
+          B.F(P, CX - hw - 1, 150 + yy, hw * 2 + 2, 1, B.tc(ST, 1));
+          if (yy > 0)
+            for (let xx = -hw + 1; xx < hw - 1; xx++)
+              B.S(P, CX + xx, 150 + yy, B.tc(WD, (xx + 40) % 5 === 0 ? 1 : xx < 0 ? 3 : 2));
+        }
+        // tetto conico
+        for (let Y = 30; Y < 74; Y++) {
+          const h2 = 5 + (Y - 30) * 0.8;
+          for (let X = Math.round(CX - h2); X < Math.round(CX + h2); X++) {
+            const n = (X + 0.5 - CX) / h2;
+            let t = (Y - 30) % 5 === 4 ? 1 : 3;
+            if (n < -0.4) t++;
+            if (n > 0.4) t--;
+            if (n > 0.8) t--;
+            B.S(P, X, Y, B.tc(RF, t));
+          }
+        }
+        B.F(P, CX - 40, 72, 80, 4, B.tc(RF, 1));
+      },
+      (P, B, h0) => {
+        // il cappello d'ardesia appuntito, con il pinnacolo di ferro
+        const cx = 64,
+          SR = B.R6('#2e2e3a');
+        // il cappello scende fino al tetto vero del mulino
+        let fondo = h0;
+        while (fondo < P.h - 1 && !P.d[(fondo * P.w + cx) * 4 + 3]) fondo++;
+        fondo += 3;
+        for (let Y = 4; Y < fondo; Y++) {
+          const hw = 1 + (Y - 4) * 0.7;
+          for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++)
+            B.S(P, X, Y, B.tc(SR, (Y - 4) % 4 === 0 ? 1 : X < cx ? 3 : 2));
+        }
+        B.F(P, cx - 1, 0, 2, 5, C('#141016'));
       }
-      B.F(P, CX - 40, 72, 80, 4, B.tc(RF, 1));
-    }),
+    ),
   _x: () => null
 };
 const MULINO_PALE = { cx: 64, hy: 62, L: 58 };
@@ -2108,141 +2797,170 @@ Object.assign(ART2, {
   casetta: () => IMG.casetta || (IMG.casetta = genVillage('casetta')),
   // il museo: un tempietto neoclassico più grande delle case (112×84), sei colonne, frontone con lo stemma
   museo: () =>
-    GB(112, 84, (P, B) => {
-      const ST = B.R6('#a8a294'),
-        MB = B.R6('#ece4d4'),
-        RF = B.R6('#3a4a6a'),
-        G = B.R6('#d8b04a'),
-        LG = B.R6('#4a2a14'),
-        CX = 112;
-      // corpo in pietra con le ali un po' più basse
-      B.stones(P, 10, 92, 46, 64, ST, { rh: 8, bw: 16 });
-      B.stones(P, 168, 92, 46, 64, ST, { rh: 8, bw: 16, shadeX: () => -1 });
-      B.stones(P, 40, 70, 144, 86, ST, { rh: 8, bw: 18, shadeX: X => (X > 170 ? -1 : 0) });
-      // cornicione delle ali
-      for (const x of [6, 164]) {
-        B.F(P, x, 86, 54, 6, B.tc(MB, 3));
-        B.F(P, x, 86, 54, 1, B.tc(MB, 5));
-        B.F(P, x, 91, 54, 1, B.tc(MB, 1));
-        B.F(P, x, 80, 54, 6, B.tc(RF, x < 100 ? 3 : 2));
-        B.F(P, x, 80, 54, 1, B.tc(RF, 4));
-      }
-      // finestre ad arco nelle ali (luce calda dentro)
-      const finestra = (x, y, w, h) => {
-        B.F(P, x - 2, y - 2, w + 4, h + 4, B.tc(MB, 2));
-        for (let Y = 0; Y < h; Y++)
-          for (let X = 0; X < w; X++) {
-            const dx = X + 0.5 - w / 2,
-              arco = Y < w / 2 && dx * dx + (Y - w / 2) * (Y - w / 2) > (w / 2) * (w / 2);
-            if (arco) continue;
-            B.S(P, x + X, y + Y, C(Y < h * 0.3 ? '#fff4c0' : Y < h * 0.7 ? '#ffe08a' : '#f0c060'));
+    GBalto(
+      112,
+      84,
+      28,
+      (P, B) => {
+        const ST = B.R6('#a8a294'),
+          MB = B.R6('#9e988a'),
+          RF = B.R6('#3a4a6a'),
+          G = B.R6('#d8b04a'),
+          LG = B.R6('#4a2a14'),
+          CX = 112;
+        // corpo in pietra con le ali un po' più basse
+        B.stones(P, 10, 92, 46, 64, ST, { rh: 8, bw: 16 });
+        B.stones(P, 168, 92, 46, 64, ST, { rh: 8, bw: 16, shadeX: () => -1 });
+        B.stones(P, 40, 70, 144, 86, ST, { rh: 8, bw: 18, shadeX: X => (X > 170 ? -1 : 0) });
+        // cornicione delle ali
+        for (const x of [6, 164]) {
+          B.F(P, x, 86, 54, 6, B.tc(MB, 3));
+          B.F(P, x, 86, 54, 1, B.tc(MB, 5));
+          B.F(P, x, 91, 54, 1, B.tc(MB, 1));
+          B.F(P, x, 80, 54, 6, B.tc(RF, x < 100 ? 3 : 2));
+          B.F(P, x, 80, 54, 1, B.tc(RF, 4));
+        }
+        // finestre ad arco nelle ali (luce calda dentro)
+        const finestra = (x, y, w, h) => {
+          B.F(P, x - 2, y - 2, w + 4, h + 4, B.tc(MB, 2));
+          for (let Y = 0; Y < h; Y++)
+            for (let X = 0; X < w; X++) {
+              const dx = X + 0.5 - w / 2,
+                arco = Y < w / 2 && dx * dx + (Y - w / 2) * (Y - w / 2) > (w / 2) * (w / 2);
+              if (arco) continue;
+              B.S(P, x + X, y + Y, C(Y < h * 0.3 ? '#fff4c0' : Y < h * 0.7 ? '#ffe08a' : '#f0c060'));
+            }
+          B.F(P, x + w / 2 - 1, y + 2, 2, h - 2, B.tc(MB, 3));
+          B.F(P, x, y + Math.round(h * 0.55), w, 1, B.tc(MB, 3));
+          B.F(P, x - 4, y + h + 2, w + 8, 3, B.tc(MB, 4));
+        };
+        finestra(24, 104, 18, 30);
+        finestra(182, 104, 18, 30);
+        // trabeazione con la scritta
+        B.F(P, 30, 56, 164, 14, B.tc(MB, 3));
+        B.F(P, 30, 56, 164, 1, B.tc(MB, 5));
+        B.F(P, 30, 69, 164, 1, B.tc(MB, 1));
+        for (let X = 34; X < 190; X += 8) B.F(P, X, 66, 4, 2, B.tc(MB, 2));
+        // MVSEO in lettere d'oro (pixel)
+        const L = {
+          M: ['10001', '11011', '10101', '10001', '10001'],
+          V: ['10001', '10001', '10001', '01010', '00100'],
+          S: ['01111', '10000', '01110', '00001', '11110'],
+          E: ['11111', '10000', '11110', '10000', '11111'],
+          O: ['01110', '10001', '10001', '10001', '01110']
+        };
+        'MVSEO'.split('').forEach((ch, i) =>
+          L[ch].forEach((r, y) =>
+            [...r].forEach((v, x) => {
+              if (v === '1') B.S(P, CX - 17 + i * 7 + x, 58 + y, B.tc(G, y < 2 ? 5 : 3));
+            })
+          )
+        );
+        // frontone
+        for (let Y = 14; Y < 56; Y++) {
+          const h2 = Math.round(10 + (Y - 14) * 2.2);
+          for (let X = CX - h2; X < CX + h2; X++) {
+            const edge = Math.abs(X + 0.5 - CX) > h2 - 6;
+            B.S(
+              P,
+              X,
+              Y,
+              edge ? B.tc(RF, (Y + X) % 4 === 0 ? 1 : X < CX ? 4 : 2) : B.tc(MB, X > CX + h2 * 0.5 ? 2 : 3)
+            );
           }
-        B.F(P, x + w / 2 - 1, y + 2, 2, h - 2, B.tc(MB, 3));
-        B.F(P, x, y + Math.round(h * 0.55), w, 1, B.tc(MB, 3));
-        B.F(P, x - 4, y + h + 2, w + 8, 3, B.tc(MB, 4));
-      };
-      finestra(24, 104, 18, 30);
-      finestra(182, 104, 18, 30);
-      // trabeazione con la scritta
-      B.F(P, 30, 56, 164, 14, B.tc(MB, 3));
-      B.F(P, 30, 56, 164, 1, B.tc(MB, 5));
-      B.F(P, 30, 69, 164, 1, B.tc(MB, 1));
-      for (let X = 34; X < 190; X += 8) B.F(P, X, 66, 4, 2, B.tc(MB, 2));
-      // MVSEO in lettere d'oro (pixel)
-      const L = {
-        M: ['10001', '11011', '10101', '10001', '10001'],
-        V: ['10001', '10001', '10001', '01010', '00100'],
-        S: ['01111', '10000', '01110', '00001', '11110'],
-        E: ['11111', '10000', '11110', '10000', '11111'],
-        O: ['01110', '10001', '10001', '10001', '01110']
-      };
-      'MVSEO'.split('').forEach((ch, i) =>
-        L[ch].forEach((r, y) =>
-          [...r].forEach((v, x) => {
-            if (v === '1') B.S(P, CX - 17 + i * 7 + x, 58 + y, B.tc(G, y < 2 ? 5 : 3));
-          })
-        )
-      );
-      // frontone
-      for (let Y = 14; Y < 56; Y++) {
-        const h2 = Math.round(10 + (Y - 14) * 2.2);
-        for (let X = CX - h2; X < CX + h2; X++) {
-          const edge = Math.abs(X + 0.5 - CX) > h2 - 6;
-          B.S(
-            P,
-            X,
-            Y,
-            edge ? B.tc(RF, (Y + X) % 4 === 0 ? 1 : X < CX ? 4 : 2) : B.tc(MB, X > CX + h2 * 0.5 ? 2 : 3)
-          );
         }
-      }
-      B.F(P, 18, 54, 188, 3, B.tc(RF, 1));
-      // stemma nel timpano: scudo d'oro con un libro
-      for (let yy = -9; yy <= 9; yy++)
-        for (let xx = -8; xx <= 8; xx++) {
-          const inside = yy < 2 ? Math.abs(xx) <= 8 : Math.abs(xx) <= 8 - (yy - 2) * 1.1;
-          if (!inside) continue;
-          const bordo = Math.abs(xx) >= 7 || yy <= -8 || (yy > 2 && Math.abs(xx) >= 7 - (yy - 2) * 1.1);
-          B.S(P, CX + xx, 38 + yy, B.tc(G, bordo ? 1 : xx + yy < 0 ? 5 : 3));
-        }
-      B.F(P, CX - 5, 35, 10, 6, B.tc(MB, 4));
-      B.F(P, CX, 35, 1, 6, B.tc(LG, 2));
-      B.F(P, CX - 2, 10, 4, 5, B.tc(G, 4));
-      for (const x of [22, 202]) B.F(P, x - 3, 48, 6, 6, B.tc(G, 3));
-      // portone
-      B.F(P, CX - 16, 96, 32, 58, B.tc(MB, 1));
-      for (let Y = 0; Y < 54; Y++)
-        for (let X = 0; X < 26; X++) {
-          const dx = X + 0.5 - 13;
-          if (Y < 13 && dx * dx + (Y - 13) * (Y - 13) > 169) continue;
-          B.S(P, CX - 13 + X, 100 + Y, B.tc(LG, X % 6 === 0 ? 1 : X < 13 ? 2 : 3));
-        }
-      B.F(P, CX - 1, 112, 2, 42, B.tc(LG, 1));
-      B.S(P, CX - 4, 132, B.tc(G, 5));
-      B.S(P, CX + 3, 132, B.tc(G, 5));
-      // colonne scanalate
-      for (const x of [48, 70, 92, 132, 154, 176]) {
-        for (let Y = 74; Y < 150; Y++)
-          for (let X = x - 5; X < x + 5; X++) {
-            const k = X - (x - 5);
-            let t = k < 2 ? 4 : k > 7 ? 2 : 3;
-            if (k === 3 || k === 6) t--;
-            B.S(P, X, Y, B.tc(MB, t));
+        B.F(P, 18, 54, 188, 3, B.tc(RF, 1));
+        // stemma nel timpano: scudo d'oro con un libro
+        for (let yy = -9; yy <= 9; yy++)
+          for (let xx = -8; xx <= 8; xx++) {
+            const inside = yy < 2 ? Math.abs(xx) <= 8 : Math.abs(xx) <= 8 - (yy - 2) * 1.1;
+            if (!inside) continue;
+            const bordo = Math.abs(xx) >= 7 || yy <= -8 || (yy > 2 && Math.abs(xx) >= 7 - (yy - 2) * 1.1);
+            B.S(P, CX + xx, 38 + yy, B.tc(G, bordo ? 1 : xx + yy < 0 ? 5 : 3));
           }
-        B.F(P, x - 7, 70, 14, 4, B.tc(MB, 4));
-        B.F(P, x - 7, 73, 14, 1, B.tc(MB, 2));
-        B.F(P, x - 7, 148, 14, 4, B.tc(MB, 3));
-        B.F(P, x - 7, 151, 14, 1, B.tc(MB, 1));
-        // ombra della colonna sul muro
-        B.F(P, x + 5, 76, 3, 72, B.tc(ST, 0));
+        B.F(P, CX - 5, 35, 10, 6, B.tc(MB, 4));
+        B.F(P, CX, 35, 1, 6, B.tc(LG, 2));
+        B.F(P, CX - 2, 10, 4, 5, B.tc(G, 4));
+        for (const x of [22, 202]) B.F(P, x - 3, 48, 6, 6, B.tc(G, 3));
+        // portone
+        B.F(P, CX - 16, 96, 32, 58, B.tc(MB, 1));
+        for (let Y = 0; Y < 54; Y++)
+          for (let X = 0; X < 26; X++) {
+            const dx = X + 0.5 - 13;
+            if (Y < 13 && dx * dx + (Y - 13) * (Y - 13) > 169) continue;
+            B.S(P, CX - 13 + X, 100 + Y, B.tc(LG, X % 6 === 0 ? 1 : X < 13 ? 2 : 3));
+          }
+        B.F(P, CX - 1, 112, 2, 42, B.tc(LG, 1));
+        B.S(P, CX - 4, 132, B.tc(G, 5));
+        B.S(P, CX + 3, 132, B.tc(G, 5));
+        // colonne scanalate
+        for (const x of [48, 70, 92, 132, 154, 176]) {
+          for (let Y = 74; Y < 150; Y++)
+            for (let X = x - 5; X < x + 5; X++) {
+              const k = X - (x - 5);
+              let t = k < 2 ? 4 : k > 7 ? 2 : 3;
+              if (k === 3 || k === 6) t--;
+              B.S(P, X, Y, B.tc(MB, t));
+            }
+          B.F(P, x - 7, 70, 14, 4, B.tc(MB, 4));
+          B.F(P, x - 7, 73, 14, 1, B.tc(MB, 2));
+          B.F(P, x - 7, 148, 14, 4, B.tc(MB, 3));
+          B.F(P, x - 7, 151, 14, 1, B.tc(MB, 1));
+          // ombra della colonna sul muro
+          B.F(P, x + 5, 76, 3, 72, B.tc(ST, 0));
+        }
+        // stendardi rossi tra le colonne
+        for (const x of [81, 143]) {
+          B.F(P, x - 5, 80, 10, 26, C('#8a2a2a'));
+          B.F(P, x - 5, 80, 10, 2, B.tc(G, 4));
+          B.F(P, x - 1, 86, 2, 12, B.tc(G, 3));
+          B.S(P, x - 5, 106, C('#8a2a2a'));
+          B.S(P, x + 4, 106, C('#8a2a2a'));
+          B.F(P, x - 3, 106, 6, 2, C('#6a1a1a'));
+        }
+        // scalinata larga
+        for (let i = 0; i < 4; i++) {
+          const y = 152 + i * 4,
+            x0 = 34 - i * 6;
+          B.F(P, x0, y, 224 - x0 * 2, 4, B.tc(MB, i % 2 ? 3 : 4));
+          B.F(P, x0, y, 224 - x0 * 2, 1, B.tc(MB, 5));
+          B.F(P, x0, y + 3, 224 - x0 * 2, 1, B.tc(MB, 1));
+        }
+        // vasi con l'alloro ai lati della scala
+        for (const x of [20, 204]) {
+          B.F(P, x - 6, 146, 12, 10, B.tc(ST, 2));
+          B.F(P, x - 7, 146, 14, 2, B.tc(ST, 4));
+          for (let yy = 0; yy < 12; yy++)
+            for (let xx = -7; xx <= 7; xx++)
+              if (xx * xx + (yy - 6) * (yy - 6) * 1.4 < 50)
+                B.S(P, x + xx, 132 + yy, C((xx + yy) % 3 ? '#3f7a2a' : '#5a9a3a'));
+        }
+      },
+      (P, B, h0) => {
+        // la torre dell'orologio: pietra annerita, quadrante di bronzo scuro, guglia d'ardesia e pinnacolo
+        const cx = 112,
+          PI = B.R6('#6a665e'),
+          SR = B.R6('#2e2e3a'),
+          BR = B.R6('#7a5a2e');
+        B.F(P, cx - 18, 22, 36, h0 + 2, B.tc(PI, 3));
+        B.F(P, cx - 18, 22, 2, h0 + 2, B.tc(PI, 4));
+        B.F(P, cx + 16, 22, 2, h0 + 2, B.tc(PI, 1));
+        for (let Y = 26; Y < h0 + 24; Y += 7) B.F(P, cx - 18, Y, 36, 1, B.tc(PI, 2));
+        for (let yy = -10; yy <= 10; yy++)
+          for (let xx = -10; xx <= 10; xx++) {
+            const d = Math.hypot(xx, yy);
+            if (d <= 10) B.S(P, cx + xx, 38 + yy, d > 8.5 ? B.tc(BR, 1) : B.tc(BR, d < 2 ? 5 : 3));
+          }
+        B.F(P, cx, 30, 1, 8, C('#1a1214'));
+        B.F(P, cx, 38, 6, 1, C('#1a1214'));
+        for (let Y = 2; Y < 24; Y++) {
+          const hw = 2 + (Y - 2) * 0.95;
+          for (let X = Math.round(cx - hw); X < Math.round(cx + hw); X++)
+            B.S(P, X, Y, B.tc(SR, (Y - 2) % 5 === 0 ? 1 : X < cx ? 3 : 2));
+        }
+        B.F(P, cx - 1, 0, 2, 4, C('#141016'));
       }
-      // stendardi rossi tra le colonne
-      for (const x of [81, 143]) {
-        B.F(P, x - 5, 80, 10, 26, C('#8a2a2a'));
-        B.F(P, x - 5, 80, 10, 2, B.tc(G, 4));
-        B.F(P, x - 1, 86, 2, 12, B.tc(G, 3));
-        B.S(P, x - 5, 106, C('#8a2a2a'));
-        B.S(P, x + 4, 106, C('#8a2a2a'));
-        B.F(P, x - 3, 106, 6, 2, C('#6a1a1a'));
-      }
-      // scalinata larga
-      for (let i = 0; i < 4; i++) {
-        const y = 152 + i * 4,
-          x0 = 34 - i * 6;
-        B.F(P, x0, y, 224 - x0 * 2, 4, B.tc(MB, i % 2 ? 3 : 4));
-        B.F(P, x0, y, 224 - x0 * 2, 1, B.tc(MB, 5));
-        B.F(P, x0, y + 3, 224 - x0 * 2, 1, B.tc(MB, 1));
-      }
-      // vasi con l'alloro ai lati della scala
-      for (const x of [20, 204]) {
-        B.F(P, x - 6, 146, 12, 10, B.tc(ST, 2));
-        B.F(P, x - 7, 146, 14, 2, B.tc(ST, 4));
-        for (let yy = 0; yy < 12; yy++)
-          for (let xx = -7; xx <= 7; xx++)
-            if (xx * xx + (yy - 6) * (yy - 6) * 1.4 < 50)
-              B.S(P, x + xx, 132 + yy, C((xx + yy) % 3 ? '#3f7a2a' : '#5a9a3a'));
-      }
-    })
+    )
 });
 
 // ---------- oggetti costruibili piccoli ----------
@@ -2475,23 +3193,19 @@ const ART3 = {
 
 // ---------- ritratti: stesse espressioni, ombre a toni pieni come gli sprite ----------
 {
-  const _lit = lit,
-    _pick = pickI;
+  const _lit = lit;
   const celLit = (n, o) => {
     const v = _lit(n, o);
     return v < 0.4 ? 0.18 : v < 0.72 ? 0.5 : v < 0.95 ? 0.68 : 0.86;
   };
   const celPick = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
-  Ext.avvolgi('genPortrait', function (prossimo, L, mood) {
-    lit = celLit;
-    pickI = celPick;
-    try {
-      return prossimo(L, mood);
-    } finally {
-      lit = _lit;
-      pickI = _pick;
-    }
-  });
+  Ext.avvolgi('genPortrait', (prossimo, L, mood) => conOmbre(celLit, celPick, () => prossimo(L, mood)));
+  // chi ha la testa disegnata a mano ha anche il ritratto a mano
+  Ext.avvolgi('genPortrait', (prossimo, L, mood) =>
+    L.mano && TESTE_MANO.sprite[(L.volto || 'giovane') + '_' + (L.style || 'short') + '_giu']
+      ? GX.ritrattoMano(L, mood)
+      : prossimo(L, mood)
+  );
 }
 
 // ======================================================================
@@ -2501,25 +3215,15 @@ const ART3 = {
 
 // ---------- stile a toni pieni per tutte le immagini "a volume" (icone, cibi, colture, oggetti) ----------
 const CEL = (() => {
-  const _lit = lit,
-    _pick = pickI;
+  const _lit = lit;
   const cl = (n, o) => {
     const v = _lit(n, o);
     return v < 0.3 ? 0.17 : v < 0.56 ? 0.45 : v < 0.8 ? 0.62 : v < 1.02 ? 0.8 : 0.96;
   };
   const cp = (n, v) => Math.min(n - 1, Math.floor(clamp(v, 0, 0.999) * n));
   const run = f =>
-    function () {
-      const a = lit,
-        b = pickI;
-      lit = cl;
-      pickI = cp;
-      try {
-        return f.apply(this, arguments);
-      } finally {
-        lit = a;
-        pickI = b;
-      }
+    function (...a) {
+      return conOmbre(cl, cp, () => f.apply(this, a));
     };
   for (const name of [
     'genIconsHD',
@@ -3968,206 +4672,59 @@ const HOG = (() => {
 }
 
 // ---------- il Cavaliere senza testa ----------
-const HORSEMAN = (() => {
-  const HB = R6b('#1e1826'),
-    HBd = HB.map(c => c.map(v => v * 0.72)),
-    MN = R6b('#2a1420'),
-    AR = R6b('#2a2a34'),
-    CO = R6b('#141018'),
-    RD = R6b('#8a0e14'),
-    RD2 = R6b('#c41a1a'),
-    ST = R6b('#b8c0c8'),
-    HF = R6b('#4a4a54');
-  const frame = f =>
-    spr2(88, 80, P => {
-      const legs = f
-        ? [
-            [56, 50, 62, 58, 58, 67, 1],
-            [52, 50, 54, 64, 58, 76, 0],
-            [24, 50, 28, 62, 34, 72, 1],
-            [28, 50, 22, 64, 18, 76, 0]
-          ]
-        : [
-            [56, 50, 66, 62, 72, 72, 1],
-            [52, 50, 56, 62, 53, 76, 0],
-            [24, 50, 14, 61, 7, 71, 1],
-            [28, 50, 30, 64, 28, 76, 0]
-          ];
-      // coda
-      for (let i = 0; i < 7; i++)
-        paint2(
-          P,
-          mkM(P).cap(19, 37 + i, 4 - (f ? 3 : 0) + i * 0.6, 50 + i * 2.2 + (f ? -2 : 0), 1.4, 0.6),
-          i % 3 === 1 ? RD : MN,
-          { thin: 1 }
-        );
-      // mantello: fodera rosso sangue sotto, nero sopra, sfilacciato
-      const capeM = mkM(P).poly([
-        [33, 9],
-        [40, 10],
-        [34, 30],
-        [22, 42],
-        [14, 46 - (f ? 4 : 0)],
-        [6, 40 - (f ? 5 : 0)],
-        [12, 30],
-        [22, 18]
-      ]);
-      for (let X = 0; X < 88; X++) {
-        const cut = 40 - (f ? 4 : 0) + ((X * 7) % 5) + (X % 3 ? 2 : 0);
-        for (let Y = cut; Y < 80; Y++) capeM.a[Y * 88 + X] = 0;
-      }
-      paint2(P, capeM, RD2, { mod: (X, Y, t) => ((X + Y * 2 + f * 3) % 7 === 0 ? t - 1 : t) });
-      paint2(
-        P,
-        mkM(P).poly([
-          [33, 9],
-          [40, 10],
-          [36, 20],
-          [24, 30],
-          [12, 34 - (f ? 3 : 0)],
-          [8, 30 - (f ? 4 : 0)],
-          [18, 20],
-          [26, 13]
-        ]),
-        CO,
-        { mod: (X, Y, t) => ((X + Y * 3) % 9 === 0 ? t + 1 : t) }
-      );
-      // zampe lontane
-      for (const [a, b, c, d, e, g, far] of legs)
-        if (far) {
-          paint2(P, mkM(P).cap(a, b, c, d, 3.4, 2.4).cap(c, d, e, g, 2.4, 2), HBd, { thin: 1 });
-          paint2(P, mkM(P).rect(e - 2, g, 5, 3), HF, { thin: 1 });
-        }
-      // corpo
-      paint2(P, mkM(P).ell(40, 44, 22, 10), HB, {
-        mod: (X, Y, t) => {
-          if (Y < 38 && t < 4) t++;
-          if ((X * 5 + Y * 3) % 23 === 0) t--;
-          return t;
-        }
-      });
-      for (let X = 22; X < 58; X += 5) P.set(X, 46 + ((X / 5) % 2), HB[1]);
-      // gualdrappa
-      paint2(
-        P,
-        mkM(P).poly([
-          [30, 34],
-          [48, 34],
-          [50, 46],
-          [46, 50],
-          [42, 47],
-          [38, 51],
-          [34, 47],
-          [30, 49]
-        ]),
-        RD,
-        { mod: (X, Y, t) => (Y === 35 ? t + 1 : t) }
-      );
-      for (let X = 30; X < 50; X += 2) P.set(X, 36, R6b('#d8a84a')[3]);
-      // collo e testa
-      paint2(P, mkM(P).cap(54, 40, 66, 18, 8, 5), HB, { mod: (X, Y, t) => Math.min(t, 3) });
-      paint2(P, mkM(P).rot(75, 18, 11, 5.2, 0.55), HB);
-      paint2(P, mkM(P).rot(81, 23, 4, 3, 0.5), HB, { base: 2 });
-      paint2(
-        P,
-        mkM(P).poly([
-          [64, 12],
-          [66, 4],
-          [69, 11]
-        ]),
-        HB,
-        { thin: 1 }
-      );
-      paint2(
-        P,
-        mkM(P).poly([
-          [67, 12],
-          [71, 5],
-          [72, 13]
-        ]),
-        HB,
-        { thin: 1 }
-      );
-      P.set(83, 24, C('#ff3020'));
-      P.set(84, 25, C('#8a0e14'));
-      for (let X = 76; X < 84; X++) P.set(X, 26 + Math.floor((X - 76) / 3), C('#0a0608'));
-      P.set(79, 27, C('#e8e0d0'));
-      P.set(81, 27, C('#e8e0d0'));
-      P.set(72, 14, C('#ff2a1a'));
-      P.set(73, 14, C('#ffb060'));
-      P.set(72, 15, C('#a01010'));
-      P.set(71, 13, HB[1]);
-      P.set(73, 13, HB[1]);
-      // criniera selvaggia
-      for (let i = 0; i < 11; i++) {
-        const x0 = 57 + i * 1.0,
-          y0 = 34 - i * 2.2,
-          len = 4 + (i % 3) * 1.6 + (f ? 1 : 0);
-        paint2(
-          P,
-          mkM(P).cap(x0, y0, x0 - len, y0 - len * 0.35 - (i % 2) + f, 1.7, 0.5),
-          i % 4 === 2 ? RD : MN,
-          { thin: 1 }
-        );
-      }
-      // zampe vicine
-      for (const [a, b, c, d, e, g, far] of legs)
-        if (!far) {
-          paint2(P, mkM(P).cap(a, b, c, d, 3.6, 2.6).cap(c, d, e, g, 2.6, 2), HB, { thin: 1 });
-          paint2(P, mkM(P).rect(e - 2, g, 5, 3), HF, { thin: 1, mod: (X, Y, t) => (Y === g ? t + 1 : t) });
-        }
-      // cavaliere: gamba e stivale
-      paint2(P, mkM(P).cap(40, 32, 46, 44, 3.2, 2.6).cap(46, 44, 44, 50, 2.6, 2.4), AR);
-      paint2(P, mkM(P).rect(42, 49, 6, 3), CO, { thin: 1 });
-      // busto corazzato
-      paint2(
-        P,
-        mkM(P).poly([
-          [32, 12],
-          [46, 11],
-          [47, 22],
-          [44, 33],
-          [34, 33],
-          [32, 22]
-        ]),
-        AR,
-        {
-          mod: (X, Y, t) => {
-            if (Y === 20 || Y === 27) t--;
-            if (X === 39 && Y > 13) t--;
-            return t;
-          }
-        }
-      );
-      paint2(P, mkM(P).ell(45, 13, 4, 3.4), AR, { mod: (X, Y, t) => (Y === 13 ? t - 1 : t) });
-      paint2(P, mkM(P).ell(33, 13, 3.4, 3), AR, { base: 2 });
-      for (let X = 33; X < 46; X++) P.set(X, 32, R6b('#5a1a1a')[3]);
-      P.set(39, 32, R6b('#d8a84a')[4]);
-      // braccio e spada
-      paint2(P, mkM(P).cap(45, 14, 53, 21, 2.6, 2.2), AR);
-      paint2(P, mkM(P).ell(54, 21, 2.4, 2.2), CO, { thin: 1 });
-      for (let i = 0; i < 28; i++) {
-        const x = 55 + i,
-          y = 19 - Math.round(i * 0.53);
-        P.set(x, y, ST[4]);
-        P.set(x, y + 1, ST[2]);
-        if (i > 24) P.set(x, y, ST[5]);
-      }
-      paint2(P, mkM(P).cap(52, 16, 56, 23, 1), R6b('#6a5a3a'), { thin: 1, flat: 1 });
-      // nessuna testa: colletto e moncone
-      paint2(P, mkM(P).ell(39, 10, 5, 2.6), CO, { thin: 1 });
-      paint2(P, mkM(P).ell(39, 9, 3.4, 1.6), RD, { thin: 1, nc: 1 });
-      P.set(38, 9, RD2[5]);
-      P.set(39, 9, RD2[4]);
-      P.set(40, 8, C('#3a0408'));
-      for (let i = 0; i < 3; i++) P.set(36 + i * 2, 11 + (i % 2), RD2[3]);
-    });
-  return [frame(0), frame(1)];
+// ---------- il Cavaliere senza testa: disegnato a mano (tools/pixel/cavaliere.pxs → js/cavaliere_mano.js) ----------
+// Quattro fotogrammi di galoppo, 44×40 unità di gioco (i piedi alla riga 38). PUNTI: dove stanno l'occhio del cavallo,
+// il collo mozzato e le narici nel disegno, per i bagliori della notte.
+const HORSEMAN = Object.keys(CAVALIERE_MANO.sprite)
+  .filter(n => n.startsWith('galoppo'))
+  .map(n => {
+    const g = CAVALIERE_MANO.sprite[n],
+      [c, x] = mk(g[0].length, g.length);
+    g.forEach((r, Y) =>
+      [...r].forEach((ch, X) => {
+        if (ch === '.') return;
+        x.fillStyle = CAVALIERE_MANO.tavolozza[ch];
+        x.fillRect(X, Y, 1, 1);
+      })
+    );
+    return c;
+  });
+// lo spavento: il Cavaliere che s'impenna verso il giocatore (tools/pixel/spavento.pxs → js/spavento_mano.js)
+const SPAVENTO = (() => {
+  const g = SPAVENTO_MANO.sprite.spavento,
+    [c, x] = mk(g[0].length, g.length);
+  g.forEach((r, Y) =>
+    [...r].forEach((ch, X) => {
+      if (ch === '.') return;
+      x.fillStyle = SPAVENTO_MANO.tavolozza[ch];
+      x.fillRect(X, Y, 1, 1);
+    })
+  );
+  return c;
 })();
+// l'Albero dei Morti disegnato a mano (tools/pixel/albero.pxs → js/albero_mano.js), stessa misura di prima
+{
+  Ext.avvolgi('genWoodArt', function (prossimo, ...a) {
+    const r = prossimo(...a);
+    const g = ALBERO_MANO.sprite.albero,
+      [c, x] = mk(g[0].length, g.length);
+    g.forEach((riga, Y) =>
+      [...riga].forEach((ch, X) => {
+        if (ch === '.') return;
+        x.fillStyle = ALBERO_MANO.tavolozza[ch];
+        x.fillRect(X, Y, 1, 1);
+      })
+    );
+    IMG.albero = c;
+    return r;
+  });
+}
+const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {
   Ext.avvolgi('genPropsHD', function (prossimo, ...argomenti) {
     const r = prossimo(...argomenti);
     IMG.horse = HORSEMAN;
+    IMG.spavento = SPAVENTO;
     return r;
   });
 }
@@ -4181,15 +4738,15 @@ const HORSEMAN = (() => {
         T = G.t,
         bx = h.x,
         by = h.y;
-      const ex = bx + fl * 14,
-        ey = by - 31,
+      const P = HORSEMAN_PUNTI,
+        su = (q, k) => [bx + fl * (q[0] - P.ancora[0] + (k || 0)), by + q[1] - P.ancora[1]],
+        [ex, ey] = su(P.occhio),
         g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 6);
       g.addColorStop(0, 'rgba(255,60,30,.9)');
       g.addColorStop(1, 'rgba(255,0,0,0)');
       ctx.fillStyle = g;
       ctx.fillRect(ex - 6, ey - 6, 12, 12);
-      const nx = bx + fl * -2.5,
-        ny = by - 34;
+      const [nx, ny] = su(P.collo);
       for (let i = 0; i < 9; i++) {
         const k = (T * 1.6 + i / 9) % 1,
           x = nx + Math.sin(T * 3 + i * 2.3) * 2 * k - fl * k * 9,
@@ -4205,8 +4762,8 @@ const HORSEMAN = (() => {
       ctx.fillRect(nx - 9, ny - 9, 18, 18);
       if (Math.floor(T * 2) % 3 === 0) {
         const k = (T * 2) % 1,
-          sx = bx + fl * (20 + k * 6),
-          sy = by - 26 + k * 2;
+          [sx, sy0] = su(P.narici, k * 6),
+          sy = sy0 + k * 2;
         ctx.fillStyle = `rgba(200,200,210,${(0.3 * (1 - k)).toFixed(2)})`;
         ctx.beginPath();
         ctx.arc(sx, sy, 1 + k * 3, 0, 7);

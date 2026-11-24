@@ -496,6 +496,10 @@ const SEASON_LOOK = {
   }
 };
 let LOOK_SEASON = -1;
+// i vestiti di stagione si rifanno al prossimo controllo (dopo un cambio d'aspetto)
+function rifaiVestiti() {
+  LOOK_SEASON = -1;
+}
 function applySeasonLooksBase() {
   const st = G.st;
   if (!st) return;

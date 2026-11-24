@@ -9,8 +9,9 @@
     "format": "prettier --write \"js/**/*.js\" \"tests/**/*.js\""
   },
   "devDependencies": {
+    "acorn": "8.14.0",
+    "eslint-scope": "8.4.0",
     "playwright": "1.63.0",
-    "prettier": "3.6.2",
-    "acorn": "8.14.0"
+    "prettier": "3.6.2"
   }
 }

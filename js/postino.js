@@ -141,16 +141,16 @@ async function postino() {
       G.map.id === 'main' &&
       !POSTINO
     ) {
-      TOUR_WAIT -= dt;
-      if (TOUR_WAIT > 0) return;
-      TOUR_WAIT = 3;
+      GIRO.attesa -= dt;
+      if (GIRO.attesa > 0) return;
+      GIRO.attesa = 3;
       if (postinoPending(st).length) postino();
       return;
     }
     if (!G.tour) {
       const el = $('#tour');
       if (el) el.classList.add('hide');
-      TOUR_WAIT = Math.max(TOUR_WAIT, 2);
+      GIRO.attesa = Math.max(GIRO.attesa, 2);
       return;
     }
     return prossimo(dt);

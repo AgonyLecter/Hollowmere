@@ -49,7 +49,7 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
 
 ## Mappa dei file (in ordine di caricamento)
-- **Motore**: `core.js` (stato, input, effetti sonori, Ext), `musica.js` (la colonna sonora: brani scritti come dati —
+- **Motore**: `core.js` (stato, input, effetti sonori, Ext), `calendario.js` (giorni, stagioni, anni), `musica.js` (la colonna sonora: brani scritti come dati —
   temi in gradi della scala, accordi in numeri romani — strumenti sintetizzati, l'«ombra» che mette angoscia anche nei
   brani allegri; il brano lo sceglie `chooseMusic` in `main.js`), `art.js` (pixel art generata), `world.js` (mappe, rendering),
   `ui.js`, `net.js` (Firebase), `main.js` (avvio, ciclo, giorni), `update.js` (aggiornamenti automatici).
@@ -77,3 +77,37 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 
 ## Strumenti di manutenzione (`tools/`)
 Script usati per i lavori di pulizia (spostare funzioni, togliere toppe, convertirle in `Ext`). Non fanno parte del gioco.
+
+## Verso i moduli JavaScript (tappa 3)
+L'obiettivo è che ogni file diventi un modulo (`import`/`export`) invece di condividere tutto come nome globale.
+Per farlo senza cambiare l'ordine in cui il gioco parte, **ogni file deve usare solo file caricati prima di lui**.
+- `node tools/dipendenze.js` — per ogni file: quanti nomi definisce, quanti ne usa da altri e da chi è usato;
+  `--cicli` mostra i gruppi di file intrecciati.
+- `node tools/ordine_moduli.js` — simula l'avvio come moduli e conta le letture che si romperebbero.
+- Il test `toppe` controlla che nessun file scriva le variabili di un altro e che i **riferimenti all'indietro**
+  (nomi presi da un file caricato dopo) non aumentino: il tetto in `tests/toppe.json` può solo scendere.
+
+Come si toglie un riferimento all'indietro: si sposta la cosa usata in un file che viene prima (utilità pure,
+dati), oppure chi sta prima offre un punto di estensione (`Ext.run`/`Ext.avvolgi`) e chi sta dopo si iscrive.
+
+## Pixel art disegnata a mano (`tools/pixel/`)
+Le teste del protagonista (e in futuro gli altri personaggi) sono disegnate a mano, pixel per pixel, come griglie
+di lettere: ogni lettera è un colore (`S` pelle, `R` capelli, `e` occhi, `o` contorno…).
+- `teste.pxs` — le teste a mano (capelli corti) di fronte, di fianco e di spalle. **Si modifica qui.**
+- `teste_varianti.py` — ricava le altre acconciature del menu Aspetto (lunghi, raccolti, spettinati, rasati) e
+  scrive `teste_tutte.pxs` (generato).
+- `studio.py` — disegna la tavola ingrandita con la griglia e la grandezza di gioco, controlla gli errori ed
+  esporta i dati per il gioco:
+  ```
+  python3 tools/pixel/teste_varianti.py
+  python3 tools/pixel/studio.py tools/pixel/teste_tutte.pxs --out tavola.png --js js/teste_mano.js --nome TESTE_MANO
+  ```
+Nel gioco (`grafica.js`) chi ha `mano: 1` nell'aspetto usa la testa a mano: le lettere si ricolorano con pelle,
+capelli, occhi e labbra scelti; il ritratto è la stessa testa ingrandita 3 volte, con le espressioni.
+Corpo, vestiti, passi e braccia con gli attrezzi restano del motore a parti, nello stesso stile.
+
+## Lo stile unico (`js/stile.js`)
+Alla fine del caricamento (punto `arte`) un filtro porta ogni immagine dell'ambiente (IMG, AIMG, FREEIMG) al
+linguaggio dell'Albero dei Morti: grana di 1 pixel per unità di gioco, una tavolozza cupa unica (`STILE_PAL`),
+luce di luna sui bordi in alto, contorno scuro. Un disegno nuovo nasce già coerente: basta disegnarlo come
+gli altri (a 2×) e il filtro lo uniforma. Si escludono interfaccia, terreno, personaggi e i disegni già fatti a mano.

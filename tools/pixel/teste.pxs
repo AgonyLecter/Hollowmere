@@ -1,0 +1,258 @@
+# Teste del protagonista disegnate a mano (capelli corti). Ancora: centro x=9, cima = cy-8.
+@tavolozza
+o #1e1418
+O #120c0e
+S #eab48a
+s #c98a66
+H #f6cfa4
+n #e2957c
+q #b07050
+R #6b3e1f
+r #4a2812
+h #9a6234
+e #2a2030
+l #f4eee4
+m #a2584a
+T #e9dcc0
+t #bcae8e
+U #f8f0dc
+N #8a3a3a
+z #5e2424
+V #5a4632
+v #3e3022
+g #d8b04a
+P #4a5a3e
+p #34402a
+B #3a2616
+b #5a3e26
+u #8a6070
+a #d8aa48
+@sprite testa_giu 18x18
+......oooooo......
+....oohhhhRRoo....
+...ohhhRRRRRRRo...
+..ohhRRRRRRhRRRo..
+..ohRRRRRRhRRRRo..
+.ohRRRrRRRRRRrRRo.
+.oRRRrSrRRRrRSrRo.
+.oRRrSSSrrrSSSSro.
+.oRrSSSSSSSSSSSSo.
+oSoSrrSSSSSSrrSoSo
+oSoSSeeSSSSeeSSoSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqqSSSSo..
+..osSSSSSSSSSSso..
+...osSSSmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite testa_lato 18x18
+.....oooooo.......
+...oohhhhRRoo.....
+..ohhhRRRRRRRo....
+.ohhRRRRRRRhRRo...
+.ohRRRRRRRhRRRRo..
+ohRRRRRRRRRRRrRRo.
+oRRRRRRRRRRRrSrRo.
+oRRRRRRRRRrrSSSSo.
+oRRRRRRRrSSSSSSSo.
+oRRRoSSorSSSrrSSo.
+oRRoSqSoSSSSSeeSo.
+oRRoSSoSSSSSSelSo.
+.oRRooSSSSSSSSSSSo
+.oRRrsSSSSSnSSSSo.
+..oRrsSSSSSSSmmo..
+...oossSSSSSSSo...
+.....oossSSSso....
+.......oosSo......
+@sprite testa_su 18x18
+......oooooo......
+....oohhhhRRoo....
+...ohhhRRRRRRRo...
+..ohhRRRRRRRhRRo..
+..ohRRRRRRRhRRRo..
+.ohRRRRRRRRRRRRRo.
+.oRRRRhRRRRRRRRRo.
+.oRRRhRRRRRRRRrRo.
+.oRRRRRRRRRRRrRRo.
+oSoRRRRRRRRRRRRoSo
+oSoRRRRRRRRRRrRoSo
+osoRRRRRRRRRrRRoso
+.ooRRRRRRRRRRRRoo.
+...oRRRRRRRRRRro..
+...orRRRRRRRRrro..
+....osrrrrrrrso...
+.....ossSSSsso....
+.......osSso......
+# ---------- VOLTI: righe 9-17 della testa di fronte (sotto la frangia). Ognuno si combina con ogni acconciatura.
+@sprite volto_giovane 18x9
+oSoSrrSSSSSSrrSoSo
+oSoSSeeSSSSeeSSoSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqqSSSSo..
+..osSSSSSSSSSSso..
+...osSSSmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_donna 18x9
+oSoSSrrSSSSrrSSoSo
+oSorreeSSSSeerroSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqSSSSSo..
+..osSSSSSSSSSSso..
+...osSSmmmmSSso...
+....oosSmmSSoo....
+......osSSso......
+@sprite volto_anziano 18x9
+oSoSrrrSSSSrrrSoSo
+oSosSeeSSSSeesSoSo
+osoSsssSSSSsssSoso
+.ooSSSSSqSSSSSSoo.
+..osSSSSqqSSSSso..
+..osqSSSSSSSSqso..
+...osSSmmmmSSso...
+....oosssSSssoo...
+......osSSso......
+@sprite volto_anziana 18x9
+oSoSSrrSSSSrrSSoSo
+oSoSqeeSSSSeeqSoSo
+osoSSssSSSSssSSoso
+.ooSnSSSqSSSSnSoo.
+..oSnSSSqqSSSnSo..
+..osSqSSSSSSqSso..
+...osSSsmmsSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_bambino 18x9
+oSoSSrSSSSSSrSSoSo
+oSoSeeeSSSSeeeSoSo
+osoSeleSSSSeleSoso
+.ooSeeeSSSSeeeSoo.
+..onSSSSSqSSSSno..
+..osSSSSSSSSSSso..
+...osSSSmmSSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_robusto 18x9
+oSorrrrSSSSrrrroSo
+oSoSseeSSSSeesSoSo
+osoSSssSSSSssSSoso
+.ooSSSSqqqqSSSSoo.
+..oSSSSqSSqSSSSo..
+..osSSSSSSSSSSso..
+..osSSSmmmmSSSso..
+..oosSSSSSSSSsoo..
+....oossSSssoo....
+@sprite volto_frate 18x9
+oSoSSrrSSSSrrSSoSo
+oSoSsssSSSSsssSoSo
+osoSseeSSSSeesSoso
+.ooSSSSSqSSSSSSoo.
+..oSSSSSqqSSSSSo..
+..osSSSSSSSSSSso..
+...osSSmmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_sinistro 18x9
+oSorrrSSSSSSrrroSo
+oSoSsrreSSerrsSoSo
+osoSsSSSSSSSSsSoso
+.oosSSSSqqSSSSsoo.
+..osSSSSqqqSSSso..
+..ossSSSSSSSSsso..
+...osSmmmmmSSso...
+....oossSSssoo....
+......osSSso......
+# ---------- VOLTI SU MISURA dei personaggi della storia ----------
+@sprite volto_ezekiel 18x9
+oSoqrrrSSSSrrrqoSo
+oSoSuerSSSSreuSoSo
+osoSuusSSSSsuuSoso
+.ooSSSSSqSSSSSSoo.
+..osSSSSqqSSSSso..
+..osqSSSSSSSSqso..
+...osSqmmmmqSso...
+....oosssSSssoo...
+......osSSso......
+@sprite volto_agatha 18x9
+oSoSSrrSSSSrSSSoSo
+oSoqeeSSSSSrrqSoSo
+osoSssSSSSSqqSSoso
+.ooSnSSSqSSSSnSoo.
+..oSnSqSqqSSSnSo..
+..osSqSSSSSSmSso..
+...osSSSmmmmSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_lucius 18x9
+oSoSSSSSSSSSSSSoSo
+oSouueeSSSSeeuuoSo
+osoSuuuSSSSuuuSoso
+.oosSSSSqSSSSSsoo.
+..osSSSSqqSSSSso..
+..ossSSSSSSSSsso..
+...osSSSmmSSSso...
+....oossSSssoo....
+......osSSso......
+@sprite volto_clara 18x9
+oSoSSSrSSSSrSSSoSo
+oSoSreeSSSSeerSoSo
+osoSeleSSSSeleSoso
+.ooSeeeSSSSeeeSoo.
+..onSSSSSqSSSSno..
+..osSSSSSSSSSSso..
+...osSSSmmSSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_tobia 18x9
+oSoSSrSSSSSSrrSoSo
+oSoSeeeSSSSeeSSoSo
+osoSeleSSSSrrSSoso
+.ooSeeeSSSSSSSSoo.
+..onSSSSSqSSSSno..
+..osSSSSSSSSSSso..
+...osSmllllmSso...
+....oosmmmmSoo....
+......osSSso......
+@sprite volto_ottavio 18x9
+oSoSrrSSSSSSrrSoSo
+oSoSSeeSSSSeeSSoSo
+osoSSelSSSSelSSoso
+.ooSnSSSSqSSSSnoo.
+..oSSSSSSqqSSSSo..
+..osSrrrrrrrrSso..
+...osSSmmmmSSso...
+....oosSSSSSoo....
+......osSSso......
+@sprite volto_irene 18x9
+oSoSrrrSSSSrrrSoSo
+oSorreeSSSSeerroSo
+osoSrelSSSSlerSoso
+.ooSSSSSSqSSSSSoo.
+..oSSSSSSqSSSqSo..
+..osSSSSSSSSSSso..
+...osSSmmmmSSso...
+....oosSmmSSoo....
+......osSSso......
+@sprite volto_mercante 18x9
+oSorrrSSSSSSrrroSo
+oSoSsrreSSerrsSoSo
+osoSuSSSSSSSSuSoso
+.oosSSSSqqSSSSsoo.
+..osSSSSqqqSSSso..
+..ossqSSSSSSqsso..
+...osSmmammmSso...
+....oossSSssoo....
+......osSSso......
+@sprite volto_nove 18x9
+oSoSSSSSSSSSSSSoSo
+oSoSeeeSSSSeeeSoSo
+osoSellSSSSlleSoso
+.ooSuuuSSSSuuuSoo.
+..oSSSSSSSSSSSSo..
+..osSSSSSSSSSSso..
+...osSSSmmSSSso...
+....oosSSSSSoo....
+......osSSso......

@@ -73,9 +73,16 @@ module.exports = async function (t, { browser }) {
               y = 8 + Math.floor(R() * 30);
               if (!m.solid(x, y)) break;
             }
+            const piene = st.inv.map((s, i) => (s ? i : -1)).filter(i => i >= 0),
+              zappa = st.inv.findIndex(s => s && s.id === 'hoe');
+            // una volta su quattro la zappa, dentro la fattoria: arare deve funzionare davvero
+            // (scegliendo sempre a caso tra decine di oggetti, arare dipendeva dalla fortuna)
+            if (zappa >= 0 && R() < 0.25) {
+              x = FARM.x0 + Math.floor(R() * (FARM.x1 - FARM.x0 + 1));
+              y = FARM.y0 + 1 + Math.floor(R() * (FARM.y1 - FARM.y0));
+              st.sel = zappa;
+            } else st.sel = pick(piene);
             setPos(G.player, x, y, Math.floor(R() * 4));
-            const piene = st.inv.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
-            st.sel = pick(piene);
             doAction();
           } else if (r < 0.65) {
             zaino();

@@ -437,7 +437,8 @@ const GUIDES = [
   }
 ];
 const guidesSeen = st => (st.free.guides = st.free.guides || {});
-let TOUR_WAIT = 4;
+// quanto manca al prossimo controllo del giro di Ottavio (lo usano valle.js e postino.js)
+const GIRO = { attesa: 4 };
 function tourStep() {
   return G.tour && G.tour.g.steps[G.tour.i];
 }
@@ -542,12 +543,12 @@ function tourTickBase(dt) {
     return;
   }
   if (G.cut || UI.busy() || G.visit) {
-    TOUR_WAIT = Math.max(TOUR_WAIT, 1.5);
+    GIRO.attesa = Math.max(GIRO.attesa, 1.5);
     return;
   }
-  TOUR_WAIT -= dt;
-  if (TOUR_WAIT > 0) return;
-  TOUR_WAIT = 3;
+  GIRO.attesa -= dt;
+  if (GIRO.attesa > 0) return;
+  GIRO.attesa = 3;
   const g = tourPick(st);
   if (g) tourStart(g);
 }

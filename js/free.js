@@ -2,31 +2,6 @@
 // ================= GIOCO LIBERO: la Valle dopo il finale =================
 // Stagioni vere, attrezzi, risorse, banco da lavoro, oggetti da costruire. Si attiva con st.free.
 
-// ---------- stagioni ----------
-const SEASONS = ['Autunno', 'Inverno', 'Primavera', 'Estate'];
-const SEASON_LEN = 28;
-const isFree = st => !!((st || G.st) && (st || G.st).free);
-function seasonOf(st) {
-  st = st || G.st;
-  if (!isFree(st)) return 0;
-  return Math.floor((st.day - st.free.start) / SEASON_LEN) % 4;
-}
-function seasonDay(st) {
-  st = st || G.st;
-  if (!isFree(st)) return st.day;
-  return ((st.day - st.free.start) % SEASON_LEN) + 1;
-}
-function yearOf(st) {
-  st = st || G.st;
-  if (!isFree(st)) return 1;
-  return Math.floor((st.day - st.free.start) / (SEASON_LEN * 4)) + 1;
-}
-const seasonName = st => SEASONS[seasonOf(st)];
-function dateLabel(st) {
-  st = st || G.st;
-  return `${DAYN[(st.day + 3) % 7]} ${seasonDay(st)} · ${seasonName(st)}${isFree(st) && yearOf(st) > 1 ? ' · anno ' + yearOf(st) : ''}`;
-}
-
 // colture: stagioni in cui crescono (0 autunno, 1 inverno, 2 primavera, 3 estate)
 Object.assign(CROPS.rapa, { s: [0, 2] });
 Object.assign(CROPS.patata, { s: [0, 2] });
