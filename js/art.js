@@ -599,6 +599,19 @@ function genBuilding(o) {
   return texturize(outline(c, '#22140c'), 0.08, Wd + rh);
 }
 // ---------- risoluzione doppia: ogni sprite del mondo è disegnato a 2× ----------
+// Uno sprite disegnato a mano (tools/pixel/*.pxs → js/*_mano.js): {tavolozza, sprite} → canvas, un pixel per lettera.
+function daGriglia(D, nome) {
+  const g = D.sprite[nome],
+    [c, x] = mk(g[0].length, g.length);
+  g.forEach((riga, Y) =>
+    [...riga].forEach((ch, X) => {
+      if (ch === '.') return;
+      x.fillStyle = D.tavolozza[ch];
+      x.fillRect(X, Y, 1, 1);
+    })
+  );
+  return c;
+}
 function mk2(w, h, opz) {
   const [c, x] = mk(w * 2, h * 2, opz);
   x.scale(2, 2);

@@ -66,121 +66,16 @@ const COMP_SHOP = [
 const COMP_FAME = 60; // da qui in su ha fame
 
 // ---------- disegni ----------
-// fotogrammi: 0-1 cammina, 2 seduto, 3 dorme (raggomitolato). Fatti la prima volta che servono.
+// fotogrammi: 0-1 cammina, 2 seduto, 3 dorme. Disegnati a mano, un manto per volta, con il suo collare
+// (tools/pixel/compagni_abbozzo.py → js/compagni_mano.js); le tele si fanno la prima volta che servono.
 const COMP_IMG = {};
 function compImg(kind, skin) {
   const k = kind + skin;
-  if (COMP_IMG[k]) return COMP_IMG[k];
-  const S = COMP_KIND[kind].skin[skin] || COMP_KIND[kind].skin[0],
-    c = rp(S.b),
-    m = rp(S.m),
-    sc = rp(shade(S.b, -0.35));
-  const macchie = (P, L) => {
-    if (S.macchie) for (const [x, y, r] of L) P.ellipse(x, y, r, r * 0.8, m, { edge: false });
-  };
-  const righe = (P, L) => {
-    if (S.righe) for (const [x, y] of L) P.capsule(x, y, x + 1, y + 3, 0.5, sc, { edge: false });
-  };
-  if (kind === 'cane')
-    COMP_IMG[k] = critFrames(32, 26, 4, (P, f) => {
-      if (f === 3) {
-        P.ellipse(15, 19, 11, 5.5, c, { spec: 0.3 });
-        P.capsule(5, 20, 12, 23, 1.6, c);
-        P.ellipse(24, 18, 5, 4, c);
-        P.ellipse(28, 19.5, 2.4, 1.8, m, { edge: false });
-        P.ellipse(22, 15.5, 2, 3, sc, { edge: false });
-        P.set(25, 17, C('#14100c'));
-        P.set(26, 17, C('#14100c'));
-        macchie(P, [
-          [12, 17, 3],
-          [18, 21, 2]
-        ]);
-        return;
-      }
-      if (f === 2) {
-        P.capsule(7, 22, 3, 17, 1.4, c, { r2: 1 });
-        P.ellipse(14, 17, 6.5, 7, c, { spec: 0.3 });
-        P.capsule(17, 18, 17, 24, 1.5, c);
-        P.capsule(13, 20, 12, 24, 1.5, c);
-        P.ellipse(18, 9, 5.2, 4.8, c, { spec: 0.2 });
-        P.ellipse(22, 11, 2.6, 2.1, m, { edge: false });
-        P.ellipse(15, 7, 2, 3.6, sc, { edge: false });
-        P.set(19, 8, C('#14100c'));
-        P.set(24, 10, C('#14100c'));
-        macchie(P, [
-          [12, 15, 2.6],
-          [16, 21, 1.8]
-        ]);
-        return;
-      }
-      const st = f ? 1.6 : -1.6;
-      P.capsule(6, 12, 3, 7 + (f ? 1 : 0), 1.3, c, { r2: 1 });
-      for (const q of [0, 1]) P.capsule(10 + q * 10, 18, 10 + q * 10 + (q ? st : -st), 24, 1.5, c);
-      P.ellipse(15, 15, 9.5, 5, c, { spec: 0.3 });
-      P.ellipse(16, 18, 6, 2, m, { edge: false });
-      P.ellipse(25, 10, 5, 4.4, c, { spec: 0.2 });
-      P.ellipse(29, 12, 2.6, 2, m, { edge: false });
-      P.ellipse(22.5, 8, 2, 3.6, sc, { edge: false });
-      P.set(26, 9, C('#14100c'));
-      P.set(31, 11, C('#14100c'));
-      macchie(P, [
-        [11, 13, 3],
-        [18, 14, 2.2]
-      ]);
-    });
-  else
-    COMP_IMG[k] = critFrames(30, 22, 4, (P, f) => {
-      if (f === 3) {
-        P.ellipse(15, 16, 10, 5, c, { spec: 0.3 });
-        P.ellipse(23, 15, 4, 3.5, c);
-        P.set(25, 12, c[2]);
-        P.set(22, 12, c[2]);
-        P.capsule(6, 18, 14, 20, 1.3, c);
-        righe(P, [
-          [11, 12],
-          [15, 12],
-          [19, 13]
-        ]);
-        macchie(P, [[13, 15, 2.6]]);
-        return;
-      }
-      if (f === 2) {
-        P.capsule(6, 20, 4, 12, 1.4, c, { r2: 1 });
-        P.ellipse(13, 15, 5.5, 6, c, { spec: 0.3 });
-        P.ellipse(14, 17, 3, 3, m, { edge: false });
-        P.capsule(15, 17, 15, 21, 1.2, c);
-        P.ellipse(16, 8, 4, 3.6, c);
-        P.ellipse(13.5, 4.6, 1.2, 1.8, c);
-        P.ellipse(18.5, 4.6, 1.2, 1.8, c);
-        P.set(15, 8, C('#7ac040'));
-        P.set(18, 8, C('#7ac040'));
-        righe(P, [
-          [10, 12],
-          [14, 11]
-        ]);
-        macchie(P, [[11, 15, 2.2]]);
-        return;
-      }
-      const st = f ? 1.5 : -1.5;
-      P.capsule(3, 10, 6, 14, 1.2, c, { r2: 1.4 });
-      for (const q of [0, 1]) P.capsule(9 + q * 9, 16, 9 + q * 9 + (q ? st : -st), 21, 1.2, c);
-      P.ellipse(14, 14, 9, 4.5, c, { spec: 0.3 });
-      P.ellipse(15, 16.5, 5, 1.6, m, { edge: false });
-      P.ellipse(24, 10, 4, 3.6, c);
-      P.ellipse(22, 6.5, 1.2, 1.8, c);
-      P.ellipse(26, 6.5, 1.2, 1.8, c);
-      P.set(26, 10, C('#7ac040'));
-      P.set(27, 11, C('#e89090'));
-      righe(P, [
-        [10, 10],
-        [14, 10],
-        [18, 10]
-      ]);
-      macchie(P, [
-        [11, 13, 2.6],
-        [18, 14, 2]
-      ]);
-    });
+  if (!COMP_IMG[k]) {
+    const M = COMPAGNI_MANO[kind],
+      D = M[skin] || M[0];
+    COMP_IMG[k] = [0, 1, 2, 3].map(f => daGriglia(D, 'f' + f));
+  }
   return COMP_IMG[k];
 }
 Ext.on('arte', () => {

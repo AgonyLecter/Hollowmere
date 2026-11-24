@@ -1,17 +1,4 @@
 'use strict';
-// Uno sprite disegnato a mano (tools/pixel/*.pxs → js/*_mano.js): {tavolozza, sprite} → canvas, un pixel per lettera.
-function daGriglia(D, nome) {
-  const g = D.sprite[nome],
-    [c, x] = mk(g[0].length, g.length);
-  g.forEach((riga, Y) =>
-    [...riga].forEach((ch, X) => {
-      if (ch === '.') return;
-      x.fillStyle = D.tavolozza[ch];
-      x.fillRect(X, Y, 1, 1);
-    })
-  );
-  return c;
-}
 // ================= GRAFICA: ritocco del comparto visivo =================
 // Solo aspetto: personaggi ridisegnati in pixel art "a mano", edifici ridipinti, luce.
 // Non cambia logica, dimensioni delle immagini, collisioni o salvataggi: sostituisce
