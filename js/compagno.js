@@ -5,8 +5,9 @@
 // ci giochi. Due comandi:
 //   Segui  → ti accompagna ovunque (anche in casa e dagli amici), ti porta i rami, i sassi e le erbe che trova
 //            e, se sei sfinito, una volta al giorno ti tira su;
-//   Resta  → di giorno gira attorno a casa, la notte dorme nella cuccia; quando sei vicino ti fa le feste e,
-//            se ha fame, ti chiama.
+//   Resta  → fa la sua vita (compVita): di giorno gira attorno a casa, caccia, gioca, annusa, si sdraia al sole;
+//            all'alba e a mezzogiorno entra a mangiare alla ciotola e fa un pisolino; la notte dorme nella cuccia.
+//            Quando passi ti corre incontro e ti fa le feste, poi torna alle sue cose: non ti segue mai.
 // I dati stanno nella tua partita (free.pet), anche quando sei in visita (G.home); la posizione è solo qui (G.comp).
 
 Object.assign(ITEMS, {
@@ -65,121 +66,16 @@ const COMP_SHOP = [
 const COMP_FAME = 60; // da qui in su ha fame
 
 // ---------- disegni ----------
-// fotogrammi: 0-1 cammina, 2 seduto, 3 dorme (raggomitolato). Fatti la prima volta che servono.
+// fotogrammi: 0-1 cammina, 2 seduto, 3 dorme. Disegnati a mano, un manto per volta, con il suo collare
+// (tools/pixel/compagni_abbozzo.py → js/compagni_mano.js); le tele si fanno la prima volta che servono.
 const COMP_IMG = {};
 function compImg(kind, skin) {
   const k = kind + skin;
-  if (COMP_IMG[k]) return COMP_IMG[k];
-  const S = COMP_KIND[kind].skin[skin] || COMP_KIND[kind].skin[0],
-    c = rp(S.b),
-    m = rp(S.m),
-    sc = rp(shade(S.b, -0.35));
-  const macchie = (P, L) => {
-    if (S.macchie) for (const [x, y, r] of L) P.ellipse(x, y, r, r * 0.8, m, { edge: false });
-  };
-  const righe = (P, L) => {
-    if (S.righe) for (const [x, y] of L) P.capsule(x, y, x + 1, y + 3, 0.5, sc, { edge: false });
-  };
-  if (kind === 'cane')
-    COMP_IMG[k] = critFrames(32, 26, 4, (P, f) => {
-      if (f === 3) {
-        P.ellipse(15, 19, 11, 5.5, c, { spec: 0.3 });
-        P.capsule(5, 20, 12, 23, 1.6, c);
-        P.ellipse(24, 18, 5, 4, c);
-        P.ellipse(28, 19.5, 2.4, 1.8, m, { edge: false });
-        P.ellipse(22, 15.5, 2, 3, sc, { edge: false });
-        P.set(25, 17, C('#14100c'));
-        P.set(26, 17, C('#14100c'));
-        macchie(P, [
-          [12, 17, 3],
-          [18, 21, 2]
-        ]);
-        return;
-      }
-      if (f === 2) {
-        P.capsule(7, 22, 3, 17, 1.4, c, { r2: 1 });
-        P.ellipse(14, 17, 6.5, 7, c, { spec: 0.3 });
-        P.capsule(17, 18, 17, 24, 1.5, c);
-        P.capsule(13, 20, 12, 24, 1.5, c);
-        P.ellipse(18, 9, 5.2, 4.8, c, { spec: 0.2 });
-        P.ellipse(22, 11, 2.6, 2.1, m, { edge: false });
-        P.ellipse(15, 7, 2, 3.6, sc, { edge: false });
-        P.set(19, 8, C('#14100c'));
-        P.set(24, 10, C('#14100c'));
-        macchie(P, [
-          [12, 15, 2.6],
-          [16, 21, 1.8]
-        ]);
-        return;
-      }
-      const st = f ? 1.6 : -1.6;
-      P.capsule(6, 12, 3, 7 + (f ? 1 : 0), 1.3, c, { r2: 1 });
-      for (const q of [0, 1]) P.capsule(10 + q * 10, 18, 10 + q * 10 + (q ? st : -st), 24, 1.5, c);
-      P.ellipse(15, 15, 9.5, 5, c, { spec: 0.3 });
-      P.ellipse(16, 18, 6, 2, m, { edge: false });
-      P.ellipse(25, 10, 5, 4.4, c, { spec: 0.2 });
-      P.ellipse(29, 12, 2.6, 2, m, { edge: false });
-      P.ellipse(22.5, 8, 2, 3.6, sc, { edge: false });
-      P.set(26, 9, C('#14100c'));
-      P.set(31, 11, C('#14100c'));
-      macchie(P, [
-        [11, 13, 3],
-        [18, 14, 2.2]
-      ]);
-    });
-  else
-    COMP_IMG[k] = critFrames(30, 22, 4, (P, f) => {
-      if (f === 3) {
-        P.ellipse(15, 16, 10, 5, c, { spec: 0.3 });
-        P.ellipse(23, 15, 4, 3.5, c);
-        P.set(25, 12, c[2]);
-        P.set(22, 12, c[2]);
-        P.capsule(6, 18, 14, 20, 1.3, c);
-        righe(P, [
-          [11, 12],
-          [15, 12],
-          [19, 13]
-        ]);
-        macchie(P, [[13, 15, 2.6]]);
-        return;
-      }
-      if (f === 2) {
-        P.capsule(6, 20, 4, 12, 1.4, c, { r2: 1 });
-        P.ellipse(13, 15, 5.5, 6, c, { spec: 0.3 });
-        P.ellipse(14, 17, 3, 3, m, { edge: false });
-        P.capsule(15, 17, 15, 21, 1.2, c);
-        P.ellipse(16, 8, 4, 3.6, c);
-        P.ellipse(13.5, 4.6, 1.2, 1.8, c);
-        P.ellipse(18.5, 4.6, 1.2, 1.8, c);
-        P.set(15, 8, C('#7ac040'));
-        P.set(18, 8, C('#7ac040'));
-        righe(P, [
-          [10, 12],
-          [14, 11]
-        ]);
-        macchie(P, [[11, 15, 2.2]]);
-        return;
-      }
-      const st = f ? 1.5 : -1.5;
-      P.capsule(3, 10, 6, 14, 1.2, c, { r2: 1.4 });
-      for (const q of [0, 1]) P.capsule(9 + q * 9, 16, 9 + q * 9 + (q ? st : -st), 21, 1.2, c);
-      P.ellipse(14, 14, 9, 4.5, c, { spec: 0.3 });
-      P.ellipse(15, 16.5, 5, 1.6, m, { edge: false });
-      P.ellipse(24, 10, 4, 3.6, c);
-      P.ellipse(22, 6.5, 1.2, 1.8, c);
-      P.ellipse(26, 6.5, 1.2, 1.8, c);
-      P.set(26, 10, C('#7ac040'));
-      P.set(27, 11, C('#e89090'));
-      righe(P, [
-        [10, 10],
-        [14, 10],
-        [18, 10]
-      ]);
-      macchie(P, [
-        [11, 13, 2.6],
-        [18, 14, 2]
-      ]);
-    });
+  if (!COMP_IMG[k]) {
+    const M = COMPAGNI_MANO[kind],
+      D = M[skin] || M[0];
+    COMP_IMG[k] = [0, 1, 2, 3].map(f => daGriglia(D, 'f' + f));
+  }
   return COMP_IMG[k];
 }
 Ext.on('arte', () => {
@@ -309,26 +205,67 @@ function compCuccia(m) {
         if (!m.solid(x, y) && !m.objAt(x, y)) return [x * 16 + 8, y * 16 + 12];
   return [m.w * 8, m.h * 8];
 }
+// quando resta, la sua giornata: in casa la notte (cuccia), all'alba e a mezzogiorno (ciotola e pisolino);
+// il resto del giorno fuori, attorno a casa
+const compInCasa = () => {
+  const t = G.st.time;
+  return compNotte() || t < 7 * 60 || (t >= 12 * 60 && t < 13 * 60 + 30);
+};
 // la mappa dove deve stare adesso (null: non è qui, è a casa mentre sei in visita)
 function compMappa(p) {
   if (p.modo === 'segui') return G.map.id;
   if (G.visit) return null;
-  return compNotte() ? 'house' : 'main';
+  return compInCasa() ? 'house' : 'main';
 }
+// la porta di casa: fuori (dove si entra) e dentro (dove si esce)
+function compPorta(mapId) {
+  if (mapId === 'house') {
+    const d = (G.maps.house.doors || []).find(d => d.to === 'main');
+    return d ? [d.tx * 16 + 8, d.ty * 16 + 8] : [6 * 16 + 8, 8 * 16];
+  }
+  const d = (G.maps.house.doors || []).find(d => d.to === 'main');
+  return d ? [d.x * 16 + 8, d.y * 16 + 6] : [10 * 16 + 8, 10 * 16 + 6];
+}
+// la ciotola in casa (o la cuccia, se non c'è)
+function compCiotola(m) {
+  const o = m.objs.find(o => o.kind === 'furn' && o.fid === 'ciotola');
+  return o ? [o.tx * 16 + 8, o.ty * 16 + 14] : compCuccia(m);
+}
+// fuori, la sua zona: attorno a casa, mai lontano
+const COMP_CASA = [11, 12],
+  COMP_RAGGIO = 9;
+function compPuntoLibero(m) {
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * Math.PI * 2,
+      r = 2 + Math.random() * (COMP_RAGGIO - 2),
+      x = Math.round(COMP_CASA[0] + Math.cos(a) * r),
+      y = Math.round(COMP_CASA[1] + Math.sin(a) * r * 0.7);
+    if (x > 0 && y > 0 && x < m.w && y < m.h && !m.solid(x, y) && !m.objAt(x, y))
+      return [x * 16 + 8, y * 16 + 12];
+  }
+  const [x, y] = COMP_GIRO[Math.floor(Math.random() * COMP_GIRO.length)];
+  return [x * 16 + 8, y * 16 + 12];
+}
+const compNellaZona = (x, y) =>
+  Math.hypot(x / 16 - COMP_CASA[0], (y / 16 - COMP_CASA[1]) / 0.7) <= COMP_RAGGIO + 1.5;
 function compPiazza(c, p) {
   const m = G.maps[c.map];
   if (p.modo === 'segui') {
     const [dx, dy] = DIRV[G.player.dir];
     c.x = G.player.x - dx * 14;
     c.y = G.player.y - dy * 10 + 2;
-  } else if (c.map === 'house') [c.x, c.y] = compCuccia(m);
-  else {
-    const [x, y] = COMP_GIRO[0];
-    c.x = x * 16 + 8;
-    c.y = y * 16 + 12;
-  }
+  } else if (G.map && G.map.id === c.map) {
+    // arriva dove sei tu: entra dalla porta
+    [c.x, c.y] = compPorta(c.map);
+  } else if (c.map === 'house') [c.x, c.y] = compCompito() || compCuccia(m);
+  else [c.x, c.y] = compPuntoLibero(m);
   c.st = 'idle';
+  c.att = null;
   c.t = 1;
+}
+// dove sta in casa quando non lo vedi: la notte nella cuccia, di giorno accanto alla ciotola
+function compCompito() {
+  return compNotte() ? null : compCiotola(G.maps.house);
 }
 function compTick(dt) {
   const p = compPet();
@@ -351,6 +288,14 @@ function compTick(dt) {
     return;
   }
   if (c.map !== dove) {
+    // se lo stai guardando, prima va alla porta a piedi; poi passa dall'altra parte
+    if (p.modo !== 'segui' && c.map && c.map === G.map.id && (dove === 'house' || dove === 'main')) {
+      const [px, py] = compPorta(c.map);
+      if (Math.hypot(px - c.x, py - c.y) > 4) {
+        compVai(c, px, py, 50, dt);
+        return;
+      }
+    }
     c.map = dove;
     compPiazza(c, p);
   }
@@ -358,6 +303,7 @@ function compTick(dt) {
   const pl = G.player,
     dP = Math.hypot(pl.x - c.x, pl.y - c.y);
   c.t -= dt;
+  c.posa = null;
   c.cuore -= dt;
   c.chiama -= dt;
   let tx = null,
@@ -399,33 +345,9 @@ function compTick(dt) {
       UI.toast(`${p.name} ti si accoccola vicino. Ti senti meglio (+20 energia).`);
       UI.hud();
     }
-  } else if (c.map === 'house') {
-    // la notte dorme nella cuccia
-    const [x, y] = compCuccia(G.map);
-    if (Math.hypot(x - c.x, y - c.y) > 3) {
-      tx = x;
-      ty = y;
-      vel = 30;
-    } else c.st = 'sleep';
   } else {
-    // resta: gira davanti a casa; se arrivi ti viene incontro
-    if (dP < 56) {
-      if (dP > 18) {
-        tx = pl.x;
-        ty = pl.y;
-        vel = 60;
-      }
-      if (c.cuore <= 0) {
-        c.cuore = 14 + Math.random() * 10;
-        floatText('♥', c.x, c.y - 18, '#ff8a8a', 0.8);
-      }
-    } else if (c.st === 'move' && c.dest) [tx, ty] = c.dest;
-    else if (c.t <= 0) {
-      const [x, y] = COMP_GIRO[Math.floor(Math.random() * COMP_GIRO.length)];
-      c.dest = [x * 16 + 8, y * 16 + 12];
-      c.t = 4 + Math.random() * 6;
-      [tx, ty] = c.dest;
-    }
+    const v = compVita(c, p, dP, dt);
+    if (v) [tx, ty, vel] = v;
   }
   // ha fame: ti chiama quando sei vicino
   if (p.fame >= COMP_FAME && dP < 90 && c.chiama <= 0) {
@@ -433,21 +355,127 @@ function compTick(dt) {
     AU.play(COMP_KIND[p.kind].verso);
     UI.toast(`${p.name} ha fame e ti chiama.`);
   }
-  if (tx != null) {
-    const dx = tx - c.x,
-      dy = ty - c.y,
-      d = Math.hypot(dx, dy);
-    if (d > 2) {
-      c.x += (dx / d) * Math.min(d, vel * dt);
-      c.y += (dy / d) * Math.min(d, vel * dt);
-      if (Math.abs(dx) > 1) c.dir = dx < 0 ? -1 : 1;
-      c.f += dt * 6;
-      c.st = 'move';
-      return;
-    }
-    c.dest = null;
+  if (tx != null && compVai(c, tx, ty, vel, dt)) return;
+  if (c.st !== 'sleep' || p.modo === 'segui') c.st = c.posa || 'sit';
+}
+// un passo verso (tx, ty): vero se si è mosso
+function compVai(c, tx, ty, vel, dt) {
+  const dx = tx - c.x,
+    dy = ty - c.y,
+    d = Math.hypot(dx, dy);
+  if (d <= 2) return false;
+  c.x += (dx / d) * Math.min(d, vel * dt);
+  c.y += (dy / d) * Math.min(d, vel * dt);
+  if (Math.abs(dx) > 1) c.dir = dx < 0 ? -1 : 1;
+  c.f += dt * (vel > 70 ? 10 : 6);
+  c.st = 'move';
+  return true;
+}
+// ---------- quando resta: la sua vita ----------
+// Ogni attività dura un po' e poi ne sceglie un'altra. Se passi ti corre incontro, ti fa le coccole e torna alle
+// sue cose: non ti segue mai fuori dalla sua zona attorno a casa. Restituisce [x, y, velocità] dove andare, o null.
+function compVita(c, p, dP, dt) {
+  const pl = G.player,
+    m = G.map,
+    K = COMP_KIND[p.kind];
+  c.saluto = (c.saluto || 0) - dt;
+  c.posa = null;
+  // il saluto: ti vede (se dorme, solo se gli arrivi vicino), corre da te e si fa coccolare
+  const vede = c.st === 'sleep' ? dP < 22 : dP < 70;
+  if (c.att !== 'saluta' && c.saluto <= 0 && vede && compNellaZona(pl.x, pl.y)) {
+    c.att = 'saluta';
+    c.t = 6;
+    c.coccole = 0;
+    AU.play(K.verso);
   }
-  if (c.st !== 'sleep' || c.map !== 'house' || p.modo === 'segui') c.st = 'sit';
+  if (c.att === 'saluta') {
+    if (c.t <= 0 || dP > 110 || !compNellaZona(pl.x, pl.y)) {
+      c.att = null;
+      c.saluto = 60;
+    } else if (dP > 16) return [pl.x, pl.y + 2, 84];
+    else {
+      c.dir = pl.x < c.x ? -1 : 1;
+      c.coccole -= dt;
+      if (c.coccole <= 0) {
+        c.coccole = 1.1;
+        floatText('♥', c.x + (Math.random() - 0.5) * 8, c.y - 16, '#ff8a8a', 0.8);
+      }
+      return null;
+    }
+  }
+  // in casa: all'alba e a mezzogiorno mangia e beve alla ciotola, poi un pisolino; la notte la cuccia
+  if (m.id === 'house') {
+    const [bx, by] = compNotte() ? compCuccia(m) : c.att === 'pisolino' ? compCuccia(m) : compCiotola(m);
+    if (Math.hypot(bx - c.x, by - c.y) > 3) return [bx, by, 34];
+    if (compNotte() || c.att === 'pisolino') c.st = 'sleep';
+    else {
+      // mangia (muove la testa), e dopo un po' va a sonnecchiare
+      if (!c.att) ((c.att = 'mangia'), (c.t = 8));
+      c.posa = Math.floor(G.t * 3) % 2 ? 'sit' : 'move';
+      if (c.t <= 0) ((c.att = 'pisolino'), (c.t = 999));
+    }
+    return null;
+  }
+  // fuori: un'attività alla volta
+  if (c.t <= 0 || !c.att) {
+    // un'attività diversa dalle ultime due (le giornate sono varie); il sole solo nel primo pomeriggio
+    const ora = G.st.time,
+      sole = ora >= 14 * 60 && ora < 17 * 60,
+      ultime = (c.ultime = c.ultime || []),
+      pesi = { giro: 3, caccia: 3, gioca: 2, annusa: 1.5, sole: sole ? 3 : 0 },
+      scelte = Object.keys(pesi).filter(a => pesi[a] && !ultime.includes(a)),
+      tot = scelte.reduce((t, a) => t + pesi[a], 0);
+    let r = Math.random() * tot;
+    c.att = scelte.find(a => (r -= pesi[a]) < 0) || scelte[0];
+    ultime.push(c.att);
+    if (ultime.length > 2) ultime.shift();
+    c.t = { sole: 14, giro: 7, caccia: 6, gioca: 4, annusa: 4 }[c.att] + Math.random() * 4;
+    c.dest = compPuntoLibero(m);
+    c.fase = 0;
+    c.t2 = 1.2 + Math.random();
+  }
+  const [dx, dy] = c.dest;
+  switch (c.att) {
+    case 'giro':
+      return [dx, dy, 34];
+    case 'annusa':
+      // a testa bassa, a piccoli passi
+      if (Math.hypot(dx - c.x, dy - c.y) > 3) return [dx, dy, 18];
+      c.posa = Math.floor(G.t * 2) % 2 ? 'sit' : 'move';
+      return null;
+    case 'sole':
+      // si sdraia al sole
+      if (Math.hypot(dx - c.x, dy - c.y) > 3) return [dx, dy, 30];
+      c.st = 'sleep';
+      return null;
+    case 'caccia':
+      // si acquatta, poi scatta e salta sulla preda
+      if (c.fase === 0) {
+        c.posa = 'sleep';
+        c.t2 -= dt;
+        if (c.t2 <= 0) ((c.fase = 1), (c.t2 = 0));
+        c.dir = dx < c.x ? -1 : 1;
+        return null;
+      }
+      if (Math.hypot(dx - c.x, dy - c.y) > 3) return [dx, dy, 120];
+      if (c.fase === 1) {
+        c.fase = 2;
+        if (Math.random() < 0.35) floatText('!', c.x, c.y - 18, '#f4d040', 0.8);
+      }
+      return null;
+    case 'gioca': {
+      // le corse matte: corre nel suo punto, poi un cerchio stretto velocissimo (spostato verso casa: resta nella zona)
+      if (c.fase === 0) {
+        if (Math.hypot(dx - c.x, dy - c.y) > 3) return [dx, dy, 60];
+        c.fase = 1;
+      }
+      const a = G.t * 7,
+        cx = dx + (COMP_CASA[0] * 16 + 8 - dx) * 0.2,
+        cy = dy + (COMP_CASA[1] * 16 + 12 - dy) * 0.2;
+      return [cx + Math.cos(a) * 14, cy + Math.sin(a) * 7, 110];
+    }
+  }
+  return null;
 }
 // rami, sassi, erbacce ed erbe spontanee vicino a te: il compagno li va a prendere
 function compCercaPreda() {
@@ -695,7 +723,7 @@ function compMenu() {
     `<button class="btn mclose" data-close>✕</button><h2>${esc(p.name)}</h2>` +
       `<div class="mrow"><canvas data-c="1" width="36" height="30" style="width:calc(36*var(--u));height:calc(30*var(--u))"></canvas><span><b>${K.n}</b> · ${esc(K.skin[p.skin].n)} <span class="hearts">${'♥'.repeat(compCuori(p))}${'♡'.repeat(5 - compCuori(p))}</span><br><span class="small">${fame} Nella ciotola: ${p.ciotola || 0} · ${p.coccole ? 'Coccolato oggi.' : 'Oggi non l’hai ancora coccolato.'}${p.portati ? ` · Ti ha portato ${p.portati} cose.` : ''}</span></span></div>` +
       `<div class="tabs"><button class="btn${p.modo === 'segui' ? ' on' : ''}" data-m="segui">Segui</button><button class="btn${p.modo === 'resta' ? ' on' : ''}" data-m="resta">Resta</button></div>` +
-      `<p class="small">${p.modo === 'segui' ? 'Ti segue ovunque e ti porta quello che trova per terra. Se sei sfinito, una volta al giorno ti tira su.' : 'Resta a casa: di giorno gira qui davanti, la notte dorme nella cuccia. Quando passi ti fa le feste.'}</p>` +
+      `<p class="small">${p.modo === 'segui' ? 'Ti segue ovunque e ti porta quello che trova per terra. Se sei sfinito, una volta al giorno ti tira su.' : 'Fa la sua vita: di giorno gira attorno a casa, caccia, gioca e si sdraia al sole; all’alba e a mezzogiorno mangia e beve in casa, la notte dorme nella cuccia. Quando passi ti corre incontro e ti fa le feste, poi torna alle sue cose.'}</p>` +
       `<p><button class="btn" data-a="coccole" ${p.coccole ? 'disabled' : ''}>Coccole</button> <button class="btn" data-a="pappa" ${cr ? '' : 'disabled'}>Dai crocchette (${cr})</button> <button class="btn" data-a="gioco" ${gioco && !p.gioco ? '' : 'disabled'}>Gioca${gioco ? ' con ' + esc(ITEMS[gioco].n.toLowerCase()) : ''}</button></p>` +
       `<h3>La bottega</h3>` +
       COMP_SHOP.filter(

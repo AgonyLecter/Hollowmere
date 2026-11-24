@@ -35,7 +35,8 @@ const Atmo = (() => {
     else c = mix(rampa(MUSCHIO, L), rampa(OLIVA, L), secco * 2);
     return c;
   }
-  function ridipingi(m, c) {
+  // c è la tela che si sta dipingendo: tutta la mappa, o un pezzo che comincia alla piastrella (Z.x0, Z.y0)
+  function ridipingi(m, c, Z = { x0: 0, y0: 0 }) {
     const W2 = c.width,
       H2_ = c.height,
       S = c.s || 1,
@@ -56,8 +57,8 @@ const Atmo = (() => {
       }
     const T = 16 * S;
     for (let py = 0; py < H2_; py++) {
-      const ty = Math.floor(py / T),
-        v = (py - ty * T) / T;
+      const ty = Math.floor(py / T) + Z.y0,
+        v = (py - (ty - Z.y0) * T) / T;
       for (let px = 0; px < W2; px++) {
         const i = (py * W2 + px) * 4,
           r = d[i],
@@ -66,8 +67,8 @@ const Atmo = (() => {
         if (d[i + 3] === 0) continue;
         const verde = g - (r > b ? r : b);
         if (verde <= 2) continue;
-        const tx = Math.floor(px / T),
-          u = (px - tx * T) / T,
+        const tx = Math.floor(px / T) + Z.x0,
+          u = (px - (tx - Z.x0) * T) / T,
           k0 = ty * (m.w + 1) + tx,
           n =
             (N[k0] * (1 - u) + N[k0 + 1] * u) * (1 - v) +
@@ -123,8 +124,9 @@ const Atmo = (() => {
           R(shade(c, 0.3), X + 0.5, Y, 0.5, 0.5);
         }
       };
-    // sotto gli alberi: un tappeto ovale, più fitto vicino al tronco
-    let s = 1;
+    // sotto gli alberi: un tappeto ovale, più fitto vicino al tronco. Ogni foglia ha il seme del suo posto
+    // (l'albero o la piastrella, e il suo numero lì): cambiare una piastrella non sposta le foglie delle altre.
+    const seme = (tx, ty, i) => (tx * 7919 + ty * 104729 + i * 31) % 1000003;
     for (const o of m.objs) {
       if (o.kind !== 'tree' || !o.img) continue;
       const cx = o.dx + iw(o.img) / 2,
@@ -133,7 +135,7 @@ const Atmo = (() => {
       for (let i = 0; i < nf; i++) {
         const a = pr(o.tx, o.ty, i * 3 + 7) * Math.PI * 2,
           r = Math.pow(pr(o.tx, o.ty, i * 3 + 8), 0.7) * 26;
-        foglia(cx + Math.cos(a) * r * 1.2, cy + Math.sin(a) * r * 0.62 + 3, s++);
+        foglia(cx + Math.cos(a) * r * 1.2, cy + Math.sin(a) * r * 0.62 + 3, seme(o.tx, o.ty, i + 1));
       }
     }
     // sparse per il prato, a mucchi seguendo il rumore
@@ -146,7 +148,7 @@ const Atmo = (() => {
           contro = m.sol && m.sol[ty * m.w + tx] ? 0.25 : 0,
           nf = Math.floor(clamp((n - 0.5) * 16 + contro * 14, 0, 6));
         for (let i = 0; i < nf; i++)
-          foglia(tx * 16 + pr(tx, ty, i) * 16, ty * 16 + pr(tx, ty, i + 40) * 16, s++);
+          foglia(tx * 16 + pr(tx, ty, i) * 16, ty * 16 + pr(tx, ty, i + 40) * 16, seme(tx, ty, i + 500));
       }
     for (const [col, p] of B) {
       x.fillStyle = col;
@@ -192,10 +194,10 @@ const Atmo = (() => {
       };
     }
   });
-  Ext.on('terreno', (m, x) => {
+  Ext.on('terreno', (m, x, Z) => {
     try {
       if (!autunno(m)) return;
-      ridipingi(m, m.ground);
+      ridipingi(m, x.canvas, Z);
       foglie(m, x);
     } catch (e) {
       console.warn('atmosfera/terreno', e);

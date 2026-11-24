@@ -1,17 +1,4 @@
 'use strict';
-// Uno sprite disegnato a mano (tools/pixel/*.pxs → js/*_mano.js): {tavolozza, sprite} → canvas, un pixel per lettera.
-function daGriglia(D, nome) {
-  const g = D.sprite[nome],
-    [c, x] = mk(g[0].length, g.length);
-  g.forEach((riga, Y) =>
-    [...riga].forEach((ch, X) => {
-      if (ch === '.') return;
-      x.fillStyle = D.tavolozza[ch];
-      x.fillRect(X, Y, 1, 1);
-    })
-  );
-  return c;
-}
 // ================= GRAFICA: ritocco del comparto visivo =================
 // Solo aspetto: personaggi ridisegnati in pixel art "a mano", edifici ridipinti, luce.
 // Non cambia logica, dimensioni delle immagini, collisioni o salvataggi: sostituisce
@@ -4753,28 +4740,67 @@ const SPAVENTO = daGriglia(SPAVENTO_MANO, 'spavento');
     return r;
   });
 }
-// Alla fine del caricamento (dopo contenuti.js, che rifà anatra, capra e pecora) gli sprite disegnati a mano
-// prendono il posto di quelli generati. Animali (tools/pixel/animali.pxs → js/animali_mano.js), di profilo verso
-// destra: la gallina ha 3 fotogrammi (il terzo becca), gli altri 2 di passo. Natura (natura.pxs → natura_mano.js):
-// 5 alberi per stagione, 3 pini, 2 cespugli, alla stessa misura di prima.
+// Alla fine del caricamento gli sprite disegnati a mano prendono il posto di quelli generati. Natura
+// (natura.pxs → natura_mano.js): 5 alberi per stagione, 3 pini, 2 cespugli, alla stessa misura di prima.
+// (Gli animali: bestiario.js.)
 Ext.on('arte', () => {
   const serie = (D, base, prop) =>
     Object.keys(D.sprite)
       .filter(n => n.replace(/\d+$/, '') === base)
       .map(n => Object.assign(daGriglia(D, n), prop));
-  CRIT.chicken = serie(ANIMALI_MANO, 'gallina');
-  Object.assign(AIMG, {
-    anatra: serie(ANIMALI_MANO, 'anatra'),
-    mucca: serie(ANIMALI_MANO, 'mucca'),
-    capra: serie(ANIMALI_MANO, 'capra'),
-    pecora: serie(ANIMALI_MANO, 'pecora'),
-    pecoraTosata: serie(ANIMALI_MANO, 'tosata')
-  });
   for (const st of [0, 1, 2, 3]) FREEIMG.trees[st] = serie(NATURA_MANO, `albero${st}_`, { canopyH: 44 });
   IMG.tree = FREEIMG.trees[0];
   IMG.pine = serie(NATURA_MANO, 'pino', { canopyH: 40 });
   IMG.bush = daGriglia(NATURA_MANO, 'cespuglio');
   IMG.bushR = daGriglia(NATURA_MANO, 'cespuglioR');
+  // le piccole cose (minori.pxs → minori_mano.js): prendono il posto delle vecchie e ne tengono l'altezza della chioma
+  const alPosto = (vecchia, nome) =>
+    Object.assign(
+      daGriglia(MINORI_MANO, nome),
+      vecchia && vecchia.canopyH ? { canopyH: vecchia.canopyH } : {}
+    );
+  Object.assign(IMG, {
+    stump: alPosto(IMG.stump, 'ceppo'),
+    stumpB: alPosto(IMG.stumpB, 'ceppoB'),
+    stumpH: alPosto(IMG.stumpH, 'ceppoH'),
+    log: alPosto(IMG.log, 'tronco'),
+    sunflower: alPosto(IMG.sunflower, 'girasole'),
+    lily: alPosto(IMG.lily, 'ninfea'),
+    hydr: alPosto(IMG.hydr, 'ortensia'),
+    leaves: alPosto(IMG.leaves, 'foglie')
+  });
+  for (const [k, nome, n] of [
+    ['tuft', 'erba', 3],
+    ['mush', 'fungo', 2],
+    ['rock', 'sasso', 3],
+    ['reed', 'canna', 2]
+  ])
+    IMG[k] = Array.from({ length: n }, (_, i) => alPosto(IMG[k] && IMG[k][i], nome + i));
+});
+// le costruzioni della Valle disegnate a mano (costruzioni.pxs → costruzioni_mano.js): pollaio, stalla e ovile
+// sono pronti alla fine del caricamento, serra, mulino, silos e pozzo si disegnano la prima volta che servono
+Ext.on('arte', () => {
+  for (const k of ['pollaio', 'stalla', 'ovile']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
+  // le decorazioni di pietra della Valle: l'angelo che piange e la fontana col doccione
+  FREEIMG.statua = daGriglia(COSTRUZIONI_MANO, 'statua');
+  FREEIMG.fontana = [0, 1].map(f => daGriglia(COSTRUZIONI_MANO, 'fontana' + f));
+});
+Ext.avvolgi('genCostrArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  for (const k of ['serra', 'mulino', 'silos', 'pozzogrande']) AIMG[k] = daGriglia(COSTRUZIONI_MANO, k);
+  return r;
+});
+// il museo gotico, con la torre dell'orologio: si disegna la prima volta che serve (genSempreArt)
+Ext.avvolgi('genSempreArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  IMG.museo = daGriglia(COSTRUZIONI_MANO, 'museo');
+  return r;
+});
+// le canne alte della riva si disegnano quando si apre la Valle (genEspArt): lì prendono il loro posto
+Ext.avvolgi('genEspArt', function (prossimo, ...a) {
+  const r = prossimo(...a);
+  IMG.canne = daGriglia(MINORI_MANO, 'canne');
+  return r;
 });
 const HORSEMAN_PUNTI = { occhio: [39.5, 14.5], collo: [21.5, 5.5], narici: [43, 15.5], ancora: [22, 38] };
 {

@@ -417,6 +417,22 @@ const NOVITA = [
         t: 'E quando la notte senti un galoppo... adesso lo vedi bene, il Cavaliere. Il mantello rosso, la spada che gocciola. Non guardarlo troppo a lungo.'
       }
     ]
+  },
+  {
+    id: 'ricordi',
+    v: 44,
+    n: 'I ricordi del nonno',
+    steps: [
+      {
+        t: 'Le cose che la storia ti ha lasciato in tasca (il nastro rosso, le chiavi, la lanterna, il mantello) hanno un posto: la cassa del nonno, in casa. Riponile: ognuna ha una pagina che racconta cosa vuol dire, dopo il finale che hai vissuto.'
+      },
+      {
+        t: 'Il tuo compagno, quando gli dici «Resta», adesso fa la sua vita: gira attorno a casa, caccia, gioca, si sdraia al sole, mangia in casa a mezzogiorno e la notte dorme nella cuccia. Quando passi ti corre incontro a farti le feste.'
+      },
+      {
+        t: 'E la pala non ferma più il gioco quando fai un vialetto.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

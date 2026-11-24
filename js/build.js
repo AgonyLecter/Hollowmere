@@ -78,10 +78,17 @@ Object.assign(ITEMS, {
     d: "Fa i vialetti nell'erba e rimette a prato la terra zappata. Solo sulle tue terre."
   }
 });
+// cambia una piastrella e ridipinge solo il terreno lì attorno (rifare tutta la mappa bloccava il gioco)
 function setGround(m, x, y, v) {
   m.set(x, y, v);
-  buildGround(m);
-  seasonGround(m);
+  if (!m.ground) {
+    buildGround(m);
+    seasonGround(m);
+    return;
+  }
+  const pezzo = buildGround(m, { x0: x - 1, y0: y - 1, x1: x + 2, y1: y + 2 });
+  seasonGround(m, pezzo);
+  incollaTerreno(m, pezzo);
 }
 function shovelAct(fx, fy) {
   const st = G.st,

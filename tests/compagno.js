@@ -57,6 +57,49 @@ module.exports = async function (t, { browser }) {
   });
   t.eq('resta: la notte dorme in casa', r.notte, 'house,sleep');
   t.eq('resta: di giorno è fuori', r.giorno, 'main');
+  // resta: si fa la sua vita (non ti segue), ti saluta quando passi e torna alle sue cose
+  const v = await page.evaluate(() => {
+    const st = G.st,
+      c = G.comp;
+    st.time = 10 * 60;
+    G.map = G.maps.main;
+    // da solo, per un minuto e mezzo di gioco: più attività diverse, sempre nella sua zona
+    setPos(G.player, 50, 34, 0);
+    const att = new Set();
+    let fuoriZona = 0;
+    for (let i = 0; i < 1800; i++) {
+      compTick(0.05);
+      if (c.att) att.add(c.att);
+      if (!compNellaZona(c.x, c.y)) fuoriZona++;
+    }
+    // passi vicino: ti viene incontro e ti fa le feste
+    c.saluto = 0;
+    setPos(G.player, 11, 13, 0);
+    c.x = G.player.x + 30;
+    c.y = G.player.y;
+    c.st = 'sit';
+    let saluta = false;
+    for (let i = 0; i < 60; i++) {
+      compTick(0.05);
+      if (c.att === 'saluta') saluta = true;
+    }
+    const vicino = Math.hypot(c.x - G.player.x, c.y - G.player.y) < 24;
+    // poi te ne vai lontano, a passi: non ti segue fuori dalla sua zona
+    for (let k = 0; k < 40; k++) {
+      setPos(G.player, 11 + k, 13 + (k >> 1), 0);
+      for (let i = 0; i < 8; i++) compTick(0.05);
+    }
+    const lontano = Math.hypot(c.x - G.player.x, c.y - G.player.y) > 200 && compNellaZona(c.x, c.y);
+    // a mezzogiorno rientra in casa a mangiare (passando dalla porta)
+    st.time = 12 * 60 + 10;
+    for (let i = 0; i < 400 && c.map !== 'house'; i++) compTick(0.05);
+    return { att: att.size, fuoriZona, saluta, vicino, lontano, pranzo: c.map };
+  });
+  t.true('resta: da solo fa cose diverse (gira, caccia, gioca, annusa)', v.att >= 3);
+  t.eq('resta: non esce dalla sua zona attorno a casa', v.fuoriZona, 0);
+  t.true('resta: quando passi ti viene incontro e ti fa le feste', v.saluta && v.vicino);
+  t.true('resta: se te ne vai non ti segue', v.lontano);
+  t.eq('resta: a mezzogiorno rientra in casa a mangiare', v.pranzo, 'house');
   // ciotola e fame
   const f = await page.evaluate(() => {
     const st = G.st,

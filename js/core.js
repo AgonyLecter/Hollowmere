@@ -55,11 +55,13 @@ function hsh(x, y) {
   h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
   return h;
 }
-function mk(w, h) {
+// una tela w×h senza sfumature; opz va a getContext ({ willReadFrequently: true } per le tele che si rileggono
+// pixel per pixel: restano nella memoria del processore e si disegnano sempre allo stesso modo)
+function mk(w, h, opz) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  const x = c.getContext('2d');
+  const x = c.getContext('2d', opz);
   x.imageSmoothingEnabled = false;
   return [c, x];
 }
