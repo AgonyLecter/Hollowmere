@@ -555,6 +555,22 @@ const NOVITA = [
         t: 'Accanto ai materiali che mancano (miglioramenti, serra, feste) il gioco ti dice <b>dove trovarli</b>. Se preferisci scoprirlo da te, lo spegni in Menu → Opzioni.'
       }
     ]
+  },
+  {
+    id: 'arredi',
+    v: 53,
+    n: 'I mobili della casa',
+    steps: [
+      {
+        t: 'Ventuno <b>mobili nuovi</b>, disegnati a mano: il letto grande con la trapunta a quadri, l’armadio intagliato, il comò, lo scrittoio, il divano, la tavola apparecchiata, il baule, il tappeto intrecciato… I più grandi occupano due o tre caselle.'
+      },
+      {
+        t: 'Alcuni sono <b>vivi</b>: l’orologio a pendolo segna l’ora e batte i rintocchi, la sedia a dondolo dondola, l’arcolaio gira, la stufa e il candelabro hanno il fuoco vero, il lucherino saltella nella gabbia, il pesce rosso nuota, il carillon suona. Toccali.'
+      },
+      {
+        t: 'Quelli di legno si fanno al <b>banco</b>; stoffa, vetro e ottone li vende <b>Agatha</b> (Arredi). E quando Brom amplia la casa, le stanze nuove hanno finestre e applique accese, il piano di sotto il pavimento di pietra, il salone un secondo camino.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

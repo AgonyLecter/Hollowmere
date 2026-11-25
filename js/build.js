@@ -391,10 +391,26 @@ function genBuildArt(...a) {
 }
 
 // arredo in casa
+// i mobili grandi occupano più caselle: fp = [larghezza, profondità]; la casella dove li posi è quella in basso a
+// sinistra, e il mobile cresce verso destra e verso la parete
+const furnFp = id => (ITEMS[id] && ITEMS[id].fp) || [1, 1];
+function furnTiles(id, x, y) {
+  const [w, h] = furnFp(id),
+    T = [];
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) T.push([x + i, y - j]);
+  return T;
+}
+// c'è posto per questo mobile qui? (i quadri e le mensole: sulla parete in alto)
+function furnSpazio(m, id, x, y) {
+  const wall = ITEMS[id] && ITEMS[id].wall;
+  return furnTiles(id, x, y).every(([a, b]) =>
+    wall ? m.get(a, b) === 9 && !m.objAt(a, b) : furnFree(m, a, b)
+  );
+}
 function furnFree(m, x, y) {
   const g = m.get(x, y);
   return (
-    g === 6 &&
+    (g === 6 || g === 7) &&
     !m.objAt(x, y) &&
     !(m.doors || []).some(d => Math.abs(d.tx - x) <= 0 && Math.abs(d.ty - y) <= 1)
   );
@@ -436,7 +452,7 @@ function houseAct(fx, fy) {
   }
   if (id && ITEMS[id].t === 'arredo') {
     const wall = ITEMS[id].wall;
-    if (wall ? !(m.get(fx, fy) === 9 && !m.objAt(fx, fy)) : !furnFree(m, fx, fy)) {
+    if (!furnSpazio(m, id, fx, fy)) {
       UI.toast(
         wall ? 'I quadri vanno appesi alla parete in alto.' : 'Non qui: serve un posto libero sul pavimento.'
       );
@@ -460,18 +476,23 @@ function addFurniture(m, st) {
   for (const k in st.free.inside || {}) {
     const [x, y] = k.split(',').map(Number),
       f = st.free.inside[k],
-      flat = ITEMS[f.id] && ITEMS[f.id].flat;
+      it = ITEMS[f.id],
+      flat = it && it.flat,
+      img = FREEIMG[f.id],
+      fp = furnFp(f.id),
+      T = furnTiles(f.id, x, y);
+    if (!it || !img) continue;
     if (flat) {
       m.add({
         kind: 'furn',
         tx: x,
         ty: y,
-        img: FREEIMG[f.id],
-        dx: x * 16 - 4,
-        dy: y * 16 + 2,
+        img,
+        dx: it.fp ? x * 16 + (fp[0] * 16 - iw(img)) / 2 : x * 16 - 4,
+        dy: it.fp ? (y + 1) * 16 - ih(img) : y * 16 + 2,
         sy: -1,
         solid: [],
-        hits: [[x, y]],
+        hits: T,
         fid: f.id,
         fk: k,
         deco: 0
@@ -479,18 +500,25 @@ function addFurniture(m, st) {
       continue;
     }
     m.add(
-      OB('furn', x, y, FREEIMG[f.id], {
+      OB('furn', x, y, img, {
         fid: f.id,
         fk: k,
         act: 'furn',
-        lift: ITEMS[f.id].wall ? -6 : 0,
-        solid: ITEMS[f.id].wall ? [] : [[x, y]],
-        hits: [[x, y]]
+        wt: fp[0],
+        lift: it.wall ? -6 : 0,
+        solid: it.wall ? [] : T,
+        hits: T
       })
     );
     if (f.id === 'lampada' || f.id === 'lanternacarta' || f.id === 'lampadario')
       m.lights.push({ x: x * 16 + 8, y: y * 16 - 10, r: 60, fire: 1 });
+    // i mobili con una fiamma (candelabro, stufa, comodino…): luce = [dx, dy, raggio] dal loro angolo in alto
+    if (it.luce) {
+      const o = m.objs[m.objs.length - 1];
+      m.lights.push({ x: o.dx + it.luce[0], y: o.dy + it.luce[1], r: it.luce[2], fire: 1 });
+    }
   }
+  Ext.run('arredaCasa', m, st); // i dettagli fissi delle stanze nuove (arredi.js)
 }
 ACT.furn = () => {};
 PROMPT.furn = 'Usa';

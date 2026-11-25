@@ -34,7 +34,8 @@ const SUITES = {
   emporio: require('./emporio'),
   fucina: require('./fucina'),
   regole: require('./regole'),
-  selvatici: require('./selvatici')
+  selvatici: require('./selvatici'),
+  arredi: require('./arredi')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
