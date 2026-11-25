@@ -587,6 +587,22 @@ const NOVITA = [
         t: 'E gli <b>attrezzi</b> sono ridisegnati: l’accetta con la lama a barba, il piccone a mezzaluna, la zappa, la pala a cuore, la falce, l’annaffiatoio di rame e la canna col mulinello.'
       }
     ]
+  },
+  {
+    id: 'pile',
+    v: 55,
+    n: 'Zaino, casse e macchine',
+    steps: [
+      {
+        t: 'Le schermate della <b>cassa</b> e delle <b>macchine</b> (fornace, barattolo, botte…) ora stanno tutte in una schermata anche sui telefoni: la cassa (o la macchina) a sinistra, lo zaino a destra.'
+      },
+      {
+        t: 'Le pile si dividono come in Minecraft: <b>tieni premuto</b> (o tasto destro) per prenderne metà o posarne una; con una pila scelta, <b>trascina il dito su più caselle</b> e si divide in parti uguali (tieni premuto prima di trascinare: una per casella). In alto ci sono −, +, ½, 1 e Tutta; sul computer va anche la rotella.'
+      },
+      {
+        t: 'Nelle macchine: un tocco mette un lotto, doppio tocco tutta la pila, <b>tocco lungo metà pila</b>.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

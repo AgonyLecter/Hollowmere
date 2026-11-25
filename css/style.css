@@ -484,3 +484,21 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 #candele i.on::after{opacity:1;transform:scale(1);animation:lFiamma .45s steps(3) infinite}
 #candele i.on:nth-child(2n)::after{animation-duration:.6s}
 @media (prefers-reduced-motion:reduce){#loading .lanterna-filo,#loading .lfiamma,#candele i.on::after{animation:none}}
+/* macchine e cassa affiancate allo zaino: la finestra si allarga e tutto sta in una schermata, senza scorrere */
+#mbox:has(.mac-corpo),#mbox:has(.icorpo){width:min(calc(472*var(--u)),98vw);max-width:98vw}
+.mac-corpo{display:flex;gap:calc(6*var(--u));align-items:flex-start}
+.mac-col{flex:0 0 auto;width:calc(150*var(--u));display:flex;flex-direction:column;align-items:center}
+.mac-col .mac{margin-top:0;padding:calc(6*var(--u)) calc(7*var(--u));gap:calc(5*var(--u))}
+.mac-col .mac-info{font-size:calc(6.5*var(--u));min-height:0}
+.mac-zaino{flex:1;min-width:0}
+.mac-zaino h3{margin-top:0}
+#mbox .mac-zaino .igrid,#mbox .icorpo .igrid{max-width:none}
+.icorpo{display:flex;gap:calc(6*var(--u));align-items:flex-start}
+.icol-c{flex:0 0 calc(130*var(--u))}
+.icol-z{flex:1;min-width:0}
+#mbox .icorpo .igrid[data-g=c]{grid-template-columns:repeat(5,minmax(0,1fr))}
+/* la quantità scelta: −, +, ½, 1, tutta */
+.iqta{display:inline-flex;gap:calc(1*var(--u));margin-left:calc(3*var(--u));vertical-align:middle}
+.iqta button{font-size:calc(6*var(--u));padding:0 calc(3*var(--u));min-width:calc(11*var(--u));line-height:calc(9*var(--u))}
+.islot.pinta{box-shadow:0 0 0 calc(1.5*var(--u)) #8ad0ff}
+

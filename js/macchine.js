@@ -519,14 +519,16 @@ function macGui(k, b) {
         ? ` <span class="small">· livello ${b.lv || 1}/3</span> <button class="btn mac-liv" data-liv>Migliora…</button>`
         : ''
     }</h2>
+    <div class="mac-corpo"><div class="mac-col">
     <div class="mac tema-${b.id}"><i class="mac-orn"></i>
       <div class="mac-sx">${slot('in')}${M.fuel ? `<div class="mac-fuoco"><div class="mac-fiamma"><b></b></div></div>${slot('f')}` : ''}</div>
       <div class="mac-freccia"><div class="mac-barra"><b></b></div><span class="mac-t"></span></div>
       ${slot('o', 'mac-out')}
     </div>
-    <div class="iinfo mac-info"></div>
-    <h3>Zaino <span class="small">— tocca: un lotto · doppio tocco: tutta la pila</span></h3>` +
-      zGriglia('z', Z.length),
+    <div class="iinfo mac-info"></div></div>
+    <div class="mac-zaino"><h3>Zaino <span class="small">— tocca: un lotto · doppio tocco: tutta la pila · tieni premuto: metà</span></h3>` +
+      zGriglia('z', Z.length) +
+      '</div></div>',
     () => {
       clearInterval(MACG.timer);
       MACG.k = MACG.b = null;
@@ -546,14 +548,36 @@ function macGui(k, b) {
       const dentro = M.ok(s.id) || (M.fuel && s.id === M.fuel);
       if (!dentro) el.classList.add('mno');
     }
-    // un tocco: un lotto (quello che serve per un pezzo); doppio tocco: il resto della pila
+    // un tocco: un lotto (quello che serve per un pezzo); doppio tocco: il resto della pila;
+    // tieni premuto (o tasto destro): metà pila, come in Minecraft
     el.onclick = () => {
+      if (MACG.lungo) {
+        MACG.lungo = false;
+        return;
+      }
       const i = +el.dataset.i,
         ora = performance.now(),
         doppio = MACG.tocco && MACG.tocco.i === i && ora - MACG.tocco.t < 330;
       MACG.tocco = doppio ? null : { i, t: ora };
       macMetti(i, doppio);
     };
+    el.oncontextmenu = e => {
+      e.preventDefault();
+      MACG.tocco = null;
+      macMetti(+el.dataset.i, 'meta');
+    };
+    el.onpointerdown = e => {
+      if (e.button === 2) return;
+      clearTimeout(MACG.premi);
+      MACG.lungo = false;
+      MACG.premi = setTimeout(() => {
+        MACG.lungo = true;
+        MACG.tocco = null;
+        if (navigator.vibrate) navigator.vibrate(15);
+        macMetti(+el.dataset.i, 'meta');
+      }, 420);
+    };
+    el.onpointerup = el.onpointerleave = el.onpointercancel = () => clearTimeout(MACG.premi);
   });
   box.querySelectorAll('.mslot').forEach(el => (el.onclick = () => macTogli(el.dataset.m)));
   const liv = box.querySelector('[data-liv]');
@@ -648,7 +672,11 @@ function macMetti(i, tutto) {
   }
   const ora = dove === 'f' ? m.f || 0 : m.in || 0,
     lotto = dove === 'f' ? 1 : macNeed(M, s.id),
-    n = Math.min(s.n, MAC_MAX - ora, tutto ? s.n : lotto);
+    n = Math.min(
+      s.n,
+      MAC_MAX - ora,
+      tutto === 'meta' ? Math.max(lotto, Math.ceil(s.n / 2)) : tutto ? s.n : lotto
+    );
   if (n <= 0) {
     UI.toast('È piena.');
     return;
