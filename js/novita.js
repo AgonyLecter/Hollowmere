@@ -465,6 +465,22 @@ const NOVITA = [
         t: 'Di notte le <b>Ombre</b> escono anche quando sei da un amico: lì seguono solo te, ti rubano un po’ di energia se ti toccano, e un colpo d’attrezzo le disperde. In miniera, invece, la pietra che nasconde la scala non si tradisce più: cercala tu.'
       }
     ]
+  },
+  {
+    id: 'orto_vivo',
+    v: 47,
+    n: "L'orto si muove",
+    steps: [
+      {
+        t: "Le piante dell'orto adesso sono vive: il vento le muove (di più quando piove), si piegano quando ci passi in mezzo e tornano su. Quando una pianta cresce, la prima volta che la vedi fa un piccolo scatto: la mattina, girando per i campi, vedi cos'è cresciuto."
+      },
+      {
+        t: "L'annaffiatoio versa davvero: un filo d'acqua dal beccuccio, la pianta che sussulta, la terra che si scurisce piano. E quello che raccogli vola fino alla sua casella della barra, che si accende d'oro quando arriva."
+      },
+      {
+        t: 'I campi sono più puliti: sulle piante mature, da lontano, c’è solo una stellina d’oro; da vicino il sigillo col raccolto. L’orologino del tempo compare sulle zolle davanti a te, o su tutte quando hai in mano l’annaffiatoio o i semi.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -1331,6 +1331,7 @@ Ext.avvolgi('doAction', function (prossimo, ...a) {
       f.w = true;
       AU.play('water');
       burst('water', fx * 16 + 8, fy * 16 + 4, 10);
+      piantaSussulta(fk, 'acqua');
       G.visit.watered++;
       MP.act(G.visit.pid, { t: 'water', k: fk, day: G.st.day, from: G.home.name });
       if (f.c) Ext.run('fatto', 'annaffia', 1);
@@ -1348,7 +1349,7 @@ Ext.on('sopraTerreno', m => {
       f = V[k],
       vicina = (dx, dy) => (V[x + dx + ',' + (y + dy)] ? 1 : 0),
       bordi = vicina(0, -1) | (vicina(1, 0) << 1) | (vicina(0, 1) << 2) | (vicina(-1, 0) << 3);
-    ctx.drawImage(T.zolla[f.w ? 1 : 0][hsh(x, y) % 3][bordi], x * 16, y * 16, 16, 16);
+    disegnaZolla(m.ox + x + ',' + y, f, x, y, bordi);
   }
   // le pareti di vetro: telaio di ferro nero, lastre verdastre con il riflesso della luna
   for (let x = 0; x < SERRA_W; x++) {
@@ -1421,7 +1422,7 @@ Ext.on('listaMondo', (list, m) => {
     if (!f.c) continue;
     const [x, y] = k.split(',').map(Number),
       img = cropImg(f);
-    list.push({ img, dx: x * 16, dy: y * 16 + 15 - ih(img), sy: y * 16 + 6, crop: f });
+    list.push({ img, x, y, k: m.ox + x + ',' + y, f, m, sy: y * 16 + 6, crop: f, draw: disegnaPianta });
   }
 });
 Ext.on('drawWorldExtras', m => {

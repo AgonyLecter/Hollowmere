@@ -242,13 +242,15 @@ function harvest(tx, ty, f) {
   if (cr.re) {
     c.a = cr.days - cr.re;
     c.dry = 0;
+    piantaSussulta(chiaveZolla(tx, ty), 'raccolto');
   } else {
     f.c = null;
     f.f = 0;
   }
   AU.play('pick');
   burst('spark', tx * 16 + 8, ty * 16 + 6, rich ? 16 : 8, '#ffe27a');
-  (G.pops || (G.pops = [])).push({ img: ICON[t], x: tx * 16 + 8, y: ty * 16 + 2, t0: G.t });
+  (G.pops || (G.pops = [])).push({ img: ICON[t], id: t, n, x: tx * 16 + 8, y: ty * 16 + 2, t0: G.t });
+  UI.hotbar(); // la casella aspetta che il raccolto arrivi in volo
   floatText('+' + (n === 1 ? '1 ' + CROPS[t].n : n + ' ' + PL[t]), tx * 16 + 8, ty * 16 - 6);
   if (rich) setTimeout(() => floatText('Raccolto abbondante!', tx * 16 + 8, ty * 16 - 14, '#b8f08a'), 250);
   st.flags.harvested = (st.flags.harvested || 0) + 1;
@@ -264,6 +266,8 @@ function harvest(tx, ty, f) {
 // notte, si salvano e viaggiano nel cooperativo come gli altri campi. Pioggia, cambio di stagione e Ombre le saltano.
 const SERRA_OX = 1000;
 const chiaveSerra = k => parseInt(k, 10) >= SERRA_OX;
+// la chiave vera di una casella della mappa in cui sei (nella serra le zolle stanno oltre SERRA_OX)
+const chiaveZolla = (tx, ty) => (G.map && G.map.id === 'serra' ? G.map.ox + tx : tx) + ',' + ty;
 function inFarm(x, y) {
   return x >= FARM.x0 && x <= FARM.x1 && y >= FARM.y0 && y <= FARM.y1;
 }
@@ -369,6 +373,7 @@ function farmAct(tx, ty) {
     allImpatto(() => {
       AU.play('water');
       GESTO.acqua(tx * 16 + 8, ty * 16 + 10);
+      piantaSussulta(chiaveZolla(tx, ty), 'acqua');
     });
     if (f.c) {
       Ext.run('fatto', 'annaffia', 1);
@@ -397,6 +402,7 @@ function farmAct(tx, ty) {
       return;
     }
     f.c = { t: def.crop, a: 0, dry: 0 };
+    piantaSussulta(chiaveZolla(tx, ty), 'semina');
     removeItem(id, 1);
     AU.play('plant');
     st.flags.planted++;

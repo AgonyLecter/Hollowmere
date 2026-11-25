@@ -478,6 +478,7 @@ function visitActBase(fx, fy) {
     f.w = true;
     AU.play('water');
     burst('water', fx * 16 + 8, fy * 16 + 4, 10);
+    piantaSussulta(fkey(fx, fy), 'acqua');
     G.visit.watered++;
     MP.act(G.visit.pid, { t: 'water', k: fkey(fx, fy), day: st.day, from: G.home.name });
     if (f.c) Ext.run('fatto', 'annaffia', 1);
@@ -550,6 +551,7 @@ function inboxApplyBase(a) {
     const f = st.farm[a.k];
     if (f && a.day === st.day && f.c) {
       f.w = true;
+      piantaSussulta(a.k, 'acqua');
       const k = a.from || 'Qualcuno';
       G.inboxN[k] = (G.inboxN[k] || 0) + 1;
       clearTimeout(G.inboxT);
