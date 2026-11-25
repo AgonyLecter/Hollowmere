@@ -149,13 +149,21 @@ Object.assign(SG, {
   more: 'un cestino di more',
   camomilla: 'un mazzo di camomilla'
 });
+// Ogni mattina nascono erbe e frutti della stagione, fino a WILD_MAX sparsi per la Valle. Quelli di un'altra
+// stagione appassiscono: prima restavano a terra per sempre, riempivano i posti e d'inverno non nasceva quasi niente.
+const WILD_MAX = 12;
 function wildMorning(st) {
   if (!isFree(st)) return;
   const W2 = st.free,
     list = WILD[seasonOf(st)] || [];
   if (!list.length) return;
+  for (const k in W2.debris) {
+    const t = W2.debris[k];
+    if (t.startsWith('w_') && !list.includes(t.slice(2))) delete W2.debris[k];
+  }
   let n = Object.values(W2.debris).filter(t => t.startsWith('w_')).length;
-  for (let i = 0; i < 14 && n < 9; i++) {
+  // tanti tentativi: in una Valle piena di campi e sentieri molti posti sono già presi
+  for (let i = 0; i < 40 && n < WILD_MAX; i++) {
     const edge = Math.random() < 0.5,
       x = edge
         ? Math.random() < 0.5
@@ -169,6 +177,27 @@ function wildMorning(st) {
     n++;
   }
 }
+
+// le scuse della Valle: per un inverno le erbe spontanee non nascevano quasi più. A chi entra dopo l'aggiornamento,
+// una volta sola, 20 agrifogli e 20 radici d'inverno (nello zaino, o nella cassetta se è pieno)
+Ext.on('partitaCaricata', st => {
+  if (!isFree(st) || G.visit || st.flags.scuseSelvatici) return;
+  st.flags.scuseSelvatici = 1;
+  riponi('agrifoglio', 20);
+  riponi('radice', 20);
+  AU.play('ok');
+  UI.toast(
+    'Le scuse della Valle: per un po’ le erbe d’inverno non spuntavano quasi più. Per te 20 agrifogli e 20 radici d’inverno.'
+  );
+  NET.save(st);
+});
+// le erbe spontanee sono piccole: una stellina che luccica a turno sopra ognuna, così si vedono anche sulla neve
+Ext.on('drawWorldExtras', m => {
+  if (m.id !== 'main' || !isFree(G.st)) return;
+  for (const o of m.objs)
+    if (o.kind === 'debris' && o.dt && o.dt.startsWith('w_'))
+      drawStellina(o.dx + ((o.img && o.img.width) || 12) / 2, o.dy - 1, o.tx * 7 + o.ty * 3);
+});
 
 // ---------- grafica ----------
 function genGardenArtBase() {

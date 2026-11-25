@@ -13,7 +13,7 @@ for (const [id, r] of Object.entries(RARE))
     n: r.n,
     t: 'res',
     v: r.v,
-    d: 'Materiale raro. Non tutti i villaggi lo hanno: si scambia al mercato del ponte.'
+    d: 'Materiale raro. Nelle rocce di ogni villaggio ce ne sono solo due su quattro; gli altri si trovano in miniera, si scambiano al mercato del ponte o si comprano da Brom, nella fucina.'
   };
 Object.assign(PL, {
   rame: 'pezzi di rame',
@@ -26,6 +26,56 @@ Object.assign(SG, {
   nichel: 'un pezzo di nichel',
   oro: "una pepita d'oro",
   diamante: 'un diamante'
+});
+// dove si trovano i materiali che chiedono i miglioramenti: lo si dice accanto a quelli che mancano
+const DOVE_MAT = {
+  ferro: 'rocce della miniera; cassa dei minerali di Brom',
+  lingotto: 'fornace (5 ferro e 1 legna); cassa dei minerali di Brom',
+  quarzo: 'miniera, dal piano 10',
+  rame: 'miniera dal piano 10; cassa di Brom; mercato del ponte',
+  nichel: 'miniera dal piano 10; cassa di Brom; mercato del ponte',
+  oro: 'miniera dal piano 10 (di più dal 20); cassa di Brom; mercato del ponte',
+  ametista: 'miniera, dal piano 20',
+  diamante: 'miniera dal piano 20; Nove, al cimitero di notte; mercato del ponte'
+};
+Object.assign(DOVE_MAT, {
+  legna: 'alberi e rami a terra',
+  pietra: 'sassi e rocce',
+  fibra: 'erbacce ed erba alta',
+  uovo: 'dalle galline; a volte nella dispensa in piazza',
+  latte: 'dalle mucche',
+  lana: 'dalle pecore',
+  miele: 'dalle arnie'
+});
+const DOVE_STAG = ['autunno', 'inverno', 'primavera', 'estate'];
+// dove si trova una cosa, in parole: minerali e materiali, erbe spontanee (in che stagione), colture
+function doveTesto(id) {
+  if (DOVE_MAT[id]) return DOVE_MAT[id];
+  const sel = [0, 1, 2, 3].filter(s => (WILD[s] || []).includes(id));
+  if (sel.length)
+    return `spontanea in ${sel.map(s => DOVE_STAG[s]).join(' e ')}: nei prati e ai margini del bosco, sotto la stellina che luccica`;
+  if (CROPS[id]) {
+    const cs = CROPS[id].s;
+    return `si coltiva${cs ? ' in ' + cs.map(s => DOVE_STAG[s]).join(' e ') : ''}: i semi da Agatha`;
+  }
+  return '';
+}
+// accanto a un materiale che manca (in HTML): dove trovarlo, se l'aiuto è acceso
+function doveMat(id, n) {
+  const t = AIUTO_DOVE.on && countItem(id) < n ? doveTesto(id) : '';
+  return t ? ` <span class="small" style="opacity:.75">— ${t}</span>` : '';
+}
+// la stessa cosa in testo semplice (per gli avvisi e gli obiettivi)
+function doveBreve(id) {
+  return AIUTO_DOVE.on ? doveTesto(id) : '';
+}
+// le feste: cosa manca ancora e dove trovarlo (se l'aiuto è acceso)
+Ext.on('festDove', (f, s) => {
+  if (!AIUTO_DOVE.on) return;
+  const L = Object.entries(f.need)
+    .filter(([k, n]) => (s.c[k] || 0) + countItem(k) < n && doveTesto(k))
+    .map(([k]) => `${ITEMS[k].n}: ${doveTesto(k)}`);
+  if (L.length) UI.toast('Dove cercare. ' + L.join(' · '));
 });
 function veinOf(pid) {
   let h = 0;
@@ -59,7 +109,7 @@ function rareDrop(o) {
     st.flags.rareTip = 1;
     tip(
       'tutRare',
-      `Hai trovato ${RARE[pick].n.toLowerCase()}! Le rocce del tuo villaggio danno ${V.map(k => RARE[k].n.toLowerCase()).join(' e ')}. Gli altri materiali si comprano dagli altri giocatori, al ponte.`
+      `Hai trovato ${RARE[pick].n.toLowerCase()}! Le rocce del tuo villaggio danno ${V.map(k => RARE[k].n.toLowerCase()).join(' e ')}. Gli altri li trovi in miniera, al mercato del ponte o da Brom, nella fucina.`
     );
   }
 }

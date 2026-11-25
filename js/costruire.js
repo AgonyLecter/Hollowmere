@@ -626,7 +626,7 @@ function funcMenu(k) {
       `<h3>Migliorare</h3>` +
       (up
         ? `<p class="small">Livello ${lv + 1}: ${F.lv[lv]}. Servono ${CZ(up.money)}, ${Object.entries(up.c)
-            .map(([i, n]) => `${n} ${ITEMS[i].n.toLowerCase()} (${countItem(i)})`)
+            .map(([i, n]) => `${n} ${ITEMS[i].n.toLowerCase()} (${countItem(i)})${doveMat(i, n)}`)
             .join(
               ', '
             )}.</p><p><button class="btn" data-up="1" ${canUp ? '' : 'disabled'}>Migliora</button></p>`

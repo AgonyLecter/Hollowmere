@@ -539,6 +539,22 @@ const NOVITA = [
         t: 'Nella Valle, la mattina, Brom lavora dentro: all’incudine migliori gli attrezzi, al tavolo da disegno ampli la casa. Il pomeriggio torna all’incudine fuori, e le scintille si vedono dalla strada.'
       }
     ]
+  },
+  {
+    id: 'materiali',
+    v: 52,
+    n: 'Erbe e materiali che si trovano',
+    steps: [
+      {
+        t: 'Le <b>erbe spontanee</b> (agrifoglio, radice d’inverno, vischio…) adesso hanno una <b>stellina</b> che luccica, anche sulla neve. Quelle di un’altra stagione appassiscono e lasciano il posto alle nuove: ne nascono molte di più. Per scusarci, a tutti 20 agrifogli e 20 radici d’inverno.'
+      },
+      {
+        t: 'Nella fucina c’è la <b>cassa dei minerali</b> di Brom: ferro, lingotti, rame, nichel e oro, poche scorte al giorno. E l’oro in miniera compare già dal piano 10.'
+      },
+      {
+        t: 'Accanto ai materiali che mancano (miglioramenti, serra, feste) il gioco ti dice <b>dove trovarli</b>. Se preferisci scoprirlo da te, lo spegni in Menu → Opzioni.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -143,6 +143,8 @@ QUESTS.unshift({
   },
   d: () => false
 });
+// cosa manca ancora per la festa e dove trovarlo: lo dice trade.js (Ext 'festDove'), che sa dove sta ogni cosa
+const festDove = (f, s) => Ext.run('festDove', f, s);
 // parlare durante i preparativi e durante la festa
 async function festTalk(n) {
   const st = G.st;
@@ -163,6 +165,7 @@ async function festTalk(n) {
         .map(([k, v]) => v + ' ' + ITEMS[k].n.toLowerCase())
         .join(', ')}.`
     );
+    festDove(f, s);
     UI.quest();
     return true;
   }
@@ -173,6 +176,7 @@ async function festTalk(n) {
   const have = Object.entries(f.need).filter(([k, v]) => (s.c[k] || 0) < v && countItem(k) > 0);
   if (!have.length) {
     await say(n.id, 'Hai trovato quello che serve? Senza fretta. Ma nemmeno troppo piano.');
+    festDove(f, s);
     return true;
   }
   const c = await ask(n.id, 'Hai portato qualcosa per la festa?', ['Consegna quello che ho', 'Dopo']);
@@ -187,7 +191,10 @@ async function festTalk(n) {
   if (festReady(st)) {
     addFriend(n.id, 2);
     await say(n.id, "C'è tutto! Sarà la festa più bella che la Valle abbia mai visto. Te lo prometto.");
-  } else await say(n.id, 'Grazie! Manca ancora qualcosa, ma siamo a buon punto.');
+  } else {
+    await say(n.id, 'Grazie! Manca ancora qualcosa, ma siamo a buon punto.');
+    festDove(f, s);
+  }
   UI.quest();
   return true;
 }

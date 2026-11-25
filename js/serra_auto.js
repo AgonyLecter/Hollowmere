@@ -494,7 +494,7 @@ Ext.on('freeMorning', st => {
 // ---------- al banco del giardiniere: comprarle ----------
 const serraCosto = A =>
   `${CZ(A.money)}, ${Object.entries(A.c)
-    .map(([i, n]) => `${n} ${ITEMS[i].n.toLowerCase()} (${countItem(i)})`)
+    .map(([i, n]) => `${n} ${ITEMS[i].n.toLowerCase()} (${countItem(i)})${doveMat(i, n)}`)
     .join(', ')}`;
 const serraPuo = A => G.st.money >= A.money && Object.entries(A.c).every(([i, n]) => countItem(i) >= n);
 Ext.on('serraMenu', (k, b) => {
