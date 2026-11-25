@@ -74,6 +74,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   verso la cassa collegata); disegni in `tools/pixel/ingegnere_abbozzo.py` → `js/ingegnere_mano.js`.
 - **L'Emporio**: `emporio.js` (l'interno dell'emporio di Agatha: mappa 'store', merce sugli scaffali da toccare, Agatha dietro
   il bancone nella Valle tranne il sabato; disegni in `tools/pixel/emporio_abbozzo.py` → `js/emporio_mano.js`).
+- **La fucina**: `fucina.js` (l'interno della fucina di Brom: mappa 'forge', incudine → forgeMenu, tavolo da disegno →
+  houseUpMenu; nella Valle Brom lavora dentro la mattina; disegni in `tools/pixel/fucina_abbozzo.py` → `js/fucina_mano.js`).
 - **Porte**: `porte.js` — bussare a chi è in casa (esce e parla, o risponde da dietro la porta; di notte, nella storia,
   vale la Regola III), il biglietto sulla porta se non c'è, e `Porte.dove(id)` per il taccuino. Battute in `BUSSA_TESTI`.
 - **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,

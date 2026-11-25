@@ -526,6 +526,19 @@ const NOVITA = [
         t: 'La merce si tocca: vedi il prezzo e la compri. Nella Valle Agatha sta dietro il bancone; il sabato torna col banco del mercato in piazza. E il caricamento, all’inizio, accende le sue candele mentre la Valle si sveglia.'
       }
     ]
+  },
+  {
+    id: 'fucina',
+    v: 51,
+    n: 'La fucina di Brom',
+    steps: [
+      {
+        t: 'Anche la <b>fucina di Brom</b> ha il suo interno: la forgia con le braci, il mantice (soffiaci dentro!), l’incudine, la vasca della tempra, la rastrelliera, la mola e il tavolo da disegno con le piante della casa.'
+      },
+      {
+        t: 'Nella Valle, la mattina, Brom lavora dentro: all’incudine migliori gli attrezzi, al tavolo da disegno ampli la casa. Il pomeriggio torna all’incudine fuori, e le scintille si vedono dalla strada.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
