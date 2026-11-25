@@ -12,6 +12,8 @@ npm run test:aggiorna       # rifà l'impronta, SOLO dopo una modifica voluta a 
 - **dati**: ogni riferimento esiste (semi → colture, ricette → ingredienti, animali → case, abitanti → orari...).
 - **impronta**: un codice per ognuna delle immagini generate e delle tabelle di dati, con il caso reso prevedibile.
   Se cambia senza che tu l'abbia voluto, qualcosa si è rotto. Utile per pulire o spostare codice.
+- **regole**: ogni tipo di messaggio tra villaggi che il gioco manda o riceve è ammesso da `firebase/regole.json`
+  (se manca, Firebase lo rifiuta in silenzio e l'amico non vede niente).
 - **fumo**: si gioca davvero, a grandi passi (prologo, paese, meteo, notte e Cavaliere, salvataggio e
   «Continua», la Valle con animali, colture, menu, un mese di mattine e quattro stagioni): nessun errore ammesso.
 

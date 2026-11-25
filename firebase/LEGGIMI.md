@@ -17,6 +17,12 @@ Se le regole sono già pubblicate, ripubblica il blocco `"hollowmere"`: contiene
 l'elenco completo dei tipi di messaggio usati dal gioco (lavorare insieme nel villaggio di un amico, doni, scudi, lettere).
 Con l'elenco vecchio quelle azioni venivano rifiutate.
 
+## Aggiornamento: casse in cooperativo e missione comune
+
+Ripubblica il blocco `"hollowmere"`: in `"visite"` l'elenco dei tipi ora comprende anche `cop` (mettere e prendere
+dalle casse e dalle macchine di un amico) e `ins`, `insc`, `insp` (la missione comune). Con l'elenco vecchio
+quei messaggi venivano rifiutati: l'amico non vedeva le cose messe nelle sue casse.
+
 ## Cosa fare nella console Firebase (una volta sola)
 
 1. **Authentication → Metodo di accesso**: attiva **Anonimo** e **Google**.

@@ -340,7 +340,7 @@ function netDiag() {
         (N.netErr ? ' (' + esc(N.netErr) + ')' : '') +
         '. Il gioco riprova da solo; «Salva adesso» riprova subito. Su Brave: disattiva gli Scudi per questo sito. Nei browser dentro le app (Instagram, WhatsApp, Telegram) apri il gioco in Chrome.'
     );
-  return [
+  const L = [
     N.uid ? ok('Identità anonima') : ko('Identità anonima: ' + esc(N.authErr || 'non ancora pronta')),
     N.saveOk
       ? ok(
@@ -354,7 +354,9 @@ function netDiag() {
         : '… nessun salvataggio online ancora in questa sessione',
     // gli ultimi errori (da copiare quando si segnala un problema)
     ...ERRORI.slice(-5).map(x => ko(esc(x.dove + ': ' + x.msg)))
-  ].join('<br>');
+  ];
+  Ext.run('netDiag', L, ok, ko); // gli altri file aggiungono le loro righe (la presenza: mp.js)
+  return L.join('<br>');
 }
 // ---------- compressione dei salvataggi (LZ, alfabeto base64: sicuro per Firebase) ----------
 const LZ = (() => {

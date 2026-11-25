@@ -47,7 +47,14 @@ const MP = {
     try {
       await NET.api.push(NET.r('visite/' + owner), Object.assign({ ts: Date.now() }, a));
     } catch (e) {
-      rete(e, 'mp');
+      rete(e, 'mp · ' + a.t);
+      // rifiutato dalle regole: l'amico non lo riceverà mai. Lo si dice una volta, non si fa finta di niente
+      if (/PERMISSION|permission/.test(String((e && (e.code || e.message)) || '')) && !MP_AVVISI.visite) {
+        MP_AVVISI.visite = 1;
+        UI.toast(
+          'La Valle ha rifiutato un messaggio per il tuo amico: non lo vedrà. Menu → Salvataggio per i dettagli.'
+        );
+      }
     }
   },
   inbox(pid, cb) {
@@ -71,8 +78,8 @@ const MP = {
     const off = D.onValue(NET.r('presenza/' + village), s => cb(s.val() || {}));
     return {
       // send: tutto (nome, aspetto…) · move: solo la posizione (update, pochi byte: si usa mentre cammini)
-      send: v => D.set(mine, v).catch(() => {}),
-      move: v => D.update(mine, v).catch(() => {}),
+      send: v => D.set(mine, v).then(presenzaOk, presenzaRifiutata),
+      move: v => D.update(mine, v).then(presenzaOk, presenzaRifiutata),
       stop: () => {
         try {
           off && off();
@@ -104,6 +111,33 @@ const MP = {
 G.others = {};
 
 // ---------- presenza ----------
+// com'è andata l'ultima volta che hai detto alla Valle dove sei: se le regole la rifiutano gli altri non ti vedono,
+// e va detto (prima si ingoiava l'errore e nessuno capiva perché l'amico non c'era)
+const PRES_STATO = { ok: 0, err: null, ritenta: null },
+  MP_AVVISI = {};
+function presenzaOk() {
+  PRES_STATO.ok = Date.now();
+  PRES_STATO.err = null;
+}
+function presenzaRifiutata(e) {
+  const msg = String((e && (e.code || e.message)) || e || 'errore');
+  if (PRES_STATO.err !== msg) rete(e, 'presenza');
+  PRES_STATO.err = msg;
+  if (!MP_AVVISI.presenza) {
+    MP_AVVISI.presenza = 1;
+    UI.toast(
+      'Gli altri non ti vedono: la Valle ha rifiutato la tua presenza. Menu → Salvataggio per i dettagli.'
+    );
+  }
+}
+Ext.on('netDiag', (L, ok, ko) => {
+  if (!PRES) return L.push('… presenza online non attiva');
+  const quanti = Object.keys(G.others).length;
+  if (PRES_STATO.err) L.push(ko('Presenza rifiutata: ' + esc(PRES_STATO.err) + ' (gli altri non ti vedono)'));
+  else if (PRES_STATO.ok)
+    L.push(ok('Presenza online · ' + (quanti ? 'qui con te: ' + quanti : 'nessun altro qui adesso')));
+  else L.push('… presenza online in partenza');
+});
 let PRES = null,
   PRES_V = null,
   PRES_T = 0,
@@ -120,7 +154,16 @@ async function presenceJoin(village) {
     me = (G.visit ? G.home : st).pid;
   presenceLeave();
   if (!MP.ok() || !me) return;
-  if (NET.own) await NET.own(me);
+  const mio = NET.own ? await NET.own(me) : true;
+  // la proprietà non si è registrata (identità non pronta, rete lenta): le regole rifiuterebbero la presenza.
+  // Si riprova da soli fra un po', finché si è ancora nello stesso villaggio
+  clearTimeout(PRES_STATO.ritenta);
+  if (!mio) {
+    PRES_STATO.err = 'proprietà del codice non registrata (' + (NET.ownErr || '?') + ')';
+    PRES_STATO.ritenta = setTimeout(() => {
+      if (PRES_V === village && MP.ok()) presenceJoin(village);
+    }, 20000);
+  }
   PRES_V = village;
   PRES_FULL = 0;
   PRES_LAST = null;

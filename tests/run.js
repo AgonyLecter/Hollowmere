@@ -32,12 +32,13 @@ const SUITES = {
   serra: require('./serra'),
   ingegnere: require('./ingegnere'),
   emporio: require('./emporio'),
-  fucina: require('./fucina')
+  fucina: require('./fucina'),
+  regole: require('./regole')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
   // --veloce: solo i controlli rapidi (circa un minuto), da usare mentre si lavora
-  VELOCI = ['sintassi', 'dati', 'impronta', 'toppe', 'fumo', 'terreno'],
+  VELOCI = ['sintassi', 'dati', 'impronta', 'toppe', 'regole', 'fumo', 'terreno'],
   opz = (k, d) => {
     const a = args.find(a => a.startsWith('--' + k + '='));
     return a ? a.split('=')[1] : d;
