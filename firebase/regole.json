@@ -64,7 +64,7 @@
           ".read": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           "$id": {
             ".write": "auth != null && ((!data.exists() && newData.exists()) || (!newData.exists() && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid))",
-            ".validate": "!newData.exists() || newData.child('t').val().matches(/^(water|gift|sale|invite|lettera|dono|scudi|cpatch|osync|cplant|ctill|cbuild|cdel|cmove|ctile)$/)"
+            ".validate": "!newData.exists() || newData.child('t').val().matches(/^(water|gift|sale|invite|lettera|dono|scudi|cpatch|osync|cplant|ctill|cbuild|cdel|cmove|ctile|cop|ins|insc|insp)$/)"
           }
         }
       },
