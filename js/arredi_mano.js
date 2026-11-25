@@ -41,7 +41,8 @@ const ARREDI_MANO = {
   "j": "#5a6a74",
   "p": "#3a2440",
   "P": "#5a3a62",
-  "r": "#7a5a86"
+  "r": "#7a5a86",
+  "R": "#e8a8b8"
  },
  "sprite": {
   "letto": [
@@ -737,6 +738,67 @@ const ARREDI_MANO = {
    "..o8777o..",
    "...oooo...",
    "...ojjo..."
+  ],
+  "cuccia": [
+   "..........................",
+   "...........oooo...........",
+   "......oooooHBhhooooo......",
+   "....ooHHHHHHHHHHHHHHoo....",
+   "..ooBhWWB444q444qWWWBhoo..",
+   ".oBHWW44q333q333q444WWBho.",
+   ".oWWqqqqqqqqqqqqqqqqqqWWo.",
+   "ohBWq333q333q333q333q3BWho",
+   "oWH4q333q333q333q333q34HBo",
+   "owBWqqqqqqqqqqqqqqqqqqBWWo",
+   "owWWB223q333q333q333qWWWBo",
+   ".oBWWW22q223q333q222WWBWo.",
+   ".owHBWWWBWqqqqqqBHWWBWwwo.",
+   "..oowHBWWWBWHWBWWWBHwwoo..",
+   "....oowHBwwwBWHwBwwwoo....",
+   "......ooooowwwBooooo......"
+  ],
+  "pallina": [
+   "..ooooo..",
+   ".o34433o.",
+   "o3404433o",
+   "o4444443o",
+   "oqqq4443o",
+   "o344qqqqo",
+   "o3344333o",
+   ".o33333o.",
+   "..ooooo.."
+  ],
+  "osso": [
+   ".ooo......ooo.",
+   "oqqqo....oqqqo",
+   "oqqqooooooqqqo",
+   "oqQqqqqqqqqQqo",
+   "oQQQQQQQQQQQQo",
+   "oQQQooooooQQQo",
+   ".oQo......oQo.",
+   "..o........o.."
+  ],
+  "topolino": [
+   ".ooooo.......",
+   "oRRRRRo......",
+   "oRRRRRMoo.oo.",
+   "oMMmmmmMMoRRo",
+   "oRkmmmmmmoooR",
+   "oLLLmmmLLRo.o",
+   ".ooLLLLooo...",
+   "...oooo......"
+  ],
+  "gomitolo": [
+   "...oooo.......",
+   ".ooppppo......",
+   "oPPrrrrpo.....",
+   "oprPrrrppo....",
+   "oprrrPrrpo.o..",
+   "oprrrrPppooro.",
+   "oprrrrrPpoooro",
+   ".opprppproroor",
+   "..oppppooro..o",
+   "...oooo..o...."
   ]
  }
 };

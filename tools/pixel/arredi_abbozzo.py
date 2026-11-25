@@ -53,7 +53,8 @@ J #8aa0a8
 j #5a6a74
 p #3a2440
 P #5a3a62
-r #7a5a86"""
+r #7a5a86
+R #e8a8b8"""
 
 A = {}
 
@@ -402,6 +403,43 @@ for k in range(4):
 T.put(4, 15, '7'); T.put(5, 15, '6')
 rett(T, 3, 4, 7, 8, 'q'); rett(T, 2, 7, 8, 9, '8')  # la candela nel suo piattino
 A['applique'] = chiudi(T, scuri='786q')
+
+# ================================================================ la cesta del compagno 26x16 (a terra: ci dorme sopra)
+T = Tela(26, 16, 23)
+T.ell(13, 9, 12.4, 6.6, ('h', 'W', 'w'), trama=lambda x, y, ch: 'B' if (x + y * 2) % 4 == 0 else ('H' if (x * 3 + y) % 7 == 0 else None))
+T.ell(13, 8.4, 9.6, 4.4, ('4', '3', '2'), trama=lambda x, y, ch: 'q' if x % 4 == 0 or y % 3 == 0 else None)  # il cuscino a quadri
+for x in range(3, 24):
+    if T.get(x, 3) != '.':
+        T.put(x, 3, 'H')
+A['cuccia'] = T.contorno()
+
+# ================================================================ i giochi del compagno (piccoli, a terra)
+T = Tela(9, 9, 24)  # la pallina rossa con la riga bianca
+T.disco(4.5, 4.5, 3.8, '3'); T.disco(4, 4, 2.6, '4')
+for x in range(1, 8):
+    T.put(x, 5 + (x - 4) * .2, 'q')
+T.put(3, 2, '0')
+A['pallina'] = T.contorno()
+T = Tela(14, 8, 25)  # l'osso di gomma
+for x in range(3, 11):
+    T.put(x, 3, 'q'); T.put(x, 4, 'Q')
+for cx in (2, 11):
+    T.disco(cx + .5, 2.5, 1.7, 'q'); T.disco(cx + .5, 5, 1.7, 'Q')
+A['osso'] = T.contorno()
+T = Tela(13, 8, 26)  # il topolino di stoffa, con la coda
+T.ell(5, 4.5, 3.8, 2.6, ('M', 'm', 'L'))
+T.disco(2.5, 2, 1.2, 'R'); T.disco(5, 1.6, 1.2, 'R')  # le orecchie
+T.put(1, 4, 'R'); T.put(2, 4, 'k')
+for k in range(5):
+    T.put(9 + k, 5 - math.sin(k) * 1.2, 'R')
+A['topolino'] = T.contorno()
+T = Tela(14, 10, 27)  # il gomitolo, col filo che scappa
+T.disco(5, 5, 3.9, 'p'); T.disco(4.6, 4.6, 3, 'r')
+for k in range(6):
+    T.put(1.5 + k * 1.2, 2 + k * .9, 'P')
+for k in range(6):
+    T.put(8 + k, 7 + math.sin(k * 1.4) * 1.3, 'r')
+A['gomitolo'] = T.contorno()
 
 QUI = os.path.dirname(__file__)
 righe = ['# I mobili della casa. Generato da arredi_abbozzo.py.', '@tavolozza', PAL]

@@ -603,6 +603,19 @@ const NOVITA = [
         t: 'Nelle macchine: un tocco mette un lotto, doppio tocco tutta la pila, <b>tocco lungo metà pila</b>.'
       }
     ]
+  },
+  {
+    id: 'compagno_gioca',
+    v: 56,
+    n: 'Giocare col compagno',
+    steps: [
+      {
+        t: 'Adesso si <b>gioca davvero</b>: dal suo menu lanci il gioco (resta tuo). Il cane rincorre la pallina o l’osso e te li riporta ai piedi; il gatto si acquatta, salta sul topolino o sul gomitolo e lo prende a zampate.'
+      },
+      {
+        t: 'Se lasci un suo gioco in casa, dopo aver mangiato ci gioca da solo. La <b>cuccia</b> è una cesta col cuscino a quadri: ci dorme sopra raggomitolato, e lo vedi. E quando ti corre incontro per le coccole si ferma al tuo fianco, senza scatti.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -21,7 +21,12 @@ Object.assign(ITEMS, {
     t: 'arredo',
     d: 'Mettila in casa e riempila di crocchette: mangia da solo la mattina.'
   },
-  cuccia: { n: 'Cuccia', t: 'arredo', d: 'Un posto tutto suo dove dormire, in casa.' },
+  cuccia: {
+    n: 'Cuccia',
+    t: 'arredo',
+    d: 'Una cesta di vimini col cuscino a quadri: ci dorme raggomitolato, e lo vedi.',
+    flat: 1
+  },
   pallina: { n: 'Pallina', t: 'arredo', d: 'Rossa, rimbalza. I cani la adorano.' },
   osso: { n: 'Osso di gomma', t: 'arredo', d: 'Da mordere per ore.' },
   topolino: { n: 'Topolino di stoffa', t: 'arredo', d: 'Pieno di erba gatta.' },
@@ -198,7 +203,8 @@ const COMP_GIRO = [
 // la cuccia (o un angolo libero) in casa
 function compCuccia(m) {
   const o = m.objs.find(o => o.kind === 'furn' && o.fid === 'cuccia');
-  if (o) return [o.tx * 16 + 8, o.ty * 16 + 14];
+  // sopra il cuscino della cesta (che sta a terra, sotto di lui: lo vedi dormire)
+  if (o) return o.img ? [o.dx + iw(o.img) / 2, o.dy + ih(o.img) / 2 + 4] : [o.tx * 16 + 8, o.ty * 16 + 12];
   for (let r = 0; r < 6; r++)
     for (let y = (m.h >> 1) - r; y <= (m.h >> 1) + r; y++)
       for (let x = (m.w >> 1) - r; x <= (m.w >> 1) + r; x++)
@@ -319,6 +325,13 @@ function compTick(dt) {
   let tx = null,
     ty = null,
     vel = 46;
+  // si gioca: tutto il resto aspetta
+  if (c.gioco) {
+    const v = compGiocoTick(c, p, dt, dP);
+    if (v && compVai(c, v[0], v[1], v[2], dt)) return;
+    c.st = c.posa || 'sit';
+    return;
+  }
   if (p.modo === 'segui') {
     if (dP > 220) compPiazza(c, p);
     // ti porta quello che trova per terra
@@ -340,10 +353,15 @@ function compTick(dt) {
         }
       }
     }
-    if (tx == null && dP > 26) {
-      tx = pl.x;
-      ty = pl.y;
-      vel = dP > 60 ? 90 : 62;
+    // ti viene dietro senza scatti: parte quando sei un po' lontano, si ferma quando ti è accanto (non a ogni passo),
+    // e rallenta avvicinandosi
+    if (tx == null) {
+      if (dP > 36) c.insegue = true;
+      else if (dP < 20) c.insegue = false;
+      if (c.insegue) {
+        [tx, ty] = compAccanto(c, pl);
+        vel = Math.min(dP > 80 ? 105 : 82, 26 + dP * 1.3);
+      }
     }
     // sei sfinito: una volta al giorno ti si accoccola vicino e ti rimette in piedi
     const st = G.st;
@@ -367,6 +385,11 @@ function compTick(dt) {
   }
   if (tx != null && compVai(c, tx, ty, vel, dt)) return;
   if (c.st !== 'sleep' || p.modo === 'segui') c.st = c.posa || 'sit';
+}
+// il posto al tuo fianco, dalla parte dove già si trova (così non ti gira intorno e non ti sta addosso)
+function compAccanto(c, pl) {
+  const lato = c.x < pl.x ? -1 : 1;
+  return [pl.x + lato * 13, pl.y + 3];
 }
 // un passo verso (tx, ty): vero se si è mosso
 function compVai(c, tx, ty, vel, dt) {
@@ -396,18 +419,27 @@ function compVita(c, p, dP, dt) {
     c.att = 'saluta';
     c.t = 6;
     c.coccole = 0;
+    c.vicino = false;
     AU.play(K.verso);
   }
   if (c.att === 'saluta') {
     if (c.t <= 0 || dP > 110 || !compNellaZona(pl.x, pl.y)) {
       c.att = null;
       c.saluto = 60;
-    } else if (dP > 16) return [pl.x, pl.y + 2, 84];
-    else {
+    } else {
+      // ti corre incontro e si ferma al tuo fianco; se ti sposti un po' resta lì, se ti allontani ti viene dietro
+      if (dP < 20) c.vicino = true;
+      else if (dP > 32) c.vicino = false;
+      if (!c.vicino) {
+        const [ax, ay] = compAccanto(c, pl);
+        return [ax, ay, Math.min(88, 24 + dP * 1.4)];
+      }
       c.dir = pl.x < c.x ? -1 : 1;
+      c.posa = 'sit';
       c.coccole -= dt;
       if (c.coccole <= 0) {
         c.coccole = 1.1;
+        c.salto = G.t; // un saltello di gioia a ogni cuore
         floatText('♥', c.x + (Math.random() - 0.5) * 8, c.y - 16, '#ff8a8a', 0.8);
       }
       return null;
@@ -417,12 +449,29 @@ function compVita(c, p, dP, dt) {
   if (m.id === 'house') {
     const [bx, by] = compNotte() ? compCuccia(m) : c.att === 'pisolino' ? compCuccia(m) : compCiotola(m);
     if (Math.hypot(bx - c.x, by - c.y) > 3) return [bx, by, 34];
+    // un gioco lasciato in casa: ci va e lo prende a zampate (o lo morde), poi il pisolino
+    if (!compNotte() && c.att === 'giocattolo' && c.gObj && m.objs.includes(c.gObj)) {
+      const o = c.gObj,
+        gx = o.dx + iw(o.img) / 2 + (c.x < o.dx ? -7 : 7),
+        gy = o.dy + ih(o.img);
+      if (Math.hypot(gx - c.x, gy - c.y) > 3) return [gx, gy, 46];
+      c.dir = o.dx + iw(o.img) / 2 < c.x ? -1 : 1;
+      const fase = Math.floor(G.t * 2.2) % 3;
+      c.posa = fase === 0 ? 'sleep' : fase === 1 ? 'move' : 'sit';
+      if (fase === 1) o._gt = G.t + 0.25; // la zampata: il gioco sobbalza
+      if (c.t <= 0) ((c.att = 'pisolino'), (c.t = 999));
+      return null;
+    }
     if (compNotte() || c.att === 'pisolino') c.st = 'sleep';
     else {
-      // mangia (muove la testa), e dopo un po' va a sonnecchiare
+      // mangia (muove la testa), e dopo un po' gioca (se in casa c'è un suo gioco) o va a sonnecchiare
       if (!c.att) ((c.att = 'mangia'), (c.t = 8));
       c.posa = Math.floor(G.t * 3) % 2 ? 'sit' : 'move';
-      if (c.t <= 0) ((c.att = 'pisolino'), (c.t = 999));
+      if (c.t <= 0) {
+        const g = m.objs.find(o => o.kind === 'furn' && K.giochi.includes(o.fid) && o.img);
+        if (g && c.att === 'mangia') ((c.att = 'giocattolo'), (c.gObj = g), (c.t = 7 + Math.random() * 4));
+        else ((c.att = 'pisolino'), (c.t = 999));
+      }
     }
     return null;
   }
@@ -519,6 +568,179 @@ function compRaccogli(p, o) {
   if (!p.portati) UI.toast(`${p.name} ti ha portato ${ITEMS[got[0]].n.toLowerCase()}. Che bravo!`);
   p.portati = (p.portati || 0) + 1;
 }
+// ---------- giocare davvero ----------
+// Lanci il gioco (resta tuo: non si consuma). Il cane gli corre dietro, lo prende in bocca e te lo riporta ai piedi;
+// il gatto si acquatta, ci salta sopra e lo prende a zampate tre volte, poi si siede soddisfatto.
+function compLancia(id) {
+  const p = compPet(),
+    c = G.comp,
+    pl = G.player;
+  if (!p || !c || c.map !== G.map.id || Math.hypot(c.x - pl.x, c.y - pl.y) > 170) {
+    UI.toast(`${p ? p.name : 'Il compagno'} non è qui: giocate quando è vicino.`);
+    return false;
+  }
+  const m = G.map,
+    [dx, dy] = DIRV[pl.dir];
+  let dist = 64,
+    ax,
+    ay;
+  // atterra davanti a te, sul primo posto libero
+  for (; dist >= 16; dist -= 8) {
+    ax = pl.x + dx * dist;
+    ay = pl.y - 4 + dy * dist;
+    // libero, e non dietro un albero o un oggetto alto (che lo coprirebbe)
+    const tx = Math.floor(ax / 16),
+      ty = Math.floor(ay / 16);
+    let coperto = false;
+    for (let k = 0; k <= 3 && !coperto; k++)
+      for (let j = -1; j <= 1; j++) {
+        const o = m.objAt(tx + j, ty + k);
+        if (o && o.img && ih(o.img) > 20 + k * 16) coperto = true;
+      }
+    if (!m.solid(tx, ty) && !coperto) break;
+  }
+  c.gioco = {
+    id,
+    fase: 'volo',
+    x0: pl.x,
+    y0: pl.y - 10,
+    x: pl.x,
+    y: pl.y - 10,
+    ax,
+    ay,
+    t: 0,
+    dur: 0.45,
+    giri: 0,
+    max: 15
+  };
+  c.att = null;
+  AU.play('blip');
+  return true;
+}
+function compGiocoTick(c, p, dt, dP) {
+  const g = c.gioco,
+    pl = G.player,
+    cane = p.kind === 'cane';
+  g.t += dt;
+  g.max -= dt;
+  if (g.max <= 0) return compGiocoFine(c, p);
+  if (g.fase === 'volo') {
+    const k = Math.min(1, g.t / g.dur);
+    g.x = g.x0 + (g.ax - g.x0) * k;
+    g.y = g.y0 + (g.ay - g.y0) * k - Math.sin(k * Math.PI) * 14;
+    if (k >= 1) ((g.fase = 'terra'), (g.t = 0), AU.play('pick'));
+    c.dir = g.x < c.x ? -1 : 1;
+    return [g.ax, g.ay + 2, 118]; // parte già mentre vola
+  }
+  if (g.fase === 'terra') {
+    const d = Math.hypot(g.x - c.x, g.y + 2 - c.y);
+    if (d > 6) return [g.x + (c.x < g.x ? -4 : 4), g.y + 2, cane ? 125 : 110];
+    if (cane) {
+      g.fase = 'riporta';
+      AU.play(COMP_KIND[p.kind].verso);
+    } else ((g.fase = 'agguato'), (g.t = 0));
+    return null;
+  }
+  if (g.fase === 'riporta') {
+    // in bocca, fino ai tuoi piedi
+    g.x = c.x + c.dir * 7;
+    g.y = c.y - 6;
+    if (dP > 18) {
+      const [ax, ay] = compAccanto(c, pl);
+      return [ax, ay, Math.min(100, 30 + dP * 1.3)];
+    }
+    g.x = c.x + c.dir * 8;
+    g.y = c.y;
+    return compGiocoFine(c, p);
+  }
+  if (g.fase === 'agguato') {
+    // il gatto si acquatta, muove il sedere… e salta
+    c.posa = 'sleep';
+    c.dir = g.x < c.x ? -1 : 1;
+    if (g.t > 0.7) {
+      g.fase = 'salto';
+      g.t = 0;
+      g.sx = c.x;
+      g.sy = c.y;
+      // la zampata: il gioco scappa un po' più in là
+      const a = Math.random() * Math.PI * 2,
+        nx = g.x + Math.cos(a) * 18,
+        ny = g.y + Math.sin(a) * 10,
+        m = G.map;
+      g.gx = g.x;
+      g.gy = g.y;
+      g.nx = m.solid(Math.floor(nx / 16), Math.floor(ny / 16)) ? g.x : nx;
+      g.ny = m.solid(Math.floor(nx / 16), Math.floor(ny / 16)) ? g.y : ny;
+    }
+    return null;
+  }
+  if (g.fase === 'salto') {
+    const k = Math.min(1, g.t / 0.35);
+    c.x = g.sx + (g.gx - g.sx) * k;
+    c.y = g.sy + (g.gy + 2 - g.sy) * k;
+    c.salto = G.t - k * 0.32 + 0.16; // in aria
+    c.posa = 'move';
+    if (k >= 1) {
+      g.fase = 'rotola';
+      g.t = 0;
+      AU.play('pick');
+    }
+    return null;
+  }
+  if (g.fase === 'rotola') {
+    const k = Math.min(1, g.t / 0.4);
+    g.x = g.gx + (g.nx - g.gx) * k;
+    g.y = g.gy + (g.ny - g.gy) * k - Math.sin(k * Math.PI) * 4;
+    if (k >= 1) {
+      g.giri++;
+      if (g.giri >= 3) return compGiocoFine(c, p);
+      g.fase = 'terra';
+    }
+    return null;
+  }
+  return null;
+}
+function compGiocoFine(c, p) {
+  c.gioco = null;
+  c.salto = G.t;
+  c.posa = 'sit';
+  c.saluto = 30;
+  AU.play(COMP_KIND[p.kind].verso);
+  floatText('♥', c.x, c.y - 18, '#ff8a8a', 1);
+  if (!p.gioco) {
+    p.gioco = true;
+    p.love = Math.min(20, p.love + 1);
+    UI.toast(`${p.name} è felice: oggi avete giocato.`);
+  }
+  return null;
+}
+// il gioco che vola, rotola o sta in bocca, e i giochi di casa che sobbalzano sotto le zampate
+Ext.on('listaMondo', (list, m) => {
+  const c = G.comp,
+    g = c && c.gioco;
+  if (g && c.map === m.id && FREEIMG[g.id]) {
+    const im = FREEIMG[g.id];
+    list.push({
+      sy: g.fase === 'riporta' ? c.y + 1 : g.y + 4,
+      draw: () => {
+        if (g.fase === 'volo' || g.fase === 'rotola') {
+          ctx.fillStyle = 'rgba(0,0,0,.2)';
+          ctx.fillRect(Math.round(g.x - 3), Math.round((g.fase === 'volo' ? g.ay : g.ny) + 3), 6, 1);
+        }
+        ctx.drawImage(im, Math.round(g.x - iw(im) / 2), Math.round(g.y - ih(im) + 3));
+      }
+    });
+  }
+  if (m.id !== 'house') return;
+  for (const o of m.objs) {
+    if (o.kind !== 'furn' || !o._gt) continue;
+    o._bx = o._bx ?? o.dx;
+    o._by = o._by ?? o.dy;
+    const k = o._gt - G.t;
+    o.dx = o._bx + (k > 0 ? Math.round(Math.sin(G.t * 40) * 1.5) : 0);
+    o.dy = o._by - (k > 0 ? Math.round(k * 8) : 0);
+  }
+});
 Ext.on('mpTick', compTick);
 
 // ---------- ogni mattina ----------
@@ -592,8 +814,9 @@ Ext.on('listaMondo', (list, m) => {
   list.push({
     sy: c.y,
     draw: () => {
-      const fr = c.st === 'move' ? Math.floor(c.f) % 2 : c.st === 'sleep' ? 3 : 2;
-      compDisegna(p.kind, p.skin, c.x, c.y, c.dir, fr, (X, Y) => {
+      const fr = c.st === 'move' ? Math.floor(c.f) % 2 : c.st === 'sleep' ? 3 : 2,
+        hop = c.salto && G.t - c.salto < 0.32 ? Math.sin(((G.t - c.salto) / 0.32) * Math.PI) * 3 : 0;
+      compDisegna(p.kind, p.skin, c.x, c.y - hop, c.dir, fr, (X, Y) => {
         if (c.st === 'sleep' && Math.floor(G.t * 1.5) % 3 === 0) {
           ctx.fillStyle = '#fff';
           ctx.font = '8px "Pixelify Sans",monospace';
@@ -734,7 +957,7 @@ function compMenu() {
       `<div class="mrow"><canvas data-c="1" width="36" height="30" style="width:calc(36*var(--u));height:calc(30*var(--u))"></canvas><span><b>${K.n}</b> · ${esc(K.skin[p.skin].n)} <span class="hearts">${'♥'.repeat(compCuori(p))}${'♡'.repeat(5 - compCuori(p))}</span><br><span class="small">${fame} Nella ciotola: ${p.ciotola || 0} · ${p.coccole ? 'Coccolato oggi.' : 'Oggi non l’hai ancora coccolato.'}${p.portati ? ` · Ti ha portato ${p.portati} cose.` : ''}</span></span></div>` +
       `<div class="tabs"><button class="btn${p.modo === 'segui' ? ' on' : ''}" data-m="segui">Segui</button><button class="btn${p.modo === 'resta' ? ' on' : ''}" data-m="resta">Resta</button></div>` +
       `<p class="small">${p.modo === 'segui' ? 'Ti segue ovunque e ti porta quello che trova per terra. Se sei sfinito, una volta al giorno ti tira su.' : 'Fa la sua vita: di giorno gira attorno a casa, caccia, gioca e si sdraia al sole; all’alba e a mezzogiorno mangia e beve in casa, la notte dorme nella cuccia. Quando passi ti corre incontro e ti fa le feste, poi torna alle sue cose.'}</p>` +
-      `<p><button class="btn" data-a="coccole" ${p.coccole ? 'disabled' : ''}>Coccole</button> <button class="btn" data-a="pappa" ${cr ? '' : 'disabled'}>Dai crocchette (${cr})</button> <button class="btn" data-a="gioco" ${gioco && !p.gioco ? '' : 'disabled'}>Gioca${gioco ? ' con ' + esc(ITEMS[gioco].n.toLowerCase()) : ''}</button></p>` +
+      `<p><button class="btn" data-a="coccole" ${p.coccole ? 'disabled' : ''}>Coccole</button> <button class="btn" data-a="pappa" ${cr ? '' : 'disabled'}>Dai crocchette (${cr})</button> <button class="btn" data-a="gioco" ${gioco ? '' : 'disabled'}>${gioco ? (p.kind === 'cane' ? 'Lancia ' : 'Fai giocare con ') + esc(ITEMS[gioco].n.toLowerCase()) : 'Gioca (serve un gioco)'}</button></p>` +
       `<h3>La bottega</h3>` +
       COMP_SHOP.filter(
         ([id]) => !['pallina', 'osso', 'topolino', 'gomitolo'].includes(id) || K.giochi.includes(id)
@@ -790,14 +1013,10 @@ function compMenu() {
           AU.play('pick');
           cuore();
         }
-        if (a === 'gioco' && gioco && !p.gioco) {
-          p.gioco = true;
-          p.love = Math.min(20, p.love + 1);
-          AU.play(K.verso);
-          cuore();
-          UI.toast(
-            `${p.name} corre dietro ${ITEMS[gioco].n.toLowerCase().startsWith('osso') ? "all'osso" : 'al gioco'} come un matto.`
-          );
+        if (a === 'gioco' && gioco) {
+          UI.close();
+          compLancia(gioco);
+          return;
         }
         ancora();
       })
