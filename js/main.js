@@ -1222,23 +1222,61 @@ function loop(now) {
   }
   requestAnimationFrame(loop);
 }
+// il caricamento: le candele sotto il titolo si accendono man mano, la frase dice cosa si sta svegliando
+function caricamento(frac, frase) {
+  const C = document.querySelectorAll('#candele i'),
+    n = Math.round(frac * C.length);
+  C.forEach((c, i) => c.classList.toggle('on', i < n));
+  if (frase) $('#lfrase').textContent = frase + '…';
+}
+// un fotogramma allo schermo: senza, la pagina resterebbe ferma finché non è pronta tutta la grafica
+const respira = () =>
+  new Promise(r => {
+    let fatto = false;
+    const fine = () => fatto || ((fatto = true), r());
+    requestAnimationFrame(() => setTimeout(fine, 0));
+    setTimeout(fine, 80);
+  });
 async function boot() {
+  caricamento(0, 'si accendono le candele');
   try {
     await Promise.race([document.fonts.ready, sleep(2500)]);
   } catch (e) {
     atteso(e);
   }
-  genAll();
-  genFreeArt();
-  genAnimalArt();
-  genMissionArt();
-  genBuildArt();
-  genGardenArt();
-  genDishArt();
-  genFestArt();
-  genFarm2Art();
-  genTradeArt();
-  Ext.run('arte'); // punto di estensione: grafica dei file aggiunti (natura_*.js)
+  // la grafica si fa a passi (prima quella del gioco, poi quella dei file aggiunti, punto 'arte'): tra un passo
+  // e l'altro le candele si accendono e lo schermo respira
+  const arte = (Ext._h.arte || []).slice(),
+    // [frase, lavoro, peso]: il peso è quanto dura più o meno quel passo, così le candele avanzano regolari
+    passi = [
+      ['si accendono le case', genAll, 430],
+      ['la Valle si stende tra i colli', genFreeArt, 250],
+      ['le bestie aprono gli occhi', genAnimalArt, 25],
+      ['la bacheca si riempie', genMissionArt, 2],
+      ['i muri si raddrizzano', genBuildArt, 5],
+      ["l'orto apre le foglie", genGardenArt, 90],
+      ['il forno si scalda', genDishArt, 20],
+      ['si appendono le ghirlande', genFestArt, 6],
+      ['le macchine sbuffano', genFarm2Art, 40],
+      ['il mercante conta le monete', genTradeArt, 6],
+      ...arte.map((f, i) =>
+        i === arte.length - 1 ? ['scende la nebbia', f, 200] : ['si dipingono le ombre', f, 25]
+      )
+    ],
+    tot = passi.reduce((a, p) => a + p[2], 0);
+  let fatto = 0;
+  caricamento(0, passi[0][0]);
+  await respira();
+  let ultimo = performance.now();
+  for (let i = 0; i < passi.length; i++) {
+    passi[i][1]();
+    fatto += passi[i][2];
+    if (performance.now() - ultimo > 30 || i === passi.length - 1) {
+      caricamento(fatto / tot, passi[Math.min(i + 1, passi.length - 1)][0]);
+      await respira();
+      ultimo = performance.now();
+    }
+  }
   initEntities();
   UI.init();
   NET.init();
