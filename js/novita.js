@@ -616,6 +616,16 @@ const NOVITA = [
         t: 'Se lasci un suo gioco in casa, dopo aver mangiato ci gioca da solo. La <b>cuccia</b> è una cesta col cuscino a quadri: ci dorme sopra raggomitolato, e lo vedi. E quando ti corre incontro per le coccole si ferma al tuo fianco, senza scatti.'
       }
     ]
+  },
+  {
+    id: 'pozzo',
+    v: 57,
+    n: 'Il pozzo ha un posto suo',
+    steps: [
+      {
+        t: 'Il <b>pozzo</b> non copre più la H della piazza: ora sta sul prato a est, nel suo angolo lastricato, col tettuccio, il secchio, l’abbeveratoio e un corvo sul tetto. Gracchia, e se ti avvicini troppo vola via. E l’<b>accetta</b> e la zappa adesso colpiscono dal verso giusto.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

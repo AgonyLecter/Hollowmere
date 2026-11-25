@@ -23,7 +23,8 @@ module.exports = async function (t, { browser }) {
       fioriere: k('fioriera').length,
       selciato: k('selciato').length,
       centro: !m.solid(44, 19) && !m.solid(45, 19) && !m.objAt(44, 19) && !m.objAt(45, 19),
-      sasso: !st.free.debris['38,16']
+      sasso: !st.free.debris['38,16'],
+      pozzo: k('well').length === 1 && k('well')[0].tx >= 52 && k('well')[0].act === 'well'
     };
   });
   t.eq('in piazza non c’è più la pietra del villaggio', r.pietra, 0);
@@ -34,6 +35,7 @@ module.exports = async function (t, { browser }) {
   t.eq('il selciato col rosone', r.selciato, 1);
   t.true('il centro resta libero per il falò delle feste', r.centro);
   t.true('un sasso lascia il posto alla fioriera', r.sasso);
+  t.true('il pozzo ha il suo angolo fuori dalla piazza (e dà ancora acqua)', r.pozzo);
   t.eq('piazza: nessun errore', errors.join('\n'), '');
   await page.close();
 };

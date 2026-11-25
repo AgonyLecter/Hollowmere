@@ -251,6 +251,85 @@ T.ell(10, 10, 8, 9, ('G', 'g', 'f'), trama=lambda x, y, ch: 'e' if (x * 5 + y * 
 T.ell(10, 6, 5, 5, ('G', 'g', 'f'), trama=lambda x, y, ch: 'e' if (x * 5 + y * 3) % 11 == 0 else None)
 A['alloro'] = chiudi(T, scuri='gfeG67')
 
+# ================================================================ l'angolo del pozzo
+# il lastricato 72x60 (a terra): pietre irregolari, muschio fra le fughe, un orlo che sfuma nell'erba
+T = Tela(72, 60, 15)
+for y in range(60):
+    for x in range(72):
+        d = ((x + .5 - 36) / 35) ** 2 + ((y + .5 - 30) / 29) ** 2
+        if d > 1 or (d > .82 and (x * 7 + y * 13) % 5 < 2):
+            continue
+        # pietre a mosaico: il colore cambia per «cella», le fughe sono scure o verdi
+        cx, cy = (x + (y // 7) * 3) // 8, y // 7
+        fuga = (x + (y // 7) * 3) % 8 == 0 or y % 7 == 0
+        if fuga:
+            ch = 'f' if (x * 3 + y) % 4 == 0 else ('e' if (x + y) % 3 == 0 else 'n')
+        else:
+            ch = ['N', 'M', 'n', 'M', 'Q', 'N'][(cx * 5 + cy * 3) % 6]
+            if (x * 11 + y * 7) % 23 == 0:
+                ch = 'g'  # una macchia di muschio
+        T.put(x, y, ch)
+A['lastrico'] = T
+
+# il pozzo 36x48: vera di pietra muschiosa, due pali, il tettuccio di scandole, la manovella, la corda e il secchio
+T = Tela(36, 48, 16)
+T.ell(18, 37, 15, 7, ('M', 'N', 'n'), trama=lambda x, y, ch: 'k' if (x + (y // 3) * 2) % 6 == 0 else ('g' if (x * 5 + y) % 13 == 0 else None))
+rett(T, 3, 37, 33, 46, 'N')
+for y in range(37, 46):  # le pietre della vera
+    for x in range(3, 33):
+        if (x + (y // 3) * 3) % 6 == 0 or y % 3 == 0:
+            T.put(x, y, 'n')
+        elif (x * 7 + y * 3) % 17 == 0:
+            T.put(x, y, 'g')
+T.ell(18, 37, 11, 4.2, ('K', 'X', 'X'), luce=False)  # la bocca buia
+T.ell(18, 38, 7, 2, ('t', 't', 'X'), luce=False)  # l'acqua, giù in fondo
+for x0 in (4, 29):  # i pali
+    rett(T, x0, 10, x0 + 3, 40, 'B'); rett(T, x0, 10, x0 + 1, 40, 'w')
+for y in range(0, 12):  # il tettuccio a due falde
+    w = 3 + y * 1.45
+    for x in range(int(18 - w), int(18 + w)):
+        T.put(x, y, 'K' if (x + (y // 2) * 2) % 4 == 0 else ('c' if y % 2 else 'k'))
+for x in range(1, 35):
+    T.put(x, 12, 'b')
+rett(T, 7, 16, 29, 18, 'w')  # il rullo della corda
+for x in range(7, 29, 3):
+    T.put(x, 16, 'h')
+rett(T, 30, 15, 34, 17, 'L'); rett(T, 33, 17, 35, 21, 'L')  # la manovella
+for y in range(18, 27):
+    T.put(18, y, 'H')  # la corda
+rett(T, 15, 27, 22, 33, 'w'); rett(T, 15, 27, 22, 28, 'I'); rett(T, 15, 31, 22, 32, 'I')  # il secchio
+A['pozzo'] = chiudi(T, scuri='MNnBwkcK')
+
+# l'abbeveratoio di pietra 30x14, con l'acqua
+T = Tela(30, 14, 17)
+rett(T, 1, 3, 29, 13, 'N'); rett(T, 1, 3, 29, 4, 'Q')
+for x in range(1, 29):
+    if x % 7 == 0:
+        for y in range(4, 13):
+            T.put(x, y, 'n')
+rett(T, 3, 4, 27, 7, 'T'); rett(T, 3, 4, 27, 5, 'y')
+T.put(8, 5, 'u'); T.put(19, 5, 'u')
+A['abbeveratoio'] = chiudi(T, scuri='NQn')
+
+# il secchio di legno 10x11
+T = Tela(10, 11, 18)
+rett(T, 1, 2, 9, 11, 'w'); rett(T, 1, 3, 9, 4, 'I'); rett(T, 1, 8, 9, 9, 'I'); rett(T, 2, 2, 8, 3, 't')
+for k in range(7):
+    T.put(1 + k * 1.15, 1 - math.sin(k / 6 * math.pi) * 1.5, 'L')
+A['secchio'] = chiudi(T, scuri='wI')
+
+# il corvo (due pose: fermo e col becco aperto), 10x8
+for f in (0, 1):
+    T = Tela(10, 8, 19 + f)
+    T.ell(5, 4.5, 3.4, 2.5, ('k', 'K', 'X'))
+    T.disco(7.5, 2.5, 1.6, 'K')
+    T.put(8, 2, '8')  # l'occhio
+    T.put(9.5, 2.5 + f * .5, 'm'); T.put(9.5, 3.5, 'm' if f else '.')  # il becco
+    for k in range(3):
+        T.put(1 - k * .6, 5 + k * .3, 'X')  # la coda
+    T.put(4, 7, 'm'); T.put(6, 7, 'm')
+    A[f'corvo{f}'] = T.contorno()
+
 QUI = os.path.dirname(__file__)
 righe = ['# La piazza della Valle. Generato da piazza_abbozzo.py.', '@tavolozza', PAL]
 for k, T in A.items():

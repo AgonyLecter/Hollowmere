@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Gli attrezzi (32x32, manico dal basso a sinistra verso l'alto a destra, la testa in alto: il gioco li ruota così
 quando il personaggio li impugna). Forme che si leggono al primo sguardo, anche piccole nella barra:
-  · l'accetta: lama larga a barba che si apre verso sinistra, il filo lucido, il tallone dietro il manico;
+  · l'accetta: lama larga a barba che si apre verso destra (dalla parte dove colpisce), il tallone dietro il manico;
   · il piccone: la testa a mezzaluna di traverso sul manico, due punte che scendono, il collare di ferro;
-  · la zappa: la lama piatta che scende a «L» dalla cima del manico;
+  · la zappa: il collo verso destra e la lama piatta che scende, a «L» rovesciata;
   · la pala: la lama a cuore in linea col manico, la maniglia a T in fondo;
   · la falce: l'asta lunga con l'impugnatura laterale, la lama lunga e ricurva col filo chiaro;
   · l'annaffiatoio: tondo, di rame rivettato, il manico ad arco, il beccuccio lungo con la cipolla forata;
@@ -91,17 +91,17 @@ def finisci(T):
 
 
 # ================================================================ l'accetta
+# la lama sta a DESTRA del manico (verso dove colpisce: il gioco la impugna così), il tallone a sinistra
 T = Tela(W, H, 1)
-manico(T, 5, 29, 22, 8, fasce=(.08, .16, .24))
-# la lama: stretta vicino all'occhio, si apre a barba verso sinistra; il filo è curvo
-lama = poligono([(21, 6.5), (21, 11), (17, 12), (12, 17.5), (9.5, 16), (8, 11), (8.5, 6), (10.5, 1.5), (16, 5)])
-ferro(T, lama, filo=lambda x, y, M: (x - 1, y) not in M or (x - 2, y) not in M and x < 11)
+manico(T, 3, 30, 17, 9, fasce=(.08, .16, .24))
+lama = poligono([(18, 6.5), (18, 11.5), (22, 12.5), (26.5, 18), (29.5, 16.5), (31, 11), (30.5, 6), (28.5, 1.5), (23, 5)])
+ferro(T, lama, filo=lambda x, y, M: (x + 1, y) not in M or ((x + 2, y) not in M and x > 27))
 for y in range(5, 13):  # l'occhio e il tallone dietro il manico
-    for x in range(21, 25):
-        T.put(x, y, 'I' if x < 24 else 'i')
-for x in range(21, 25):
+    for x in range(14, 18):
+        T.put(x, y, 'I' if x > 14 else 'i')
+for x in range(14, 18):
     T.put(x, 5, 'L')
-T.put(22, 8, 'j'); T.put(23, 8, 'j'); T.put(22, 9, 'j')  # il cuneo nel manico
+T.put(16, 8, 'j'); T.put(15, 8, 'j'); T.put(16, 9, 'j')  # il cuneo nel manico
 A['accetta'] = finisci(T)
 
 # ================================================================ il piccone
@@ -126,12 +126,13 @@ for y in range(2, 7):  # il collare
 A['piccone'] = finisci(T)
 
 # ================================================================ la zappa
+# il collo esce dalla cima del manico verso destra e la lama scende (come la impugna il gioco)
 T = Tela(W, H, 3)
-manico(T, 4, 29, 23, 7, fasce=(.72,))
-ferro(T, poligono([(25, 3), (25, 7), (16, 7), (16, 4)]))  # il collo che esce dalla cima
-ferro(T, poligono([(13, 5), (17, 5), (16.5, 15), (14.5, 17.5), (11, 17), (12.5, 10)]),
+manico(T, 3, 30, 18, 8, fasce=(.72,))
+ferro(T, poligono([(16, 4), (16, 8), (25, 8), (25, 5)]))  # il collo
+ferro(T, poligono([(23, 5), (28, 5), (28.5, 15), (26.5, 18), (22, 17.5), (23.5, 10)]),
       filo=lambda x, y, M: (x, y + 1) not in M)  # la lama che scende, col filo in basso
-T.put(24, 5, 'j'); T.put(13, 6, 'j'); T.put(15, 6, 'j')  # i chiodi
+T.put(17, 6, 'j'); T.put(24, 6, 'j'); T.put(26, 6, 'j')  # i chiodi
 A['hoe'] = finisci(T)
 
 # ================================================================ la pala
