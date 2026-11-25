@@ -80,6 +80,12 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   vale la Regola III), il biglietto sulla porta se non c'è, e `Porte.dove(id)` per il taccuino. Battute in `BUSSA_TESTI`.
 - **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,
   piume, commenti, gara della settimana. Dati in `hollowmere/gazzetta` (regole in `firebase/regole.json`).
+- **Svago**: `svago.js` + `svago_testi.js` (dopo `main.js`: usa `onMinute`) — il tempo libero con gli abitanti.
+  Davanti a chi pesca, prende il tè, legge, spacca legna, guarda le stelle, fa il picnic, balla, cura l'orto o sta in
+  panchina il tasto azione dice «Unisciti» (punto `mira`). I minigiochi a tempo (`SVAGO.gioco`) prendono il tasto
+  azione avvolgendo `updatePlayer` (muoversi li interrompe). Il falò in piazza (venerdì dalle 20, sabato dalle 21:30)
+  e la corsa coi sacchi (il 9 e il 23 della stagione, alle 18) spostano gli abitanti avvolgendo `SCHED`. Panchine:
+  «Siediti a pensare»; sassi piatti a mani vuote davanti all'acqua. Stato in `st.free.svago`; testi in `SV_T`.
 - **Novità**: `novita.js` — ogni aggiornamento ha una voce che Ottavio il postino annuncia ai giocatori (tranne la wiki).
 - **Wiki**: `wiki.js` (in fondo a tutto). Si costruisce dal vivo dai dati del gioco: un oggetto, una ricetta, una
   coltura, un animale o un abitante nuovo compare da solo, con la sua icona. È privata (nessun pulsante): si apre con

@@ -626,6 +626,22 @@ const NOVITA = [
         t: 'Il <b>pozzo</b> non copre più la H della piazza: ora sta sul prato a est, nel suo angolo lastricato, col tettuccio, il secchio, l’abbeveratoio e un corvo sul tetto. Gracchia, e se ti avvicini troppo vola via. E l’<b>accetta</b> e la zappa adesso colpiscono dal verso giusto.'
       }
     ]
+  },
+  {
+    id: 'svago',
+    v: 58,
+    n: 'Il tempo libero con gli abitanti',
+    steps: [
+      {
+        t: 'Quando un abitante pesca, prende il tè, legge, spacca legna, guarda le stelle, fa il picnic, balla, cura l’orto o sta in panchina, avvicinati: il fumetto dice <b>Unisciti</b>. Si fa insieme: tre lanci a testa con la sua canna, una tazza e due chiacchiere (ognuno apprezza un modo di rispondere), una puntata del suo racconto, colpi a tempo con l’accetta, un ballo a ritmo… E l’amicizia cresce.'
+      },
+      {
+        t: 'Il <b>venerdì sera</b> dalle 20, e il <b>sabato</b> dopo il ballo, in piazza si accende il <b>falò</b>. Chi c’è si siede intorno: storie di paura e ricordi, la tua storia, castagne sulle braci, una canzone stonata.'
+      },
+      {
+        t: 'Il <b>9 e il 23</b> di ogni stagione, alle 18, Agatha organizza la <b>corsa coi sacchi</b> sul prato a ovest della piazza. Salta a ritmo: chi salta prima di toccare terra inciampa. E da soli: sulle panchine ci si siede a pensare, e a mani vuote davanti al fiume si lanciano i <b>sassi piatti</b>.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

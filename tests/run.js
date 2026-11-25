@@ -31,6 +31,7 @@ const SUITES = {
   ricordi: require('./ricordi'),
   serra: require('./serra'),
   ingegnere: require('./ingegnere'),
+  svago: require('./svago'),
   emporio: require('./emporio'),
   fucina: require('./fucina'),
   regole: require('./regole'),
