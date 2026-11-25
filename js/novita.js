@@ -571,6 +571,22 @@ const NOVITA = [
         t: 'Quelli di legno si fanno al <b>banco</b>; stoffa, vetro e ottone li vende <b>Agatha</b> (Arredi). E quando Brom amplia la casa, le stanze nuove hanno finestre e applique accese, il piano di sotto il pavimento di pietra, il salone un secondo camino.'
       }
     ]
+  },
+  {
+    id: 'piazza_nuova',
+    v: 54,
+    n: 'La piazza e gli attrezzi nuovi',
+    steps: [
+      {
+        t: 'La <b>piazza</b> si è fatta bella: il cordolo di granito, il rosone di pietra al centro (dove nelle feste si accende il falò), gli allori all’ingresso, le fioriere che cambiano fiori con le stagioni e i festoni di bandierine tra i lampioni.'
+      },
+      {
+        t: 'Le due <b>bacheche</b> sono nuove: a sinistra quella degli incarichi, a destra l’albo della Valle, coi pallini che si accendono per chi è online qui. La pietra del villaggio non c’è più: il rango lo trovi sotto l’orologio.'
+      },
+      {
+        t: 'E gli <b>attrezzi</b> sono ridisegnati: l’accetta con la lama a barba, il piccone a mezzaluna, la zappa, la pala a cuore, la falce, l’annaffiatoio di rame e la canna col mulinello.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

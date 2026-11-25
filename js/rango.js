@@ -197,16 +197,8 @@ function genPietraArt(...a) {
   return Ext.catena('genPietraArt', genPietraArtBase, this, a);
 }
 
-{
-  Ext.on('applyFree', function (m, st) {
-    if (m.id !== 'main' || !isFree(st)) return;
-    if (!IMG.pietra && PX.prototype.line) genPietraArt();
-    const [x, y] = PIETRA_AT;
-    const o = m.objAt(x, y);
-    if (o && o.kind !== 'built') mapRemove(m, o);
-    if (!m.objAt(x, y)) m.add(OB('pietra', x, y, IMG.pietra, { act: 'pietra' }));
-  });
-}
+// la pietra del villaggio non sta più in piazza: rango e prestigio si aprono dal pulsante sotto l'orologio
+// (ACT.pietra resta: è la stessa scheda)
 PROMPT.pietra = 'Il villaggio';
 ACT.pietra = () => {
   if (G.visit) {
@@ -223,14 +215,10 @@ ACT.pietra = () => {
 GUIDES.push({
   id: 'pietra',
   v: 14,
-  n: 'La pietra del villaggio',
+  n: 'Il rango del villaggio',
   steps: [
     {
-      t: "In piazza, accanto alla bacheca, c'è la pietra del villaggio. Toccala: ti dice il rango, quanto manca al prossimo e cosa fare per salire.",
-      at: () => ({ x: PIETRA_AT[0] * 16 + 8, y: PIETRA_AT[1] * 16, l: 'La pietra' })
-    },
-    {
-      t: "Il rango lo vedi sempre anche sullo schermo, in alto a destra, sotto l'ora e i soldi: «Rango». Toccalo e si apre lo stesso registro."
+      t: "Il rango del villaggio lo vedi sempre sullo schermo, in alto a destra, sotto l'ora e i soldi: «Rango». Toccalo: ti dice quanto manca al prossimo e cosa fare per salire."
     }
   ]
 });
