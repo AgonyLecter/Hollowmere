@@ -1752,6 +1752,24 @@ function drawSigillo(X, Y, icona, a = 1) {
   if (icona) ctx.drawImage(icona, X - 4, Y - 4, 9, 9);
   ctx.globalAlpha = 1;
 }
+// la stellina d'oro delle piante mature viste da lontano: luccica a turno
+function drawStellina(X, Y, fase) {
+  const u = (G.t * 0.8 + fase * 0.37) % 1,
+    on = u < 0.5,
+    bob = Math.round(Math.sin(G.t * 3 + fase) * 1);
+  X = Math.round(X);
+  Y = Math.round(Y) + bob;
+  ctx.fillStyle = '#07050a';
+  ctx.fillRect(X - 1, Y - 2, 3, 5);
+  ctx.fillRect(X - 2, Y - 1, 5, 3);
+  ctx.fillStyle = on ? '#ffd070' : '#c8862e';
+  ctx.fillRect(X, Y - 1, 1, 3);
+  ctx.fillRect(X - 1, Y, 3, 1);
+  if (on) {
+    ctx.fillStyle = '#fff6d0';
+    ctx.fillRect(X, Y, 1, 1);
+  }
+}
 function drawEtichetta(X, Y, t, brutta) {
   ctx.font = '8px "Silkscreen","Pixelify Sans",monospace';
   ctx.textAlign = 'center';
@@ -1767,6 +1785,161 @@ function drawEtichetta(X, Y, t, brutta) {
   ctx.fillStyle = brutta ? '#ffb0a0' : '#f6e6c0';
   ctx.fillText(t, X, by + 8.5);
 }
+// ---------- le piante vive ----------
+// Le colture non sono immagini ferme: il vento le muove a fasce di pixel (la cima più della base, come in un
+// disegno a mano), chi passa le piega e tornano su con una molla, quando crescono di stadio fanno un piccolo
+// scatto con qualche scintilla verde (la prima volta che le vedi: così la mattina si vede cos'è cresciuto),
+// sussultano quando le semini, le annaffi o le raccogli, e la terra bagnata si scurisce piano.
+// Lo stato è solo per il disegno (non si salva): PIANTE, per chiave della zolla in st.farm.
+const PIANTE = new Map();
+function pianta(k) {
+  let s = PIANTE.get(k);
+  if (!s) PIANTE.set(k, (s = { ang: 0, vel: 0, t: G.t, stadio: null, popT: -9, scT: -9, wT: -9 }));
+  return s;
+}
+// chiamata da farm.js e dalla serra: tipo = 'semina' | 'acqua' | 'raccolto'
+function piantaSussulta(k, tipo) {
+  const s = pianta(k);
+  if (tipo === 'acqua') {
+    s.wT = G.t;
+    s.scT = G.t;
+  } else if (tipo === 'semina') {
+    s.popT = G.t;
+    s.stadio = 0;
+  } else {
+    s.scT = G.t;
+    s.vel += 40;
+    s.stadio = null; // ricresce: il prossimo stadio si conta da qui
+  }
+}
+// chi passa tra le piante (tu e, in cooperativo, gli altri sulla stessa mappa): posizione e velocità
+const MOVENTI = { t: -1, L: [], prec: new Map() };
+function moventi(m) {
+  if (MOVENTI.t === G.t) return MOVENTI.L;
+  const dt = Math.max(1e-3, G.t - (MOVENTI.tp ?? G.t - 0.016)),
+    L = [],
+    vedi = (id, x, y) => {
+      const pr = MOVENTI.prec.get(id),
+        vx = pr ? (x - pr[0]) / dt : 0;
+      MOVENTI.prec.set(id, [x, y]);
+      if (Math.abs(vx) < 400) L.push({ x, y, vx });
+    };
+  if (G.player && G.mode === 'game') vedi('io', G.player.x, G.player.y);
+  for (const pid in G.others || {}) {
+    const o = G.others[pid];
+    if (o && o.map === m.id) vedi(pid, o.x, o.y);
+  }
+  MOVENTI.tp = G.t;
+  MOVENTI.t = G.t;
+  MOVENTI.L = L;
+  return L;
+}
+// e = { img, x, y (casella), k (chiave in st.farm), f (la zolla), m (la mappa) }
+function disegnaPianta(e) {
+  const { img, x, y, k, f, m } = e,
+    c = f.c,
+    s = pianta(k),
+    dt = Math.min(0.05, Math.max(0, G.t - s.t));
+  s.t = G.t;
+  // lo stadio: la prima volta si prende com'è; se poi è più avanti, scatta
+  const st = c.dead ? -1 : cropStage(c);
+  if (s.stadio === null || st < s.stadio) s.stadio = st;
+  else if (st > s.stadio) {
+    s.stadio = st;
+    s.popT = G.t + ((x * 7 + y * 3) % 5) * 0.06; // non tutte insieme: un'onda lungo il campo
+    for (let i = 0; i < 5; i++)
+      G.parts.push({
+        k: 'spark',
+        x: x * 16 + 3 + Math.random() * 10,
+        y: y * 16 + 4 + Math.random() * 8,
+        vx: 0,
+        vy: -14,
+        t: -i * 0.05,
+        life: 0.7,
+        c: i % 2 ? '#b8f08a' : '#e8ffc0'
+      });
+  }
+  // chi passa vicino la spinge dall'altra parte, in proporzione a quanto va veloce
+  const bx = x * 16 + 8,
+    by = y * 16 + 12;
+  for (const p of moventi(m)) {
+    const ddx = bx - p.x,
+      ddy = by - p.y;
+    if (Math.abs(ddy) < 9 && Math.abs(ddx) < 12 && Math.abs(p.vx) > 8) {
+      const vicino = 1 - Math.abs(ddx) / 12;
+      s.vel += Math.sign(p.vx) * vicino * Math.min(1, Math.abs(p.vx) / 60) * 140 * dt * 6;
+      if (!s.fruscio || G.t - s.fruscio > 0.5) {
+        s.fruscio = G.t;
+        if (Math.random() < 0.5) AU.play('passoErba');
+      }
+    }
+  }
+  // la molla: torna dritta, smorzata
+  s.vel += (-90 * s.ang - 7 * s.vel) * dt;
+  s.ang = Math.max(-4, Math.min(4, s.ang + s.vel * dt));
+  // il vento: più forte con la pioggia, quasi niente sotto i vetri, lento d'inverno; le secche no
+  const forza = m.interior ? 0.25 : G.st.weather === 'pioggia' ? 1.5 : G.st.weather === 'neve' ? 0.4 : 0.8,
+    vento = c.dead
+      ? 0
+      : (Math.sin(G.t * (1.3 + forza * 0.5) + x * 0.7 + y * 0.45) * 0.7 +
+          Math.sin(G.t * 3.1 + x * 1.9) * 0.25) *
+        forza,
+    // il sussulto (acqua, raccolto): un tremito breve
+    ts = G.t - s.scT,
+    trem = ts >= 0 && ts < 0.35 ? Math.sin(ts * 55) * 1.2 * (1 - ts / 0.35) : 0,
+    cima = vento + s.ang + trem;
+  const W = iw(img),
+    H = ih(img),
+    X = x * 16 + Math.round((16 - W) / 2),
+    Y = y * 16 + 15 - H,
+    top = Math.floor(img.top || 0),
+    alto = H - top;
+  // lo scatto (semina, nuovo stadio): si schiaccia e si allunga dalla base
+  const tp = G.t - s.popT;
+  if (tp >= 0 && tp < 0.42) {
+    const u = tp / 0.42,
+      e2 = Math.sin(u * Math.PI) * (1 - u * 0.5),
+      sy = 1 + e2 * 0.22,
+      sx = 1 - e2 * 0.12;
+    ctx.save();
+    ctx.translate(X + W / 2, Y + H);
+    ctx.scale(sx, sy);
+    ctx.drawImage(img, -W / 2, -H, W, H);
+    ctx.restore();
+    return;
+  }
+  if (tp < 0 && tp > -0.5) {
+    // in attesa del suo turno nell'onda: un filo più bassa
+    ctx.drawImage(img, X, Y + 1, W, H - 1);
+    return;
+  }
+  // a fasce di 3 righe: in cima tutto lo spostamento, ai piedi (la zolla) niente
+  if (Math.abs(cima) < 0.5 || alto <= 4) {
+    ctx.drawImage(img, X, Y, W, H);
+    return;
+  }
+  const S = img.s || 1,
+    piedi = 4;
+  for (let r = top; r < H; r += 3) {
+    const h = Math.min(3, H - r),
+      quota = (H - piedi - (r + h / 2)) / Math.max(1, alto - piedi),
+      dx = quota > 0 ? Math.round(cima * Math.pow(quota, 1.3)) : 0;
+    ctx.drawImage(img, 0, r * S, img.width, h * S, X + dx, Y + r, W, h);
+  }
+}
+// la terra bagnata si scurisce piano (0.7 s) invece di cambiare di colpo
+function disegnaZolla(k, f, x, y, bordi) {
+  const s = PIANTE.get(k),
+    tw = s ? G.t - s.wT : 9,
+    v = hsh(x, y) % 3;
+  if (f.w && tw < 0.7) {
+    ctx.drawImage(T.zolla[0][v][bordi], x * 16, y * 16, 16, 16);
+    ctx.globalAlpha = tw / 0.7;
+    ctx.drawImage(T.zolla[1][v][bordi], x * 16, y * 16, 16, 16);
+    ctx.globalAlpha = 1;
+  } else ctx.drawImage(T.zolla[f.w ? 1 : 0][v][bordi], x * 16, y * 16, 16, 16);
+}
+const QUADRANTI_VIS = new Map(); // quanto si vede l'orologino di ogni zolla (dissolvenza)
 function drawCropMarks(m, tx0, ty0, tx1, ty1) {
   if (m.id !== 'main' || G.mode !== 'game') return;
   const fm = G.st.farm,
@@ -1802,12 +1975,19 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
           life: 0.6,
           c: '#fff3a0'
         });
-      // il sigillo d'oro col raccolto: pieno da vicino, più tenue da lontano
-      drawSigillo(X, Y - 5, ICON[c.t], d < 5 ? 1 : 0.6);
+      // da vicino il sigillo d'oro col raccolto; da lontano solo una stellina, per non coprire il campo
+      if (d < 2.2 || (x === fx && y === fy)) drawSigillo(X, Y - 5, ICON[c.t]);
+      else drawStellina(X, Y - 4, x * 3 + y);
       continue;
     }
-    let a = d < 3.5 ? 0.95 : d < 6 ? ((6 - d) / 2.5) * 0.95 : 0;
-    if (hold) a = Math.max(a, 0.95);
+    // il quadrante: sulla zolla davanti e su quelle accanto, o su tutte con l'annaffiatoio o i semi in mano
+    // visibile o no, con una dissolvenza rapida nel passaggio: a metà opacità diventerebbe una macchia
+    const qv = QUADRANTI_VIS.get(G.map.id + ':' + k) || { v: 0, t: G.t },
+      voglio = hold || d < 2.2 ? 1 : 0;
+    qv.v += (voglio - qv.v) * Math.min(1, (G.t - qv.t) * 12);
+    qv.t = G.t;
+    QUADRANTI_VIS.set(G.map.id + ':' + k, qv);
+    const a = qv.v < 0.05 ? 0 : qv.v * 0.95;
     // il quadrante: le notti passate, e mezza in più se oggi è già bagnata
     const n = CROPS[c.t].days;
     drawQuadrante(X, Y - 3, (c.a + (f.w ? 0.5 : 0)) / n, a);
@@ -1819,7 +1999,8 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
     }
     if (!f.w) drawDrop(a > 0.03 ? X + 9 : X, a > 0.03 ? Y - 3 : Y - 2, cropWilt(f));
   }
-  if (focus) {
+  // l'etichetta col nome: solo quando ti fermi davanti (camminando tra i filari sfarfallerebbe)
+  if (focus && !p.moving) {
     const c = focus.f.c,
       pronta = c && !c.dead && cropStage(c) === 3;
     drawEtichetta(
@@ -1829,25 +2010,95 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
       c.dead || cropWilt(focus.f)
     );
   }
-  drawPops();
+}
+// ---------- il raccolto che vola nello zaino ----------
+// Quello che raccogli sale dalla pianta, si gonfia un attimo, poi vola con una curva fino alla sua casella della
+// barra (o al 🎒, se è in un'altra fila), rimpicciolendo fino alla misura della casella, con una scia di
+// scintille; all'arrivo la casella sussulta e si accende d'oro. Senza barra visibile, va verso il personaggio.
+// Con o.n (il raccolto dei campi) la casella mostra il nuovo numero solo all'arrivo: popInVolo lo sottrae.
+function popInVolo(id) {
+  let n = 0;
+  for (const o of G.pops || []) if (o.id === id && o.n) n += o.n;
+  return n;
+}
+function popMeta(o) {
+  const cv = document.querySelector('canvas'),
+    r = cv && cv.getBoundingClientRect();
+  if (!r || !r.width || !G.st) return null;
+  const inv = G.st.inv,
+    i = o.id ? inv.findIndex(s => s && s.id === o.id) : -1,
+    base = Math.floor(G.st.sel / 10) * 10;
+  let el = null;
+  if (i >= base && i < base + 10) el = document.querySelectorAll('#hotbar .slot')[i - base];
+  if (!el || !el.offsetWidth) el = document.getElementById('bInv');
+  if (!el || !el.offsetWidth || UI.busy()) return null;
+  const q = el.getBoundingClientRect(),
+    k = VW / r.width;
+  return {
+    el,
+    x: G.cam.x + (q.left + q.width / 2 - r.left) * k,
+    y: G.cam.y + (q.top + q.height / 2 - r.top) * k,
+    lato: Math.max(8, q.width * k * 0.62)
+  };
 }
 function drawPops() {
   const P = G.pops;
   if (!P || !P.length) return;
-  const pl = G.player;
+  const pl = G.player,
+    SALE = 0.32,
+    VOLA = 0.55;
   for (let i = P.length - 1; i >= 0; i--) {
     const o = P[i],
-      u = (G.t - o.t0) / 0.6;
-    if (u >= 1) {
-      P.splice(i, 1);
+      t = G.t - o.t0;
+    if (t < SALE) {
+      // sale e si gonfia, con un piccolo dondolio
+      const u = t / SALE,
+        e = 1 - Math.pow(1 - u, 3),
+        sc = 1 + Math.sin(u * Math.PI) * 0.3,
+        L = 16 * sc,
+        dond = Math.sin(u * Math.PI * 2) * 0.25;
+      ctx.save();
+      ctx.translate(Math.round(o.x), Math.round(o.y - e * 14));
+      ctx.rotate(dond);
+      ctx.drawImage(o.img, -L / 2, -L / 2, L, L);
+      ctx.restore();
       continue;
     }
-    const e = u * u * (3 - 2 * u),
-      x = o.x + (pl.x - o.x) * e,
-      y = o.y + (pl.y - 26 - o.y) * e - Math.sin(u * Math.PI) * 16;
-    ctx.globalAlpha = u > 0.8 ? (1 - u) * 5 : 1;
-    ctx.drawImage(o.img, Math.round(x - 8), Math.round(y - 8), 16, 16);
-    ctx.globalAlpha = 1;
+    const meta = popMeta(o) || { x: pl.x, y: pl.y - 26, lato: 10, el: null },
+      u = Math.min(1, (t - SALE) / VOLA),
+      e = u * u * (3 - 2 * u),
+      x0 = o.x,
+      y0 = o.y - 14,
+      // la curva: un arco che sale prima di scendere verso la casella
+      mx = (x0 + meta.x) / 2,
+      my = Math.min(y0, meta.y) - 30,
+      x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * mx + e * e * meta.x,
+      y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * my + e * e * meta.y,
+      L = 16 + (meta.lato - 16) * e;
+    if (u >= 1) {
+      P.splice(i, 1);
+      if (o.n) UI.hotbar();
+      if (meta.el) {
+        meta.el.classList.remove('arriva');
+        void meta.el.offsetWidth; // fa ripartire l'animazione se arriva un altro
+        meta.el.classList.add('arriva');
+        clearTimeout(meta.el._arrT);
+        meta.el._arrT = setTimeout(() => meta.el.classList.remove('arriva'), 450);
+      }
+      continue;
+    }
+    if (Math.random() < 0.5)
+      G.parts.push({
+        k: 'spark',
+        x: x + (Math.random() - 0.5) * 4,
+        y: y + (Math.random() - 0.5) * 4,
+        vx: 0,
+        vy: 4,
+        t: 0,
+        life: 0.35,
+        c: Math.random() < 0.5 ? '#ffe27a' : '#fff6d0'
+      });
+    ctx.drawImage(o.img, Math.round(x - L / 2), Math.round(y - L / 2), Math.round(L), Math.round(L));
   }
 }
 function drawPostMarks(m) {
@@ -1946,7 +2197,7 @@ function render() {
       const f = fm[k];
       const vicina = (dx, dy) => (fm[x + dx + ',' + (y + dy)] ? 1 : 0),
         bordi = vicina(0, -1) | (vicina(1, 0) << 1) | (vicina(0, 1) << 2) | (vicina(-1, 0) << 3);
-      ctx.drawImage(T.zolla[f.w ? 1 : 0][hsh(x, y) % 3][bordi], x * 16, y * 16, 16, 16);
+      disegnaZolla(k, f, x, y, bordi);
       if (f.f)
         for (let i = 0; i < 7; i++) {
           const h = hsh(x * 7 + i, y * 13 + i);
@@ -1977,7 +2228,7 @@ function render() {
       const [x, y] = k.split(',').map(Number);
       if (x < tx0 - 1 || x > tx1 + 1 || y < ty0 - 1 || y > ty1 + 1) continue;
       const img = cropImg(f);
-      list.push({ img, dx: x * 16, dy: y * 16 + 15 - ih(img), sy: y * 16 + 6, crop: f });
+      list.push({ img, x, y, k, f, m, sy: y * 16 + 6, crop: f, draw: disegnaPianta });
     }
   }
   for (const n of G.npcs) if (!n.hidden && n.map === m.id) list.push({ npc: n, sy: n.y });
@@ -2098,6 +2349,7 @@ function render() {
   if (!m.interior && G.mode !== 'boot') drawClouds(cx, cy);
   drawPostMarks(m);
   drawWorldExtras(m);
+  drawPops(); // il raccolto che vola nello zaino: su ogni mappa
   drawLand(m);
   drawMachines(m);
   drawFest(m);

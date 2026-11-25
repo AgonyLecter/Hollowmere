@@ -47,6 +47,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `posta:intercetta` (`Ext.intercetta('posta', a)`) | un messaggio dalla posta (`visite/<pid>`); chi lo gestisce restituisce `true` |
 | `mira` | chi o cosa si può toccare davanti al giocatore (`C`, `ax`, `ay`, `m`): si aggiunge `{ k: 'ext', d, act(), fumetto() }` a `C` |
 | `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
+| `serraMappa` / `serraMenu` / `funcMenuPronto` / `funcMigliorato` | la stanza della serra si costruisce / il menu del banco (HTML in più e pulsanti) / un edificio sale di livello |
+| `automatismo` / `portaDiCasa` (`Ext.intercetta`) | un automatismo della serra è stato installato / dove rientra la sera chi non ha una casa del paese |
 | `vaiMappa` (`Ext.intercetta('vaiMappa', id, x, y, dir)`) | cambiare mappa da un file caricato prima di `main.js` (restituisce la promessa di `goMap`) |
 
 ## Mappa dei file (in ordine di caricamento)
@@ -58,7 +60,8 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 - **La Valle (gioco libero)**: `free.js`, `animals.js`, `build.js`, `garden.js`, `macchine.js` (abilità, macchine,
   alberi da frutto), `trade.js`, `anim.js`, `valle.js`, `espansione.js` (rango, zone, nuovi abitanti), `costruire.js` (anche l’interno della serra: aiuole in `st.farm` con la x oltre `SERRA_OX`),
   `miniera.js` (la scala per scendere è sotto una pietra qualunque: nessun aiuto visivo), `sempre.js` (museo, traguardi, eventi), `rango.js`, `vita.js` (giornate e chiacchiere degli abitanti),
-  `aspetto.js`, `zaino.js` (zaino, casse e la riparazione dei contenitori), `compagno.js` (il cane o il gatto:
+  `aspetto.js`, `zaino.js` (zaino, casse e la riparazione dei contenitori), `serra_auto.js` (gli automatismi della
+  serra: irrigatori a scomparsa alle 7, braccio a carrucola dalle 8 che posa i raccolti nella cassa della serra), `compagno.js` (il cane o il gatto:
   adozione, Segui/Resta, bottega), `contenuti.js` (colture, alberi, animali, ricette aggiunti di recente).
 - **Multiplayer**: `mp.js`, `missions.js`, `chat.js`, `coop.js`, `scambi.js`, `postino.js`, `coop_vivo.js`.
 - **Grafica rifatta**: `grafica.js` (personaggi, edifici, animali, attrezzi, cibi, atmosfera, strutture animate).
@@ -66,6 +69,9 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   alambicco, seminatrice, compostiera, forno a legna: ognuna con la sua animazione), `natura_cucina.js` (ricette che si
   imparano dagli abitanti, da soli o con l'esperienza; effetti dei piatti), `natura_fauna.js` (animali selvatici e
   taccuino del naturalista). La grafica si fa nel punto `arte`; macchine e animali si disegnano con `listaMondo`.
+- **L'Ingegnere**: `ingegnere.js` (arriva dopo il primo automatismo della serra; carro-officina, bottega, chiave inglese,
+  congegni montati sugli incroci fra le zolle in `st.free.auto`: irrigatori interrati alle 7, braccio raccoglitore dalle 8
+  verso la cassa collegata); disegni in `tools/pixel/ingegnere_abbozzo.py` → `js/ingegnere_mano.js`.
 - **Porte**: `porte.js` — bussare a chi è in casa (esce e parla, o risponde da dietro la porta; di notte, nella storia,
   vale la Regola III), il biglietto sulla porta se non c'è, e `Porte.dove(id)` per il taccuino. Battute in `BUSSA_TESTI`.
 - **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,

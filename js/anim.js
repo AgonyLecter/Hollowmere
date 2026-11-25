@@ -170,7 +170,7 @@ function popScale(o) {
   return 1 + Math.sin((t / 0.35) * Math.PI) * 0.18;
 }
 function flyPop(id, x, y) {
-  if (ICON[id]) (G.pops || (G.pops = [])).push({ img: ICON[id], x, y, t0: G.t });
+  if (ICON[id]) (G.pops || (G.pops = [])).push({ img: ICON[id], id, x, y, t0: G.t });
 }
 
 // ---------- personalizzazione: tetto, pareti, pavimento, recinti ----------

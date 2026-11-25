@@ -238,8 +238,10 @@ const UI = {
         c = el.firstChild,
         x = c.getContext('2d');
       x.clearRect(0, 0, 32, 32);
-      if (s && ICON[s.id]) x.drawImage(ICON[s.id], 0, 0);
-      el.lastChild.textContent = s && s.n > 1 ? s.n : '';
+      // quello che sta ancora volando verso la casella non si conta finché non arriva (world.js, drawPops)
+      const n = s ? s.n - popInVolo(s.id) : 0;
+      if (s && n > 0 && ICON[s.id]) x.drawImage(ICON[s.id], 0, 0);
+      el.lastChild.textContent = s && n > 1 ? n : '';
       el.classList.toggle('sel', base + i === G.st.sel);
     }
   },

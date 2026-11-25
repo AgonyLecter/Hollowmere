@@ -10,6 +10,9 @@ const HOMES = {
   tobia: 'varco'
 };
 function homeDoor(id) {
+  // punto di estensione: chi non ha una casa del paese (il carro dell'Ingegnere) dice qui dove rientra
+  const fuori = Ext.intercetta('portaDiCasa', id);
+  if (fuori) return fuori;
   const k = HOMES[id];
   // i nuovi abitanti della Valle rientrano nella loro casetta, non oltre il ponte
   if (k === 'ponte' && typeof resOf === 'function' && isFree()) {

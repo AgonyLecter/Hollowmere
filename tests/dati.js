@@ -272,6 +272,7 @@ module.exports = async function (t, { browser }) {
       for (const f of Object.values(FESTE)) for (const [x] of f.shop || []) ok.add(x);
       for (const [x] of NOVE_SHOP) ok.add(x);
       for (const [x] of BOTTEGA) ok.add(x);
+      for (const [x] of ING_SHOP) ok.add(x); // la bottega dell'Ingegnere
       for (const l of Object.values(WILD)) for (const x of l) ok.add(x);
       for (const l of Object.values(FISH)) for (const x of l) ok.add(x[0]);
       for (const f of [5, 15, 30, 45, 80]) for (const [x] of oreTable(f)) ok.add(x);

@@ -736,6 +736,7 @@ function waterWide(tx, ty) {
     if (g && !g.w) {
       g.w = true;
       burst('water', (tx + a) * 16 + 8, (ty + b) * 16 + 4, 6);
+      piantaSussulta(chiaveZolla(tx + a, ty + b), 'acqua');
       if (g.c) st.flags.watered = (st.flags.watered || 0) + 1;
     }
   }

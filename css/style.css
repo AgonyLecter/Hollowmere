@@ -459,3 +459,7 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .staz-incudine i:nth-child(3){position:absolute;left:calc(50% + 4*var(--u));top:calc(6*var(--u));width:calc(2*var(--u));height:calc(2*var(--u));background:#ffd070;box-shadow:calc(-8*var(--u)) calc(-3*var(--u)) 0 #ffb040,calc(6*var(--u)) calc(-4*var(--u)) 0 #fff2a0,calc(-2*var(--u)) calc(-6*var(--u)) 0 #e05a18;animation:temaScintille 1.4s steps(4) infinite}
 @keyframes temaScintille{0%{transform:translateY(0);opacity:1}60%{opacity:1}100%{transform:translateY(calc(-6*var(--u)));opacity:0}}
 @media (prefers-reduced-motion:reduce){.mac[class*=tema-] .mac-orn,.mac[class*=tema-] .mac-orn::after,.mac[class*=tema-] .mac-freccia,.staz i{animation:none!important}}
+/* il raccolto arriva nella casella: un sussulto e un lampo d'oro (world.js, drawPops) */
+.slot.arriva,#bInv.arriva{animation:slotArriva .42s cubic-bezier(.3,1.6,.5,1)}
+@keyframes slotArriva{0%{transform:scale(1)}35%{transform:scale(1.22) translateY(calc(-2*var(--u)));filter:brightness(1.5) drop-shadow(0 0 calc(4*var(--u)) rgba(255,210,110,.9))}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.slot.arriva,#bInv.arriva{animation:none}}

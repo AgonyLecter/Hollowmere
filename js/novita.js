@@ -465,6 +465,54 @@ const NOVITA = [
         t: 'Di notte le <b>Ombre</b> escono anche quando sei da un amico: lì seguono solo te, ti rubano un po’ di energia se ti toccano, e un colpo d’attrezzo le disperde. In miniera, invece, la pietra che nasconde la scala non si tradisce più: cercala tu.'
       }
     ]
+  },
+  {
+    id: 'orto_vivo',
+    v: 47,
+    n: "L'orto si muove",
+    steps: [
+      {
+        t: "Le piante dell'orto adesso sono vive: il vento le muove (di più quando piove), si piegano quando ci passi in mezzo e tornano su. Quando una pianta cresce, la prima volta che la vedi fa un piccolo scatto: la mattina, girando per i campi, vedi cos'è cresciuto."
+      },
+      {
+        t: "L'annaffiatoio versa davvero: un filo d'acqua dal beccuccio, la pianta che sussulta, la terra che si scurisce piano. E quello che raccogli vola fino alla sua casella della barra, che si accende d'oro quando arriva."
+      },
+      {
+        t: 'I campi sono più puliti: sulle piante mature, da lontano, c’è solo una stellina d’oro; da vicino il sigillo col raccolto. L’orologino del tempo compare sulle zolle davanti a te, o su tutte quando hai in mano l’annaffiatoio o i semi.'
+      }
+    ]
+  },
+  {
+    id: 'serra_auto',
+    v: 48,
+    n: 'La serra lavora da sola',
+    steps: [
+      {
+        t: 'Al banco del giardiniere, dentro la serra, ci sono due <b>automatismi</b>. Gli <b>irrigatori a scomparsa</b>: ogni mattina alle 7 spuntano dalla terra delle aiuole, girano spruzzando tutte le zolle e rientrano.'
+      },
+      {
+        t: 'Il <b>braccio a carrucola</b>: una gru sotto il tetto di vetro. Dalle 8 corre sulle rotaie, cala le pinze sulle piante mature e le posa nella <b>cassa della serra</b>, accanto alla porta: la svuoti quando vuoi. Se non sei lì, il lavoro si fa lo stesso.'
+      },
+      {
+        t: 'E dentro la serra adesso la zappa risponde, il gesto dell’attrezzo si vede, e chi è da un amico col permesso di aiutare può seminare e raccogliere anche nella sua serra.'
+      }
+    ]
+  },
+  {
+    id: 'ingegnere',
+    v: 49,
+    n: "L'Ingegnere",
+    steps: [
+      {
+        t: "Quando installi il primo automatismo della serra, la voce gira: la mattina dopo, accanto alla piazza, si ferma un carro-officina a vapore. Ci vive <b>l'Ingegnere</b>, cilindro, occhialoni d'ottone e un passerotto meccanico sul cappello."
+      },
+      {
+        t: 'Al suo carro vende la <b>chiave inglese</b> e i congegni per i campi. Con la chiave in mano vedi gli incroci fra le zolle: gli <b>irrigatori interrati</b> si montano lì, sotto terra, senza togliere posto alle piante, e alle 7 spuntano e bagnano tutto intorno.'
+      },
+      {
+        t: 'Il <b>braccio raccoglitore</b> va anche lui su un incrocio: collegalo a una cassa con la chiave e dalle 8 raccoglie le piante mature e te le spedisce lungo il filo di rame. Se cambi idea, lo smonti e torna nello zaino.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

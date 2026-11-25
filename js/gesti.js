@@ -230,6 +230,56 @@ function cadutaAterra(c) {
     });
 }
 
+// ---------- il getto dell'annaffiatoio ----------
+// Mentre l'annaffiatoio è inclinato (la parte «versa» del gesto, moto() in anim.js) dal beccuccio esce un arco di
+// gocce che cade sulla zolla davanti: stessa fisica delle schegge (gravità, ombra a terra). Solo su una zolla.
+const GETTO = { acc: 0 };
+function gettoAcqua(dt) {
+  const A = G.toolA,
+    k = swingK();
+  if (!A || A.id !== 'can' || k < 0 || !G.map) return;
+  const versa = clamp((k - 0.25) / 0.35, 0, 1) - clamp((k - 0.8) / 0.2, 0, 1);
+  if (versa < 0.45) return;
+  const [fx, fy] = frontTile();
+  if (!G.st.farm[chiaveZolla(fx, fy)]) return;
+  const p = G.player,
+    [dx, dy] = DIRV[A.dir],
+    x0 = p.x + dx * 11,
+    y0 = p.y + dy * 5 - (dy < 0 ? 4 : 0),
+    z0 = dy < 0 ? 15 : 11,
+    g = 260;
+  GETTO.acc += dt * 70 * versa;
+  while (GETTO.acc >= 1) {
+    GETTO.acc--;
+    const tx = fx * 16 + 8 + caso(-4, 4),
+      ty = fy * 16 + 10 + caso(-2, 2),
+      T = caso(0.2, 0.26),
+      vz = (-z0 + 0.5 * g * T * T) / T;
+    pezzo({
+      k: 'goccia',
+      x: x0 + caso(-0.6, 0.6),
+      y: y0,
+      z: z0,
+      g,
+      vx: (tx - x0) / T,
+      vy: (ty - y0) / T,
+      vz,
+      col: Math.random() < 0.6 ? '#a8d8f8' : '#6ab0e0',
+      w: 1,
+      h: 1.5,
+      life: T + 0.04,
+      rimbalzi: 0
+    });
+  }
+}
+Ext.on('mpTick', dt => {
+  try {
+    gettoAcqua(dt);
+  } catch (e) {
+    console.error(e);
+  }
+});
+
 // ---------- vita dei pezzi ----------
 Ext.on('mpTick', dt => {
   try {
