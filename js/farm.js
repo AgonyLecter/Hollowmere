@@ -336,6 +336,15 @@ function farmAct(tx, ty) {
     return;
   }
   if (id === 'hoe') {
+    // le aiuole della serra nascono già dissodate (e lì le terre di Ezekiel non c'entrano)
+    if (f && m.id === 'serra') {
+      UI.toast(
+        f.c
+          ? 'C’è una pianta: la zappa serve solo per toglierla se secca.'
+          : 'L’aiuola è già dissodata: semina pure.'
+      );
+      return;
+    }
     if (isFree(st) ? !ownedAt(tx, ty) : !inFarm(tx, ty)) {
       if (free)
         UI.toast(

@@ -615,7 +615,9 @@ function funcMenu(k) {
     body = `<p>Nel silos: <b>${b.hay || 0}</b> / ${cap} fieno.</p><p class="small">D'inverno, ogni mattina, riempie le mangiatoie di tutti i pollai e le stalle.</p>${h ? `<p><button class="btn" data-silo="1">Metti il fieno (${Math.min(h, cap - (b.hay || 0))})</button></p>` : ''}`;
   }
   if (b.id === 'serra')
-    body = `<p class="small">Adesso: ${F.lv[lv - 1]}. Sotto i vetri si semina fuori stagione e al cambio di stagione non muore niente. Pioggia qui non ne arriva: le aiuole vanno annaffiate.</p>`;
+    body =
+      `<p class="small">Adesso: ${F.lv[lv - 1]}. Sotto i vetri si semina fuori stagione e al cambio di stagione non muore niente. Pioggia qui non ne arriva: le aiuole vanno annaffiate.</p>` +
+      (Ext.intercetta('serraMenu', k, b) || ''); // gli automatismi (serra_auto.js)
   if (b.id === 'pozzogrande')
     body = `<p class="small">Ogni mattina bagna tutte le zolle nel ${F.lv[lv - 1]}.</p>`;
   UI.open(
@@ -639,6 +641,7 @@ function funcMenu(k) {
     UI._mclose = null;
     funcMenu(k);
   };
+  Ext.run('funcMenuPronto', k, b, box, again); // punto di estensione: i pulsanti aggiunti da altri file
   {
     const t = box.querySelector('[data-mac]');
     if (t)
@@ -696,6 +699,7 @@ function funcMenu(k) {
         G.shake = 1;
         UI.hud();
         UI.toast(`${ITEMS[b.id].n}: livello ${b.lv}!`);
+        Ext.run('funcMigliorato', k, b);
         addXP('arti', 20);
         NET.save(st);
         again();
@@ -1254,6 +1258,7 @@ function buildSerra(st, k) {
     deco: 1
   });
   m.doors.push({ tx: 7, ty: SERRA_H - 1, to: 'main', x: ax, y: ay + 1, dir: 0 });
+  Ext.run('serraMappa', m, b, k); // punto di estensione: la cassa e i congegni degli automatismi
   addExits(m);
   buildGround(m);
   return m;
@@ -1271,6 +1276,11 @@ async function serraEntra(k) {
   }
 }
 ACT.serrabanco = o => funcMenu(o.bk);
+Ext.on('funcMigliorato', (k, b) => {
+  if (b.id !== 'serra' || !G.map || G.map.id !== 'serra' || G.map.serraK !== k) return;
+  G.maps.serra = buildSerra(G.st, k);
+  G.map = G.maps.serra;
+});
 PROMPT.serrabanco = 'Migliora';
 // la mappa della serra si rifà con le altre (anche se si è salvato là dentro)
 Ext.avvolgi('rebuildMaps', function (prossimo, ...a) {
@@ -1321,26 +1331,62 @@ Ext.avvolgi('doAction', function (prossimo, ...a) {
   if (!m || m.id !== 'serra' || G.cut || UI.busy()) return prossimo(...a);
   const [fx, fy] = frontTile(),
     fk = m.ox + fx + ',' + fy,
-    f = G.st.farm[fk];
-  if (!f) return prossimo(...a);
-  if (G.visit) {
-    // ospite: come nei campi, si annaffia e basta
-    const it = selItem();
+    f = G.st.farm[fk],
+    it = selItem(),
+    def = it && ITEMS[it.id];
+  if (!f) {
+    // davanti al pavimento con un attrezzo da campo o dei semi: si dice dove si coltiva, invece di tacere
+    if (!m.objAt(fx, fy) && def && (it.id === 'hoe' || it.id === 'can' || /^(seed|fert)$/.test(def.t))) {
+      toolSwing();
+      UI.toast('Qui è pavimento: si coltiva nelle aiuole di terra, dentro i bordi di legno.');
+      return;
+    }
+    return prossimo(...a);
+  }
+  const v = G.visit;
+  if (v && !v.coop) {
+    // ospite senza permesso: come nei campi, si annaffia e basta
     if (it && it.id === 'can' && !f.w) {
       if (!useEnergy(1)) return;
+      toolSwing();
       f.w = true;
       AU.play('water');
       burst('water', fx * 16 + 8, fy * 16 + 4, 10);
       piantaSussulta(fk, 'acqua');
-      G.visit.watered++;
-      MP.act(G.visit.pid, { t: 'water', k: fk, day: G.st.day, from: G.home.name });
+      v.watered++;
+      MP.act(v.pid, { t: 'water', k: fk, day: G.st.day, from: G.home.name });
       if (f.c) Ext.run('fatto', 'annaffia', 1);
-    } else UI.toast(`Sei nella serra di ${G.visit.name}: puoi annaffiare.`);
+    } else
+      UI.toast(
+        `Sei nella serra di ${v.name}: puoi annaffiare. Per seminare e raccogliere serve il permesso di aiutare.`
+      );
+    return;
+  }
+  toolSwing();
+  if (v) {
+    // ospite col permesso (cooperativo): come nei campi del padrone (coop_vivo.js), si lavora sul suo villaggio
+    // e le differenze delle zolle gli arrivano da sole
+    G.visit = null;
+    G.coopAct = true;
+    try {
+      serraCon(m, () => farmAct(fx, fy));
+    } finally {
+      G.visit = v;
+      G.coopAct = false;
+    }
     return;
   }
   serraCon(m, () => farmAct(fx, fy));
 });
-// il disegno: le zolle sul pavimento, i vetri, le piante (in ordine di profondità) e i segni sopra le piante
+// la nuvoletta sopra la testa: anche nella serra dice «Raccogli» davanti a una pianta matura
+Ext.avvolgi('promptInfo', function (prossimo, ...a) {
+  const m = G.map;
+  if (!m || m.id !== 'serra' || G.mode !== 'game' || G.cut || UI.busy()) return prossimo(...a);
+  const [fx, fy] = frontTile(),
+    f = G.st.farm[m.ox + fx + ',' + fy];
+  if (f && f.c && !f.c.dead && cropStage(f.c) === 3) return { x: fx * 16 + 8, y: fy * 16 - 8, t: 'Raccogli' };
+  return prossimo(...a);
+}); // il disegno: le zolle sul pavimento, i vetri, le piante (in ordine di profondità) e i segni sopra le piante
 Ext.on('sopraTerreno', m => {
   if (m.id !== 'serra') return;
   const V = serraVista(m);

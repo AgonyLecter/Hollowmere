@@ -481,6 +481,22 @@ const NOVITA = [
         t: 'I campi sono più puliti: sulle piante mature, da lontano, c’è solo una stellina d’oro; da vicino il sigillo col raccolto. L’orologino del tempo compare sulle zolle davanti a te, o su tutte quando hai in mano l’annaffiatoio o i semi.'
       }
     ]
+  },
+  {
+    id: 'serra_auto',
+    v: 48,
+    n: 'La serra lavora da sola',
+    steps: [
+      {
+        t: 'Al banco del giardiniere, dentro la serra, ci sono due <b>automatismi</b>. Gli <b>irrigatori a scomparsa</b>: ogni mattina alle 7 spuntano dalla terra delle aiuole, girano spruzzando tutte le zolle e rientrano.'
+      },
+      {
+        t: 'Il <b>braccio a carrucola</b>: una gru sotto il tetto di vetro. Dalle 8 corre sulle rotaie, cala le pinze sulle piante mature e le posa nella <b>cassa della serra</b>, accanto alla porta: la svuoti quando vuoi. Se non sei lì, il lavoro si fa lo stesso.'
+      },
+      {
+        t: 'E dentro la serra adesso la zappa risponde, il gesto dell’attrezzo si vede, e chi è da un amico col permesso di aiutare può seminare e raccogliere anche nella sua serra.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

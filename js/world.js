@@ -1939,6 +1939,7 @@ function disegnaZolla(k, f, x, y, bordi) {
     ctx.globalAlpha = 1;
   } else ctx.drawImage(T.zolla[f.w ? 1 : 0][v][bordi], x * 16, y * 16, 16, 16);
 }
+const QUADRANTI_VIS = new Map(); // quanto si vede l'orologino di ogni zolla (dissolvenza)
 function drawCropMarks(m, tx0, ty0, tx1, ty1) {
   if (m.id !== 'main' || G.mode !== 'game') return;
   const fm = G.st.farm,
@@ -1980,8 +1981,13 @@ function drawCropMarks(m, tx0, ty0, tx1, ty1) {
       continue;
     }
     // il quadrante: sulla zolla davanti e su quelle accanto, o su tutte con l'annaffiatoio o i semi in mano
-    let a = d < 1.7 ? 0.95 : d < 2.6 ? ((2.6 - d) / 0.9) * 0.95 : 0;
-    if (hold) a = Math.max(a, 0.95);
+    // visibile o no, con una dissolvenza rapida nel passaggio: a metà opacità diventerebbe una macchia
+    const qv = QUADRANTI_VIS.get(G.map.id + ':' + k) || { v: 0, t: G.t },
+      voglio = hold || d < 2.2 ? 1 : 0;
+    qv.v += (voglio - qv.v) * Math.min(1, (G.t - qv.t) * 12);
+    qv.t = G.t;
+    QUADRANTI_VIS.set(G.map.id + ':' + k, qv);
+    const a = qv.v < 0.05 ? 0 : qv.v * 0.95;
     // il quadrante: le notti passate, e mezza in più se oggi è già bagnata
     const n = CROPS[c.t].days;
     drawQuadrante(X, Y - 3, (c.a + (f.w ? 0.5 : 0)) / n, a);
