@@ -4,6 +4,11 @@
 // zolle (senza toccarle) e lo si smonta; alle 7 gli irrigatori bagnano solo le zolle che coprono, dalle 8 il
 // braccio manda il raccolto alla cassa collegata (anche quando non sei lì).
 const { openGame, newGame, skipScenes } = require('./helpers');
+const carroSulPozzoN = ([ax, ay]) => {
+  for (let y = ay - 1; y <= ay + 1; y++)
+    for (let x = ax; x < ax + 4; x++) if (x >= 52 && x <= 57 && y >= 17 && y <= 23) return true;
+  return false;
+};
 module.exports = async function (t, { browser }) {
   const { page, errors } = await openGame(browser);
   await newGame(page, 'Ada', 'f');
@@ -50,6 +55,25 @@ module.exports = async function (t, { browser }) {
   );
   t.true('il suo carro-officina è accanto alla piazza', arrivo.carro);
   t.true('di giorno lui sta davanti al carro', arrivo.davanti);
+  // il carro non si ferma mai sull'angolo del pozzo; e chi ce l'aveva già parcheggiato (prima che il pozzo
+  // lasciasse la piazza) se lo ritrova poco più in là, col pozzo al suo posto
+  const pozzo = await page.evaluate(() => {
+    const I = G.st.free.ing,
+      fuori = I.qui.slice();
+    I.qui = [54, 21];
+    rebuildMaps();
+    G.map = G.maps.main;
+    const m = G.maps.main,
+      c = m.objs.find(o => o.kind === 'carroIng'),
+      w = m.objs.find(o => o.kind === 'well');
+    const r = { scelto: fuori, ora: I.qui.slice(), pozzo: !!w, carro: !!c, sotto: carroSulPozzo(...I.qui) };
+    return r;
+  });
+  t.true('il posto scelto per il carro non pesta l’angolo del pozzo', !carroSulPozzoN(pozzo.scelto));
+  t.true(
+    'un carro salvato sul pozzo viene spostato e il pozzo c’è',
+    pozzo.pozzo && pozzo.carro && !pozzo.sotto && pozzo.ora.join() !== '54,21'
+  );
   // la bottega
   await page.evaluate(() => ingBottega());
   for (const id of ['chiave', 'irr_auto', 'irr_auto2', 'braccio_auto']) {

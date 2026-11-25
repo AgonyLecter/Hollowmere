@@ -107,10 +107,20 @@ const ingQui = st => {
   return I && I.qui && (st || G.st).day >= I.day ? I : null;
 };
 const carroPorta = I => [I.qui[0] + 2, I.qui[1] + 1];
+// l'angolo del pozzo sul prato a est (lastricato, pozzo, abbeveratoio, secchio): il carro non ci si ferma mai
+const ANGOLO_POZZO = { x0: 52, y0: 17, x1: 57, y1: 23 };
+const nelPozzo = (x, y) =>
+  x >= ANGOLO_POZZO.x0 && x <= ANGOLO_POZZO.x1 && y >= ANGOLO_POZZO.y0 && y <= ANGOLO_POZZO.y1;
+// il carro (4×2 e la fila della porta) con l'angolo in (ax, ay) pesterebbe l'angolo del pozzo?
+const carroSulPozzo = (ax, ay) => {
+  for (let y = ay - 1; y <= ay + 1; y++) for (let x = ax; x < ax + 4; x++) if (nelPozzo(x, y)) return true;
+  return false;
+};
 // il posto del carro: 4×2 caselle libere (e la fila davanti per la porta), il più vicino possibile alla piazza
 function carroPosto(m, st) {
   const libera = (x, y) =>
     m.inb(x, y) &&
+    !nelPozzo(x, y) &&
     !m.solid(x, y) &&
     !m.objAt(x, y) &&
     !st.farm[x + ',' + y] &&
@@ -133,6 +143,11 @@ Ext.on('applyFree', (m, st) => {
   const I = ingQui(st),
     img = FREEIMG.carroIng;
   if (!I || !img) return;
+  // chi aveva già il carro parcheggiato dove ora c'è il pozzo: lo sposta al primo posto libero lì vicino
+  if (carroSulPozzo(I.qui[0], I.qui[1])) {
+    const p = carroPosto(m, st);
+    if (p) I.qui = p;
+  }
   const [ax, ay] = I.qui,
     solid = [];
   for (let y = ay - 1; y <= ay; y++) for (let x = ax; x < ax + 4; x++) solid.push([x, y]);
