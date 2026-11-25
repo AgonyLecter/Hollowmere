@@ -513,6 +513,19 @@ const NOVITA = [
         t: 'Il <b>braccio raccoglitore</b> va anche lui su un incrocio: collegalo a una cassa con la chiave e dalle 8 raccoglie le piante mature e te le spedisce lungo il filo di rame. Se cambi idea, lo smonti e torna nello zaino.'
       }
     ]
+  },
+  {
+    id: 'emporio',
+    v: 50,
+    n: 'L’emporio apre la porta',
+    steps: [
+      {
+        t: 'L’<b>Emporio Crane</b> adesso ha il suo interno: di giorno la porta si apre. Dentro ci sono il bancone con la bilancia e il campanello, gli scaffali coi semi della stagione, il tavolo delle novità, i sacchi di concime e il cesto del pane di Clara.'
+      },
+      {
+        t: 'La merce si tocca: vedi il prezzo e la compri. Nella Valle Agatha sta dietro il bancone; il sabato torna col banco del mercato in piazza. E il caricamento, all’inizio, accende le sue candele mentre la Valle si sveglia.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

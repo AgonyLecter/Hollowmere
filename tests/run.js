@@ -30,7 +30,8 @@ const SUITES = {
   terreno: require('./terreno'),
   ricordi: require('./ricordi'),
   serra: require('./serra'),
-  ingegnere: require('./ingegnere')
+  ingegnere: require('./ingegnere'),
+  emporio: require('./emporio')
 };
 const args = process.argv.slice(2),
   aggiorna = args.includes('--aggiorna'),
