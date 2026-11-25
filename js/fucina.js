@@ -2,7 +2,7 @@
 // ================= LA FUCINA DI BROM, DENTRO =================
 // Di giorno la porta della fucina si apre: dentro la forgia di pietra con le braci che respirano, il mantice,
 // l'incudine sul ceppo, la vasca della tempra, la rastrelliera degli attrezzi, il tavolo da disegno con le piante
-// della casa, il carbone e la mola. I servizi di Brom stanno dove si fanno: all'incudine si migliorano gli
+// della casa, il carbone, la mola e la cassa dei minerali (si comprano ferro, lingotti, rame, nichel e oro). I servizi di Brom stanno dove si fanno: all'incudine si migliorano gli
 // attrezzi (forgeMenu), al tavolo da disegno si amplia la casa (houseUpMenu), se lui c'è.
 // Nella Valle la mattina Brom lavora qui dentro (scintille e colpi di martello); il pomeriggio torna
 // all'incudine fuori, così il paese continua a vedere le scintille. Nella storia resta fuori, come sempre.
@@ -82,6 +82,14 @@ function buildFucina(st) {
   });
   metti('fuc_carbone', 1, 7, I.fuc_carbone, { act: 'fucCarbone', wt: 1 });
   metti('fuc_mola', 10, 6, I.fuc_mola, { act: 'fucMola' });
+  metti('fuc_minerali', 8, 6, I.fuc_minerali, {
+    act: 'fucMinerali',
+    wt: 2,
+    solid: [
+      [8, 6],
+      [9, 6]
+    ]
+  });
   // la luce della forgia, calda e bassa
   m.lights.push({ x: 2 * 16 + 8, y: 2 * 16, r: 80, fire: 1 }, { x: 10 * 16, y: 3 * 16, r: 36, fire: 1 });
   const [dx, dy] = bdoor('forge');
@@ -176,7 +184,61 @@ ACT.fucMola = () => {
   AU.play('pietra');
   UI.toast('Giri la manovella. La mola canta, e una scintilla ti salta sulla manica.');
 };
+// ---------- la cassa dei minerali ----------
+// Ogni villaggio trova nelle sue rocce solo due materiali rari su quattro, e l'oro in miniera è profondo: senza
+// qualcuno con cui scambiare, la serra e le macchine grandi restavano un miraggio. Brom ne tiene un po' da parte
+// e lo vende caro (al mercato del ponte e in miniera conviene di più). Le scorte si rifanno ogni mattina.
+const FUC_MIN = [
+  ['ferro', 40, 10],
+  ['lingotto', 190, 3],
+  ['rame', 90, 5],
+  ['nichel', 130, 4],
+  ['oro', 340, 2]
+];
+function fucScorte(st) {
+  const f = (st.flags.fucMin = st.flags.fucMin || { day: -1, presi: {} });
+  if (f.day !== st.day) {
+    f.day = st.day;
+    f.presi = {};
+  }
+  return f;
+}
+function fucMinerali() {
+  const st = G.st,
+    sc = fucScorte(st),
+    c_e = bromQui(),
+    resta = id => FUC_MIN.find(r => r[0] === id)[2] - (sc.presi[id] || 0),
+    prezzo = id => FUC_MIN.find(r => r[0] === id)[1],
+    can = (id, q) => resta(id) >= q && st.money >= prezzo(id) * q;
+  UI.open(
+    `<button class="btn mclose" data-close>✕</button><h2>La cassa dei minerali</h2><p class="small">${c_e ? '«Roba buona. Non chiedere da dove viene.»' : 'Brom non c’è. Sul coperchio, col gesso: «Prezzo giusto. Soldi nel barattolo.»'} Le scorte si rifanno ogni mattina. — Hai <b>${CZ(st.money)}</b></p>` +
+      FUC_MIN.map(
+        ([id, p]) =>
+          `<div class="mrow"><canvas data-i="${id}" width="32" height="32"></canvas><span>${ITEMS[id].n}<br><span class="small">${resta(id) > 0 ? 'ne restano ' + resta(id) : 'finito per oggi'}</span></span><b class="price">${CZ(p)}</b><button class="btn" data-m="${id}" data-q="1" ${can(id, 1) ? '' : 'disabled'}>×1</button></div>`
+      ).join('')
+  );
+  const box = $('#mbox');
+  box
+    .querySelectorAll('canvas[data-i]')
+    .forEach(c => ICON[c.dataset.i] && c.getContext('2d').drawImage(ICON[c.dataset.i], 0, 0));
+  box.querySelectorAll('[data-m]').forEach(
+    b =>
+      (b.onclick = () => {
+        const id = b.dataset.m;
+        if (!can(id, 1) || !addItem(id, 1)) return;
+        st.money -= prezzo(id);
+        sc.presi[id] = (sc.presi[id] || 0) + 1;
+        AU.play(c_e ? 'coin' : 'pick');
+        UI.hud();
+        UI._mclose = null;
+        fucMinerali();
+      })
+  );
+}
+ACT.fucMinerali = () => fucMinerali();
+
 Object.assign(PROMPT, {
+  fucMinerali: 'Minerali',
   fucIncudine: 'Incudine',
   fucTavolo: 'Tavolo',
   fucMantice: 'Soffia',

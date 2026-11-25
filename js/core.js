@@ -200,6 +200,9 @@ const LS = {
     }
   }
 };
+// l'aiuto «dove si trova»: accanto a un materiale che manca (miglioramenti, feste) il gioco dice dove cercarlo.
+// Si spegne nelle Opzioni; vale per questo dispositivo
+const AIUTO_DOVE = { on: LS.get('hm_dove') !== '0' };
 impostaZoom(LS.get('hm_zoom'));
 const SC = n => `${n} ${Math.abs(n) === 1 ? 'scudo' : 'scudi'}`,
   CZ = n => `<span class="coin"></span>${n}`;

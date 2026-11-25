@@ -77,7 +77,8 @@ function oreTable(f) {
       ['ferro', 28],
       ['quarzo', 12],
       ['rame', 8],
-      ['nichel', 4]
+      ['nichel', 4],
+      ['oro', 3] // un po' d'oro già da qui: la serra e le macchine lo chiedono presto
     ];
   if (f < 40)
     return [

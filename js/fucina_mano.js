@@ -244,6 +244,28 @@ const FUCINA_MANO = {
    "..oBBo........oBBo..",
    "..oBBo........oBBo..",
    "..oBBo........oBBo.."
+  ],
+  "minerali": [
+   "............................",
+   "............................",
+   "............................",
+   "..oooooo.oooooo.oooooo.ooooo",
+   ".ojJJJJjoj7J7J7omMmMmMo09898",
+   ".o65565oo76676ooMmmMmoo98898",
+   ".o55656oo66767oommMmMoo88989",
+   ".o55555jo66666jommmmmmo88888",
+   "ojW5WW5bJW6WW6bJWmWWmbJW8WW8",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "owwwwwwbwwwwwwbwwwwwwbwwwwwo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "owwwwwwbwwwwwwbwwwwwwbwwwwwo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "oBBBBBBbBBBBBBbBBBBBBbBBBBBo",
+   "obbbbbbbbbbbbbbbbbbbbbbbbbbo"
   ]
  }
 };

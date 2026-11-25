@@ -272,6 +272,7 @@ async function startFrom(st) {
       });
   }
   UI.toast(`Bentornat{o|a}, ${st.name}. Giorno ${st.day}.`);
+  Ext.run('partitaCaricata', G.st); // doni d'aggiornamento e simili (garden.js)
 }
 function toTitle() {
   G.coach = null;

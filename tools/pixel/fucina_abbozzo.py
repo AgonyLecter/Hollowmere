@@ -197,6 +197,27 @@ for a in range(0, 360, 45):
 rett(T, 17, 8, 20, 9, 'w')  # la manovella
 A['mola'] = chiudi(T, scuri='BmML')
 
+# ---------------------------------------------------------------- la cassa dei minerali 28x20
+# una cassa bassa di assi, divisa in scomparti: ferro rugginoso, rame, nichel, pepite d'oro; il barattolo dei soldi
+T = Tela(28, 20, 10)
+rett(T, 1, 8, 27, 20, 'B')
+for x in range(1, 27):
+    T.put(x, 8, 'W'); T.put(x, 19, 'b')
+for x in (7, 14, 21):
+    for y in range(8, 20):
+        T.put(x, y, 'b')
+for y in (12, 16):
+    for x in range(1, 27):
+        if T.get(x, y) == 'B':
+            T.put(x, y, 'w')
+for x0, cols in ((1, '56'), (8, '67'), (15, 'mM'), (22, '89')):
+    for k in range(9):
+        x, y = x0 + 1 + (k * 3) % 5, 4 + (k * 5) % 4
+        T.put(x, y, cols[k % 2]); T.put(x + 1, y, cols[(k + 1) % 2]); T.put(x, y + 1, cols[0])
+    rett(T, x0 + 1, 7, x0 + 6, 8, cols[0])
+T.put(23, 4, '0')  # una pepita che brilla
+A['minerali'] = chiudi(T, scuri='BbWw56')
+
 QUI = os.path.dirname(__file__)
 righe = ['# L\'interno della fucina di Brom. Generato da fucina_abbozzo.py.', '@tavolozza', PAL]
 for k, T in A.items():
