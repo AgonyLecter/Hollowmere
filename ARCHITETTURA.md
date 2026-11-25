@@ -48,6 +48,7 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
 | `mira` | chi o cosa si può toccare davanti al giocatore (`C`, `ax`, `ay`, `m`): si aggiunge `{ k: 'ext', d, act(), fumetto() }` a `C` |
 | `arredo` (`Ext.intercetta('arredo', o)`) | il giocatore tocca un mobile di casa senza un'azione sua (la ciotola, la cuccia…) |
 | `serraMappa` / `serraMenu` / `funcMenuPronto` / `funcMigliorato` | la stanza della serra si costruisce / il menu del banco (HTML in più e pulsanti) / un edificio sale di livello |
+| `automatismo` / `portaDiCasa` (`Ext.intercetta`) | un automatismo della serra è stato installato / dove rientra la sera chi non ha una casa del paese |
 | `vaiMappa` (`Ext.intercetta('vaiMappa', id, x, y, dir)`) | cambiare mappa da un file caricato prima di `main.js` (restituisce la promessa di `goMap`) |
 
 ## Mappa dei file (in ordine di caricamento)
@@ -68,6 +69,9 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
   alambicco, seminatrice, compostiera, forno a legna: ognuna con la sua animazione), `natura_cucina.js` (ricette che si
   imparano dagli abitanti, da soli o con l'esperienza; effetti dei piatti), `natura_fauna.js` (animali selvatici e
   taccuino del naturalista). La grafica si fa nel punto `arte`; macchine e animali si disegnano con `listaMondo`.
+- **L'Ingegnere**: `ingegnere.js` (arriva dopo il primo automatismo della serra; carro-officina, bottega, chiave inglese,
+  congegni montati sugli incroci fra le zolle in `st.free.auto`: irrigatori interrati alle 7, braccio raccoglitore dalle 8
+  verso la cassa collegata); disegni in `tools/pixel/ingegnere_abbozzo.py` → `js/ingegnere_mano.js`.
 - **Porte**: `porte.js` — bussare a chi è in casa (esce e parla, o risponde da dietro la porta; di notte, nella storia,
   vale la Regola III), il biglietto sulla porta se non c'è, e `Porte.dove(id)` per il taccuino. Battute in `BUSSA_TESTI`.
 - **Gazzetta**: `gazzetta.js` — il «social» della Valle (multiplayer): trespolo, Pennino il piccione, fotografie seppia,

@@ -497,6 +497,22 @@ const NOVITA = [
         t: 'E dentro la serra adesso la zappa risponde, il gesto dell’attrezzo si vede, e chi è da un amico col permesso di aiutare può seminare e raccogliere anche nella sua serra.'
       }
     ]
+  },
+  {
+    id: 'ingegnere',
+    v: 49,
+    n: "L'Ingegnere",
+    steps: [
+      {
+        t: "Quando installi il primo automatismo della serra, la voce gira: la mattina dopo, accanto alla piazza, si ferma un carro-officina a vapore. Ci vive <b>l'Ingegnere</b>, cilindro, occhialoni d'ottone e un passerotto meccanico sul cappello."
+      },
+      {
+        t: 'Al suo carro vende la <b>chiave inglese</b> e i congegni per i campi. Con la chiave in mano vedi gli incroci fra le zolle: gli <b>irrigatori interrati</b> si montano lì, sotto terra, senza togliere posto alle piante, e alle 7 spuntano e bagnano tutto intorno.'
+      },
+      {
+        t: 'Il <b>braccio raccoglitore</b> va anche lui su un incrocio: collegalo a una cassa con la chiave e dalle 8 raccoglie le piante mature e te le spedisce lungo il filo di rame. Se cambi idea, lo smonti e torna nello zaino.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

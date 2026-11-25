@@ -9,7 +9,7 @@
 
 // ---------- fotografie del villaggio e differenze ----------
 // Le fotografie non portano il contenuto di casse (inv) e macchine (m): quello viaggia come operazioni (più sotto).
-const W_OBJ = ['built', 'tiles', 'debris', 'gone'];
+const W_OBJ = ['built', 'tiles', 'debris', 'gone', 'auto']; // auto: i congegni montati con la chiave (ingegnere.js)
 const CONT = ['inv', 'm'];
 function senzaCont(b) {
   const r = Object.assign({}, b);
@@ -26,6 +26,7 @@ function snapW(st) {
       tiles: F.tiles || {},
       debris: F.debris || {},
       gone: F.gone || {},
+      auto: F.auto || {},
       farm: st.farm || {},
       animals: F.animals || []
     })

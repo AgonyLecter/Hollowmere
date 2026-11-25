@@ -522,6 +522,7 @@ Ext.on('funcMenuPronto', (k, b, box, again) => {
         st.money -= A.money;
         for (const [i, n] of Object.entries(A.c)) removeItem(i, n);
         b.auto = Object.assign({}, b.auto, { [id]: 1 });
+        Ext.run('automatismo', k, id); // l'Ingegnere ne sente parlare (ingegnere.js)
         AU.play('ok');
         G.shake = 1;
         UI.hud();

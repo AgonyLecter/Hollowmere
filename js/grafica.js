@@ -176,6 +176,9 @@ const GX = (() => {
       // occhiaie (un viola spento sulla pelle) e l'oro di un dente
       u: h2r(mix(r2h(R.sk[2]), '#4a2a4a', 0.35)),
       a: [216, 170, 72],
+      // le lenti verdi degli occhialoni da saldatore (l'Ingegnere)
+      P: [98, 156, 116],
+      p: [46, 86, 66],
       X: (R.beard || R.hr)[3],
       x: (R.beard || R.hr)[1],
       e: h2r(mix(L.eye || '#4a3a2a', '#120a10', 0.55)),
@@ -203,6 +206,7 @@ const GX = (() => {
   }
   // segni personali sul volto: lentiggini, occhialini (montatura di ferro), cicatrice
   function segniMano(T, L) {
+    if (L.occhialoni) T = occhialoniMano(T);
     if (!L.lentiggini && !L.occhiali && !L.cicatrice) return T;
     const G = T.map(r => [...r]),
       w = G[0].length,
@@ -242,6 +246,27 @@ const GX = (() => {
       const [ex, ey] = lati[0][0];
       for (let k = 0; k < 3; k++) if (pelle(ex - 1 + k, ey + 2 + k)) G[ey + 2 + k][ex - 1 + k] = 'q';
     }
+    return G.map(r => r.join(''));
+  }
+  // gli occhialoni d'ottone sugli occhi che si vedono (di profilo): anello d'oro, lente verde col riflesso
+  function occhialoniMano(T) {
+    if (T.some(r => r.includes('P'))) return T; // di fronte: gli occhialoni li ha già il volto su misura
+    const G = T.map(r => [...r]),
+      occhi = [];
+    G.forEach((r, y) => r.forEach((ch, x) => 'el'.includes(ch) && occhi.push([x, y])));
+    if (!occhi.length) return T;
+    const xs = occhi.map(o => o[0]),
+      ys = occhi.map(o => o[1]),
+      x0 = Math.min(...xs) - 1,
+      x1 = Math.max(...xs) + 1,
+      y0 = Math.min(...ys) - 1,
+      y1 = Math.max(...ys) + 1;
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        if (!G[y] || G[y][x] === undefined || G[y][x] === '.' || G[y][x] === 'o') continue;
+        const bordo = y === y0 || y === y1 || x === x0 || x === x1;
+        G[y][x] = bordo ? 'a' : y === y0 + 1 && x === x0 + 1 ? 'l' : 'P';
+      }
     return G.map(r => r.join(''));
   }
   // il ritratto di chi ha la testa a mano: la stessa testa ingrandita 3 volte a pixel interi, con le spalle

@@ -668,6 +668,7 @@ const Wiki = {
       key: 'Oggetti speciali',
       seed: 'Semi',
       tool: 'Attrezzi',
+      congegno: 'Congegni dell’Ingegnere',
       fert: 'Concime',
       bad: 'Proibiti',
       gift: 'Offerte'
