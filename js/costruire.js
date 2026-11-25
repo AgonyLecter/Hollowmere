@@ -110,8 +110,12 @@ function bmCanPlace(id, x, y) {
     const m = G.map,
       o = m.objAt(x, y);
     if (!ITEMS[id] || ITEMS[id].t !== 'arredo') return 'In casa vanno i mobili.';
-    if (ITEMS[id].wall) return m.get(x, y) === 9 && !o ? '' : 'I quadri vanno sulla parete in alto.';
-    return furnFree(m, x, y) ? '' : 'Non qui: serve un posto libero sul pavimento, lontano dalla porta.';
+    const fp = furnFp(id),
+      grande = fp[0] > 1 || fp[1] > 1 ? ` (${fp[0]}×${fp[1]} caselle)` : '';
+    if (ITEMS[id].wall) return furnSpazio(m, id, x, y) ? '' : 'Questo va sulla parete in alto' + grande + '.';
+    return furnSpazio(m, id, x, y)
+      ? ''
+      : 'Non qui: serve un posto libero sul pavimento' + grande + ', lontano dalla porta.';
   }
   const st = G.st,
     m = G.maps.main,
@@ -437,8 +441,9 @@ function drawBM() {
     id = b.carry ? b.carry.data.id : b.mode === 'piazza' && it && canHere(it.id) ? it.id : null;
   if (id) {
     const ok = !bmCanPlace(id, b.x, b.y),
-      sz = ITEMS[id].size,
-      T = sz ? bldFoot(id, b.x, b.y).T : [[b.x, b.y]];
+      casa = m.id === 'house',
+      sz = !casa && ITEMS[id].size,
+      T = sz ? bldFoot(id, b.x, b.y).T : casa ? furnTiles(id, b.x, b.y) : [[b.x, b.y]];
     ctx.fillStyle = ok ? 'rgba(110,220,110,.32)' : 'rgba(230,80,60,.38)';
     for (const [x, y] of T) ctx.fillRect(Math.round(x * 16 - cx), Math.round(y * 16 - cy), 16, 16);
     const img = sz
@@ -450,7 +455,7 @@ function drawBM() {
       ctx.globalAlpha = 0.6;
       const w = iw(img),
         h = ih(img),
-        wt = sz ? sz[0] : 1,
+        wt = sz ? sz[0] : casa ? furnFp(id)[0] : 1,
         dx = sz ? bldFoot(id, b.x, b.y).x0 : b.x;
       ctx.drawImage(
         img,

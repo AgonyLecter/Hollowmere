@@ -569,7 +569,7 @@ function freeMorningBase(st) {
         y = 6 + Math.floor(Math.random() * 36),
         k = fkey(x, y);
       if (W2.debris[k] || W2.built[k] || st.farm[k]) continue;
-      if (x >= 40 && x <= 50 && y >= 13 && y <= 24) continue;
+      if (x >= 37 && x <= 52 && y >= 13 && y <= 24) continue; // la piazza resta pulita
       W2.debris[k] = inFarm(x, y)
         ? ['erbaccia', 'sasso', 'ramo', 'erbaccia'][i % 4]
         : ['ramo', 'sasso', 'erbaccia'][i % 3];

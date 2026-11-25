@@ -2,7 +2,8 @@
 // ================= LO ZAINO (inventario vero) =================
 // Nella Valle lo zaino ha tre file da 10 (la barra in basso mostra una fila alla volta: ⇅ cambia fila).
 // Schermata completa (🎒 accanto alla barra, o tasto I), come in Minecraft: tocca per prendere in mano e posare,
-// doppio tocco per spostare veloce, tieni premuto per dividere la pila. La cassa usa lo stesso sistema.
+// doppio tocco per spostare veloce, tieni premuto (o tasto destro) per dividere la pila, e con una pila scelta
+// si trascina sulle caselle per distribuirla in parti uguali. La cassa usa lo stesso sistema.
 // Gli oggetti della storia, nella Valle, sono ricordi qualsiasi: si spostano, si mettono in cassa, si buttano.
 
 const INV_FREE = 30,
@@ -381,8 +382,10 @@ function zaino(chestKey) {
         : '') +
       `<div class="islot itrash" data-trash="1" title="Butta quello che hai scelto">🗑</div></div>` +
       `<div class="iinfo"></div>` +
-      (ZCH ? `<div class="icap">Cassa</div>${zGriglia('c', L.c.length)}<div class="icap">Zaino</div>` : '') +
-      zGriglia('z', L.z.length) +
+      // con la cassa aperta: cassa a sinistra e zaino a destra, così sta tutto in una schermata anche sui telefoni
+      (ZCH
+        ? `<div class="icorpo"><div class="icol-c"><div class="icap">Cassa</div>${zGriglia('c', L.c.length)}</div><div class="icol-z"><div class="icap">Zaino</div>${zGriglia('z', L.z.length)}</div></div>`
+        : zGriglia('z', L.z.length)) +
       `</div>`,
     () => {
       zCassaNota();
@@ -434,22 +437,95 @@ function zAggiorna() {
     el.classList.toggle('pick', !!sc && ZSEL.w === w && ZSEL.i === i);
   });
   box.querySelector('.iinfo').innerHTML = sc
-    ? zDesc(sc, ZSEL.n)
-    : '<span class="small">Tocca per scegliere, tocca un posto per spostare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b>: metà pila (o posane una) · trascina</span>';
+    ? zDesc(sc, ZSEL.n) +
+      (sc.n > 1 && !zTool(sc.id)
+        ? `<span class="iqta"><button class="btn" data-zq="-1">−</button><button class="btn" data-zq="+1">+</button><button class="btn" data-zq="meta">½</button><button class="btn" data-zq="1">1</button><button class="btn" data-zq="tutta">Tutta</button></span>`
+        : '')
+    : '<span class="small">Tocca per scegliere, tocca un posto per spostare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b> (o tasto destro): metà pila, o posane una · con una pila scelta, <b>trascina sulle caselle</b>: la dividi in parti uguali</span>';
   box.querySelector('[data-trash]').classList.toggle('on', !!sc);
+}
+// la quantità scelta: −, +, metà, una, tutta (pulsanti nella riga in alto, o la rotella del mouse)
+function zQuanti(k) {
+  const s = zScelta();
+  if (!s) return;
+  if (k === 'meta') ZSEL.n = Math.ceil(s.n / 2);
+  else if (k === '1') ZSEL.n = 1;
+  else if (k === 'tutta') ZSEL.n = s.n;
+  else ZSEL.n = Math.min(s.n, Math.max(1, ZSEL.n + +k));
+  AU.play('ui');
+}
+// alla Minecraft: con una pila scelta, trascinando sulle caselle (vuote o con la stessa cosa) la si divide in
+// parti uguali; se prima tieni premuto, ne posi una per casella mentre passi
+function zPuoPintare(w, i) {
+  const s = zScelta(),
+    t = zLists()[w] && zLists()[w][i];
+  return !!s && !zTool(s.id) && !(w === ZSEL.w && i === ZSEL.i) && (!t || t.id === s.id);
+}
+function zDistribuisci(posti) {
+  const s = zScelta();
+  if (!s || !posti.length) return;
+  const n = ZSEL.n,
+    k = posti.length,
+    per = Math.floor(n / k),
+    resto = n - per * k;
+  posti.forEach(([w, i], j) => {
+    const q = per + (per === 0 && j < resto ? 1 : 0);
+    if (q > 0 && zMuovi(ZSEL.w, ZSEL.i, q, w, i)) ZSEL.n -= q;
+  });
+  AU.play('blip');
+  if (ZSEL.n <= 0 || !zScelta()) zNessuna();
 }
 // tocchi, doppi tocchi, pressioni lunghe e trascinamenti (dito o mouse)
 function zDrag(box) {
   let d = null;
-  const LUNGO = 420;
+  const LUNGO = 420,
+    slotSotto = e => {
+      const t = document.elementFromPoint(e.clientX, e.clientY);
+      return t && t.closest && t.closest('.islot[data-w]');
+    },
+    pulisci = () => box.querySelectorAll('.islot.pinta').forEach(x => x.classList.remove('pinta'));
+  box.oncontextmenu = e => e.preventDefault();
+  box.onwheel = e => {
+    if (!zScelta()) return;
+    e.preventDefault();
+    zQuanti(e.deltaY < 0 ? '+1' : '-1');
+    zAggiorna();
+  };
+  box.addEventListener('click', e => {
+    const q = e.target.closest && e.target.closest('[data-zq]');
+    if (!q) return;
+    zQuanti(q.dataset.zq);
+    zAggiorna();
+  });
   box.querySelectorAll('.islot[data-w]').forEach(el => {
     const w = el.dataset.w,
       i = +el.dataset.i;
     el.onpointerdown = e => {
       e.preventDefault();
-      d = { w, i, x: e.clientX, y: e.clientY, moved: false, el, shift: e.shiftKey };
+      // tasto destro: subito come una pressione lunga (metà pila, o posane una)
+      if (e.button === 2) {
+        zTocca(w, i, true);
+        ZLAST = null;
+        zDopo();
+        return;
+      }
+      const pinta = zPuoPintare(w, i);
+      d = { w, i, x: e.clientX, y: e.clientY, moved: false, el, shift: e.shiftKey, pinta, posti: [] };
+      if (pinta) {
+        d.posti.push([w, i]);
+        el.classList.add('pinta');
+      }
       d.timer = setTimeout(() => {
         if (!d || d.moved) return;
+        if (d.pinta) {
+          // tieni premuto e poi trascina: una per casella
+          d.uno = true;
+          pulisci();
+          zTocca(w, i, true);
+          if (navigator.vibrate) navigator.vibrate(15);
+          zDopo();
+          return;
+        }
         zTocca(w, i, true);
         if (navigator.vibrate) navigator.vibrate(15);
         zDopo();
@@ -464,6 +540,22 @@ function zDrag(box) {
     el.onpointermove = e => {
       if (!d || d.el !== el) return;
       if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8) return;
+      if (d.pinta) {
+        // la pennellata: si aggiungono le caselle sotto il dito
+        d.moved = true;
+        if (!d.uno) clearTimeout(d.timer);
+        const sl = slotSotto(e);
+        if (!sl) return;
+        const w2 = sl.dataset.w,
+          i2 = +sl.dataset.i;
+        if (d.posti.some(([a, b]) => a === w2 && b === i2) || !zPuoPintare(w2, i2)) return;
+        d.posti.push([w2, i2]);
+        if (d.uno) {
+          zTocca(w2, i2, true);
+          zDopo();
+        } else sl.classList.add('pinta');
+        return;
+      }
       const L = zLists();
       if (!d.moved) {
         if (!L[w][i]) return;
@@ -485,8 +577,20 @@ function zDrag(box) {
       const was = d;
       d = null;
       clearTimeout(was.timer);
+      pulisci();
       if (was.g) was.g.remove();
       el.classList.remove('drag');
+      if (was.pinta && was.moved) {
+        // fine della pennellata: in parti uguali (o, se era «una per casella», è già tutto fatto)
+        if (!was.uno) zDistribuisci(was.posti);
+        ZLAST = null;
+        zDopo();
+        return;
+      }
+      if (was.uno) {
+        ZLAST = null;
+        return;
+      }
       if (was.moved) {
         // trascinata: tutta la pila dove la lasci (o nel cestino)
         const t = document.elementFromPoint(e.clientX, e.clientY),
@@ -528,6 +632,7 @@ function zDrag(box) {
         if (d.g) d.g.remove();
         d.el.classList.remove('drag');
       }
+      pulisci();
       d = null;
     };
   });

@@ -555,6 +555,67 @@ const NOVITA = [
         t: 'Accanto ai materiali che mancano (miglioramenti, serra, feste) il gioco ti dice <b>dove trovarli</b>. Se preferisci scoprirlo da te, lo spegni in Menu → Opzioni.'
       }
     ]
+  },
+  {
+    id: 'arredi',
+    v: 53,
+    n: 'I mobili della casa',
+    steps: [
+      {
+        t: 'Ventuno <b>mobili nuovi</b>, disegnati a mano: il letto grande con la trapunta a quadri, l’armadio intagliato, il comò, lo scrittoio, il divano, la tavola apparecchiata, il baule, il tappeto intrecciato… I più grandi occupano due o tre caselle.'
+      },
+      {
+        t: 'Alcuni sono <b>vivi</b>: l’orologio a pendolo segna l’ora e batte i rintocchi, la sedia a dondolo dondola, l’arcolaio gira, la stufa e il candelabro hanno il fuoco vero, il lucherino saltella nella gabbia, il pesce rosso nuota, il carillon suona. Toccali.'
+      },
+      {
+        t: 'Quelli di legno si fanno al <b>banco</b>; stoffa, vetro e ottone li vende <b>Agatha</b> (Arredi). E quando Brom amplia la casa, le stanze nuove hanno finestre e applique accese, il piano di sotto il pavimento di pietra, il salone un secondo camino.'
+      }
+    ]
+  },
+  {
+    id: 'piazza_nuova',
+    v: 54,
+    n: 'La piazza e gli attrezzi nuovi',
+    steps: [
+      {
+        t: 'La <b>piazza</b> si è fatta bella: il cordolo di granito, il rosone di pietra al centro (dove nelle feste si accende il falò), gli allori all’ingresso, le fioriere che cambiano fiori con le stagioni e i festoni di bandierine tra i lampioni.'
+      },
+      {
+        t: 'Le due <b>bacheche</b> sono nuove: a sinistra quella degli incarichi, a destra l’albo della Valle, coi pallini che si accendono per chi è online qui. La pietra del villaggio non c’è più: il rango lo trovi sotto l’orologio.'
+      },
+      {
+        t: 'E gli <b>attrezzi</b> sono ridisegnati: l’accetta con la lama a barba, il piccone a mezzaluna, la zappa, la pala a cuore, la falce, l’annaffiatoio di rame e la canna col mulinello.'
+      }
+    ]
+  },
+  {
+    id: 'pile',
+    v: 55,
+    n: 'Zaino, casse e macchine',
+    steps: [
+      {
+        t: 'Le schermate della <b>cassa</b> e delle <b>macchine</b> (fornace, barattolo, botte…) ora stanno tutte in una schermata anche sui telefoni: la cassa (o la macchina) a sinistra, lo zaino a destra.'
+      },
+      {
+        t: 'Le pile si dividono come in Minecraft: <b>tieni premuto</b> (o tasto destro) per prenderne metà o posarne una; con una pila scelta, <b>trascina il dito su più caselle</b> e si divide in parti uguali (tieni premuto prima di trascinare: una per casella). In alto ci sono −, +, ½, 1 e Tutta; sul computer va anche la rotella.'
+      },
+      {
+        t: 'Nelle macchine: un tocco mette un lotto, doppio tocco tutta la pila, <b>tocco lungo metà pila</b>.'
+      }
+    ]
+  },
+  {
+    id: 'compagno_gioca',
+    v: 56,
+    n: 'Giocare col compagno',
+    steps: [
+      {
+        t: 'Adesso si <b>gioca davvero</b>: dal suo menu lanci il gioco (resta tuo). Il cane rincorre la pallina o l’osso e te li riporta ai piedi; il gatto si acquatta, salta sul topolino o sul gomitolo e lo prende a zampate.'
+      },
+      {
+        t: 'Se lasci un suo gioco in casa, dopo aver mangiato ci gioca da solo. La <b>cuccia</b> è una cesta col cuscino a quadri: ci dorme sopra raggomitolato, e lo vedi. E quando ti corre incontro per le coccole si ferma al tuo fianco, senza scatti.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
