@@ -240,7 +240,17 @@ function compPuntoLibero(m) {
       r = 2 + Math.random() * (COMP_RAGGIO - 2),
       x = Math.round(COMP_CASA[0] + Math.cos(a) * r),
       y = Math.round(COMP_CASA[1] + Math.sin(a) * r * 0.7);
-    if (x > 0 && y > 0 && x < m.w && y < m.h && !m.solid(x, y) && !m.objAt(x, y))
+    // il punto vero (casella arrotondata, ai piedi) deve restare dentro la zona: vicino al bordo l'arrotondamento
+    // lo spingeva appena fuori, e il compagno ci andava
+    if (
+      x > 0 &&
+      y > 0 &&
+      x < m.w &&
+      y < m.h &&
+      !m.solid(x, y) &&
+      !m.objAt(x, y) &&
+      compNellaZona(x * 16 + 8, y * 16 + 12)
+    )
       return [x * 16 + 8, y * 16 + 12];
   }
   const [x, y] = COMP_GIRO[Math.floor(Math.random() * COMP_GIRO.length)];
