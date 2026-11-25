@@ -7,7 +7,9 @@
 //     (legno, tettuccio di scandole, lanterna), a destra l'albo della Valle (pietra e ardesia, il piccione in cima,
 //     la mappa dipinta e la lavagna dei nomi: i pallini si accendono per chi è online qui);
 //   · due allori in vaso accanto all'ingresso, le fioriere di pietra agli angoli (i fiori cambiano con la stagione);
-//   · i festoni di bandierine tra i lampioni, che il vento muove.
+//   · i festoni di bandierine tra i lampioni, che il vento muove;
+//   · il pozzo non sta più in piazza (copriva il medaglione): ha il suo angolo sul prato a est, col lastricato,
+//     l'abbeveratoio, il secchio e un corvo sul tetto che gracchia e vola via se ti avvicini troppo.
 // La pietra del villaggio non c'è più: il rango sta nel pulsante sotto l'orologio. Nella storia la piazza resta com'era.
 
 const PZ = { x0: 38, y0: 15, x1: 51, y1: 23 };
@@ -64,6 +66,23 @@ Ext.on('applyFree', (m, st) => {
     const n = OB('albo', albo.tx, albo.ty, I.pz_albo, { wt: 2 });
     Object.assign(albo, { img: I.pz_albo, dx: n.dx, dy: n.dy, sy: n.sy });
   }
+  // il pozzo lascia la piazza (stava sul medaglione) e ha un angolo tutto suo, sul prato a est
+  for (const o of m.objs.filter(q => q.kind === 'well')) mapRemove(m, o);
+  m.add({
+    kind: 'lastrico',
+    tx: 53,
+    ty: 18,
+    img: I.pz_lastrico,
+    dx: 53 * 16 - 4,
+    dy: 18 * 16 + 14,
+    sy: -2,
+    solid: [],
+    hits: [],
+    deco: 1
+  });
+  PZ.pozzo = pzMetti(m, 'well', 54, 20, I.pz_pozzo, { act: 'well', T: T2(54, 20) });
+  pzMetti(m, 'abbeveratoio', 55, 22, I.pz_abbeveratoio, { act: 'abbeveratoio', T: T2(55, 22) });
+  pzMetti(m, 'secchio', 53, 21, I.pz_secchio, { act: 'secchio' });
   // gli allori all'ingresso dalla cappella e le fioriere agli angoli
   for (const x of [42, 44]) pzMetti(m, 'alloro', x, 16, I.pz_alloro, { act: 'alloro' });
   const fio = I['pz_fioriera' + seasonOf(st)];
@@ -149,6 +168,69 @@ Ext.on('drawWorldExtras', m => {
   }
 });
 
+// il corvo sul tetto del pozzo: guarda di qua e di là, ogni tanto gracchia; se gli arrivi troppo vicino vola via
+// e torna dopo un po'
+const CORVO = { x: 0, dir: 1, prossimo: 0, becco: 0, via: 0, volo: null };
+Ext.on('drawWorldExtras', m => {
+  if (m.id !== 'main' || !isFree(G.st) || !PZ.pozzo || !m.objs.includes(PZ.pozzo) || !FREEIMG.pz_corvo0)
+    return;
+  const o = PZ.pozzo,
+    pl = G.player,
+    cx = o.dx + 18,
+    cy = o.dy + 1,
+    notte = G.st.time >= 21 * 60 || G.st.time < 6 * 60;
+  if (notte) return; // la notte dorme altrove
+  if (CORVO.volo) {
+    // vola via in diagonale, verso il bosco
+    const v = CORVO.volo,
+      k = (G.t - v.t) / 1.4;
+    if (k < 1) {
+      const fr = Math.floor(G.t * 10) % 2;
+      ctx.drawImage(
+        FREEIMG['pz_corvo' + fr],
+        Math.round(cx + k * 90 - 5),
+        Math.round(cy - k * 70 - Math.sin(k * 6) * 3)
+      );
+    } else CORVO.volo = null;
+    return;
+  }
+  if (G.t < CORVO.via) return;
+  if (Math.hypot(pl.x - cx, pl.y - (o.dy + 44)) < 22) {
+    CORVO.volo = { t: G.t };
+    CORVO.via = G.t + 25;
+    AU.play('corvo');
+    return;
+  }
+  if (G.t > CORVO.prossimo) {
+    CORVO.prossimo = G.t + 1.5 + Math.random() * 3;
+    const r = Math.random();
+    if (r < 0.35) CORVO.dir = -CORVO.dir;
+    else if (r < 0.65) CORVO.x = Math.max(-8, Math.min(8, CORVO.x + (Math.random() < 0.5 ? -4 : 4)));
+    else if (Math.hypot(pl.x - cx, pl.y - cy) < 120) {
+      CORVO.becco = G.t + 0.4;
+      AU.play('corvo');
+    }
+  }
+  const im = FREEIMG[G.t < CORVO.becco ? 'pz_corvo1' : 'pz_corvo0'],
+    X = Math.round(cx + CORVO.x),
+    Y = Math.round(cy - 6);
+  ctx.save();
+  if (CORVO.dir < 0) {
+    ctx.translate(X, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(im, -5, Y);
+  } else ctx.drawImage(im, X - 5, Y);
+  ctx.restore();
+});
+SFX.corvo =
+  SFX.corvo ||
+  ((a, t) => {
+    a.osc('sawtooth', 520, t, 0.16, 0.05, null, 0.01, 300);
+    a.noise(t, 0.14, 0.05, 'bandpass', 1400, 3);
+  });
+ACT.abbeveratoio = () =>
+  UI.toast('L’abbeveratoio del pozzo. Ci beve chi passa: cavalli, cani, e una volta un uomo senza fretta.');
+ACT.secchio = () => UI.toast('Un secchio di legno, ancora umido. Qualcuno ha attinto stamattina.');
 ACT.alloro = () =>
   UI.toast('Un alloro in vaso. Agatha ne stacca una foglia per il brodo, quando pensa che non la vedi.');
 ACT.fioriera = () => {
@@ -162,4 +244,4 @@ ACT.fioriera = () => {
     ][s]
   );
 };
-Object.assign(PROMPT, { alloro: 'Guarda', fioriera: 'Guarda' });
+Object.assign(PROMPT, { alloro: 'Guarda', fioriera: 'Guarda', abbeveratoio: 'Guarda', secchio: 'Guarda' });
