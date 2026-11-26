@@ -502,3 +502,23 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .iqta button{font-size:calc(6*var(--u));padding:0 calc(3*var(--u));min-width:calc(11*var(--u));line-height:calc(9*var(--u))}
 .islot.pinta{box-shadow:0 0 0 calc(1.5*var(--u)) #8ad0ff}
 
+/* la casa degli animali (barnMenu) */
+#mbox .stl-head{display:flex;gap:calc(5*var(--u));align-items:center;margin-bottom:calc(2*var(--u))}
+#mbox .stl-head>div{flex:1;min-width:0}
+#mbox .stl-head canvas{width:calc(48*var(--u));height:calc(36*var(--u));image-rendering:pixelated;flex:none;background:radial-gradient(ellipse at 50% 85%,rgba(90,60,30,.35),rgba(90,60,30,0) 70%)}
+#mbox .stl-chips{display:flex;flex-wrap:wrap;gap:calc(2*var(--u))}
+#mbox .stl-chip{display:inline-block;font-size:calc(6*var(--u));padding:calc(.5*var(--u)) calc(3*var(--u));margin:calc(.5*var(--u)) calc(1*var(--u)) calc(.5*var(--u)) 0;background:rgba(122,74,32,.14);color:#5a2a0c;box-shadow:0 0 0 var(--u) rgba(122,74,32,.35);white-space:nowrap}
+#mbox .stl-chip.ok{background:rgba(110,170,80,.2);color:#2e5a1a}
+#mbox .stl-chip.bad{background:rgba(200,60,30,.16);color:#8a1e0e}
+#mbox .stl-chip.tinta{background:rgba(160,80,180,.16);color:#5a1e6a}
+#mbox .stl-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(46*var(--u)),1fr));gap:calc(3*var(--u))}
+#mbox .stl-pila{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--u);padding:calc(3*var(--u)) calc(2*var(--u));font:inherit;font-size:calc(6*var(--u));color:#3a1a08;cursor:pointer;background:rgba(255,248,225,.55);border:0;box-shadow:inset 0 var(--u) 0 rgba(255,255,255,.6),0 0 0 var(--u) rgba(122,74,32,.45),0 calc(2*var(--u)) 0 rgba(90,50,20,.3);transition:transform .1s}
+#mbox .stl-pila:hover{transform:translateY(calc(-1*var(--u)))}
+#mbox .stl-pila:active{transform:translateY(var(--u))}
+#mbox .stl-pila canvas{width:calc(20*var(--u));height:calc(20*var(--u));image-rendering:pixelated}
+#mbox .stl-pila b{position:absolute;top:calc(1*var(--u));right:calc(2*var(--u));font-size:calc(7*var(--u));color:#7a3a10}
+#mbox .stl-pila span{text-align:center;line-height:1.1}
+#mbox .stl-bestie{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(110*var(--u)),1fr));gap:calc(3*var(--u))}
+#mbox .stl-bestia{display:flex;gap:calc(4*var(--u));align-items:center;padding:calc(3*var(--u));background:rgba(255,248,225,.42);box-shadow:inset 0 var(--u) 0 rgba(255,255,255,.55),0 0 0 var(--u) rgba(122,74,32,.35)}
+#mbox .stl-bestia canvas{width:calc(24*var(--u));height:calc(24*var(--u));image-rendering:pixelated;flex:none}
+#mbox .stl-bestia>div{line-height:1.25;min-width:0}

@@ -265,6 +265,8 @@ module.exports = async function (t, { browser }) {
       const ok = new Set(['legna', 'pietra', 'fibra', 'uovo', 'ferro', 'essenza', 'concime', 'pane']),
         add = k => !ok.has(k) && (ok.add(k), true);
       for (const [k, v] of Object.entries(ITEMS)) if (v.t === 'seed') ok.add(k);
+      // i mobili del nonno sono già in casa; i premi dei segreti si hanno solo lì (segreti.js)
+      for (const [k, v] of Object.entries(ITEMS)) if (v.nonno || v.premio) ok.add(k);
       for (const k of MERC_STOCK) ok.add(k);
       for (const r of RES_POOL) for (const [x] of r.shop) ok.add(x);
       for (const [x] of DECOR_SHOP) ok.add(x);
@@ -299,7 +301,14 @@ module.exports = async function (t, { browser }) {
         for (const r of COOK)
           if (impara(r) && Object.keys(r.need).every(k => ok.has(k))) giro = add(r.id) || giro;
         for (const c of CRAFTS) if (Object.keys(c.c).every(k => ok.has(k))) giro = add(c.id) || giro;
-        for (const a of Object.values(ANIMALS)) if (ok.has(a.home)) giro = add(a.prod) || giro;
+        for (const a of Object.values(ANIMALS))
+          if (ok.has(a.home)) {
+            giro = add(a.prod) || giro;
+            if (a.prod2) giro = add(a.prod2) || giro;
+          }
+        // la lana colorata: una pecora tinta col colorante dello stesso colore
+        for (const k of Object.keys(ITEMS))
+          if (/^lana_/.test(k) && ok.has('lana') && ok.has('colorante_' + k.slice(5))) giro = add(k) || giro;
       }
       bad(
         'oggetti che non si possono ottenere in nessun modo',

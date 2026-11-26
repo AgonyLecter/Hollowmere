@@ -249,7 +249,7 @@ async function startFrom(st) {
   rebuildMaps();
   G.map = G.maps[st.map || 'house'] || G.maps.house;
   setPos(G.player, st.px ?? 2, st.py ?? 3, st.dir ?? 0);
-  if (G.map.id === 'house' && st.px == null) setPos(G.player, 2, 3, 0);
+  if (G.map.id === 'house' && st.px == null) setPos(G.player, ...svegliaPos(st), 0);
   safeSpot(st);
   snapNPCs();
   spawnCritters();
@@ -521,8 +521,7 @@ function morningSetup() {
   applyUpgrades();
   freeMorning(st);
   st.map = 'house';
-  st.px = 2;
-  st.py = 3;
+  [st.px, st.py] = svegliaPos(st); // accanto al letto, dovunque l'abbia messo
   st.dir = 0;
 }
 async function morningEvents() {
@@ -710,7 +709,7 @@ async function endDay(passed, faded) {
     st.flags.pettedToday = 0;
     G.parts = [];
     G.map = G.maps.house;
-    setPos(G.player, 2, 3, 0);
+    setPos(G.player, ...svegliaPos(st), 0);
     NET.save(st);
     UI.hud();
     UI.quest();
