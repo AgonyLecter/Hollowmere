@@ -19,11 +19,14 @@ Ext.on('arte', () => {
 });
 
 const PZ_CEDE = new Set(['pumpkin', 'debris', 'tuft']);
+const PZ_RESTA = new Set(['built', 'carroIng', 'svfalo', 'door', 'bld', 'fence', 'cancello']);
 function pzMetti(m, kind, x, y, img, o = {}) {
   const T = o.T || [[x, y]];
   for (const [a, b] of T) {
     const q = m.objAt(a, b);
-    if (q && !PZ_CEDE.has(q.kind)) return null; // zucche, rami, sassi ed erbacce lasciano il posto; il resto no
+    // zucche, rami, sassi ed erbacce lasciano il posto; il resto no. L'angolo del pozzo (forza) è suo: lì cede
+    // tutto quello che non hai costruito tu (un sasso grosso, un ceppo, un fungo nati lì prima che il pozzo arrivasse)
+    if (q && !PZ_CEDE.has(q.kind) && !(o.forza && !PZ_RESTA.has(q.kind))) return null;
   }
   for (const [a, b] of T) {
     const q = m.objAt(a, b);
@@ -80,9 +83,20 @@ Ext.on('applyFree', (m, st) => {
     hits: [],
     deco: 1
   });
-  PZ.pozzo = pzMetti(m, 'well', 54, 20, I.pz_pozzo, { act: 'well', T: T2(54, 20) });
-  pzMetti(m, 'abbeveratoio', 55, 22, I.pz_abbeveratoio, { act: 'abbeveratoio', T: T2(55, 22) });
-  pzMetti(m, 'secchio', 53, 21, I.pz_secchio, { act: 'secchio' });
+  // il pozzo ha la precedenza; se proprio lì c'è una cosa tua, si mette accanto
+  PZ.pozzo = null;
+  for (const [x, y] of [
+    [54, 20],
+    [54, 19],
+    [55, 20],
+    [53, 20],
+    [54, 21]
+  ]) {
+    PZ.pozzo = pzMetti(m, 'well', x, y, I.pz_pozzo, { act: 'well', T: T2(x, y), forza: 1 });
+    if (PZ.pozzo) break;
+  }
+  pzMetti(m, 'abbeveratoio', 55, 22, I.pz_abbeveratoio, { act: 'abbeveratoio', T: T2(55, 22), forza: 1 });
+  pzMetti(m, 'secchio', 53, 21, I.pz_secchio, { act: 'secchio', forza: 1 });
   // gli allori all'ingresso dalla cappella e le fioriere agli angoli
   for (const x of [42, 44]) pzMetti(m, 'alloro', x, 16, I.pz_alloro, { act: 'alloro' });
   const fio = I['pz_fioriera' + seasonOf(st)];
