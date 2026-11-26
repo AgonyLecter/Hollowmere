@@ -1034,7 +1034,7 @@ async function freeStartBase(ending) {
     giveItem('pala');
     st.free.land = ['casa'];
     st.free.tiles = {};
-    st.free.inside = {};
+    st.free.inside = st.free.inside || {}; // i mobili del nonno ci sono già (casaLibera)
     st.free.recipes = {};
     // il banco da lavoro accanto a casa
     const k = fkey(14, 11);

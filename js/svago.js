@@ -1503,6 +1503,7 @@ Ext.on('freeAct:intercetta', function (fx, fy) {
   AU.play('rustle');
   const prima = S.rec.sassi || 0;
   if (n > prima) S.rec.sassi = n;
+  Ext.run('sassi', n); // punto di estensione: segreti.js (il sasso che arriva all'altra riva)
   setTimeout(
     () => {
       const k = Object.keys(SV_T.sassi)

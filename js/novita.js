@@ -642,6 +642,28 @@ const NOVITA = [
         t: 'Il <b>9 e il 23</b> di ogni stagione, alle 18, Agatha organizza la <b>corsa coi sacchi</b> sul prato a ovest della piazza. Salta a ritmo: chi salta prima di toccare terra inciampa. E da soli: sulle panchine ci si siede a pensare, e a mani vuote davanti al fiume si lanciano i <b>sassi piatti</b>.'
       }
     ]
+  },
+  {
+    id: 'allevamento_casa',
+    v: 59,
+    n: 'Pecore colorate, casa tutta tua e segreti',
+    steps: [
+      {
+        t: 'Le case degli animali hanno una schermata nuova: ogni prodotto con la sua pila (anche con più specie insieme) e <b>Prendi tutto</b>. Le <b>pecore</b> danno lana e anche <b>latte di pecora</b>, per il pecorino.'
+      },
+      {
+        t: 'Al banco, nella categoria <b>Tinture</b>, fai i coloranti con l’orto: rosso, arancio, giallo, verde, blu, viola, fucsia, nero (il bianco toglie la tinta). Con un colorante in mano tocca una pecora al pascolo: si tinge, e la sua lana sarà di quel colore.'
+      },
+      {
+        t: 'La lana colorata va al <b>telaio</b>: nuovi colori per vestiti, scarpe e cappelli, e lo <b>scialle di lana</b>. In ☰ → Aspetto ora scegli anche fazzoletto al collo e calze. Con due matasse dello stesso colore <b>rifai il letto</b>.'
+      },
+      {
+        t: 'La casa è <b>tutta tua</b>: letto, camino, ritratto, cassa, scaffale, tavolo e tappeto del nonno si spostano come gli altri mobili. La mattina ti svegli accanto al letto, dovunque l’hai messo.'
+      },
+      {
+        t: 'Gli abitanti hanno abitudini nuove nella settimana e piccoli gesti loro. E di notte… se Tobia ti dà appuntamento, non mancare. E se qualcuno ti chiama da dietro, non girarti.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -90,6 +90,7 @@ function avOwn(st) {
   a.top = a.top || {};
   a.hat = a.hat || {};
   a.hair = a.hair || {};
+  a.acc = a.acc || {};
   for (const k of ['crema', 'blu', 'marrone', 'cuoio', 'bosco', 'vino', 'grigio', 'sabbia']) a.col[k] = 1;
   a.top.none = a.top.vest = a.top.dress = 1;
   a.hat.none = 1;
@@ -133,6 +134,10 @@ function avLook(g, a) {
   }
   if (a.top === 'apron') L.apron = tc;
   if (a.beard) L.beard = L.hair;
+  // gli accessori (le calze e il fazzoletto ci sono sempre; lo scialle si lavora al telaio con la lana)
+  if (a.calze && COLORI[a.calze]) L.calze = COLORI[a.calze][1];
+  if (a.cravat && COLORI[a.cravat]) L.cravat = COLORI[a.cravat][1];
+  if (a.shawl && a.shawl !== 'none' && COLORI[a.shawl]) L.shawl = COLORI[a.shawl][1];
   if (a.hat && a.hat !== 'none') {
     L.hat = a.hat;
     L.hatCol = (COLORI[a.hatCol] || [])[1] || '#5a4632';
@@ -200,7 +205,9 @@ function aspettoHTML(st) {
   <h3>Sopra</h3><p>${opts('top', SOPRA, O.top)}</p>${a.top !== 'none' ? `<p>${pal('topCol')}</p>` : ''}
   <h3>Pantaloni</h3><p>${pal('pants')}</p><h3>Scarpe</h3><p>${pal('shoe')}</p>
   <h3>Cappello</h3><p>${opts('hat', CAPPELLI, O.hat)}</p>${a.hat !== 'none' ? `<p>${pal('hatCol')}</p>` : ''}
-  <p class="small">Colori e cappelli nuovi: da Agatha («Abiti e cappelli»). Colori speciali: al telaio, che si costruisce al banco da lavoro.</p></div></div>`;
+  <h3>Fazzoletto al collo</h3><p>${pal('cravat')}</p><h3>Calze</h3><p>${pal('calze')}</p>
+  ${O.acc.scialle ? `<h3>Scialle di lana</h3><p><button class="btn${!a.shawl || a.shawl === 'none' ? ' on' : ''}" data-av="shawl" data-v="none">Nessuno</button></p><p>${pal('shawl')}</p>` : ''}
+  <p class="small">Colori e cappelli nuovi: da Agatha («Abiti e cappelli»). Colori speciali: al telaio, che si costruisce al banco da lavoro. Con la lana colorata delle tue pecore, al telaio, nascono i colori di lana e lo scialle.</p></div></div>`;
 }
 function aspettoWire(st, again) {
   const box = $('#mbox');
@@ -354,30 +361,43 @@ Object.assign(ITEMS, {
 });
 Object.assign(PLACE_TOOL, { telaio: 'accetta' });
 CRAFTS.push({ id: 'telaio', q: 1, c: { legna: 30, fibra: 20 }, cat: 'cas' });
+// le righe del telaio: [chiave, ingrediente, quanti, fibra (5 se manca)]; «acc:nome» è un accessorio (TELAIO_ACC)
+const TELAIO_ACC = { scialle: 'Scialle di lana' };
+const telaioNome = k => (k.startsWith('acc:') ? TELAIO_ACC[k.slice(4)] : COLORI[k][0]);
+const telaioHa = (O, k) => (k.startsWith('acc:') ? !!O.acc[k.slice(4)] : !!O.col[k]);
 function telaioMenu() {
   const st = avSt(),
     O = avOwn(st);
+  const riga = ([k, ing, n, fib = 5]) => {
+    const has = telaioHa(O, k),
+      can = !has && countItem('fibra') >= fib && countItem(ing) >= n,
+      sw = k.startsWith('acc:') ? '🧶' : `<i class="swi" style="background:${COLORI[k][1]}"></i>`;
+    return `<div class="mrow"><span style="flex:1">${sw} <b>${telaioNome(k)}</b><br><span class="small">${fib ? fib + ' fibra + ' : ''}${n} × ${ITEMS[ing] ? ITEMS[ing].n : ing} (${countItem(ing)})</span></span>${has ? '<span class="small">tuo</span>' : `<button class="btn" data-tl="${k}" ${can ? '' : 'disabled'}>Tessi</button>`}</div>`;
+  };
+  const lana = TELAIO.filter(r => /^lana/.test(r[1])),
+    altri = TELAIO.filter(r => !/^lana/.test(r[1]));
   UI.open(
     `<button class="btn mclose" data-close>✕</button><h2>Il telaio</h2><p class="small">Fibra e un colorante: il colore nuovo va nel guardaroba, per tutti i vestiti. — Fibra: <b>${countItem('fibra')}</b></p>` +
-      TELAIO.map(([k, ing, n]) => {
-        const has = !!O.col[k],
-          can = !has && countItem('fibra') >= 5 && countItem(ing) >= n;
-        return `<div class="mrow"><span style="flex:1"><i class="swi" style="background:${COLORI[k][1]}"></i> <b>${COLORI[k][0]}</b><br><span class="small">5 fibra + ${n} × ${ITEMS[ing] ? ITEMS[ing].n : ing} (${countItem(ing)})</span></span>${has ? '<span class="small">tuo</span>' : `<button class="btn" data-tl="${k}" ${can ? '' : 'disabled'}>Tessi</button>`}</div>`;
-      }).join('')
+      altri.map(riga).join('') +
+      (lana.length
+        ? `<h3>Con la lana</h3><p class="small">La lana delle tue pecore (tingile con un colorante per averla colorata): colori morbidi per vestiti, scarpe e accessori.</p>` +
+          lana.map(riga).join('')
+        : '')
   );
   $('#mbox')
     .querySelectorAll('[data-tl]')
     .forEach(
       b =>
         (b.onclick = () => {
-          const [k, ing, n] = TELAIO.find(x => x[0] === b.dataset.tl);
-          if (countItem('fibra') < 5 || countItem(ing) < n) return;
-          removeItem('fibra', 5);
+          const [k, ing, n, fib = 5] = TELAIO.find(x => x[0] === b.dataset.tl);
+          if (countItem('fibra') < fib || countItem(ing) < n) return;
+          if (fib) removeItem('fibra', fib);
           removeItem(ing, n);
-          O.col[k] = 1;
+          if (k.startsWith('acc:')) O.acc[k.slice(4)] = 1;
+          else O.col[k] = 1;
           AU.play('ok');
           addXP('arti', 6);
-          UI.toast(`Hai tessuto: ${COLORI[k][0]}. Indossalo da ☰ → Aspetto.`);
+          UI.toast(`Hai tessuto: ${telaioNome(k)}. Indossalo da ☰ → Aspetto.`);
           NET.save(st);
           UI._mclose = null;
           telaioMenu();

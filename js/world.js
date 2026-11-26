@@ -380,6 +380,59 @@ function buildMain(st) {
   addFlora(m);
   return m;
 }
+// i mobili del nonno nella casa: finita la storia diventano mobili come gli altri (si spostano, si tolgono).
+// Il passaggio si fa una volta sola (st.free.casaLibera), al primo ingresso nella Valle; il resto lo fa casa_libera.js.
+const CASA_NONNO = [
+  ['letto_nonno', '1,3'],
+  ['camino_nonno', '5,1'],
+  ['ritratto_nonno', '3,1'],
+  ['cassa_nonno', '9,2'],
+  ['scaffale_nonno', '10,2'],
+  ['tavolo_nonno', '7,5'],
+  ['tappeto_nonno', '4,4']
+];
+function casaLibera(st) {
+  if (!isFree(st) || !st.free) return false;
+  if (G.visit) return !!st.free.casaLibera; // in visita la casa dell'amico resta com'è: niente passaggi
+  if (!st.free.casaLibera) {
+    st.free.casaLibera = 1;
+    const I = (st.free.inside = st.free.inside || {});
+    for (const [id, k] of CASA_NONNO) {
+      if (I[k]) (st.free.daRiporre = st.free.daRiporre || []).push(id);
+      else I[k] = { id };
+    }
+  }
+  return true;
+}
+// dove ci si sveglia: accanto al letto (quello del nonno o uno nuovo), dovunque sia
+function svegliaPos(st) {
+  if (!casaLibera(st)) return [2, 3];
+  const I = st.free.inside || {},
+    HS = houseSize(st),
+    occ = new Set();
+  let letto = null;
+  for (const k in I) {
+    const [x, y] = k.split(',').map(Number),
+      it = ITEMS[I[k].id] || {},
+      [w, h] = it.fp || [1, 1];
+    if (!it.flat && !it.wall)
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) occ.add(x + i + ',' + (y - j));
+    if ((I[k].id === 'letto_nonno' || I[k].id === 'letto') && !letto) letto = [x, y, w, h];
+  }
+  if (!letto) return [2, 3];
+  const [x, y, w, h] = letto,
+    ok = (a, b) => a >= 1 && b >= 2 && a <= HS.w - 2 && b <= HS.h - 2 && !occ.has(a + ',' + b);
+  for (const [a, b] of [
+    [x + w, y],
+    [x - 1, y],
+    [x, y + 1],
+    [x + w, y - 1],
+    [x - 1, y - 1],
+    [x + 1, y + 1]
+  ])
+    if (ok(a, b)) return [a, b];
+  return [2, 3];
+}
 function buildHouse(st) {
   const HS = houseSize(st),
     HW = HS.w,
@@ -388,67 +441,73 @@ function buildHouse(st) {
   m.fill(0, 0, HW - 1, 0, 8);
   m.fill(0, 1, HW - 1, 1, 9);
   m.fill(0, 2, HW - 1, HH - 1, 6);
-  m.add(
-    OB('fire', 5, 1, IMG.fire[0], {
-      wt: 2,
-      solid: [
-        [5, 1],
-        [6, 1]
-      ],
-      hits: [
-        [5, 1],
-        [6, 1]
-      ],
-      act: 'fire',
-      anim: 'fire',
-      lift: 4
-    })
-  );
-  m.lights.push({ x: 6 * 16, y: 24, r: 70, fire: 1 });
+  // finita la storia i mobili del nonno sono mobili come gli altri (st.free.inside): si spostano tutti
+  const libera = casaLibera(st);
+  if (!libera) {
+    m.add(
+      OB('fire', 5, 1, IMG.fire[0], {
+        wt: 2,
+        solid: [
+          [5, 1],
+          [6, 1]
+        ],
+        hits: [
+          [5, 1],
+          [6, 1]
+        ],
+        act: 'fire',
+        anim: 'fire',
+        lift: 4
+      })
+    );
+    m.lights.push({ x: 6 * 16, y: 24, r: 70, fire: 1 });
+  }
   m.add(OB('window', 8, 1, IMG.window, { act: 'window', win: 1, lift: -6 }));
   m.add(OB('window', 2, 1, IMG.window, { act: 'window', win: 1, lift: -6 }));
-  m.add(OB('portrait', 3, 1, IMG.portrait[H2(st) ? 1 : 0], { act: 'portrait', lift: -6 }));
-  m.add(
-    OB('bed', 1, 3, IMG.bed, {
-      solid: [
-        [1, 2],
-        [1, 3]
-      ],
-      hits: [
-        [1, 2],
-        [1, 3]
-      ],
-      act: 'bed'
-    })
-  );
-  m.add(OB('chest', 9, 2, F_(st).openedChest ? IMG.chestO : IMG.chest, { act: 'chest' }));
-  m.add(OB('shelf', 10, 2, IMG.shelf, { act: 'shelf' }));
-  m.add(
-    OB('table', 7, 5, IMG.table, {
-      wt: 2,
-      solid: [
-        [7, 5],
-        [8, 5]
-      ],
-      hits: [
-        [7, 5],
-        [8, 5]
-      ],
-      act: 'table'
-    })
-  );
-  m.add({
-    kind: 'rug',
-    tx: 4,
-    ty: 4,
-    img: IMG.rug,
-    dx: 4 * 16,
-    dy: 4 * 16 + 8,
-    sy: -1,
-    solid: [],
-    hits: [],
-    deco: 1
-  });
+  if (!libera) {
+    m.add(OB('portrait', 3, 1, IMG.portrait[H2(st) ? 1 : 0], { act: 'portrait', lift: -6 }));
+    m.add(
+      OB('bed', 1, 3, IMG.bed, {
+        solid: [
+          [1, 2],
+          [1, 3]
+        ],
+        hits: [
+          [1, 2],
+          [1, 3]
+        ],
+        act: 'bed'
+      })
+    );
+    m.add(OB('chest', 9, 2, F_(st).openedChest ? IMG.chestO : IMG.chest, { act: 'chest' }));
+    m.add(OB('shelf', 10, 2, IMG.shelf, { act: 'shelf' }));
+    m.add(
+      OB('table', 7, 5, IMG.table, {
+        wt: 2,
+        solid: [
+          [7, 5],
+          [8, 5]
+        ],
+        hits: [
+          [7, 5],
+          [8, 5]
+        ],
+        act: 'table'
+      })
+    );
+    m.add({
+      kind: 'rug',
+      tx: 4,
+      ty: 4,
+      img: IMG.rug,
+      dx: 4 * 16,
+      dy: 4 * 16 + 8,
+      sy: -1,
+      solid: [],
+      hits: [],
+      deco: 1
+    });
+  }
   if (F_(st).page2avail && !F_(st).page2)
     m.add(OB('page2', 6, 7, IMG.paper, { act: 'page2', solid: [], hits: [[6, 7]] }));
   if (HW > 12) {

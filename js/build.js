@@ -505,11 +505,15 @@ function addFurniture(m, st) {
         fk: k,
         act: 'furn',
         wt: fp[0],
-        lift: it.wall ? -6 : 0,
-        solid: it.wall ? [] : T,
+        lift: it.lift != null ? it.lift : it.wall ? -6 : 0,
+        anim: it.anim,
+        solid: it.wall && !it.solido ? [] : T,
         hits: T
       })
     );
+    // un mobile con la sua luce (il camino del nonno): la luce segue il mobile
+    if (it.luceCasa)
+      m.lights.push({ x: x * 16 + it.luceCasa[0], y: y * 16 + it.luceCasa[1], r: it.luceCasa[2], fire: 1 });
     if (f.id === 'lampada' || f.id === 'lanternacarta' || f.id === 'lampadario')
       m.lights.push({ x: x * 16 + 8, y: y * 16 - 10, r: 60, fire: 1 });
     // i mobili con una fiamma (candelabro, stufa, comodino…): luce = [dx, dy, raggio] dal loro angolo in alto
