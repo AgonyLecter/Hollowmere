@@ -3083,7 +3083,10 @@ function updPrints(dt) {
 function aimInfo() {
   const st = G.st,
     m = G.map;
-  if (G.mode !== 'game' || G.cut || UI.busy() || m.id !== 'main') return null;
+  if (G.mode !== 'game' || G.cut || UI.busy()) return null;
+  // nella serra la casellina la calcola chi conosce le aiuole (costruire.js)
+  if (m.id === 'serra') return Ext.intercetta('mirinoSerra') || null;
+  if (m.id !== 'main') return null;
   const it = selItem();
   if (!it) return null;
   const def = ITEMS[it.id];

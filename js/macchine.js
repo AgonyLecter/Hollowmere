@@ -84,6 +84,25 @@ Object.assign(ITEMS, {
     t: 'res',
     d: "Serve per le macchine, l'irrigatore grande e, all'incudine, per forgiare gli attrezzi."
   },
+  // i metalli rari si fondono come il ferro: dalla roccia al lingotto, nella fornace
+  lingotto_rame: {
+    n: 'Lingotto di rame',
+    t: 'res',
+    v: 190,
+    d: 'Quattro minerali di rame e una legna, nella fornace. Fili, tubi, fontane, congegni.'
+  },
+  lingotto_nichel: {
+    n: 'Lingotto di nichel',
+    t: 'res',
+    v: 280,
+    d: 'Quattro minerali di nichel e una legna, nella fornace. Specchi, lampadari, filo d’argento al telaio.'
+  },
+  lingotto_oro: {
+    n: "Lingotto d'oro",
+    t: 'res',
+    v: 520,
+    d: "Tre pepite d'oro grezzo e una legna, nella fornace. Per le cose che durano: la serra grande, le statue, gli attrezzi d'oro."
+  },
   incudine: {
     n: 'Incudine',
     t: 'place',
@@ -103,7 +122,7 @@ Object.assign(ITEMS, {
   fornace: {
     n: 'Fornace',
     t: 'place',
-    d: 'Ferro e legna a sinistra, lingotti a destra: ogni 5 minerali e 1 legna, un lingotto in un’ora e mezza.'
+    d: 'Minerale e legna a sinistra, lingotti a destra. Fonde il ferro (5), il rame e il nichel (4) e l’oro (3): ogni volta con 1 legna.'
   },
   barattolo: {
     n: 'Barattolo delle conserve',
@@ -321,6 +340,14 @@ function craftMenu(cat, staz = 'banco') {
     );
 }
 
+// ---------- la fusione: quale minerale, quanti per lingotto, quanto tempo ----------
+const FUSIONE = {
+  ferro: { n: 5, out: 'lingotto', min: 90 },
+  rame: { n: 4, out: 'lingotto_rame', min: 100 },
+  nichel: { n: 4, out: 'lingotto_nichel', min: 120 },
+  oro: { n: 3, out: 'lingotto_oro', min: 150 }
+};
+const MAC_MIN_FUSIONE = Object.fromEntries(Object.entries(FUSIONE).map(([k, v]) => [k, v.min]));
 // ---------- macchine ----------
 // Ogni macchina ha la sua schermata (stile fornace): a sinistra quello che metti dentro (e la legna, se brucia),
 // al centro la freccia che si riempie, a destra quello che esce. Lavora un pezzo alla volta, col tempo del gioco:
@@ -331,16 +358,18 @@ const MACH = {
   botte: { days: 3, ok: id => ITEMS['succo_' + id], out: id => 'succo_' + id },
   fornace: {
     days: 1,
-    ok: id => id === 'ferro',
-    need: 5,
-    out: () => 'lingotto',
+    ok: id => !!FUSIONE[id],
+    need: id => (FUSIONE[id] || FUSIONE.ferro).n,
+    out: id => (FUSIONE[id] || FUSIONE.ferro).out,
     fuel: 'legna',
-    vuole: 'ferro'
+    vuole: 'ferro',
+    aiutoFuoco:
+      'Metti <b>5 minerali di ferro</b>, <b>4 di rame</b>, <b>4 di nichel</b> o <b>3 pepite d’oro</b>, e <b>1 legna</b> per ogni lingotto.'
   }
 };
 // minuti di gioco per ogni pezzo (un'ora di gioco sono 25 secondi veri)
 const MAC_MIN = {
-  fornace: 90,
+  fornace: b => (FUSIONE[b.m && b.m.i] || FUSIONE.ferro).min,
   barattolo: 180,
   botte: 480,
   frantoio: 360,
@@ -500,6 +529,8 @@ function macTesto(b) {
   if (perche === 'fuoco') return 'Il fuoco è spento: metti della <b>legna</b> qui sotto.';
   if (perche === 'poco')
     return `Ne servono <b>${macNeed(M, m.i)}</b> per volta: aggiungine ancora ${macNeed(M, m.i) - m.in}.`;
+  if (M.aiutoFuoco)
+    return `${M.aiutoFuoco} Il ferro ci mette ${macMin(MAC_MIN_FUSIONE.ferro)}, l’oro ${macMin(MAC_MIN_FUSIONE.oro)}.`;
   return M.fuel
     ? `Metti <b>${macNeed(M, M.vuole)} ${esc(ITEMS[M.vuole].n.toLowerCase())}</b> e <b>1 legna</b> per ogni ${esc(ITEMS[M.out(M.vuole)].n.toLowerCase())}. Ognuno ci mette ${macMin(macDur(b))}.`
     : `${esc(M.aiuto || 'Tocca nello zaino quello che vuoi metterci dentro.')} Ogni pezzo ci mette ${macMin(macDur(b))}.`;
@@ -957,6 +988,184 @@ function treeAct(o, b) {
   return true;
 }
 // ---------- grafica ----------
+
+// ---------- le icone di minerali e lingotti (disegnate a pixel, ognuna diversa) ----------
+// Il minerale è un pezzo di roccia con la sua forma e le sue vene: il ferro arrugginito, il rame lucido con la
+// patina verde, il nichel argento-verde a scaglie, l'oro in pepite dentro una vena di quarzo bianco.
+// Il lingotto è un mattoncino a tre facce (sopra chiaro, davanti, di lato scuro) col marchio e un lampo di luce.
+function iconaPixel(disegna) {
+  const W = 32,
+    px = new Array(W * W).fill(null),
+    set = (x, y, c) => {
+      x = Math.round(x);
+      y = Math.round(y);
+      if (x >= 0 && y >= 0 && x < W && y < W) px[y * W + x] = c;
+    },
+    has = (x, y) => x >= 0 && y >= 0 && x < W && y < W && px[y * W + x] !== null;
+  disegna(set, has);
+  const [c, x] = mk(W, W, { willReadFrequently: true }),
+    D = x.createImageData(W, W),
+    d = D.data,
+    put = (i, hex) => {
+      d[i * 4] = parseInt(hex.slice(1, 3), 16);
+      d[i * 4 + 1] = parseInt(hex.slice(3, 5), 16);
+      d[i * 4 + 2] = parseInt(hex.slice(5, 7), 16);
+      d[i * 4 + 3] = 255;
+    };
+  for (let y = 0; y < W; y++)
+    for (let X = 0; X < W; X++) {
+      const i = y * W + X;
+      if (px[i]) put(i, px[i]);
+      else if (has(X - 1, y) || has(X + 1, y) || has(X, y - 1) || has(X, y + 1)) put(i, '#1c120e');
+    }
+  x.putImageData(D, 0, 0);
+  return c;
+}
+const MINERALI = {
+  ferro: {
+    roccia: ['#9a948a', '#7a756c', '#5a5650'],
+    vena: ['#e08a4a', '#b05a2a', '#7a3a1e'],
+    tipo: 'macchie',
+    forma: 1
+  },
+  rame: {
+    roccia: ['#8e8a84', '#6e6a66', '#4e4c4a'],
+    vena: ['#f4a060', '#d8703a', '#9a4a22'],
+    patina: '#4ab08a',
+    tipo: 'pepite',
+    forma: 2
+  },
+  nichel: {
+    roccia: ['#8a8c84', '#6a6c66', '#4c4e4a'],
+    vena: ['#e8f0e8', '#b8c8bc', '#7a9a84'],
+    tipo: 'scaglie',
+    forma: 3
+  },
+  oro: {
+    roccia: ['#968e80', '#766e62', '#564e44'],
+    vena: ['#fff0a0', '#f0c030', '#b0801a'],
+    quarzo: '#f4f0e4',
+    tipo: 'quarzo',
+    forma: 4
+  }
+};
+const hshM = (a, b) => (((a * 73856093) ^ (b * 19349663)) >>> 0) % 1000;
+function iconaMinerale(id) {
+  const M = MINERALI[id];
+  return iconaPixel((set, has) => {
+    // la roccia: un ciottolo irregolare, con la sua forma (raggio che cambia con l'angolo)
+    const cx = 16,
+      cy = 17,
+      R = a => 10 + Math.sin(a * 3 + M.forma) * 1.6 + Math.sin(a * 5 + M.forma * 2) * 1.1;
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        const dx = x - cx,
+          dy = (y - cy) * 1.25,
+          a = Math.atan2(dy, dx),
+          r = Math.hypot(dx, dy);
+        if (r > R(a)) continue;
+        // luce da sinistra in alto: chiaro, medio, scuro
+        const l = (-dx - dy) / R(a);
+        set(x, y, l > 0.35 ? M.roccia[0] : l > -0.45 ? M.roccia[1] : M.roccia[2]);
+        if (hshM(x, y) < 40 && l > -0.2) set(x, y, M.roccia[0]);
+      }
+    const dentro = (x, y) => has(x, y);
+    const blob = (x0, y0, r, C) => {
+      for (let y = Math.floor(y0 - r); y <= Math.ceil(y0 + r); y++)
+        for (let x = Math.floor(x0 - r); x <= Math.ceil(x0 + r); x++) {
+          if (!dentro(x, y) || Math.hypot(x - x0, y - y0) > r) continue;
+          const l = x - x0 + (y - y0);
+          set(x, y, l < -r * 0.4 ? C[0] : l > r * 0.5 ? C[2] : C[1]);
+        }
+      set(x0 - Math.round(r * 0.4), y0 - Math.round(r * 0.4), '#ffffff');
+    };
+    if (M.tipo === 'macchie') {
+      // il ferro: chiazze di ruggine sparse
+      for (const [x, y, r] of [
+        [11, 14, 2.6],
+        [19, 19, 3],
+        [17, 12, 1.8],
+        [12, 21, 1.6],
+        [22, 14, 1.4]
+      ])
+        blob(x, y, r, M.vena);
+    } else if (M.tipo === 'pepite') {
+      // il rame: pepite lucide e la patina verde attorno
+      for (const [x, y, r] of [
+        [9, 18, 1.8],
+        [16, 10, 1.5],
+        [22, 16, 1.6],
+        [17, 23, 1.7]
+      ])
+        blob(x, y, r, ['#8ae0b8', M.patina, '#2a7a5a']);
+      for (const [x, y, r] of [
+        [12, 15, 2.8],
+        [20, 20, 2.4],
+        [18, 12, 1.6]
+      ])
+        blob(x, y, r, M.vena);
+    } else if (M.tipo === 'scaglie') {
+      // il nichel: scaglie metalliche oblique
+      for (const [x, y, n] of [
+        [9, 15, 6],
+        [13, 11, 7],
+        [14, 18, 8],
+        [18, 22, 5],
+        [19, 13, 5]
+      ])
+        for (let k = 0; k < n; k++) {
+          if (dentro(x + k, y + Math.floor(k / 2)))
+            set(x + k, y + Math.floor(k / 2), k % 3 ? M.vena[1] : M.vena[0]);
+          if (dentro(x + k, y + Math.floor(k / 2) + 1)) set(x + k, y + Math.floor(k / 2) + 1, M.vena[2]);
+        }
+    } else {
+      // l'oro: una vena di quarzo bianco che attraversa la roccia, con le pepite dentro
+      for (let x = 4; x < 29; x++) {
+        const y = Math.round(20 - (x - 4) * 0.42);
+        for (let k = -1; k <= 1; k++) if (dentro(x, y + k)) set(x, y + k, k === -1 ? '#ffffff' : M.quarzo);
+      }
+      for (const [x, y, r] of [
+        [11, 17, 2.4],
+        [18, 14, 2.8],
+        [23, 12, 1.6]
+      ])
+        blob(x, y, r, M.vena);
+    }
+  });
+}
+const LINGOTTI = {
+  lingotto: ['#d4dae0', '#9ca4ae', '#68707c', '#454c56'],
+  lingotto_rame: ['#ffc290', '#e8804a', '#b8562a', '#7a3418'],
+  lingotto_nichel: ['#f4f8f4', '#c8d4cc', '#94a49a', '#5e6e64'],
+  lingotto_oro: ['#fff4b0', '#f4c838', '#c8901a', '#8a5a10']
+};
+function iconaLingotto(id) {
+  const C = LINGOTTI[id];
+  return iconaPixel(set => {
+    // un mattoncino a tronco di piramide visto un po' dall'alto: sopra (chiaro), davanti, di lato (scuro)
+    const xL = 5,
+      xR = 26,
+      yT = 11,
+      yM = 17,
+      yB = 24,
+      rientro = 3;
+    for (let y = yT; y < yM; y++) {
+      const k = (y - yT) / (yM - yT),
+        a = Math.round(xL + rientro * (1 - k)),
+        b = Math.round(xR - 3 - rientro * (1 - k) + 3 * k);
+      for (let x = a; x <= b; x++) set(x, y, y === yT ? C[0] : C[1]);
+    }
+    for (let y = yM; y <= yB; y++) for (let x = xL; x <= xR - 3; x++) set(x, y, y === yM ? C[1] : C[2]);
+    for (let y = yM - 1; y <= yB; y++)
+      for (let x = xR - 2; x <= xR; x++) if (y - yM + 1 >= x - (xR - 2) - 2) set(x, y, C[3]);
+    // il marchio sul davanti e il lampo di luce sopra
+    for (let x = 12; x <= 17; x++) set(x, 20, C[3]);
+    set(12, 21, C[3]);
+    set(17, 21, C[3]);
+    for (let x = xL + 5; x <= xL + 11; x++) set(x, yT + 2, '#ffffff');
+    set(xL + 4, yT + 3, '#ffffff');
+  });
+}
 function genFarm2ArtBase() {
   const I = (id, fn) => {
     const P = new PX(32, 32);
@@ -967,25 +1176,8 @@ function genFarm2ArtBase() {
   const stone = rp('#8a877d'),
     wood = rp('#8a5a30'),
     iron = rp('#7a7a82');
-  I('ferro', P => {
-    P.ellipse(16, 18, 10, 8, stone, { spec: 0.3 });
-    for (const [a, b] of [
-      [12, 16],
-      [19, 20],
-      [17, 14]
-    ])
-      P.ellipse(a, b, 2.4, 2, rp('#c8703a'), { spec: 0.8, edge: false });
-  });
-  I('lingotto', P => {
-    P.body(
-      12,
-      24,
-      () => 16,
-      Y => 8 + (Y - 12) * 0.4,
-      iron,
-      { nyF: () => -0.5, spec: 0.9 }
-    );
-  });
+  ICON.ferro = iconaMinerale('ferro');
+  for (const id of Object.keys(LINGOTTI)) ICON[id] = iconaLingotto(id);
   I('lastre', P => {
     for (const [a, b] of [
       [6, 8],

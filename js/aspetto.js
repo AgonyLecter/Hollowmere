@@ -79,8 +79,8 @@ const TELAIO = [
   ['arancio', 'carota', 3],
   ['rosa', 'fragola', 3],
   ['ombra', 'essenza', 1],
-  ['oro', 'oro', 1],
-  ['argento', 'nichel', 1]
+  ['oro', 'lingotto_oro', 1],
+  ['argento', 'lingotto_nichel', 1]
 ];
 const avSt = () => (G.visit ? G.home : G.st);
 function avOwn(st) {

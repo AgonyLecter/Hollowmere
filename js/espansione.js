@@ -1184,25 +1184,255 @@ function genEspArtBase() {
     P.ellipse(9, 24, 3, 3, rp('#8a8a8a'), { spec: 0.8 });
     P.line(27, 4, 27, 20, C('#d8d8c8'));
   });
-  const fish = (id, c, c2, big) =>
-    I(id, P => {
-      P.ellipse(15, 16, big ? 11 : 9, big ? 6 : 5, rp(c), { spec: 0.8 });
-      P.body(
-        9,
-        23,
-        () => 27,
-        Y => Math.abs(Y - 16) * 0.7 + 1,
-        rp(c2)
+  // i pesci, disegnati di profilo (muso a sinistra), ognuno con la sua forma e i suoi segni:
+  // corpo = per ogni colonna metà altezza e linea di mezzo; dorso scuro, fianco, ventre chiaro; pinne; occhio
+  const pesce = (id, F) => {
+    const W = 32,
+      H = 32,
+      px = new Array(W * H).fill(null),
+      set = (x, y, c) => {
+        x = Math.round(x);
+        y = Math.round(y);
+        if (x >= 0 && y >= 0 && x < W && y < H) px[y * W + x] = c;
+      },
+      has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && px[y * W + x] !== null,
+      hsh2 = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
+    const { x0, x1, xc, alto, cy, curva = () => 0, back, fianco, ventre, pinna, coda = 'forca' } = F;
+    // le pinne (sotto il corpo, così il corpo le copre all'attacco)
+    const tri = (pts, c) => {
+      const ys = pts.map(p => p[1]),
+        xs = pts.map(p => p[0]);
+      for (let y = Math.min(...ys); y <= Math.max(...ys); y++)
+        for (let x = Math.min(...xs); x <= Math.max(...xs); x++) {
+          let dentro = false;
+          for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+            const [xi, yi] = pts[i],
+              [xj, yj] = pts[j];
+            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+          }
+          if (dentro) set(x, y, c);
+        }
+    };
+    const hb = F.prof
+      ? t => F.prof(Math.min(1, Math.max(0, t)))
+      : t => alto * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t)) ** 0.75), 0.85);
+    const mezzo = x => cy + curva((x - x0) / (xc - x0));
+    for (const f of F.pinne || []) tri(f(mezzo, hb), f.c || pinna);
+    // la coda
+    const yc = mezzo(xc);
+    if (coda === 'forca') {
+      tri(
+        [
+          [xc - 2, yc - 1],
+          [x1, yc - 6],
+          [x1 - 2, yc],
+          [x1, yc + 6],
+          [xc - 2, yc + 1]
+        ],
+        pinna
       );
-      P.ellipse(9, 15, 1.3, 1.3, rp('#1a1418'));
-    });
-  fish('trota', '#8aa0a8', '#6a8088');
-  fish('carpa', '#b8903a', '#8a6a2a', 1);
-  fish('luccio', '#6a8a4a', '#4a6a3a', 1);
-  fish('persico', '#a8b84a', '#c8603a');
-  fish('anguilla', '#4a4a3a', '#3a3a2a');
-  fish('tinca', '#5a7a3a', '#4a5a2a');
-  fish('salmerino', '#f0c83a', '#d8a02a');
+    } else if (coda === 'tonda') {
+      tri(
+        [
+          [xc - 2, yc - 1],
+          [x1, yc - 5],
+          [x1 + 1, yc],
+          [x1, yc + 5],
+          [xc - 2, yc + 1]
+        ],
+        pinna
+      );
+    } else if (coda === 'punta')
+      tri(
+        [
+          [xc - 3, yc - 2],
+          [x1, yc],
+          [xc - 3, yc + 2]
+        ],
+        pinna
+      );
+    // il corpo
+    for (let x = x0; x <= xc; x++) {
+      const t = (x - x0) / (xc - x0),
+        h = Math.max(0.6, hb(t)),
+        m = mezzo(x);
+      for (let y = Math.ceil(m - h); y <= Math.floor(m + h); y++) {
+        const v = (y - (m - h)) / (2 * h || 1);
+        let c = v < 0.32 ? back : v < 0.68 ? fianco : ventre;
+        if (F.segni) c = F.segni(x, y, v, t, c, hsh2) || c;
+        set(x, y, c);
+      }
+    }
+    // un lampo di luce sul dorso, verso la testa, e la bocca
+    for (let x = x0 + 3; x <= x0 + Math.round((xc - x0) * 0.42); x++) {
+      const t = (x - x0) / (xc - x0),
+        y = Math.ceil(mezzo(x) - hb(t)) + 1;
+      if (has(x, y)) set(x, y, F.luce || '#f4f0e0');
+    }
+    set(x0, Math.round(mezzo(x0) + 1), '#2a1610');
+    // l'occhio
+    const ex = x0 + (F.occhio || 3),
+      ey = Math.round(mezzo(ex) - hb((ex - x0) / (xc - x0)) * 0.35);
+    set(ex, ey, '#f4f0e8');
+    set(ex + 1, ey, F.iride || '#1a1418');
+    set(ex, ey + 1, F.iride || '#1a1418');
+    set(ex + 1, ey + 1, '#1a1418');
+    // la branchia
+    const gx = ex + 3;
+    for (let k = -1; k <= 1; k++) if (has(gx, ey + 1 + k)) set(gx, ey + 1 + k, F.branchia || back);
+    // il contorno
+    const [c, cx] = mk(W, H, { willReadFrequently: true }),
+      D = cx.createImageData(W, H),
+      d = D.data;
+    const put = (x, y, hex) => {
+      const i = (y * W + x) * 4;
+      d[i] = parseInt(hex.slice(1, 3), 16);
+      d[i + 1] = parseInt(hex.slice(3, 5), 16);
+      d[i + 2] = parseInt(hex.slice(5, 7), 16);
+      d[i + 3] = 255;
+    };
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        if (px[y * W + x]) put(x, y, px[y * W + x]);
+        else if (has(x - 1, y) || has(x + 1, y) || has(x, y - 1) || has(x, y + 1)) put(x, y, '#1c120e');
+      }
+    cx.putImageData(D, 0, 0);
+    ICON[id] = c;
+  };
+  const dorsale = (a, b, alta) => {
+    const f = (mezzo, hb) => {
+      const T = x => (x - 3) / 21;
+      return [
+        [a, Math.round(mezzo(a) - hb(T(a))) + 1],
+        [a + 2, Math.round(mezzo(a) - hb(T(a))) - alta],
+        [b, Math.round(mezzo(b) - hb(T(b))) - 1],
+        [b, Math.round(mezzo(b) - hb(T(b))) + 1]
+      ];
+    };
+    return f;
+  };
+  const ventrale = (a, b, bassa) => (mezzo, hb) => {
+    const T = x => (x - 3) / 21;
+    return [
+      [a, Math.round(mezzo(a) + hb(T(a))) - 1],
+      [a + 1, Math.round(mezzo(a) + hb(T(a))) + bassa],
+      [b, Math.round(mezzo(b) + hb(T(b))) + 1],
+      [b, Math.round(mezzo(b) + hb(T(b))) - 1]
+    ];
+  };
+  // trota: snella, argento oliva, banda rosata e puntini neri
+  pesce('trota', {
+    x0: 3,
+    xc: 24,
+    x1: 29,
+    alto: 4.6,
+    cy: 16,
+    back: '#5e7458',
+    fianco: '#a8b8a8',
+    ventre: '#e8e4d8',
+    pinna: '#7a8a70',
+    pinne: [dorsale(11, 15, 3), ventrale(14, 17, 2), ventrale(19, 21, 2)],
+    segni: (x, y, v, t, c, h) =>
+      v > 0.45 && v < 0.6 ? '#d8909a' : v < 0.55 && h(x, y) % 9 === 0 ? '#2a2420' : null
+  });
+  // carpa: alta e tonda, bronzo dorato, squame, pinne aranciate
+  pesce('carpa', {
+    x0: 3,
+    xc: 23,
+    x1: 29,
+    alto: 7,
+    cy: 16,
+    back: '#7a5a22',
+    fianco: '#c8963a',
+    ventre: '#ecd8a0',
+    pinna: '#c0703a',
+    pinne: [dorsale(9, 19, 1), ventrale(12, 15, 3), ventrale(18, 20, 2)],
+    segni: (x, y, v, t, c) =>
+      v > 0.15 && v < 0.85 && (x + (y % 2) * 2) % 4 === 0 ? (v < 0.32 ? '#5e4418' : '#a87a2a') : null,
+    occhio: 3
+  });
+  // luccio: lungo, muso a becco, verde con macchie chiare, pinne dietro
+  pesce('luccio', {
+    x0: 1,
+    xc: 25,
+    x1: 30,
+    alto: 4,
+    cy: 16,
+    back: '#3e5a2e',
+    fianco: '#6e8e4a',
+    ventre: '#dce4b8',
+    pinna: '#7a6a3a',
+    pinne: [dorsale(18, 22, 3), ventrale(18, 21, 3)],
+    segni: (x, y, v, t, c, h) => (v > 0.3 && v < 0.7 && h(x >> 1, y) % 5 === 0 ? '#c8d890' : null),
+    occhio: 4
+  });
+  // persico: verde giallo, strisce scure, pinne rosse e cresta spinosa
+  pesce('persico', {
+    x0: 3,
+    xc: 24,
+    x1: 29,
+    alto: 6,
+    cy: 16,
+    back: '#4e6a2a',
+    fianco: '#b8c04a',
+    ventre: '#f0e8c0',
+    pinna: '#d0502a',
+    pinne: [
+      Object.assign(dorsale(8, 14, 4), { c: '#5a6a3a' }),
+      dorsale(15, 20, 2),
+      ventrale(12, 14, 3),
+      ventrale(18, 20, 2)
+    ],
+    segni: (x, y, v, t, c) => (v < 0.7 && t > 0.2 && t < 0.9 && x % 4 === 0 ? '#2e3a1a' : null)
+  });
+  // anguilla: lunga e sinuosa, scura sopra, chiara sotto, pinna continua
+  pesce('anguilla', {
+    x0: 2,
+    xc: 29,
+    x1: 30,
+    alto: 2.4,
+    cy: 16,
+    curva: t => Math.sin(t * Math.PI * 1.6 + 0.4) * 2.6,
+    prof: t => Math.max(0.6, 2.6 * Math.min(1, t * 5, (1 - t) * 2.4 + 0.3)),
+    back: '#34341f',
+    fianco: '#58583a',
+    ventre: '#c8c098',
+    pinna: '#4a4a2e',
+    coda: 'punta',
+    occhio: 2,
+    luce: '#7a7a58'
+  });
+  // tinca: tozza, verde oliva dorato, pelle liscia, occhio rosso, pinne tonde
+  pesce('tinca', {
+    x0: 3,
+    xc: 23,
+    x1: 28,
+    alto: 6,
+    cy: 16,
+    back: '#3a4a1e',
+    fianco: '#6a7a2e',
+    ventre: '#c8b860',
+    pinna: '#3e4a24',
+    coda: 'tonda',
+    iride: '#c8302a',
+    luce: '#a8b860',
+    pinne: [dorsale(11, 15, 3), ventrale(13, 16, 3), ventrale(18, 20, 2)]
+  });
+  // salmerino d'oro: oro e arancio, puntini chiari, pinne col bordo bianco
+  pesce('salmerino', {
+    x0: 3,
+    xc: 24,
+    x1: 29,
+    alto: 5,
+    cy: 16,
+    back: '#b0701a',
+    fianco: '#f0b830',
+    ventre: '#fff0b8',
+    pinna: '#e06a2a',
+    luce: '#fff8d8',
+    pinne: [dorsale(11, 15, 3), Object.assign(ventrale(14, 17, 2), { c: '#f4f0e8' }), ventrale(19, 21, 2)],
+    segni: (x, y, v, t, c, h) => (v < 0.6 && h(x, y) % 7 === 0 ? '#fff4c8' : null)
+  });
   I('casetta', P => {
     P.rect(6, 14, 20, 14, rp('#e8d8b8'));
     P.body(

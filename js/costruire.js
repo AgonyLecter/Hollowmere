@@ -5,7 +5,7 @@
 // sposta le costruzioni (le bestie, le casse e gli abitanti vengono con loro), togli e riprendi.
 
 G.bm = null; // {x,y,mode:'piazza'|'sposta'|'togli',carry:{from,data},t}
-const BM_MODES = { piazza: 'Piazza', sposta: 'Sposta', togli: 'Togli' };
+const BM_MODES = { piazza: 'Piazza', sposta: 'Sposta', ruota: 'Ruota', togli: 'Togli' };
 const bmHome = () => isFree(G.st) && !G.visit && G.map && (G.map.id === 'main' || G.map.id === 'house');
 // fuori si piazzano le costruzioni, in casa i mobili
 const canHere = id =>
@@ -72,6 +72,8 @@ function bmBar() {
       const v = a.dataset.bm;
       if (v === 'esci') return bmClose();
       if (v === 'ok') return bmAction();
+      // «Ruota» con qualcosa in mano (spostato o da piazzare) lo gira subito; a mani vuote è una modalità
+      if (v === 'ruota' && bmGiraInMano()) return;
       if (G.bm.carry) {
         UI.toast('Prima metti giù quello che stai spostando.');
         return;
@@ -95,7 +97,9 @@ function bmBar() {
         : 'Scegli nella barra qualcosa da costruire.'
       : b.mode === 'sposta'
         ? 'Punta una costruzione e premi A per sollevarla.'
-        : 'Punta una costruzione o una lastra: torna nello zaino.';
+        : b.mode === 'ruota'
+          ? 'Punta un mobile e premi A per girarlo.'
+          : 'Punta una costruzione o una lastra: torna nello zaino.';
   el.classList.toggle('top', !!(G.map && G.map.id === 'house'));
   el.innerHTML = `<b>Costruzione</b><p>${what}</p><p class="tb">${Object.entries(BM_MODES)
     .map(([k, n]) => `<button class="btn ${b.mode === k ? 'on' : ''}" data-bm="${k}">${n}</button>`)
@@ -105,15 +109,16 @@ function bmBar() {
   el.classList.remove('hide');
 }
 // regole di posa: le stesse del gioco, ma sul cursore
-function bmCanPlace(id, x, y) {
+function bmCanPlace(id, x, y, r = 0) {
   if (G.map && G.map.id === 'house') {
     const m = G.map,
       o = m.objAt(x, y);
     if (!ITEMS[id] || ITEMS[id].t !== 'arredo') return 'In casa vanno i mobili.';
-    const fp = furnFp(id),
+    const fp = furnFp(id, r),
       grande = fp[0] > 1 || fp[1] > 1 ? ` (${fp[0]}×${fp[1]} caselle)` : '';
-    if (ITEMS[id].wall) return furnSpazio(m, id, x, y) ? '' : 'Questo va sulla parete in alto' + grande + '.';
-    return furnSpazio(m, id, x, y)
+    if (ITEMS[id].wall)
+      return furnSpazio(m, id, x, y, r) ? '' : 'Questo va sulla parete in alto' + grande + '.';
+    return furnSpazio(m, id, x, y, r)
       ? ''
       : 'Non qui: serve un posto libero sul pavimento' + grande + ', lontano dalla porta.';
   }
@@ -248,6 +253,10 @@ function bmActionBase() {
     if (id === 'casetta') UI.toast('Casetta costruita! Domattina arriverà qualcuno ad abitarla.');
     UI.hotbar();
     bmBar();
+    return;
+  }
+  if (b.mode === 'ruota') {
+    UI.toast('Fuori le costruzioni si spostano e basta: in casa i mobili si girano.');
     return;
   }
   // sposta e togli
@@ -440,18 +449,35 @@ function drawBM() {
   const it = selItem(),
     id = b.carry ? b.carry.data.id : b.mode === 'piazza' && it && canHere(it.id) ? it.id : null;
   if (id) {
-    const ok = !bmCanPlace(id, b.x, b.y),
-      casa = m.id === 'house',
+    const casa = m.id === 'house',
+      r = casa ? (b.carry ? b.carry.data.r || 0 : b.r || 0) : 0,
+      ok = !bmCanPlace(id, b.x, b.y, r),
       sz = !casa && ITEMS[id].size,
-      T = sz ? bldFoot(id, b.x, b.y).T : casa ? furnTiles(id, b.x, b.y) : [[b.x, b.y]];
+      T = sz ? bldFoot(id, b.x, b.y).T : casa ? furnTiles(id, b.x, b.y, r) : [[b.x, b.y]];
     ctx.fillStyle = ok ? 'rgba(110,220,110,.32)' : 'rgba(230,80,60,.38)';
     for (const [x, y] of T) ctx.fillRect(Math.round(x * 16 - cx), Math.round(y * 16 - cy), 16, 16);
     const img = sz
       ? AIMG[id]
       : id === 'lastre'
         ? null
-        : placeImg(id, b.carry ? b.carry.data : { id, d: st.day });
-    if (img) {
+        : casa
+          ? furnImg(id, r)
+          : placeImg(id, b.carry ? b.carry.data : { id, d: st.day });
+    if (img && casa) {
+      // in casa l'anteprima sta esattamente dove starà il mobile (centrato sulla sua impronta, i quadri più su)
+      const it = ITEMS[id],
+        fp = furnFp(id, r),
+        lift = it.flat ? 0 : it.lift != null ? it.lift : it.wall ? -6 : 0;
+      ctx.globalAlpha = 0.6;
+      ctx.drawImage(
+        img,
+        Math.round(b.x * 16 + (fp[0] * 16 - iw(img)) / 2 - cx),
+        Math.round((b.y + 1) * 16 - ih(img) + lift - cy),
+        iw(img),
+        ih(img)
+      );
+      ctx.globalAlpha = 1;
+    } else if (img) {
       ctx.globalAlpha = 0.6;
       const w = iw(img),
         h = ih(img),
@@ -568,7 +594,7 @@ const FUNC = {
 };
 const FUNC_UP = {
   2: { money: 1500, c: { legna: 80, pietra: 60, lingotto: 4 } },
-  3: { money: 4000, c: { lingotto: 10, rame: 4, oro: 1 } }
+  3: { money: 4000, c: { lingotto: 10, lingotto_rame: 2, lingotto_oro: 1 } }
 };
 const fLv = b => b.lv || 1;
 // l'area di un edificio: la sua impronta allargata di r
@@ -971,7 +997,7 @@ Object.assign(HOUSE_UP, {
   5: {
     n: 'Il salone',
     cost: 16000,
-    c: { legna: 400, pietra: 300, lingotto: 20, oro: 2, diamante: 1 },
+    c: { legna: 400, pietra: 300, lingotto: 20, lingotto_oro: 1, diamante: 1 },
     d: "Il salone delle feste, con il soffitto alto e il camino grande. In tutta la Valle non ce n'è uno così."
   }
 });
@@ -1067,7 +1093,7 @@ function bmActionHouse() {
   W2.inside = W2.inside || {};
   if (b.carry) {
     const d = b.carry.data,
-      why = bmCanPlace(d.id, x, y);
+      why = bmCanPlace(d.id, x, y, d.r || 0);
     if (why) {
       UI.toast(why);
       AU.play('no');
@@ -1085,7 +1111,7 @@ function bmActionHouse() {
       UI.toast('Seleziona nella barra un mobile o un quadro.');
       return;
     }
-    const why = bmCanPlace(it.id, x, y);
+    const why = bmCanPlace(it.id, x, y, b.r || 0);
     if (why) {
       UI.toast(why);
       AU.play('no');
@@ -1093,7 +1119,7 @@ function bmActionHouse() {
     }
     const id = it.id;
     removeItem(id, 1);
-    bmPut(k, { id });
+    bmPut(k, b.r % furnGiri(id) ? { id, r: b.r % furnGiri(id) } : { id });
     st.flags.decor = (st.flags.decor || 0) + 1;
     UI.hotbar();
     bmBar();
@@ -1102,11 +1128,16 @@ function bmActionHouse() {
   const o = bmTarget(x, y);
   if (!o) {
     UI.toast(
-      b.mode === 'sposta' ? "Qui non c'è un mobile da spostare." : "Qui non c'è un mobile da togliere."
+      b.mode === 'sposta'
+        ? "Qui non c'è un mobile da spostare."
+        : b.mode === 'ruota'
+          ? "Qui non c'è un mobile da girare."
+          : "Qui non c'è un mobile da togliere."
     );
     return;
   }
   const d = W2.inside[o.fk];
+  if (b.mode === 'ruota') return bmGiraMobile(o, d);
   if (b.mode === 'togli') {
     if (!addItem(d.id, 1)) return;
     delete W2.inside[o.fk];
@@ -1121,6 +1152,54 @@ function bmActionHouse() {
   houseRebuild();
   AU.play('pick');
   bmBar();
+}
+
+// ---------- girare i mobili ----------
+// quello che hai in mano (spostato o da piazzare): gira l'anteprima. Restituisce vero se c'era qualcosa da girare.
+function bmGiraInMano() {
+  const b = G.bm;
+  if (!b || !G.map || G.map.id !== 'house') return false;
+  const it = selItem(),
+    id = b.carry ? b.carry.data.id : b.mode === 'piazza' && it && canHere(it.id) ? it.id : null;
+  if (!id) return false;
+  const n = furnGiri(id);
+  if (n < 2) {
+    UI.toast(ITEMS[id].n + ' non si gira: sta bene così.');
+    return true;
+  }
+  if (b.carry) b.carry.data.r = ((b.carry.data.r || 0) + 1) % n;
+  else b.r = ((b.r || 0) + 1) % n;
+  AU.play('ui');
+  bmBar();
+  return true;
+}
+// un mobile già messo: si gira dov'è, se il nuovo ingombro ci sta (lui stesso non conta)
+function bmGiraMobile(o, d) {
+  const n = furnGiri(d.id);
+  if (n < 2) {
+    UI.toast(ITEMS[d.id].n + ' non si gira: sta bene così.');
+    return;
+  }
+  const r = ((d.r || 0) + 1) % n,
+    [x, y] = o.fk.split(',').map(Number),
+    m = G.map,
+    wall = ITEMS[d.id].wall,
+    ok = furnTiles(d.id, x, y, r).every(([a, b2]) => {
+      const q = m.objAt(a, b2);
+      if (q === o) return wall ? m.get(a, b2) === 9 : true;
+      return wall ? m.get(a, b2) === 9 && !q : furnFree(m, a, b2);
+    });
+  if (!ok) {
+    UI.toast('Non c’è posto per girarlo qui: spostalo prima dove c’è più spazio.');
+    AU.play('no');
+    return;
+  }
+  if (r) d.r = r;
+  else delete d.r;
+  houseRebuild();
+  AU.play('plant');
+  const q = G.map.objAt(x, y);
+  if (q) q.popT = G.t;
 }
 
 // ================= MAI PIÙ INCASTRATI =================
@@ -1331,6 +1410,23 @@ function serraCon(m, fn) {
     }
   }
 }
+// la casellina davanti al giocatore, anche nella serra: gialla dove puoi lavorare la zolla, rossa dove no
+Ext.on('mirinoSerra', () => {
+  const m = G.map,
+    it = selItem();
+  if (!m || !it) return null;
+  const def = ITEMS[it.id] || {};
+  if (!(it.id === 'hoe' || it.id === 'can' || def.t === 'seed' || def.t === 'fert')) return null;
+  const [tx, ty] = frontTile(),
+    f = G.st.farm[m.ox + tx + ',' + ty];
+  let ok = false;
+  if (f && f.c && cropStage(f.c) === 3) ok = true;
+  else if (f && it.id === 'hoe') ok = cropGone(f) || !f.c;
+  else if (f && it.id === 'can') ok = !f.w;
+  else if (f && def.t === 'seed') ok = !f.c;
+  else if (f && def.t === 'fert') ok = !f.f;
+  return { tx, ty, ok, id: it.id };
+});
 Ext.avvolgi('doAction', function (prossimo, ...a) {
   const m = G.map;
   if (!m || m.id !== 'serra' || G.cut || UI.busy()) return prossimo(...a);

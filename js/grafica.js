@@ -5030,9 +5030,13 @@ const SNOWTEX = (() => {
 })();
 let SNOWPAT = null;
 const capCache = new WeakMap();
-function snowCap(img, big) {
-  let c = capCache.get(img);
-  if (c !== undefined) return c;
+function snowCap(img, big, fisso) {
+  // fisso: uno spessore preciso (la neve sulle piccole costruzioni cresce a strati), con la sua cache
+  let C = capCache.get(img);
+  if (!C || typeof C !== 'object' || C.getContext) capCache.set(img, (C = { _: C }));
+  const ck = fisso ? 'f' + fisso : big ? 'b' : 's';
+  if (ck in C) return C[ck];
+  let c;
   try {
     const w = img.width,
       h = img.height,
@@ -5048,9 +5052,10 @@ function snowCap(img, big) {
         const a = d[(Y * w + X) * 4 + 3],
           up = Y ? d[((Y - 1) * w + X) * 4 + 3] : 0;
         if (a > 200 && up < 40) {
-          const th =
-            (big ? 16 + ((X * 5) % 4) + Math.round(Math.sin(X * 0.33) * 3) : 3 + ((X * 7) % 3)) +
-            (Math.sin(X * 0.7) > 0.6 ? 2 : 0);
+          const th = fisso
+            ? Math.max(1, fisso + (Math.sin(X * 0.9) > 0.5 ? 1 : 0) - ((X * 7) % 5 === 0 ? 1 : 0))
+            : (big ? 16 + ((X * 5) % 4) + Math.round(Math.sin(X * 0.33) * 3) : 3 + ((X * 7) % 3)) +
+              (Math.sin(X * 0.7) > 0.6 ? 2 : 0);
           for (let k = 0; k < th; k++) {
             if (d[((Y + k) * w + X) * 4 + 3] < 200) break;
             x.fillStyle = k === 0 ? '#ffffff' : k < th - 1 ? '#eef3fa' : '#c8d4e6';
@@ -5065,9 +5070,63 @@ function snowCap(img, big) {
   } catch (e) {
     c = null;
   }
-  capCache.set(img, c);
+  C[ck] = c;
   return c;
 }
+// ---- la neve sulle piccole costruzioni (banco, cassa, botti, macchine…) ----
+// Non è subito bianca: mentre nevica (o d'inverno) si posa a poco a poco su quello che non usi, fino a uno strato
+// sottile (st.free.neve: bk → 0…1, ci vogliono circa quattro ore). Se usi la cosa, la neve cade (e la si vede
+// cadere). Sulle fonti di calore non si posa mai. Con la bella stagione si scioglie. I tetti degli edifici grandi
+// restano come prima.
+const NEVE_CALDE = new Set(['fornace', 'fornoalegna', 'alambicco', 'essiccatoio', 'compostiera', 'lampione']);
+const NEVE_ORE = 240;
+let NEVE_T = 0,
+  NEVE_ULT = null;
+function neveDi(o) {
+  if (o.kind !== 'built') return 1;
+  const st = G.st,
+    b = st.free && st.free.built[o.bk];
+  if (!b) return 1;
+  if (NEVE_CALDE.has(b.id)) return 0;
+  if (ITEMS[b.id] && ITEMS[b.id].size) return 1;
+  return (st.free.neve && st.free.neve[o.bk]) || 0;
+}
+Ext.on('mpTick', dt => {
+  NEVE_T -= dt;
+  if (NEVE_T > 0) return;
+  NEVE_T = 1;
+  const st = G.st;
+  if (!st || !isFree(st) || G.visit || !st.free) return;
+  const ora = st.day * 1440 + st.time,
+    min = NEVE_ULT == null ? 0 : Math.max(0, Math.min(120, ora - NEVE_ULT));
+  NEVE_ULT = ora;
+  if (!min) return;
+  const N = (st.free.neve = st.free.neve || {}),
+    cade = st.weather === 'neve' ? 1 : isWinter() ? 0.35 : -2; // fuori dall'inverno si scioglie in fretta
+  for (const k in st.free.built) {
+    const b = st.free.built[k];
+    if (NEVE_CALDE.has(b.id) || (ITEMS[b.id] && ITEMS[b.id].size)) continue;
+    const v = clamp((N[k] || 0) + (cade * min) / NEVE_ORE, 0, 1);
+    if (v > 0) N[k] = Math.round(v * 1000) / 1000;
+    else delete N[k];
+  }
+});
+// usare una costruzione la scuote: la neve cade
+Ext.on('freeAct:intercetta', function (fx, fy) {
+  const st = G.st,
+    m = G.map;
+  if (!st || !st.free || !st.free.neve || !m || m.id !== 'main') return;
+  const o = m.objAt(fx, fy);
+  if (!o || o.kind !== 'built' || !st.free.neve[o.bk]) return;
+  const v = st.free.neve[o.bk];
+  delete st.free.neve[o.bk];
+  if (v > 0.15 && o.img) {
+    const W = iw(o.img);
+    for (let i = 0; i < 3; i++)
+      burst('dust', o.dx + ((i + 0.5) * W) / 3, o.dy + 3, Math.round(2 + v * 4), '#f4f8ff');
+    AU.play('rustle', 0.5);
+  }
+});
 const SNOWMAN = [0, 1, 2].map(st =>
   spr2(32, 48, P => {
     const S = R6b('#e8eef8');
@@ -5547,7 +5606,17 @@ addEventListener('keydown', e => {
           )
             continue;
           if (o.dx > cx + VW || o.dx + iw(o.img) < cx || o.dy > cy + VH || o.dy + ih(o.img) < cy) continue;
-          const c = snowCap(o.img, o.kind !== 'fence' && o.kind !== 'post');
+          const lv = neveDi(o);
+          if (lv <= 0) continue;
+          const piccola =
+              o.kind === 'built' &&
+              lv < 1.0001 &&
+              !(G.st.free.built[o.bk] && ITEMS[G.st.free.built[o.bk].id].size),
+            th = piccola ? Math.round(lv * Math.max(2, Math.min(5, Math.round(ih(o.img) * 0.18)))) : 0;
+          if (piccola && !th) continue;
+          const c = piccola
+            ? snowCap(o.img, false, th)
+            : snowCap(o.img, o.kind !== 'fence' && o.kind !== 'post');
           if (c) ctx.drawImage(c, Math.round(o.dx), Math.round(o.dy), iw(o.img), ih(o.img));
         }
         ctx.globalAlpha = 1;

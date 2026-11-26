@@ -3,9 +3,9 @@
 // Ogni villaggio ha nelle sue rocce due soli materiali rari su quattro (scelti dal codice del villaggio):
 // per avere gli altri bisogna commerciare con gli altri giocatori, al mercato del ponte.
 const RARE = {
-  rame: { n: 'Rame', v: 40, c: '#c8703a', w: 5 },
-  nichel: { n: 'Nichel', v: 60, c: '#a8b0a8', w: 4 },
-  oro: { n: 'Oro', v: 150, c: '#f0c83a', w: 2 },
+  rame: { n: 'Minerale di rame', v: 40, c: '#c8703a', w: 5 },
+  nichel: { n: 'Minerale di nichel', v: 60, c: '#a8b0a8', w: 4 },
+  oro: { n: 'Oro grezzo', v: 150, c: '#f0c83a', w: 2 },
   diamante: { n: 'Diamante', v: 400, c: '#a8e8f8', w: 1 }
 };
 for (const [id, r] of Object.entries(RARE))
@@ -13,17 +13,21 @@ for (const [id, r] of Object.entries(RARE))
     n: r.n,
     t: 'res',
     v: r.v,
-    d: 'Materiale raro. Nelle rocce di ogni villaggio ce ne sono solo due su quattro; gli altri si trovano in miniera, si scambiano al mercato del ponte o si comprano da Brom, nella fucina.'
+    d:
+      (id === 'diamante'
+        ? 'Materiale raro.'
+        : 'Minerale raro, ancora nella roccia: nella fornace diventa lingotto.') +
+      ' Nelle rocce di ogni villaggio ce ne sono solo due su quattro; gli altri si trovano in miniera, si scambiano al mercato del ponte o si comprano da Brom, nella fucina.'
   };
 Object.assign(PL, {
-  rame: 'pezzi di rame',
-  nichel: 'pezzi di nichel',
-  oro: "pepite d'oro",
+  rame: 'minerali di rame',
+  nichel: 'minerali di nichel',
+  oro: "pepite d'oro grezzo",
   diamante: 'diamanti'
 });
 Object.assign(SG, {
-  rame: 'un pezzo di rame',
-  nichel: 'un pezzo di nichel',
+  rame: 'un minerale di rame',
+  nichel: 'un minerale di nichel',
   oro: "una pepita d'oro",
   diamante: 'un diamante'
 });
@@ -35,6 +39,9 @@ const DOVE_MAT = {
   rame: 'miniera dal piano 10; cassa di Brom; mercato del ponte',
   nichel: 'miniera dal piano 10; cassa di Brom; mercato del ponte',
   oro: 'miniera dal piano 10 (di più dal 20); cassa di Brom; mercato del ponte',
+  lingotto_rame: 'fornace (4 minerali di rame e 1 legna)',
+  lingotto_nichel: 'fornace (4 minerali di nichel e 1 legna)',
+  lingotto_oro: "fornace (3 pepite d'oro grezzo e 1 legna)",
   ametista: 'miniera, dal piano 20',
   diamante: 'miniera dal piano 20; Nove, al cimitero di notte; mercato del ponte'
 };
@@ -136,16 +143,16 @@ Object.assign(ITEMS, {
   }
 });
 CRAFTS.push(
-  { id: 'statua', q: 1, c: { oro: 3, pietra: 20 }, cat: 'est' },
-  { id: 'fontana', q: 1, c: { rame: 4, pietra: 30 }, cat: 'est' },
-  { id: 'banderuola', q: 1, c: { rame: 3, legna: 5 }, cat: 'est' },
-  { id: 'lampadario', q: 1, c: { diamante: 1, rame: 2, nichel: 1 }, cat: 'cas' },
-  { id: 'specchio', q: 1, c: { nichel: 3, legna: 10 }, cat: 'cas' },
-  { id: 'attrezzi_oro', q: 1, c: { oro: 2, lingotto: 2 }, cat: 'agr' }
+  { id: 'statua', q: 1, c: { lingotto_oro: 2, pietra: 20 }, cat: 'est' },
+  { id: 'fontana', q: 1, c: { lingotto_rame: 2, pietra: 30 }, cat: 'est' },
+  { id: 'banderuola', q: 1, c: { lingotto_rame: 1, legna: 5 }, cat: 'est' },
+  { id: 'lampadario', q: 1, c: { diamante: 1, lingotto_rame: 1, lingotto_nichel: 1 }, cat: 'cas' },
+  { id: 'specchio', q: 1, c: { lingotto_nichel: 1, legna: 10 }, cat: 'cas' },
+  { id: 'attrezzi_oro', q: 1, c: { lingotto_oro: 1, lingotto: 2 }, cat: 'agr' }
 );
 Object.assign(PLACE_TOOL, { statua: 'piccone', fontana: 'piccone', banderuola: 'accetta' });
 // la casa grande di Brom ora vuole anche il nichel: un motivo in più per commerciare
-if (typeof HOUSE_UP !== 'undefined') HOUSE_UP[3].c.nichel = 4;
+if (typeof HOUSE_UP !== 'undefined') HOUSE_UP[3].c.lingotto_nichel = 1; // il nichel si fonde come il ferro
 const goldTools = () => isFree() && countItem('attrezzi_oro') > 0;
 
 // ---------- mercato del ponte (Firebase: mercato/) ----------
@@ -340,26 +347,29 @@ function genTradeArtBase() {
     ICON[id] = pxCanvas(P);
   };
   for (const [id, r] of Object.entries(RARE))
-    I(id, P => {
-      if (id === 'diamante') {
-        P.body(
-          8,
-          26,
-          () => 16,
-          Y => (Y < 14 ? (Y - 8) * 1.3 + 3 : 11 - (Y - 14) * 0.9),
-          rp(r.c),
-          { nyF: Y => (Y < 14 ? -0.6 : 0.4), spec: 1 }
-        );
-      } else {
-        P.ellipse(16, 18, 10, 8, rp('#7a776d'), { spec: 0.2 });
-        for (const [a, b, s] of [
-          [12, 16, 3],
-          [20, 19, 2.6],
-          [16, 13, 2.2]
-        ])
-          P.ellipse(a, b, s, s * 0.8, rp(r.c), { spec: 0.9, edge: false });
-      }
-    });
+    if (MINERALI[id])
+      ICON[id] = iconaMinerale(id); // la roccia con le sue vene (macchine.js)
+    else
+      I(id, P => {
+        if (id === 'diamante') {
+          P.body(
+            8,
+            26,
+            () => 16,
+            Y => (Y < 14 ? (Y - 8) * 1.3 + 3 : 11 - (Y - 14) * 0.9),
+            rp(r.c),
+            { nyF: Y => (Y < 14 ? -0.6 : 0.4), spec: 1 }
+          );
+        } else {
+          P.ellipse(16, 18, 10, 8, rp('#7a776d'), { spec: 0.2 });
+          for (const [a, b, s] of [
+            [12, 16, 3],
+            [20, 19, 2.6],
+            [16, 13, 2.2]
+          ])
+            P.ellipse(a, b, s, s * 0.8, rp(r.c), { spec: 0.9, edge: false });
+        }
+      });
   I('statua', P => {
     P.rect(9, 25, 14, 5, rp('#8a877d'));
     P.body(

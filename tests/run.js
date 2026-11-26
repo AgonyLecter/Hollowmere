@@ -34,6 +34,7 @@ const SUITES = {
   svago: require('./svago'),
   allevamento: require('./allevamento'),
   segreti: require('./segreti'),
+  materiali: require('./materiali'),
   emporio: require('./emporio'),
   fucina: require('./fucina'),
   regole: require('./regole'),
