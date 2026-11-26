@@ -23,7 +23,7 @@ module.exports = async function (t, { browser }) {
     rebuildMaps();
     goMap('house', 6, 12, 0, true);
     const m = G.maps.house;
-    R.camini = m.objs.filter(o => o.kind === 'fire').length;
+    R.camini = m.objs.filter(o => o.kind === 'fire' || o.fid === 'camino_nonno').length; // quello del nonno ora è un mobile
     R.applique = m.objs.filter(o => o.kind === 'applique').length;
     R.pietra = m.get(10, 11) === 7;
     // il letto grande: 2×2 caselle

@@ -404,12 +404,14 @@ Object.assign(ITEMS, {
   seme_rosso: {
     n: 'Seme rosso',
     t: 'res',
+    premio: 1, // si ha solo dall'Albero, di notte
     v: 0,
     d: 'Caldo come una brace. Non si pianta: dicono che, piantato, crescerebbe un Albero. Si tiene.'
   },
   scheggia_albero: {
     n: "Scheggia dell'Albero",
     t: 'res',
+    premio: 1,
     v: 0,
     d: 'Corteccia rossa, tiepida. Di notte, se la stringi, senti contare.'
   }

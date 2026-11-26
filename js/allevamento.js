@@ -89,7 +89,7 @@ function tintaImg(img, hex, filtro, chiave) {
   if (c[k]) return c[k];
   const w = iw(img),
     h = ih(img),
-    [cv, x] = mk(w, h);
+    [cv, x] = mk(w, h, { willReadFrequently: true }); // sul processore: lo stesso risultato su ogni macchina
   x.drawImage(img, 0, 0, w, h);
   const D = x.getImageData(0, 0, w, h),
     d = D.data,
@@ -131,6 +131,12 @@ Ext.on('prodotto', a =>
 );
 
 // ---------- le icone: boccette e matasse ----------
+const mixHex = (a, b, k) =>
+  '#' +
+  [1, 3, 5]
+    .map(i => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - k) + parseInt(b.slice(i, i + 2), 16) * k))
+    .map(v => v.toString(16).padStart(2, '0'))
+    .join('');
 Ext.on('arte', () => {
   for (const k in TINTE) {
     const T = TINTE[k],
@@ -143,9 +149,9 @@ Ext.on('arte', () => {
     x.fillRect(11, 10, 10, 17);
     x.fillStyle = T.c;
     x.fillRect(11, 15, 10, 12);
-    x.fillStyle = 'rgba(255,255,255,.35)';
+    x.fillStyle = mixHex(T.c, '#ffffff', 0.35); // colori pieni: niente trasparenze (danno pixel diversi da macchina a macchina)
     x.fillRect(12, 16, 2, 9);
-    x.fillStyle = 'rgba(0,0,0,.25)';
+    x.fillStyle = mixHex(T.c, '#000000', 0.25);
     x.fillRect(19, 15, 2, 12);
     x.fillStyle = '#a8784a';
     x.fillRect(13, 6, 6, 4);

@@ -214,7 +214,7 @@ module.exports = async function (t, { browser }) {
   t.true('dopo la corsa i corridori tornano alle loro giornate', corsa.liberi);
   const dopoCorsa = await page.evaluate(() => {
     snapNPCs();
-    return NPC('agatha').act !== 'corsa_org';
+    return schedOf('agatha').act !== 'corsa_org'; // la giornata che le tocca adesso
   });
   t.true('una corsa al giorno: dopo, Agatha torna al suo banco', dopoCorsa);
 

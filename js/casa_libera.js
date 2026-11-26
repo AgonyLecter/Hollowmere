@@ -48,6 +48,21 @@ for (const id in NONNO) ITEMS[id] = Object.assign({ t: 'arredo', v: 0, nonno: 1 
   def('tappeto_nonno', () => IMG.rug);
 }
 
+// le icone (zaino, modalità costruzione): il disegno del mobile, rimpicciolito nei 32×32
+Ext.on('arte', () => {
+  for (const id in NONNO) {
+    const im = FREEIMG[id];
+    if (!im) continue;
+    const [c, x] = mk(32, 32, { willReadFrequently: true }),
+      w = iw(im),
+      h = ih(im),
+      k = Math.min(1, 30 / Math.max(w, h)),
+      W = Math.max(1, Math.round(w * k)),
+      H = Math.max(1, Math.round(h * k));
+    x.drawImage(im, Math.round((32 - W) / 2), Math.round((32 - H) / 2), W, H);
+    ICON[id] = c;
+  }
+});
 // ---------- toccarli: fanno quello che facevano ----------
 const LETTI = new Set(['letto_nonno', 'letto']);
 Ext.on('arredo', o => {

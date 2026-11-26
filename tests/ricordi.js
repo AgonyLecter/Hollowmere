@@ -32,7 +32,7 @@ module.exports = async function (t, { browser }) {
     window.__pagine = [];
     const paper = UI.paper.bind(UI);
     UI.paper = (html, b) => (window.__pagine.push(html), paper(html, b));
-    const o = G.maps.house.objs.find(o => o.act === 'chest');
+    const o = G.maps.house.objs.find(o => o.act === 'chest' || o.fid === 'cassa_nonno'); // nella Valle è un mobile come gli altri
     window.__fine = 0;
     Promise.resolve(ACT.chest(o)).finally(() => (window.__fine = 1));
     return true;

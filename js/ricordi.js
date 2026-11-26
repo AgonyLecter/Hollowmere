@@ -78,7 +78,8 @@ async function cassaDelNonno(o) {
   const st = G.st,
     R = (st.free.ricordi = st.free.ricordi || {}),
     daRiporre = Object.keys(RICORDI_NONNO).filter(k => countItem(k) > 0 && !R[k]);
-  o.img = IMG.chestO;
+  if (o && o.kind === 'chest') o.img = IMG.chestO; // la cassa fissa della storia; quella spostabile si apre da sé
+  G.st.flags.openedChest = 1;
   AU.play('door');
   if (daRiporre.length) {
     await narr(
