@@ -175,6 +175,61 @@ module.exports = async function (t, { browser }) {
     casa.col === 'blu' && casa.img
   );
   t.true('il camino spostabile si porta dietro fuoco e luce', !!casa.fuoco);
+  // girare i mobili e l'ingombro che segue il disegno
+  const gira = await page.evaluate(async () => {
+    const st = G.st,
+      I = st.free.inside;
+    G.cut = 0;
+    bmOpen();
+    G.bm.mode = 'ruota';
+    G.bm.x = 10;
+    G.bm.y = 6;
+    bmAction();
+    const letto = I['10,6'] && I['10,6'].r;
+    // il tappeto: tre caselle per due, come il suo disegno; girato diventa due per tre
+    const fp = furnFp('tappeto_nonno'),
+      fp1 = furnFp('tappeto_nonno', 1),
+      tap = G.map.objs.find(o => o.fid === 'tappeto_nonno'),
+      dentro = tap.dx >= 0 && tap.dx + iw(tap.img) <= houseSize(st).w * 16;
+    bmClose();
+    return { letto, fp, fp1, dentro };
+  });
+  t.true('«Ruota» gira il letto dov’è', gira.letto === 1);
+  t.true(
+    'il tappeto occupa le caselle del suo disegno (e girato scambia i lati), senza uscire dalla stanza',
+    gira.fp.join() === '3,2' && gira.fp1.join() === '2,3' && gira.dentro
+  );
+  // la neve sulle piccole costruzioni: si posa piano su quello che non usi, cade quando lo usi, mai sul fuoco
+  const neve = await page.evaluate(async () => {
+    const st = G.st;
+    goMap('main', 30, 30, 0, true);
+    st.free.built['31,30'] = { id: 'banco' };
+    st.free.built['33,30'] = { id: 'fornace' };
+    rebuildMaps();
+    G.map = G.maps.main;
+    st.weather = 'neve';
+    st.time = 9 * 60;
+    Ext.run('mpTick', 2);
+    st.time += 60;
+    Ext.run('mpTick', 2);
+    const un_ora = (st.free.neve || {})['31,30'] || 0;
+    for (let i = 0; i < 4; i++) {
+      st.time += 60;
+      Ext.run('mpTick', 2);
+    }
+    const tanto = st.free.neve['31,30'],
+      fuoco = !st.free.neve['33,30'];
+    setPos(G.player, 31, 31, 3);
+    freeAct(31, 30);
+    UI.close();
+    return { un_ora, tanto, fuoco, usato: !st.free.neve['31,30'] };
+  });
+  t.true(
+    'mentre nevica, la neve su un banco non usato cresce piano (non subito bianco)',
+    neve.un_ora > 0.1 && neve.un_ora < 0.5 && neve.tanto === 1
+  );
+  t.true('sulle fonti di calore la neve non si posa', neve.fuoco);
+  t.true('usando il banco, la neve cade', neve.usato);
   const mattina = await page.evaluate(async () => {
     window.__vuoi = [];
     await endDay(false);

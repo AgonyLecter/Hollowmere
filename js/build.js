@@ -393,17 +393,49 @@ function genBuildArt(...a) {
 // arredo in casa
 // i mobili grandi occupano più caselle: fp = [larghezza, profondità]; la casella dove li posi è quella in basso a
 // sinistra, e il mobile cresce verso destra e verso la parete
-const furnFp = id => (ITEMS[id] && ITEMS[id].fp) || [1, 1];
-function furnTiles(id, x, y) {
-  const [w, h] = furnFp(id),
+// la rotazione di un mobile (r): i mobili visti dall'alto (letti, tappeti, tavoli: ruota 'quarto') girano di un
+// quarto alla volta e scambiano larghezza e profondità; gli altri si specchiano (davanti resta davanti)
+const furnQuarto = id => !!(ITEMS[id] && ITEMS[id].ruota === 'quarto');
+const furnGiri = id => (ITEMS[id] && ITEMS[id].noGira ? 1 : furnQuarto(id) ? 4 : 2);
+const furnFp = (id, r = 0) => {
+  const fp = (ITEMS[id] && ITEMS[id].fp) || [1, 1];
+  return furnQuarto(id) && r % 2 ? [fp[1], fp[0]] : fp;
+};
+const GIRA_CACHE = new WeakMap();
+function furnGira(img, r, quarto) {
+  r = quarto ? r % 4 : r % 2;
+  if (!img || !r) return img;
+  let c = GIRA_CACHE.get(img);
+  if (!c) GIRA_CACHE.set(img, (c = {}));
+  const k = (quarto ? 'q' : 's') + r;
+  if (c[k]) return c[k];
+  const w = iw(img),
+    h = ih(img),
+    [cv, x] = mk(quarto && r % 2 ? h : w, quarto && r % 2 ? w : h, { willReadFrequently: true });
+  x.save();
+  if (!quarto) {
+    x.translate(w, 0);
+    x.scale(-1, 1);
+  } else {
+    x.translate(cv.width / 2, cv.height / 2);
+    x.rotate((r * Math.PI) / 2);
+    x.translate(-w / 2, -h / 2);
+  }
+  x.drawImage(img, 0, 0, w, h);
+  x.restore();
+  return (c[k] = cv);
+}
+const furnImg = (id, r = 0) => furnGira(FREEIMG[id], r, furnQuarto(id));
+function furnTiles(id, x, y, r = 0) {
+  const [w, h] = furnFp(id, r),
     T = [];
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) T.push([x + i, y - j]);
   return T;
 }
 // c'è posto per questo mobile qui? (i quadri e le mensole: sulla parete in alto)
-function furnSpazio(m, id, x, y) {
+function furnSpazio(m, id, x, y, r = 0) {
   const wall = ITEMS[id] && ITEMS[id].wall;
-  return furnTiles(id, x, y).every(([a, b]) =>
+  return furnTiles(id, x, y, r).every(([a, b]) =>
     wall ? m.get(a, b) === 9 && !m.objAt(a, b) : furnFree(m, a, b)
   );
 }
@@ -478,9 +510,10 @@ function addFurniture(m, st) {
       f = st.free.inside[k],
       it = ITEMS[f.id],
       flat = it && it.flat,
-      img = FREEIMG[f.id],
-      fp = furnFp(f.id),
-      T = furnTiles(f.id, x, y);
+      r = f.r || 0,
+      img = furnImg(f.id, r),
+      fp = furnFp(f.id, r),
+      T = furnTiles(f.id, x, y, r);
     if (!it || !img) continue;
     if (flat) {
       m.add({
@@ -488,8 +521,9 @@ function addFurniture(m, st) {
         tx: x,
         ty: y,
         img,
-        dx: it.fp ? x * 16 + (fp[0] * 16 - iw(img)) / 2 : x * 16 - 4,
-        dy: it.fp ? (y + 1) * 16 - ih(img) : y * 16 + 2,
+        // centrato sulla sua impronta e appoggiato sulla fila in basso: il disegno sta dentro le sue caselle
+        dx: x * 16 + (fp[0] * 16 - iw(img)) / 2,
+        dy: (y + 1) * 16 - ih(img),
         sy: -1,
         solid: [],
         hits: T,

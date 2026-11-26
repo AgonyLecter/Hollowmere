@@ -42,6 +42,8 @@ module.exports = async function (t, { browser }) {
     document.querySelectorAll('.toast').forEach(e => e.remove());
     setPos(G.player, 3, 5, 3);
     prendi('hoe');
+    // la casellina davanti al giocatore c'è anche nella serra (prima mancava)
+    window.__mirino = aimInfo();
     azione();
     const zappa = toasts();
     prendi(seme);
@@ -138,6 +140,11 @@ module.exports = async function (t, { browser }) {
   }, auto.ck);
   t.true('tolta la serra, la sua cassa sparisce', tolta.via);
   t.true('e il contenuto arriva nella cassetta delle spedizioni', tolta.posta);
+  const mirino = await page.evaluate(() => window.__mirino);
+  t.true(
+    'nella serra c’è la casellina davanti al giocatore, sull’aiuola',
+    !!mirino && mirino.tx === 3 && mirino.ty === 4
+  );
   t.eq('serra: nessun errore', errors.join('\n'), '');
   await page.close();
 };

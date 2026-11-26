@@ -664,6 +664,22 @@ const NOVITA = [
         t: 'Gli abitanti hanno abitudini nuove nella settimana e piccoli gesti loro. E di notte… se Tobia ti dà appuntamento, non mancare. E se qualcuno ti chiama da dietro, non girarti.'
       }
     ]
+  },
+  {
+    id: 'neve_ruota',
+    v: 60,
+    n: 'Neve vera, mobili che girano, pesci nuovi',
+    steps: [
+      {
+        t: 'D’inverno la neve si posa piano sulle cose che non usi (banco, casse, botti, macchine); quando le usi, cade. Su fornace, forno, alambicco e lampioni non si posa: scaldano.'
+      },
+      {
+        t: 'In casa, in modalità costruzione, c’è <b>Ruota</b>: i letti, i tavoli e i tappeti girano di un quarto, gli altri mobili si specchiano. Con un mobile in mano, Ruota gira l’anteprima. Ogni mobile occupa le caselle del suo disegno, e l’anteprima sta esattamente dove starà.'
+      },
+      {
+        t: 'Nella serra c’è la casellina davanti a te, come nei campi. E i <b>pesci</b> sono disegnati da capo: ognuno con la sua forma e i suoi colori.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);
