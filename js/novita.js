@@ -680,6 +680,16 @@ const NOVITA = [
         t: 'Nella serra c’è la casellina davanti a te, come nei campi. E i <b>pesci</b> sono disegnati da capo: ognuno con la sua forma e i suoi colori.'
       }
     ]
+  },
+  {
+    id: 'lingotti',
+    v: 61,
+    n: 'Rame, nichel e oro in lingotti',
+    steps: [
+      {
+        t: 'La <b>fornace</b> adesso fonde tutti i minerali: 5 di ferro, 4 di rame, 4 di nichel o 3 pepite d’oro, e 1 legna per ogni lingotto. Le ricette e i miglioramenti chiedono i <b>lingotti</b> di rame, nichel e oro, come per il ferro (in meno pezzi). Minerali e lingotti hanno disegni nuovi, ognuno il suo.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

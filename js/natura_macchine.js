@@ -110,7 +110,7 @@ const NAT_MACH = {
   alambicco: {
     n: 'Alambicco',
     d: 'Rame e fuoco lento: fiori ed erbe diventano essenze preziose in dieci ore.',
-    c: { rame: 4, pietra: 10, lingotto: 1 },
+    c: { lingotto_rame: 2, pietra: 10, lingotto: 1 },
     lv: 6,
     tool: 'piccone',
     size: [18, 24],

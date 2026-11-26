@@ -594,7 +594,7 @@ const FUNC = {
 };
 const FUNC_UP = {
   2: { money: 1500, c: { legna: 80, pietra: 60, lingotto: 4 } },
-  3: { money: 4000, c: { lingotto: 10, rame: 4, oro: 1 } }
+  3: { money: 4000, c: { lingotto: 10, lingotto_rame: 2, lingotto_oro: 1 } }
 };
 const fLv = b => b.lv || 1;
 // l'area di un edificio: la sua impronta allargata di r
@@ -997,7 +997,7 @@ Object.assign(HOUSE_UP, {
   5: {
     n: 'Il salone',
     cost: 16000,
-    c: { legna: 400, pietra: 300, lingotto: 20, oro: 2, diamante: 1 },
+    c: { legna: 400, pietra: 300, lingotto: 20, lingotto_oro: 1, diamante: 1 },
     d: "Il salone delle feste, con il soffitto alto e il camino grande. In tutta la Valle non ce n'è uno così."
   }
 });

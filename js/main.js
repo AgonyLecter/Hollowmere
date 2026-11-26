@@ -1244,6 +1244,10 @@ async function boot() {
   } catch (e) {
     atteso(e);
   }
+  // prima che siano letti tutti i file (anche quelli dopo main.js: svago, allevamento, casa, segreti), la lista
+  // dei lavori di grafica sarebbe incompleta: si aspetta che la pagina abbia finito di caricare gli script
+  if (document.readyState === 'loading')
+    await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
   // la grafica si fa a passi (prima quella del gioco, poi quella dei file aggiunti, punto 'arte'): tra un passo
   // e l'altro le candele si accendono e lo schermo respira
   const arte = (Ext._h.arte || []).slice(),

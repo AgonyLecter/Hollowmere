@@ -18,13 +18,13 @@ const SERRA_AUTO = {
     n: 'Irrigatori a scomparsa',
     d: 'Ogni mattina alle 7 spuntano dalla terra delle aiuole e bagnano tutte le zolle. Poi rientrano.',
     money: 1500,
-    c: { lingotto: 6, rame: 4 }
+    c: { lingotto: 6, lingotto_rame: 2 }
   },
   gru: {
     n: 'Braccio a carrucola',
     d: 'Una gru sotto il tetto: dalle 8 raccoglie le piante mature e le posa nella cassa della serra, accanto alla porta.',
     money: 3000,
-    c: { lingotto: 8, oro: 2, legna: 30 }
+    c: { lingotto: 8, lingotto_oro: 1, legna: 30 }
   }
 };
 const ORA_IRR = 7 * 60,
