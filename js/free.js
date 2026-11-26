@@ -570,6 +570,7 @@ function freeMorningBase(st) {
         k = fkey(x, y);
       if (W2.debris[k] || W2.built[k] || st.farm[k]) continue;
       if (x >= 37 && x <= 52 && y >= 13 && y <= 24) continue; // la piazza resta pulita
+      if (x >= 52 && x <= 57 && y >= 17 && y <= 23) continue; // e anche l'angolo del pozzo
       W2.debris[k] = inFarm(x, y)
         ? ['erbaccia', 'sasso', 'ramo', 'erbaccia'][i % 4]
         : ['ramo', 'sasso', 'erbaccia'][i % 3];

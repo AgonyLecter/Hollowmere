@@ -36,6 +36,30 @@ module.exports = async function (t, { browser }) {
   t.true('il centro resta libero per il falò delle feste', r.centro);
   t.true('un sasso lascia il posto alla fioriera', r.sasso);
   t.true('il pozzo ha il suo angolo fuori dalla piazza (e dà ancora acqua)', r.pozzo);
+  // una partita in cui, prima che il pozzo arrivasse, sul suo posto era nato un sasso grosso; e una con una
+  // costruzione del giocatore proprio lì: il pozzo c'è lo stesso (accanto, se c'è una cosa tua)
+  const r2 = await page.evaluate(() => {
+    const st = G.st;
+    const roccia = m => {
+      if (m.id === 'main') m.add(OB('rock', 54, 20, IMG.rock && IMG.rock[0], { act: 'rock' }));
+    };
+    Ext.on('applyFree:prima', roccia);
+    rebuildMaps();
+    const conSasso = G.maps.main.objs.filter(o => o.kind === 'well');
+    Ext._h['applyFree:prima'] = Ext._h['applyFree:prima'].filter(f => f !== roccia);
+    const id = Object.keys(ITEMS).find(k => ITEMS[k].t === 'place' && !ITEMS[k].size && PLACE_TOOL[k]);
+    st.free.built['54,20'] = { id };
+    rebuildMaps();
+    const conCosa = G.maps.main.objs.filter(o => o.kind === 'well');
+    delete st.free.built['54,20'];
+    rebuildMaps();
+    return {
+      sasso: conSasso.length === 1 && conSasso[0].tx === 54 && conSasso[0].ty === 20,
+      cosa: conCosa.length === 1 && !!G.st && (conCosa[0].tx !== 54 || conCosa[0].ty !== 20)
+    };
+  });
+  t.true('anche con un sasso grosso nato sul suo posto, il pozzo c’è', r2.sasso);
+  t.true('con una tua costruzione sul suo posto, il pozzo si mette accanto', r2.cosa);
   t.eq('piazza: nessun errore', errors.join('\n'), '');
   await page.close();
 };
