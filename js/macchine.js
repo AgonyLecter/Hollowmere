@@ -87,7 +87,7 @@ Object.assign(ITEMS, {
   lingotto: {
     n: 'Lingotto di ferro',
     t: 'res',
-    v: 90,
+    v: 55,
     d: "Serve per le macchine, l'irrigatore grande e, all'incudine, per forgiare gli attrezzi."
   },
   // i metalli rari si fondono come il ferro: dalla roccia al lingotto, nella fornace

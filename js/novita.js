@@ -713,6 +713,16 @@ const NOVITA = [
         t: 'Il <b>frantoio</b> chiede meno: 3 olive, 2 noci o 1 girasole, e l’olio vale di più. Statua, fontana, alambicco e irrigatori della serra vogliono <b>un solo lingotto</b> raro, e Brom tiene <b>tre pepite d’oro</b> al giorno: quanto basta per un lingotto. Anche il ferro e il suo lingotto ora si vendono.'
       }
     ]
+  },
+  {
+    id: 'cassetta_tutto',
+    v: 64,
+    n: 'La cassetta prende tutto',
+    steps: [
+      {
+        t: 'Nella <b>cassetta delle spedizioni</b> adesso va tutto quello che ha un prezzo, non solo i raccolti: minerali, lingotti, diamanti, farina, coloranti, il pane del forno. Tienilo in mano e metti dentro. Ottavio invece compra ancora solo raccolti, uova e latte, ma paga di più.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

@@ -21,7 +21,7 @@ const sellPrice = id =>
       (typeof evMult === 'function' ? evMult(id) : 1) *
       (G.st && G.st.demand === id ? 1.4 : 1) *
       (typeof Mercato !== 'undefined' ? Mercato.domanda(id) : 1) *
-      (isFree() ? (skLv('agri') >= 8 ? 1.25 : skLv('agri') >= 2 ? 1.1 : 1) : 1)
+      (isFree() && ITEMS[id].t === 'crop' ? (skLv('agri') >= 8 ? 1.25 : skLv('agri') >= 2 ? 1.1 : 1) : 1)
   );
 
 // ---------- lampioni: Lucius li accende (e li spegne) uno per uno; gli ultimi tre si accendono "da soli" ----------

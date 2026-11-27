@@ -111,6 +111,25 @@ module.exports = async function (t, { browser }) {
   );
   t.eq('frantoio e mulino non fanno perdere valore', eq.perdono.join(', '), '');
   t.true('la wiki dice come si fondono rame, nichel e oro', eq.wiki);
+  // la cassetta delle spedizioni prende tutto quello che ha un prezzo (non solo i raccolti)
+  const cas = await page.evaluate(() => {
+    const st = G.st;
+    st.inv = st.inv.map(() => null);
+    st.inv[0] = { id: 'diamante', n: 1 };
+    st.sel = 0;
+    st.shipped = [];
+    ACT.bin();
+    const diamante = st.shipped.length === 1 && st.shipped[0][0] === 'diamante' && st.shipped[0][2] > 0;
+    UI.close && UI.close();
+    return {
+      diamante,
+      si: ['lingotto', 'lingotto_oro', 'farina', 'rame'].every(vendibile),
+      no: ['piccone', 'legna', 'pietra'].some(vendibile)
+    };
+  });
+  t.true('nella cassetta si vende anche un diamante', cas.diamante);
+  t.true('e i lingotti, la farina, i minerali', cas.si);
+  t.true('ma non gli attrezzi, la legna e la pietra', !cas.no);
   t.eq('materiali: nessun errore', errors.join('\n'), '');
   await page.close();
 };
