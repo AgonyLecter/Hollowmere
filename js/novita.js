@@ -723,6 +723,16 @@ const NOVITA = [
         t: 'Nella <b>cassetta delle spedizioni</b> adesso va tutto quello che ha un prezzo, non solo i raccolti: minerali, lingotti, diamanti, farina, coloranti, il pane del forno. Tienilo in mano e metti dentro. Ottavio invece compra ancora solo raccolti, uova e latte, ma paga di più.'
       }
     ]
+  },
+  {
+    id: 'dove_amico',
+    v: 65,
+    n: 'Dov’è il tuo amico',
+    steps: [
+      {
+        t: 'Quando vai a trovare qualcuno e non lo vedi, il gioco ti dice perché: è <b>in casa</b> (o nella serra, in miniera…), vi siete <b>visitati nello stesso momento</b> (ognuno nel villaggio vuoto dell’altro: torni a casa uno dei due), oppure <b>non sta giocando</b>. E chi riceve una visita legge dove si trova l’ospite.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

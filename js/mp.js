@@ -134,11 +134,14 @@ Ext.on('netDiag', (L, ok, ko) => {
   if (!PRES) return L.push('… presenza online non attiva');
   const quanti = Object.keys(G.others).length;
   if (PRES_STATO.err) L.push(ko('Presenza rifiutata: ' + esc(PRES_STATO.err) + ' (gli altri non ti vedono)'));
+  else if (PRES_STATO.ok && G.visit && !G.others[G.visit.pid])
+    L.push(ko(esc(G.visit.name) + ' non è nel suo villaggio adesso (in visita altrove o non sta giocando)'));
   else if (PRES_STATO.ok)
     L.push(ok('Presenza online · ' + (quanti ? 'qui con te: ' + quanti : 'nessun altro qui adesso')));
   else L.push('… presenza online in partenza');
 });
 let PRES = null,
+  PRES_DA = 0,
   PRES_V = null,
   PRES_T = 0,
   PRES_FULL = 0,
@@ -196,6 +199,10 @@ async function presenceJoin(village) {
     }
     for (const pid in G.others) if (!all[pid]) delete G.others[pid];
   });
+  PRES_DA = performance.now();
+  AMICO_DOVE.altrove = undefined;
+  AMICO_DOVE.chiesto = 0;
+  if (mio) amicoDoveScrivi(me, village);
   CHAT_OFF = MP.chat(village, m => {
     const o = Object.values(G.others).find(o => o.name === m.n);
     AU.play('blip');
@@ -204,6 +211,79 @@ async function presenceJoin(village) {
     G.chatB.push({ who: m.n, t: m.t, life: 5, o });
   });
 }
+// ---------- dov'è il tuo amico ----------
+// Due amici possono essere «online insieme» e non vedersi: uno è in casa e l'altro fuori, oppure si sono visitati
+// nello stesso momento (ognuno nel villaggio vuoto dell'altro), oppure l'amico non sta giocando. Il gioco lo dice:
+// ognuno scrive nella sua scheda (villaggi/<codice>/dove) in quale villaggio si trova, e quando chiude sparisce.
+const AMICO_DOVE = { t: 0, chiesto: 0, altrove: undefined },
+  DOVE_LUOGHI = {
+    main: 'fuori, nella Valle',
+    house: 'in casa',
+    serra: 'nella serra',
+    miniera: 'in miniera',
+    wood: 'nel bosco',
+    barn: 'nella stalla',
+    chapel: 'in cappella',
+    forge: 'alla fucina',
+    store: 'all’emporio'
+  },
+  doveLuogo = id => DOVE_LUOGHI[id] || 'da un’altra parte';
+function amicoDoveScrivi(me, village) {
+  const D = NET.api,
+    r = NET.r('villaggi/' + me + '/dove');
+  D.set(r, village).catch(e => rete(e, 'presenza'));
+  try {
+    D.onDisconnect(r).remove();
+  } catch (e) {
+    rete(e, 'presenza');
+  }
+}
+// il testo per chi è in visita (dov'è il padrone) e per chi riceve (dove sono i suoi ospiti)
+function amicoDoveTesto() {
+  const v = G.visit;
+  if (v) {
+    const h = G.others[v.pid];
+    if (h) return h.map === G.map.id ? '' : `${esc(v.name)} è ${doveLuogo(h.map)}.`;
+    if (performance.now() - PRES_DA < 6000) return '';
+    const now = performance.now();
+    if (now - AMICO_DOVE.chiesto > 10000 && NET.ok) {
+      AMICO_DOVE.chiesto = now;
+      NET.api
+        .get(NET.r('villaggi/' + v.pid + '/dove'))
+        .then(s => {
+          if (G.visit === v) AMICO_DOVE.altrove = s.val() || null;
+        })
+        .catch(e => rete(e, 'presenza'));
+    }
+    const d = AMICO_DOVE.altrove;
+    if (d === undefined) return '';
+    if (G.home && d === G.home.pid)
+      return `${esc(v.name)} è nel <b>tuo</b> villaggio: vi siete visitati nello stesso momento. Torni a casa uno dei due (dal ponte): l’altro lo trova lì.`;
+    if (d && d !== v.pid) return `${esc(v.name)} è in visita da un altro amico: adesso qui non c'è.`;
+    return `${esc(v.name)} non sta giocando adesso: vedi il suo villaggio, ma non c'è nessuno.`;
+  }
+  const fuori = Object.values(G.others).filter(o => o.name && o.map && o.map !== G.map.id);
+  return fuori.length ? fuori.map(o => `👋 ${esc(o.name)} è qui, ${doveLuogo(o.map)}`).join('<br>') : '';
+}
+Ext.on('mpTick', dt => {
+  AMICO_DOVE.t -= dt;
+  if (AMICO_DOVE.t > 0) return;
+  AMICO_DOVE.t = 0.5;
+  let el = $('#pchip');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pchip';
+    el.className = 'dark hide';
+    ($('#hud') || document.body).appendChild(el);
+  }
+  const t = PRES && G.mode === 'game' && !G.cut ? amicoDoveTesto() : '';
+  el.classList.toggle('hide', !t);
+  if (!t) return;
+  if (el.innerHTML !== t) el.innerHTML = t;
+  // sotto il riquadro della visita, se c'è
+  const vc = $('#vchip');
+  el.style.top = vc && !vc.classList.contains('hide') ? vc.offsetTop + vc.offsetHeight + 4 + 'px' : '';
+});
 function presenceLeave() {
   if (PRES) PRES.stop();
   PRES = null;

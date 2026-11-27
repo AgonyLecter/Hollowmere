@@ -27,4 +27,25 @@ module.exports = async function (t, { ROOT }) {
   t.eq('index.html e sw.js caricano gli stessi script nello stesso ordine', inSw.join(','), inHtml.join(','));
   const missing = js.map(f => 'js/' + f).filter(f => !inHtml.includes(f));
   t.eq('nessun file JS dimenticato fuori da index.html', missing.join(','), '');
+  // due file che dichiarano lo stesso nome globale (const, let, function, class): con const/let la pagina non parte
+  // («already declared»), con function vince l'ultima e l'altra sparisce in silenzio
+  const acorn = require('acorn'),
+    visto = {},
+    doppi = [];
+  for (const f of inHtml) {
+    const ast = acorn.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'), { ecmaVersion: 2022 });
+    for (const n of ast.body) {
+      const nomi =
+        n.type === 'FunctionDeclaration' || n.type === 'ClassDeclaration'
+          ? [n.id.name]
+          : n.type === 'VariableDeclaration' && n.kind !== 'var'
+            ? n.declarations.map(d => d.id.name).filter(Boolean)
+            : [];
+      for (const x of nomi) {
+        if (visto[x] && visto[x] !== f) doppi.push(`${x} (${visto[x]}, ${f})`);
+        visto[x] = visto[x] || f;
+      }
+    }
+  }
+  t.eq('nessun nome globale dichiarato in due file', doppi.join(', '), '');
 };
