@@ -72,6 +72,46 @@ module.exports = async function (t, { browser }) {
   t.true('l’orologio a pendolo si disegna vivo (lancette e pendolo)', vivi.pendolo);
   t.true('toccato, l’arcolaio gira', vivi.gira);
   t.true('toccata, la sedia dondola', vivi.dondola);
+  // tappeti e mobili stanno uno sopra l'altro (un tavolino sul tappeto), due tappeti no; tavoli e letti si
+  // specchiano invece di girare di un quarto (disegnati di lato, girati avrebbero le gambe all'insù)
+  const tap = await page.evaluate(() => {
+    const st = G.st,
+      R = {};
+    let m = G.maps.house,
+      pos = null;
+    for (let y = 2; y < m.h && !pos; y++)
+      for (let x = 1; x < m.w - 3 && !pos; x++)
+        if (furnSpazio(m, 'tappetone', x, y) && furnSpazio(m, 'tavolino', x + 1, y)) pos = [x, y];
+    const [x, y] = pos;
+    st.free.inside[fkey(x, y)] = { id: 'tappetone' };
+    rebuildMaps();
+    G.map = m = G.maps.house;
+    R.tavolo = furnSpazio(m, 'tavolino', x + 1, y);
+    R.tappeto2 = furnSpazio(m, 'tappeto', x + 1, y);
+    R.angolo = bmCanPlace('tavolino', x, y);
+    st.free.inside[fkey(x + 1, y)] = { id: 'tavolino' };
+    rebuildMaps();
+    G.map = m = G.maps.house;
+    R.sopra = (m.objAt(x + 1, y) || {}).fid;
+    R.tappetoQui = (m.objAt(x + 2, y) || {}).fid;
+    R.giri = [furnGiri('tavolo_nonno'), furnGiri('letto'), furnGiri('tappetone')].join();
+    R.fpTavolo = furnFp('tavolo_nonno', 1).join();
+    delete st.free.inside[fkey(x, y)];
+    delete st.free.inside[fkey(x + 1, y)];
+    rebuildMaps();
+    G.map = G.maps.house;
+    return R;
+  });
+  t.true('un tavolino si posa sul tappeto', tap.tavolo);
+  t.true('un tappeto non si posa sopra un altro tappeto', !tap.tappeto2);
+  t.true('ma non dalla stessa casella d’angolo (e la posa dice perché)', /comincia/.test(tap.angolo || ''));
+  t.eq(
+    'sul tappeto si tocca il tavolino, accanto il tappeto',
+    tap.sopra + '/' + tap.tappetoQui,
+    'tavolino/tappetone'
+  );
+  t.eq('tavoli e letti si specchiano, i tappeti girano di un quarto', tap.giri, '2,2,4');
+  t.eq('il tavolo specchiato tiene il suo ingombro', tap.fpTavolo, '2,1');
   const dove = await page.evaluate(() => ({
     banco: ['letto', 'armadio', 'pendolo', 'stufa'].every(id => CRAFTS.some(c => c.id === id)),
     agatha: ['divano', 'carillon', 'gabbia'].every(id => DECOR_SHOP.some(d => d[0] === id)),

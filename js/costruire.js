@@ -114,6 +114,10 @@ function bmCanPlace(id, x, y, r = 0) {
     const m = G.map,
       o = m.objAt(x, y);
     if (!ITEMS[id] || ITEMS[id].t !== 'arredo') return 'In casa vanno i mobili.';
+    // ogni mobile è segnato dalla sua casella d'angolo: un tappeto e un mobile stanno uno sopra l'altro, ma non
+    // possono cominciare dalla stessa casella
+    if ((G.st.free.inside || {})[fkey(x, y)])
+      return 'Su questa casella comincia già un altro mobile: prova una casella più in là.';
     const fp = furnFp(id, r),
       grande = fp[0] > 1 || fp[1] > 1 ? ` (${fp[0]}×${fp[1]} caselle)` : '';
     if (ITEMS[id].wall)
@@ -1183,12 +1187,7 @@ function bmGiraMobile(o, d) {
   const r = ((d.r || 0) + 1) % n,
     [x, y] = o.fk.split(',').map(Number),
     m = G.map,
-    wall = ITEMS[d.id].wall,
-    ok = furnTiles(d.id, x, y, r).every(([a, b2]) => {
-      const q = m.objAt(a, b2);
-      if (q === o) return wall ? m.get(a, b2) === 9 : true;
-      return wall ? m.get(a, b2) === 9 && !q : furnFree(m, a, b2);
-    });
+    ok = furnSpazio(m, d.id, x, y, r, o);
   if (!ok) {
     UI.toast('Non c’è posto per girarlo qui: spostalo prima dove c’è più spazio.');
     AU.play('no');

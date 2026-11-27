@@ -690,6 +690,16 @@ const NOVITA = [
         t: 'La <b>fornace</b> adesso fonde tutti i minerali: 5 di ferro, 4 di rame, 4 di nichel o 3 pepite d’oro, e 1 legna per ogni lingotto. Le ricette e i miglioramenti chiedono i <b>lingotti</b> di rame, nichel e oro, come per il ferro (in meno pezzi). Minerali e lingotti hanno disegni nuovi, ognuno il suo.'
       }
     ]
+  },
+  {
+    id: 'tappeti_sotto',
+    v: 62,
+    n: 'Mobili sui tappeti',
+    steps: [
+      {
+        t: 'I mobili si posano sopra i <b>tappeti</b>: un tavolino in mezzo al tappeto grande, il letto con il tappeto ai piedi. Con <b>Ruota</b> i tappeti girano di un quarto, letti e tavoli si specchiano (girati di lato avevano le gambe all’insù). E se nella <b>fornace</b> c’è ancora un lingotto diverso pronto, te lo dice: prendilo e riparte.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

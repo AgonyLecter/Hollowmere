@@ -49,6 +49,11 @@ module.exports = async function (t, { browser }) {
       chi,
       icone: ids.every(id => !!ICON[id]),
       formeDiverse: new Set(forme).size === 4,
+      altro: (() => {
+        // fuori ci sono lingotti di ferro, dentro il rame: si ferma e lo dice (non «è piena»)
+        const b = { id: 'fornace', m: { i: 'rame', in: 4, f: 1, o: 'lingotto', on: 2, t0: null } };
+        return [macFermo(b), macTesto(b)];
+      })(),
       tempo: [macDur({ id: 'fornace', m: { i: 'ferro' } }), macDur({ id: 'fornace', m: { i: 'oro' } })]
     };
   });
@@ -61,6 +66,11 @@ module.exports = async function (t, { browser }) {
       ['nichel', true, 4, 'lingotto_nichel'],
       ['oro', true, 3, 'lingotto_oro']
     ])
+  );
+  t.eq('con altri lingotti pronti la fornace aspetta che li prendi', r.altro[0], 'altro');
+  t.true(
+    'e lo dice, invece di «è piena»',
+    /prendi <b>lingotto/i.test(r.altro[1]) && !/piena/.test(r.altro[1])
   );
   t.true('l’oro ci mette più del ferro', r.tempo[1] > r.tempo[0]);
   t.eq('nessuna ricetta chiede rame, nichel o oro grezzi', r.chi.join(', '), '');
