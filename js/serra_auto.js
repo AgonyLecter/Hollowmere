@@ -18,7 +18,7 @@ const SERRA_AUTO = {
     n: 'Irrigatori a scomparsa',
     d: 'Ogni mattina alle 7 spuntano dalla terra delle aiuole e bagnano tutte le zolle. Poi rientrano.',
     money: 1500,
-    c: { lingotto: 6, lingotto_rame: 2 }
+    c: { lingotto: 6, lingotto_rame: 1 }
   },
   gru: {
     n: 'Braccio a carrucola',

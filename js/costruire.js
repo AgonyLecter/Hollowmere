@@ -577,7 +577,7 @@ Object.assign(ITEMS, {
     size: [2, 2],
     d: 'Ogni mattina bagna tutte le zolle intorno.'
   },
-  farina: { n: 'Farina', t: 'res', v: 12, d: 'Dal mulino. Pane, pizza, gnocchi, torte.' }
+  farina: { n: 'Farina', t: 'res', v: 45, d: 'Dal mulino. Pane, pizza, gnocchi, torte.' }
 });
 Object.assign(PLACE_TOOL, { serra: 'piccone', mulino: 'accetta', silos: 'accetta', pozzogrande: 'piccone' });
 CRAFTS.push(
@@ -598,7 +598,7 @@ const FUNC = {
 };
 const FUNC_UP = {
   2: { money: 1500, c: { legna: 80, pietra: 60, lingotto: 4 } },
-  3: { money: 4000, c: { lingotto: 10, lingotto_rame: 2, lingotto_oro: 1 } }
+  3: { money: 4000, c: { lingotto: 10, lingotto_rame: 1, lingotto_oro: 1 } }
 };
 const fLv = b => b.lv || 1;
 // l'area di un edificio: la sua impronta allargata di r
@@ -614,7 +614,7 @@ function funcArea(k, b) {
 function inSerra(x, y) {
   return x >= SERRA_OX || !!(G.map && G.map.id === 'serra');
 }
-const MILL = { mais: [1, 2], patata: [2, 1], castagne: [1, 1] }; // [quanti ne servono, quanta farina danno]
+const MILL = { mais: [1, 2], patata: [1, 1], castagne: [1, 1] }; // [quanti ne servono, quanta farina danno]
 // il mulino è una macchina come la fornace (macchine.js): macina una porzione alla volta, più svelto ai livelli alti
 MACH.mulino = {
   ok: id => !!MILL[id],
@@ -827,7 +827,7 @@ Object.assign(ITEMS, {
     n: 'Pane fatto in casa',
     t: 'food',
     e: 45,
-    v: 60,
+    v: 130,
     d: 'Croccante fuori, morbido dentro. +45 energia.'
   },
   pizza: {

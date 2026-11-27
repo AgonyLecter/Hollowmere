@@ -560,15 +560,23 @@ function addFurniture(m, st) {
         hits: T
       })
     );
+    // un mobile specchiato porta la sua luce dall'altra parte (le luci si misurano dal lato sinistro)
+    const spec = r % 2 && !furnQuarto(f.id),
+      lx = (dx, w) => (spec ? w - dx : dx);
     // un mobile con la sua luce (il camino del nonno): la luce segue il mobile
     if (it.luceCasa)
-      m.lights.push({ x: x * 16 + it.luceCasa[0], y: y * 16 + it.luceCasa[1], r: it.luceCasa[2], fire: 1 });
+      m.lights.push({
+        x: x * 16 + lx(it.luceCasa[0], fp[0] * 16),
+        y: y * 16 + it.luceCasa[1],
+        r: it.luceCasa[2],
+        fire: 1
+      });
     if (f.id === 'lampada' || f.id === 'lanternacarta' || f.id === 'lampadario')
       m.lights.push({ x: x * 16 + 8, y: y * 16 - 10, r: 60, fire: 1 });
     // i mobili con una fiamma (candelabro, stufa, comodino…): luce = [dx, dy, raggio] dal loro angolo in alto
     if (it.luce) {
       const o = m.objs[m.objs.length - 1];
-      m.lights.push({ x: o.dx + it.luce[0], y: o.dy + it.luce[1], r: it.luce[2], fire: 1 });
+      m.lights.push({ x: o.dx + lx(it.luce[0], iw(o.img)), y: o.dy + it.luce[1], r: it.luce[2], fire: 1 });
     }
   }
   Ext.run('arredaCasa', m, st); // i dettagli fissi delle stanze nuove (arredi.js)

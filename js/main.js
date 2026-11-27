@@ -66,8 +66,17 @@ const TITLE = {
   },
   opts() {
     UI.open(
-      `<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`
+      `<button class="btn mclose" data-close>✕</button><h2>Opzioni</h2><p>Musica <input type="range" id="vm" min="0" max="1" step=".05" value="${AU.vol.m}"></p><p>Effetti <input type="range" id="vs" min="0" max="1" step=".05" value="${AU.vol.s}"></p><p data-no-tr>🌐 ${Object.entries(
+        LINGUE
+      )
+        .map(([k, n]) => `<button class="btn${k === LINGUA ? ' on' : ''}" data-lingua="${k}">${n}</button>`)
+        .join(
+          ' '
+        )}</p><p class="small">Su telefono: gira in orizzontale e usa "Schermo intero". Muoviti trascinando il pollice a sinistra, A per agire.</p><p class="small">Su PC: WASD/frecce, E o Spazio per agire, 1–0 per gli oggetti, Esc per il menu.</p>`
     );
+    $('#mbox')
+      .querySelectorAll('[data-lingua]')
+      .forEach(b => (b.onclick = () => linguaScegli(b.dataset.lingua)));
     const vm = $('#vm'),
       vs = $('#vs');
     vm.oninput = () => {
@@ -84,6 +93,22 @@ const TITLE = {
   },
   full() {
     goFull();
+  },
+  // la lingua: si sceglie qui (o nelle Opzioni) e il gioco si ricarica nella lingua nuova
+  lingua() {
+    UI.open(
+      `<button class="btn mclose" data-close>✕</button><h2 data-no-tr>🌐 Lingua · Language</h2><p data-no-tr>${Object.entries(
+        LINGUE
+      )
+        .map(([k, n]) => `<button class="btn${k === LINGUA ? ' on' : ''}" data-lingua="${k}">${n}</button>`)
+        .join(' ')}</p>` +
+        (LINGUA !== 'it'
+          ? `<p class="small">The English translation is in progress: some texts are still in Italian.</p>`
+          : '')
+    );
+    $('#mbox')
+      .querySelectorAll('[data-lingua]')
+      .forEach(b => (b.onclick = () => linguaScegli(b.dataset.lingua)));
   },
   // la Valle: il gioco libero, con il suo salvataggio separato (e il suo codice di villaggio)
   async valle() {

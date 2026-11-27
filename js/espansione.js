@@ -1186,118 +1186,94 @@ function genEspArtBase() {
   });
   // i pesci, disegnati di profilo (muso a sinistra), ognuno con la sua forma e i suoi segni:
   // corpo = per ogni colonna metà altezza e linea di mezzo; dorso scuro, fianco, ventre chiaro; pinne; occhio
+  // disegnati a pixel con iconaPixel (macchine.js): ogni casella piena, poi il contorno scuro attorno
   const pesce = (id, F) => {
-    const W = 32,
-      H = 32,
-      px = new Array(W * H).fill(null),
-      set = (x, y, c) => {
-        x = Math.round(x);
-        y = Math.round(y);
-        if (x >= 0 && y >= 0 && x < W && y < H) px[y * W + x] = c;
-      },
-      has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && px[y * W + x] !== null,
-      hsh2 = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
-    const { x0, x1, xc, alto, cy, curva = () => 0, back, fianco, ventre, pinna, coda = 'forca' } = F;
-    // le pinne (sotto il corpo, così il corpo le copre all'attacco)
-    const tri = (pts, c) => {
-      const ys = pts.map(p => p[1]),
-        xs = pts.map(p => p[0]);
-      for (let y = Math.min(...ys); y <= Math.max(...ys); y++)
-        for (let x = Math.min(...xs); x <= Math.max(...xs); x++) {
-          let dentro = false;
-          for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-            const [xi, yi] = pts[i],
-              [xj, yj] = pts[j];
-            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+    ICON[id] = iconaPixel((set, has) => {
+      const hsh2 = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
+      const { x0, x1, xc, alto, cy, curva = () => 0, back, fianco, ventre, pinna, coda = 'forca' } = F;
+      // le pinne (sotto il corpo, così il corpo le copre all'attacco)
+      const tri = (pts, c) => {
+        const ys = pts.map(p => p[1]),
+          xs = pts.map(p => p[0]);
+        for (let y = Math.min(...ys); y <= Math.max(...ys); y++)
+          for (let x = Math.min(...xs); x <= Math.max(...xs); x++) {
+            let dentro = false;
+            for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+              const [xi, yi] = pts[i],
+                [xj, yj] = pts[j];
+              if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+            }
+            if (dentro) set(x, y, c);
           }
-          if (dentro) set(x, y, c);
+      };
+      const hb = F.prof
+        ? t => F.prof(Math.min(1, Math.max(0, t)))
+        : t => alto * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t)) ** 0.75), 0.85);
+      const mezzo = x => cy + curva((x - x0) / (xc - x0));
+      for (const f of F.pinne || []) tri(f(mezzo, hb), f.c || pinna);
+      // la coda
+      const yc = mezzo(xc);
+      if (coda === 'forca') {
+        tri(
+          [
+            [xc - 2, yc - 1],
+            [x1, yc - 6],
+            [x1 - 2, yc],
+            [x1, yc + 6],
+            [xc - 2, yc + 1]
+          ],
+          pinna
+        );
+      } else if (coda === 'tonda') {
+        tri(
+          [
+            [xc - 2, yc - 1],
+            [x1, yc - 5],
+            [x1 + 1, yc],
+            [x1, yc + 5],
+            [xc - 2, yc + 1]
+          ],
+          pinna
+        );
+      } else if (coda === 'punta')
+        tri(
+          [
+            [xc - 3, yc - 2],
+            [x1, yc],
+            [xc - 3, yc + 2]
+          ],
+          pinna
+        );
+      // il corpo
+      for (let x = x0; x <= xc; x++) {
+        const t = (x - x0) / (xc - x0),
+          h = Math.max(0.6, hb(t)),
+          m = mezzo(x);
+        for (let y = Math.ceil(m - h); y <= Math.floor(m + h); y++) {
+          const v = (y - (m - h)) / (2 * h || 1);
+          let c = v < 0.32 ? back : v < 0.68 ? fianco : ventre;
+          if (F.segni) c = F.segni(x, y, v, t, c, hsh2) || c;
+          set(x, y, c);
         }
-    };
-    const hb = F.prof
-      ? t => F.prof(Math.min(1, Math.max(0, t)))
-      : t => alto * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t)) ** 0.75), 0.85);
-    const mezzo = x => cy + curva((x - x0) / (xc - x0));
-    for (const f of F.pinne || []) tri(f(mezzo, hb), f.c || pinna);
-    // la coda
-    const yc = mezzo(xc);
-    if (coda === 'forca') {
-      tri(
-        [
-          [xc - 2, yc - 1],
-          [x1, yc - 6],
-          [x1 - 2, yc],
-          [x1, yc + 6],
-          [xc - 2, yc + 1]
-        ],
-        pinna
-      );
-    } else if (coda === 'tonda') {
-      tri(
-        [
-          [xc - 2, yc - 1],
-          [x1, yc - 5],
-          [x1 + 1, yc],
-          [x1, yc + 5],
-          [xc - 2, yc + 1]
-        ],
-        pinna
-      );
-    } else if (coda === 'punta')
-      tri(
-        [
-          [xc - 3, yc - 2],
-          [x1, yc],
-          [xc - 3, yc + 2]
-        ],
-        pinna
-      );
-    // il corpo
-    for (let x = x0; x <= xc; x++) {
-      const t = (x - x0) / (xc - x0),
-        h = Math.max(0.6, hb(t)),
-        m = mezzo(x);
-      for (let y = Math.ceil(m - h); y <= Math.floor(m + h); y++) {
-        const v = (y - (m - h)) / (2 * h || 1);
-        let c = v < 0.32 ? back : v < 0.68 ? fianco : ventre;
-        if (F.segni) c = F.segni(x, y, v, t, c, hsh2) || c;
-        set(x, y, c);
       }
-    }
-    // un lampo di luce sul dorso, verso la testa, e la bocca
-    for (let x = x0 + 3; x <= x0 + Math.round((xc - x0) * 0.42); x++) {
-      const t = (x - x0) / (xc - x0),
-        y = Math.ceil(mezzo(x) - hb(t)) + 1;
-      if (has(x, y)) set(x, y, F.luce || '#f4f0e0');
-    }
-    set(x0, Math.round(mezzo(x0) + 1), '#2a1610');
-    // l'occhio
-    const ex = x0 + (F.occhio || 3),
-      ey = Math.round(mezzo(ex) - hb((ex - x0) / (xc - x0)) * 0.35);
-    set(ex, ey, '#f4f0e8');
-    set(ex + 1, ey, F.iride || '#1a1418');
-    set(ex, ey + 1, F.iride || '#1a1418');
-    set(ex + 1, ey + 1, '#1a1418');
-    // la branchia
-    const gx = ex + 3;
-    for (let k = -1; k <= 1; k++) if (has(gx, ey + 1 + k)) set(gx, ey + 1 + k, F.branchia || back);
-    // il contorno
-    const [c, cx] = mk(W, H, { willReadFrequently: true }),
-      D = cx.createImageData(W, H),
-      d = D.data;
-    const put = (x, y, hex) => {
-      const i = (y * W + x) * 4;
-      d[i] = parseInt(hex.slice(1, 3), 16);
-      d[i + 1] = parseInt(hex.slice(3, 5), 16);
-      d[i + 2] = parseInt(hex.slice(5, 7), 16);
-      d[i + 3] = 255;
-    };
-    for (let y = 0; y < H; y++)
-      for (let x = 0; x < W; x++) {
-        if (px[y * W + x]) put(x, y, px[y * W + x]);
-        else if (has(x - 1, y) || has(x + 1, y) || has(x, y - 1) || has(x, y + 1)) put(x, y, '#1c120e');
+      // un lampo di luce sul dorso, verso la testa, e la bocca
+      for (let x = x0 + 3; x <= x0 + Math.round((xc - x0) * 0.42); x++) {
+        const t = (x - x0) / (xc - x0),
+          y = Math.ceil(mezzo(x) - hb(t)) + 1;
+        if (has(x, y)) set(x, y, F.luce || '#f4f0e0');
       }
-    cx.putImageData(D, 0, 0);
-    ICON[id] = c;
+      set(x0, Math.round(mezzo(x0) + 1), '#2a1610');
+      // l'occhio
+      const ex = x0 + (F.occhio || 3),
+        ey = Math.round(mezzo(ex) - hb((ex - x0) / (xc - x0)) * 0.35);
+      set(ex, ey, '#f4f0e8');
+      set(ex + 1, ey, F.iride || '#1a1418');
+      set(ex, ey + 1, F.iride || '#1a1418');
+      set(ex + 1, ey + 1, '#1a1418');
+      // la branchia
+      const gx = ex + 3;
+      for (let k = -1; k <= 1; k++) if (has(gx, ey + 1 + k)) set(gx, ey + 1 + k, F.branchia || back);
+    });
   };
   const dorsale = (a, b, alta) => {
     const f = (mezzo, hb) => {

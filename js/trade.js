@@ -143,8 +143,8 @@ Object.assign(ITEMS, {
   }
 });
 CRAFTS.push(
-  { id: 'statua', q: 1, c: { lingotto_oro: 2, pietra: 20 }, cat: 'est' },
-  { id: 'fontana', q: 1, c: { lingotto_rame: 2, pietra: 30 }, cat: 'est' },
+  { id: 'statua', q: 1, c: { lingotto_oro: 1, pietra: 20 }, cat: 'est' },
+  { id: 'fontana', q: 1, c: { lingotto_rame: 1, pietra: 30 }, cat: 'est' },
   { id: 'banderuola', q: 1, c: { lingotto_rame: 1, legna: 5 }, cat: 'est' },
   { id: 'lampadario', q: 1, c: { diamante: 1, lingotto_rame: 1, lingotto_nichel: 1 }, cat: 'cas' },
   { id: 'specchio', q: 1, c: { lingotto_nichel: 1, legna: 10 }, cat: 'cas' },

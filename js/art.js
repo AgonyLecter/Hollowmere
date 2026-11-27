@@ -3080,6 +3080,12 @@ function updPrints(dt) {
   G.prints = G.prints.filter(p => p.t < p.life);
 }
 // ---------- anteprima della casella bersaglio ----------
+// nella cassetta va tutto quello che ha un prezzo: raccolti, prodotti, pesci, minerali, lingotti, farina…
+// (non gli attrezzi e gli oggetti speciali, e nemmeno quello che non vale niente: legna, pietra, mobili del nonno)
+const vendibile = id => {
+  const it = ITEMS[id];
+  return !!it && it.v > 0 && it.t !== 'key' && it.t !== 'tool';
+};
 function aimInfo() {
   const st = G.st,
     m = G.map;
@@ -3203,7 +3209,7 @@ function promptInfoBase() {
   if (o && o.act) {
     let t = PROMPT[o.act];
     if (o.act === 'post') t = st.flags.gotPaint && !st.flags.posts[o.pi] ? 'Dipingi' : null;
-    if (o.act === 'bin' && !(selItem() && ITEMS[selItem().id].t === 'crop')) t = 'Cassetta';
+    if (o.act === 'bin' && !(selItem() && vendibile(selItem().id))) t = 'Cassetta';
     if (t) return { x: o.tx * 16 + 8 + ((o.wt || 1) - 1) * 8, y: Math.min(o.dy, o.ty * 16) - 4, t };
   }
   return null;
@@ -4576,7 +4582,7 @@ const CROPS = {
   rapa: { days: 2, n: 'Rapa', y: [1, 1] },
   patata: { days: 3, n: 'Patata', y: [1, 2] },
   zucca: { days: 3, n: 'Zucca', y: [1, 1] },
-  fagioli: { days: 3, n: 'Fagioli', y: [2, 3], re: 1 },
+  fagioli: { days: 3, n: 'Fagioli', y: [2, 3], re: 2 },
   cavolo: { days: 4, n: 'Cavolo nero', y: [1, 1] }
 };
 const CROPIMG = {},
