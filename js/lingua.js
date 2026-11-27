@@ -86,6 +86,49 @@ function trCerca(s, prof = 0) {
     const t = trCerca(m[1], prof + 1);
     if (t != null) return t + m[2];
   }
+  // «3 zucche», «2 × Rapa»: il numero resta, il resto si traduce
+  const q = /^([+−-]?\d[\d.,]*\s*(?:×\s*)?)(\S[\s\S]*)$/.exec(s);
+  if (q && prof < 3) {
+    const t = trCerca(q[2], prof + 1);
+    if (t != null) return q[1] + t;
+  }
+  // elenchi messi insieme dal codice («2 rapa + 1 patata», «zucche, rape»): ogni pezzo, se li conosce tutti
+  if (prof < 3) {
+    const parti = s.split(/(\s+[+·]\s+|,\s+|\s+e\s+)/);
+    if (parti.length > 1) {
+      let out = '';
+      for (let i = 0; i < parti.length; i++) {
+        if (i % 2) {
+          out += /^\s+e\s+$/.test(parti[i]) ? ' ' + (trParola('e', D) || 'e') + ' ' : parti[i];
+          continue;
+        }
+        const t = trCerca(parti[i], prof + 1);
+        if (t == null) {
+          out = null;
+          break;
+        }
+        out += t;
+      }
+      if (out != null) return out;
+    }
+  }
+  // frasi messe in fila dal codice («Annaffiata oggi. Terra concimata.»): ognuna per conto suo, se le conosce tutte
+  if (prof < 3) {
+    const parti = s.split(/(?<=[.!?…»])(\s+)(?=[A-ZÀ-Ù«("])/);
+    if (parti.length > 1) {
+      let out = '';
+      for (let i = 0; i < parti.length; i++) {
+        if (i % 2) {
+          out += parti[i];
+          continue;
+        }
+        const t = trCerca(parti[i], prof + 1);
+        if (t == null) return null;
+        out += t;
+      }
+      return out;
+    }
+  }
   return null;
 }
 // la funzione che usa tutto il gioco: il testo nella lingua scelta (o com'era, se non c'è la traduzione)
