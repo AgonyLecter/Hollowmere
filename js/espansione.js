@@ -1451,7 +1451,7 @@ GUIDES.push({
       at: () => ({ x: 60 * 16 + 8, y: 18 * 16 + 4, l: 'I cancelli a est' })
     },
     {
-      t: "Al Lago e sul fiume si <b>pesca</b>: lancia davanti all'acqua, aspetta il «!» e tira subito. La canna la vende Agatha quando il Lago è aperto."
+      t: "Al Lago e sul fiume <b>si pesca</b>: lancia davanti all'acqua, aspetta il «!» e tira subito. La canna la vende Agatha quando il Lago è aperto."
     },
     {
       t: 'Dal Borgo, al banco da lavoro (Edifici), puoi costruire una <b>casetta</b>: il giorno dopo arriva un nuovo abitante, con la sua bottega e una richiesta al giorno.'

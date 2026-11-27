@@ -32,10 +32,14 @@ function trSchemi() {
     idx = new Map(),
     liberi = [];
   // le richieste scritte con {it} e {r} (riempite dal codice prima di arrivare qui) valgono anche con {0} e {1}
+  // (e così ogni segnaposto con un nome, come {dove} e {chi}: numerati nell'ordine in cui compaiono; {n} resta)
+  const nome = /\{(?!n\})([a-z]+)\}/g;
   for (const k of Object.keys(D))
-    if (/\{(it|r)\}/.test(k)) {
-      const a = k.replace('{it}', '{0}').replace('{r}', '{1}');
-      if (D[a] == null) D[a] = D[k].replace('{it}', '{0}').replace('{r}', '{1}');
+    if (/\{(?!n\})[a-z]+\}/.test(k)) {
+      const num = {};
+      let i = 0;
+      const a = k.replace(nome, (_, x) => '{' + (num[x] ??= i++) + '}');
+      if (D[a] == null) D[a] = D[k].replace(nome, (m, x) => (num[x] != null ? '{' + num[x] + '}' : m));
     }
   for (const k of Object.keys(D)) {
     if (!/\{\d+\}/.test(k)) continue;
