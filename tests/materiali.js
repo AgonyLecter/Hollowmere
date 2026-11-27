@@ -76,6 +76,41 @@ module.exports = async function (t, { browser }) {
   t.eq('nessuna ricetta chiede rame, nichel o oro grezzi', r.chi.join(', '), '');
   t.true('ogni minerale e ogni lingotto ha la sua icona', r.icone);
   t.true('i minerali rari hanno ognuno la sua forma (non più lo stesso sasso)', r.formeDiverse);
+  // l'equilibrio: nessuna coltura rende quasi niente, nessuna doppia le altre; le macchine non fanno perdere valore
+  const eq = await page.evaluate(() => {
+    const V = id => (ITEMS[id] && ITEMS[id].v) || 0,
+      basse = [],
+      resa = [];
+    for (const it of Object.values(ITEMS)) {
+      if (it.t !== 'seed' || !CROPS[it.crop]) continue;
+      const c = CROPS[it.crop],
+        y = (c.y[0] + c.y[1]) / 2,
+        g = c.re
+          ? ((1 + Math.floor((28 - c.days) / c.re)) * y * V(it.crop) - it.p) / 28
+          : (Math.floor(28 / c.days) * (y * V(it.crop) - it.p)) / 28;
+      resa.push([it.crop, g]);
+      if (g < 7.5) basse.push(it.crop + ' ' + g.toFixed(1));
+    }
+    resa.sort((a, b) => b[1] - a[1]);
+    const perdono = [];
+    for (const [id, M] of Object.entries(NAT_MACH))
+      if (M.in && id === 'frantoio')
+        for (const [k, n] of Object.entries(M.in)) if (V(M.out(k)) <= V(k) * n) perdono.push(id + ':' + k);
+    for (const [k, [q, f]] of Object.entries(MILL))
+      if (k === 'grano' && V('farina') * f <= V(k) * q) perdono.push('mulino:' + k);
+    const h = Wiki.pagina(),
+      wiki = ['lingotto_rame', 'lingotto_nichel', 'lingotto_oro'].every(k =>
+        h.includes('Fornace: ' + FUSIONE[Object.keys(FUSIONE).find(m => FUSIONE[m].out === k)].n + '×')
+      );
+    return { basse, primo: resa[0], secondo: resa[1], perdono, wiki, testo: ITEMS.s_fagioli.d };
+  });
+  t.eq('nessuna coltura rende quasi niente', eq.basse.join(', '), '');
+  t.true(
+    `nessuna coltura rende il doppio delle altre (${eq.primo[0]} ${eq.primo[1].toFixed(0)}, poi ${eq.secondo[0]} ${eq.secondo[1].toFixed(0)})`,
+    eq.primo[1] < eq.secondo[1] * 1.5
+  );
+  t.eq('frantoio e mulino non fanno perdere valore', eq.perdono.join(', '), '');
+  t.true('la wiki dice come si fondono rame, nichel e oro', eq.wiki);
   t.eq('materiali: nessun errore', errors.join('\n'), '');
   await page.close();
 };

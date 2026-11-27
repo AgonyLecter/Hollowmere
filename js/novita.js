@@ -700,6 +700,19 @@ const NOVITA = [
         t: 'I mobili si posano sopra i <b>tappeti</b>: un tavolino in mezzo al tappeto grande, il letto con il tappeto ai piedi. Con <b>Ruota</b> i tappeti girano di un quarto, letti e tavoli si specchiano (girati di lato avevano le gambe all’insù). E se nella <b>fornace</b> c’è ancora un lingotto diverso pronto, te lo dice: prendilo e riparte.'
       }
     ]
+  },
+  {
+    id: 'equilibrio',
+    v: 63,
+    n: 'Prezzi e raccolti più giusti',
+    steps: [
+      {
+        t: 'Le colture semplici rendono di più: <b>grano, orzo, ceci, lenticchie, sedano, pastinaca, radicchio</b>, i fiori e le altre che prima valevano poco. Il <b>grano</b> al mulino dà due farine, e la <b>farina</b> vale qualcosa. I <b>fagioli</b> ricrescono ogni due notti, come gli altri rampicanti (prima ogni notte).'
+      },
+      {
+        t: 'Il <b>frantoio</b> chiede meno: 3 olive, 2 noci o 1 girasole, e l’olio vale di più. Statua, fontana, alambicco e irrigatori della serra vogliono <b>un solo lingotto</b> raro, e Brom tiene <b>tre pepite d’oro</b> al giorno: quanto basta per un lingotto. Anche il ferro e il suo lingotto ora si vendono.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

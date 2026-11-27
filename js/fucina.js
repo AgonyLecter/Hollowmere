@@ -193,7 +193,7 @@ const FUC_MIN = [
   ['lingotto', 190, 3],
   ['rame', 90, 5],
   ['nichel', 130, 4],
-  ['oro', 340, 2]
+  ['oro', 340, 3]
 ];
 function fucScorte(st) {
   const f = (st.flags.fucMin = st.flags.fucMin || { day: -1, presi: {} });

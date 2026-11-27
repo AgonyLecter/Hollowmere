@@ -18,7 +18,7 @@ const ITEMS = {
     t: 'seed',
     crop: 'fagioli',
     p: 60,
-    d: 'Rampicanti: dopo il primo raccolto ricrescono ogni notte.',
+    d: 'Rampicanti: dopo il primo raccolto ricrescono ogni due notti.',
     x: 'Si raccolgono più volte.'
   },
   s_cavolo: {

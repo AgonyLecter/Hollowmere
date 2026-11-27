@@ -5611,7 +5611,7 @@ addEventListener('keydown', e => {
           const piccola =
               o.kind === 'built' &&
               lv < 1.0001 &&
-              !(G.st.free.built[o.bk] && ITEMS[G.st.free.built[o.bk].id].size),
+              !(G.st.free.built[o.bk] && (ITEMS[G.st.free.built[o.bk].id] || {}).size),
             th = piccola ? Math.round(lv * Math.max(2, Math.min(5, Math.round(ih(o.img) * 0.18)))) : 0;
           if (piccola && !th) continue;
           const c = piccola

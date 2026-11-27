@@ -41,7 +41,7 @@ const NAT_ESS = [
   'zafferano'
 ];
 Object.assign(ITEMS, {
-  olio: { n: "Olio d'oliva", t: 'crop', v: 150, d: 'Verde e dorato. Dal frantoio: olive, girasoli o noci.' },
+  olio: { n: "Olio d'oliva", t: 'crop', v: 190, d: 'Verde e dorato. Dal frantoio: olive, girasoli o noci.' },
   burro: { n: 'Burro', t: 'crop', v: 110, d: 'Dalla zangola, con il latte di mucca.' },
   caldarroste: { n: 'Caldarroste', t: 'food', e: 40, d: 'Calde nel cartoccio. +40 energia.' }
 });
@@ -73,15 +73,15 @@ natValori();
 const NAT_MACH = {
   frantoio: {
     n: 'Frantoio',
-    d: 'La macina di pietra: 3 olive (o 3 noci, o 2 girasoli) diventano olio in sei ore.',
+    d: 'La macina di pietra: 3 olive (o 2 noci, o 1 girasole) diventano olio in sei ore.',
     c: { pietra: 40, legna: 20, lingotto: 2 },
     lv: 5,
     tool: 'piccone',
     size: [18, 22],
     days: 2,
-    in: { olive: 3, noce: 3, girasole: 2 },
+    in: { olive: 3, noce: 2, girasole: 1 },
     out: () => 'olio',
-    aiuto: 'Il frantoio vuole 3 olive, 3 noci o 2 girasoli.'
+    aiuto: 'Il frantoio vuole 3 olive, 2 noci o 1 girasole.'
   },
   essiccatoio: {
     n: 'Essiccatoio',
@@ -110,7 +110,7 @@ const NAT_MACH = {
   alambicco: {
     n: 'Alambicco',
     d: 'Rame e fuoco lento: fiori ed erbe diventano essenze preziose in dieci ore.',
-    c: { lingotto_rame: 2, pietra: 10, lingotto: 1 },
+    c: { lingotto_rame: 1, pietra: 10, lingotto: 1 },
     lv: 6,
     tool: 'piccone',
     size: [18, 24],

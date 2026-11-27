@@ -4576,7 +4576,7 @@ const CROPS = {
   rapa: { days: 2, n: 'Rapa', y: [1, 1] },
   patata: { days: 3, n: 'Patata', y: [1, 2] },
   zucca: { days: 3, n: 'Zucca', y: [1, 1] },
-  fagioli: { days: 3, n: 'Fagioli', y: [2, 3], re: 1 },
+  fagioli: { days: 3, n: 'Fagioli', y: [2, 3], re: 2 },
   cavolo: { days: 4, n: 'Cavolo nero', y: [1, 1] }
 };
 const CROPIMG = {},

@@ -356,7 +356,7 @@ const UI = {
                 : 'Finito per oggi.';
           if (d.t !== 'seed') return d.d;
           const c = CROPS[d.crop];
-          return `Matura in ${c.days} notti${c.re ? ', poi ricresce ogni notte' : ''} · vale ${CZ(ITEMS[d.crop].v)}${c.y[1] > 1 ? (c.re ? ' a manciata' : ' (a volte di più)') : ''}${d.x ? '. ' + d.x : ''}`;
+          return `Matura in ${c.days} notti${c.re ? ', poi ricresce ' + (c.re > 1 ? `ogni ${c.re} notti` : 'ogni notte') : ''} · vale ${CZ(ITEMS[d.crop].v)}${c.y[1] > 1 ? (c.re ? ' a manciata' : ' (a volte di più)') : ''}${d.x ? '. ' + d.x : ''}`;
         };
         const can = (id, q) => st.money >= price(id) * q && (id !== 'pane' || bread >= q);
         this.open(
