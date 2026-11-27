@@ -437,11 +437,11 @@ function zAggiorna() {
     el.classList.toggle('pick', !!sc && ZSEL.w === w && ZSEL.i === i);
   });
   box.querySelector('.iinfo').innerHTML = sc
-    ? zDesc(sc, ZSEL.n) +
+    ? `<span class="itxt">${zDesc(sc, ZSEL.n)}</span>` +
       (sc.n > 1 && !zTool(sc.id)
         ? `<span class="iqta"><button class="btn" data-zq="-1">−</button><button class="btn" data-zq="+1">+</button><button class="btn" data-zq="meta">½</button><button class="btn" data-zq="1">1</button><button class="btn" data-zq="tutta">Tutta</button></span>`
         : '')
-    : '<span class="small">Tocca per scegliere, tocca un posto per spostare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b> (o tasto destro): metà pila, o posane una · con una pila scelta, <b>trascina sulle caselle</b>: la dividi in parti uguali</span>';
+    : '<span class="small itxt">Tocca per scegliere, tocca un posto per spostare · <b>doppio tocco</b>: sposta veloce · <b>tieni premuto</b> (o tasto destro): metà pila, o posane una · con una pila scelta, <b>trascina sulle caselle</b>: la dividi in parti uguali</span>';
   box.querySelector('[data-trash]').classList.toggle('on', !!sc);
 }
 // la quantità scelta: −, +, metà, una, tutta (pulsanti nella riga in alto, o la rotella del mouse)

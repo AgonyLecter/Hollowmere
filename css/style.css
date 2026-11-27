@@ -195,7 +195,8 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .itrash{width:calc(17*var(--u));height:calc(17*var(--u));aspect-ratio:auto;margin-left:auto;display:flex;align-items:center;justify-content:center;font-size:calc(9*var(--u));opacity:.45;flex:none}
 .itrash.on{opacity:1;border-image-source:var(--pozzoSel)}
 .iinfo{font-size:calc(7*var(--u));line-height:1.35}
-.izaino .iinfo{height:calc(10*var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(1.5*var(--u))}
+.izaino .iinfo{height:calc(13*var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(1.5*var(--u));display:flex;align-items:center}
+.izaino .iinfo .itxt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #mbox .icap{font-size:calc(5.5*var(--u));letter-spacing:.1em;text-transform:uppercase;color:#7a3a10;max-width:calc(258*var(--u));margin:0 auto calc(.5*var(--u))}
 .ighost{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:99;image-rendering:pixelated;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
 #bInv{position:absolute;left:calc(-40*var(--u));top:50%;transform:translateY(-50%);width:calc(17*var(--u));height:calc(17*var(--u));font-size:calc(8*var(--u));background:linear-gradient(#5e3c24,#3c2414);box-shadow:0 0 0 var(--u) #140a06;pointer-events:auto;color:#fff;border:0;padding:0}
@@ -500,8 +501,9 @@ input[type=range]{accent-color:#a8743e;width:60%;vertical-align:middle}
 .icol-z{flex:1;min-width:0}
 #mbox .icorpo .igrid[data-g=c]{grid-template-columns:repeat(5,minmax(0,1fr))}
 /* la quantità scelta: −, +, ½, 1, tutta */
-.iqta{display:inline-flex;gap:calc(1*var(--u));margin-left:calc(3*var(--u));vertical-align:middle}
-.iqta button{font-size:calc(6*var(--u));padding:0 calc(3*var(--u));min-width:calc(11*var(--u));line-height:calc(9*var(--u))}
+.iqta{display:inline-flex;flex:0 0 auto;gap:calc(1*var(--u));margin-left:calc(3*var(--u));vertical-align:middle}
+/* bordo sottile: la riga delle informazioni è alta 13 unità e i pulsanti ci devono stare interi */
+.iqta button{font-size:calc(6*var(--u));padding:0 calc(3*var(--u));min-width:calc(11*var(--u));line-height:calc(8*var(--u));margin:0;border-width:calc(2*var(--u));border-image-width:calc(2*var(--u))}
 .islot.pinta{box-shadow:0 0 0 calc(1.5*var(--u)) #8ad0ff}
 
 /* la casa degli animali (barnMenu) */
