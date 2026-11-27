@@ -11,6 +11,20 @@ Con queste regole:
 - le visite ricevute le legge e le cancella solo il proprietario del villaggio;
 - **la Gazzetta della Valle** (il «social» col piccione): ognuno pubblica e toglie solo i propri biglietti (testo fino a 240 caratteri; le «fotografie» non sono immagini ma scene del gioco in testo, che il gioco ridisegna: le regole rifiutano qualsiasi immagine), dà o toglie solo le proprie piume, commenta a nome proprio; **un biglietto ogni 20 ore** per giocatore (nodo `gazzetta/ultimo`), che l'autore può correggere (solo il testo) o togliere.
 
+## Aggiornamento: salvataggi non più elencabili, schede leggere per la regia
+
+Ripubblica il blocco `"hollowmere"`. Cambia due cose:
+
+- **`players`**: prima chiunque poteva scaricare in un colpo i salvataggi di tutti (`".read": true` sul ramo intero).
+  Ora si legge **un salvataggio alla volta, conoscendone il codice** (`players/$pid`): visite, amici e cambio di
+  dispositivo funzionano come prima. L'elenco intero lo legge solo l'admin.
+- **`schede`** (ramo nuovo): a ogni salvataggio il gioco scrive anche una scheda leggera (nome, giorno, capitolo, ora).
+  `fusco.html` legge queste, non più i salvataggi completi: da molti megabyte a pochi kilobyte, e niente più
+  salvataggi interi che arrivano alla regia ogni volta che qualcuno salva. Le schede le legge solo l'admin.
+
+Dopo aver ripubblicato le regole, apri `fusco.html`, accedi e premi **«Ricostruisci l'elenco dai salvataggi»** una
+volta sola: così compaiono anche i giocatori che non hanno più salvato dall'aggiornamento.
+
 ## Aggiornamento: la Gazzetta e le visite
 
 Se le regole sono già pubblicate, ripubblica il blocco `"hollowmere"`: contiene il ramo nuovo `"gazzetta"` e, in `"visite"`,

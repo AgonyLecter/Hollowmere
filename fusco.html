@@ -100,6 +100,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
  </section>
  <section class="wide">
   <h2>Giocatori</h2>
+  <p class="small" id="pInfo">Accedi come admin per vedere i giocatori.</p>
+  <button class="ghost hide" id="pRebuild" title="Legge una volta tutti i salvataggi e ne ricava le schede leggere. Serve solo per i giocatori che non salvano da prima dell'aggiornamento.">Ricostruisci l'elenco dai salvataggi (una volta sola)</button>
   <div class="list"><table><thead><tr><th>Nome</th><th>Codice</th><th>Giorno</th><th>Stato</th><th>Ultimo accesso</th></tr></thead><tbody id="pList"><tr><td colspan="5" class="small">Caricamento…</td></tr></tbody></table></div>
  </section>
 </main>
@@ -120,6 +122,7 @@ let EDIT=null;
 const fill=m=>{$('#mTipo').value=m.tipo||'recupero';$('#mNpc').value=m.npc||'agatha';$('#mTit').value=m.titolo||'';$('#mTxt').value=m.testo||'';$('#mOgg').value=m.oggetto||'';$('#mLuo').value=m.luogo||'campi';$('#mItem').value=m.item||'rapa';$('#mN').value=m.tipo==='consegna'?(m.n||5):5;$('#mNo').value=m.tipo==='ombre'?(m.n||3):3;$('#mPre').value=m.premio??300;$('#mDest').value=m.dest||'finiti';$('#mGr').value=m.grazie||'';showType()};
 document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{EDIT=null;$('#fTitle').textContent='Nuova missione';fill(TPL[b.dataset.t])});
 $('#mReset').onclick=()=>{EDIT=null;$('#fTitle').textContent='Nuova missione';fill({})};
+let apriGiocatori=()=>{};
 try{
  const [A,D]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js')]);
  const app=A.initializeApp(CFG,'fusco'),db=D.getDatabase(app),R=p=>D.ref(db,'hollowmere/'+p);
@@ -137,10 +140,11 @@ try{
  AU.getRedirectResult(auth).catch(showErr);
  $('#login').onclick=()=>AU.signInWithPopup(auth,new AU.GoogleAuthProvider()).catch(e=>{showErr(e);if(['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e&&e.code))setTimeout(()=>AU.signInWithRedirect(auth,new AU.GoogleAuthProvider()).catch(showErr),1500)});
  $('#logout').onclick=()=>AU.signOut(auth);
- AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
+ AU.onAuthStateChanged(auth,async u=>{$('#login').classList.toggle('hide',!!u);$('#logout').classList.toggle('hide',!u);if(!u){apriGiocatori(false);$('#who').firstChild.textContent='Per modificare missioni ed eventi accedi con il tuo account Google. ';return}
   let adm=false;try{adm=(await D.get(R('admin/'+u.uid))).val()===true}catch(e){}
   // primo accesso: le regole permettono di segnarsi admin solo all'email scelta come regista
   if(!adm){try{await D.set(R('admin/'+u.uid),true);adm=true}catch(e){}}
+  apriGiocatori(adm);
   $('#who').firstChild.textContent=adm?`Regia aperta: ${u.email||u.uid}. `:`Accesso fatto (${u.email||''}), ma questo account non è admin. UID da aggiungere in hollowmere/admin nella console: ${u.uid} `});
  const fail=e=>alert('Non autorizzato: serve l\'accesso con un account admin.\n'+(e&&e.message||e));
  D.onValue(D.ref(db,'.info/connected'),s=>{$('#net').textContent=s.val()?'● Collegato alla Valle':'○ Non collegato'});
@@ -175,11 +179,21 @@ try{
   $('#mList').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>D.update(R('missioni/'+b.dataset.a),{attiva:!MISS[b.dataset.a].attiva}).catch(fail));
   $('#mList').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(confirm('Eliminare la missione «'+MISS[b.dataset.d].titolo+'»?'))D.remove(R('missioni/'+b.dataset.d)).catch(fail)});
   $('#mList').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{EDIT=b.dataset.e;$('#fTitle').textContent='Modifica missione';fill(MISS[EDIT]);scrollTo({top:0,behavior:'smooth'})})});
- // giocatori (solo i campi leggeri: il salvataggio completo non serve qui)
+ // giocatori: legge solo le schede leggere (nome, giorno, capitolo, ora), mai i salvataggi completi.
+ // Le schede le legge solo l'admin, quindi si aprono dopo l'accesso (vedi onAuthStateChanged).
  const drawP=pv=>{const rows=Object.entries(pv).map(([pid,o])=>({pid,name:o.name,day:o.day,ch:o.ch,ts:o.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0));
   $('#sTot').textContent=rows.length;$('#sFree').textContent=rows.filter(r=>r.ch>=5).length;
-  $('#pList').innerHTML=rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.pid)}</td><td>${r.day??'–'}</td><td>${r.ch>=5?'<span class="tag on">gioco libero</span>':'capitolo '+(r.ch||0)}</td><td class="small">${r.ts?new Date(r.ts).toLocaleString('it-IT'):'–'}</td></tr>`).join('')||'<tr><td colspan="5" class="small">Nessun salvataggio online, per ora.</td></tr>'};
- D.onValue(D.query(R('players'),D.limitToLast(300)),s=>drawP(s.val()||{}),e=>{$('#pList').innerHTML=`<tr><td colspan="5">Non riesco a leggere i giocatori: ${esc(e.code||e.message||e)}.</td></tr>`;$('#sTot').textContent='?';$('#sFree').textContent='?'});
+  $('#pList').innerHTML=rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.pid)}</td><td>${r.day??'–'}</td><td>${r.ch>=5?'<span class="tag on">gioco libero</span>':'capitolo '+(r.ch||0)}</td><td class="small">${r.ts?new Date(r.ts).toLocaleString('it-IT'):'–'}</td></tr>`).join('')||'<tr><td colspan="5" class="small">Nessuna scheda, per ora. Le schede compaiono quando i giocatori salvano; per quelli di prima usa «Ricostruisci l\'elenco».</td></tr>'};
+ let stopP=null;
+ apriGiocatori=on=>{if(stopP){stopP();stopP=null}$('#pRebuild').classList.toggle('hide',!on);$('#pInfo').classList.toggle('hide',on);
+  if(!on){$('#pList').innerHTML='<tr><td colspan="5" class="small">Accedi come admin per vedere i giocatori.</td></tr>';$('#sTot').textContent='?';$('#sFree').textContent='?';return}
+  stopP=D.onValue(D.query(R('schede'),D.orderByChild('ts'),D.limitToLast(300)),s=>drawP(s.val()||{}),e=>{$('#pList').innerHTML=`<tr><td colspan="5">Non riesco a leggere le schede dei giocatori: ${esc(e.code||e.message||e)}. Hai ripubblicato le regole (ramo «schede»)?</td></tr>`;$('#sTot').textContent='?';$('#sFree').textContent='?'})};
+ $('#pRebuild').onclick=async()=>{if(!confirm('Scarico una volta tutti i salvataggi per ricavarne le schede. Con tanti giocatori può pesare qualche megabyte. Procedo?'))return;
+  const b=$('#pRebuild');b.disabled=true;b.textContent='Ricostruisco…';
+  try{const pv=(await D.get(R('players'))).val()||{},up={};
+   for(const[pid,o]of Object.entries(pv))if(o&&o.name&&o.ts)up[pid]={name:String(o.name).slice(0,20),day:+o.day||0,ch:+o.ch||0,ts:+o.ts};
+   await D.update(R('schede'),up);b.textContent=`Fatto: ${Object.keys(up).length} schede ✓`}
+  catch(e){fail(e);b.textContent='Ricostruisci l\'elenco dai salvataggi (una volta sola)'}finally{b.disabled=false}};
  // chi è collegato adesso: la presenza nei villaggi (si cancella da sola quando chiudono il gioco)
  const VN={};D.onValue(R('villaggi'),s=>{const v=s.val()||{};for(const k in v)VN[k]=v[k].name});
  D.onValue(R('presenza'),s=>{const v=s.val()||{},L=[];for(const vil in v)for(const pid in v[vil]){const o=v[vil][pid]||{};L.push({vil,pid,name:o.name,map:o.map,ts:o.ts})}
