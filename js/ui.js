@@ -3,10 +3,14 @@
 const NAMES = Object.fromEntries(NPC_DEF);
 NAMES.voce = 'Voce dietro la porta';
 NAMES.cocchiere = 'Cocchiere';
+// i nomi propri restano come sono in ogni lingua (non sono frasi da tradurre: lingua.js)
+if (LINGUA !== 'it')
+  for (const n of ['Hollowmere', ...Object.values(NAMES)])
+    if (TRAD[LINGUA][n] == null && /^[A-Z][a-zà-ù]+( [A-Z][a-zà-ù]+)?$/.test(n)) TRAD[LINGUA][n] = n;
 function fmt(t) {
   const f = G.st && G.st.g === 'f';
-  return String(t)
-    .replace(/\{n\}/g, (G.st && G.st.name) || (f ? 'forestiera' : 'forestiero'))
+  return String(tr(t))
+    .replace(/\{n\}/g, (G.st && G.st.name) || tr(f ? 'forestiera' : 'forestiero'))
     .replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (_, a, b) => (f ? b : a));
 }
 function glitchText(t, h) {
@@ -776,7 +780,7 @@ const UI = {
             // la lettera può essere già stata chiusa (saltando la scena): allora non c'è più niente da mostrare
             const ok = $('#ltok');
             if (!ok || !el.isConnected) return;
-            el.innerHTML = esc(txt) + '\n\n<s style="opacity:.35">non venire</s>';
+            el.innerHTML = esc(txt) + `\n\n<s style="opacity:.35">${esc(tr('non venire'))}</s>`;
             ok.style.visibility = 'visible';
           }, 900);
         }

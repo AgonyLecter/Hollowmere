@@ -36,6 +36,7 @@ const SUITES = {
   segreti: require('./segreti'),
   materiali: require('./materiali'),
   online: require('./online'),
+  lingua: require('./lingua'),
   emporio: require('./emporio'),
   fucina: require('./fucina'),
   regole: require('./regole'),

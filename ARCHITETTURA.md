@@ -28,6 +28,13 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
    e a ogni pubblicazione si cambia `CACHE` in `sw.js` (così i telefoni si aggiornano da soli).
 5. **I salvataggi dei giocatori** (`G.st`) vanno solo estesi, mai rinominati: le partite vecchie devono restare valide.
 
+6. **Le lingue.** Il gioco si scrive in italiano, come sempre: le frasi restano nel codice. Le altre lingue sono un
+   dizionario (`js/lingua_en*.js`, `TRAD.en`) con la frase italiana come chiave e `{0}`, `{1}`… al posto dei pezzi
+   variabili dei template. La traduzione avviene dove il testo arriva sullo schermo (`js/lingua.js`): `fmt()` per
+   dialoghi e avvisi, un osservatore per tutto quello che entra nella pagina, `fillText` per il canvas. Dopo aver
+   aggiunto o cambiato frasi: `node tools/testi.js` dice quante sono tradotte, `node tools/testi.js mancanti js/FILE.js`
+   elenca quelle di un file ancora da tradurre (pronte da copiare nel dizionario).
+
 ## Punti di estensione disponibili
 | Punto | Quando |
 |---|---|
