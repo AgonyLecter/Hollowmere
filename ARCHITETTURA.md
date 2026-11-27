@@ -34,6 +34,11 @@ e il sito si pubblica così com'è. `package.json` serve solo agli sviluppatori 
    dialoghi e avvisi, un osservatore per tutto quello che entra nella pagina, `fillText` per il canvas. Dopo aver
    aggiunto o cambiato frasi: `node tools/testi.js` dice quante sono tradotte, `node tools/testi.js mancanti js/FILE.js`
    elenca quelle di un file ancora da tradurre (pronte da copiare nel dizionario).
+   Il traduttore capisce anche le frasi che il codice compone: un numero davanti («3 zucche»), elenchi («2 rapa + 1
+   patata»), più frasi in fila (ognuna per conto suo), segnaposto con un nome come `{it}`, `{dove}`, `{cosa}`
+   (numerati nell'ordine in cui compaiono). Una parola trovata con la maiuscola vale anche minuscola. La wiki, che si
+   apre in un riquadro a parte, passa da `trHtml()`. Per le frasi composte per genere («Sei uscit» + o/a) conviene
+   mettere nel dizionario le frasi intere.
 
 ## Punti di estensione disponibili
 | Punto | Quando |
