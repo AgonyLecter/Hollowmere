@@ -393,8 +393,9 @@ function genBuildArt(...a) {
 // arredo in casa
 // i mobili grandi occupano più caselle: fp = [larghezza, profondità]; la casella dove li posi è quella in basso a
 // sinistra, e il mobile cresce verso destra e verso la parete
-// la rotazione di un mobile (r): i mobili visti dall'alto (letti, tappeti, tavoli: ruota 'quarto') girano di un
-// quarto alla volta e scambiano larghezza e profondità; gli altri si specchiano (davanti resta davanti)
+// la rotazione di un mobile (r): quello che sta piatto a terra ed è disegnato dall'alto (i tappeti, la cuccia:
+// ruota 'quarto') gira di un quarto alla volta e scambia larghezza e profondità; gli altri, disegnati un po' di
+// lato (letti, tavoli, armadi…), si specchiano: girati di un quarto avrebbero le gambe di lato o all'insù
 const furnQuarto = id => !!(ITEMS[id] && ITEMS[id].ruota === 'quarto');
 const furnGiri = id => (ITEMS[id] && ITEMS[id].noGira ? 1 : furnQuarto(id) ? 4 : 2);
 const furnFp = (id, r = 0) => {
@@ -433,17 +434,28 @@ function furnTiles(id, x, y, r = 0) {
   return T;
 }
 // c'è posto per questo mobile qui? (i quadri e le mensole: sulla parete in alto)
-function furnSpazio(m, id, x, y, r = 0) {
-  const wall = ITEMS[id] && ITEMS[id].wall;
+function furnSpazio(m, id, x, y, r = 0, salta = null) {
+  const it = ITEMS[id] || {};
   return furnTiles(id, x, y, r).every(([a, b]) =>
-    wall ? m.get(a, b) === 9 && !m.objAt(a, b) : furnFree(m, a, b)
+    it.wall ? m.get(a, b) === 9 && !furnSopra(m, a, b, false, salta) : furnFree(m, a, b, !!it.flat, salta)
   );
 }
-function furnFree(m, x, y) {
+// c'è qualcosa su questa casella che impedisce di posarci un mobile? I tappeti (piatti) e i mobili (in piedi)
+// stanno uno sopra l'altro: un tavolo si mette sul tappeto e un tappeto sotto il letto; due tappeti o due mobili no.
+// salta: l'oggetto da non contare (il mobile che si sta girando)
+function furnSopra(m, x, y, flat, salta) {
+  return m.objs.some(o => {
+    if (o === salta || !(o.hits || o.solid || []).some(([a, b]) => a === x && b === y)) return false;
+    if (o.kind !== 'furn') return true;
+    const piatto = !!(ITEMS[o.fid] && ITEMS[o.fid].flat);
+    return piatto === flat;
+  });
+}
+function furnFree(m, x, y, flat = false, salta = null) {
   const g = m.get(x, y);
   return (
     (g === 6 || g === 7) &&
-    !m.objAt(x, y) &&
+    !furnSopra(m, x, y, flat, salta) &&
     !(m.doors || []).some(d => Math.abs(d.tx - x) <= 0 && Math.abs(d.ty - y) <= 1)
   );
 }
@@ -484,7 +496,7 @@ function houseAct(fx, fy) {
   }
   if (id && ITEMS[id].t === 'arredo') {
     const wall = ITEMS[id].wall;
-    if (!furnSpazio(m, id, fx, fy)) {
+    if (st.free.inside[k] || !furnSpazio(m, id, fx, fy)) {
       UI.toast(
         wall ? 'I quadri vanno appesi alla parete in alto.' : 'Non qui: serve un posto libero sul pavimento.'
       );
@@ -505,7 +517,10 @@ function houseAct(fx, fy) {
 }
 function addFurniture(m, st) {
   if (!isFree(st)) return;
-  for (const k in st.free.inside || {}) {
+  // prima i tappeti, poi i mobili: un mobile posato su un tappeto è quello che si tocca (e si sposta) lì sopra
+  const I = st.free.inside || {},
+    piatto = k => !!(ITEMS[I[k].id] && ITEMS[I[k].id].flat);
+  for (const k of Object.keys(I).sort((a, b) => piatto(b) - piatto(a))) {
     const [x, y] = k.split(',').map(Number),
       f = st.free.inside[k],
       it = ITEMS[f.id],

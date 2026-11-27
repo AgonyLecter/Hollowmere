@@ -410,7 +410,7 @@ function macFermo(b) {
   if (m.in < macNeed(M, m.i)) return 'poco';
   if (M.fuel && !(m.f > 0)) return 'fuoco';
   const out = M.out(m.i);
-  if (m.on > 0 && m.o !== out) return 'piena';
+  if (m.on > 0 && m.o !== out) return 'altro'; // fuori c'è un prodotto diverso: prima va preso
   if (m.on + macOutN(M, m.i) > MAC_MAX) return 'piena';
   return '';
 }
@@ -526,6 +526,8 @@ function macTesto(b) {
     );
   }
   if (perche === 'piena') return 'Prendi quello che è pronto: la macchina è piena e si è fermata.';
+  if (perche === 'altro')
+    return `Si è fermata: prima prendi <b>${esc(ITEMS[m.o].n.toLowerCase())}</b> qui a destra, poi ${M.fuel ? 'fonde' : 'lavora'} <b>${esc(ITEMS[m.i].n.toLowerCase())}</b>. Non si mescolano.`;
   if (perche === 'fuoco') return 'Il fuoco è spento: metti della <b>legna</b> qui sotto.';
   if (perche === 'poco')
     return `Ne servono <b>${macNeed(M, m.i)}</b> per volta: aggiungine ancora ${macNeed(M, m.i) - m.in}.`;
@@ -721,6 +723,8 @@ function macMetti(i, tutto) {
   }
   // in cooperativo al padrone arriva l'operazione, non la fotografia della macchina
   Ext.run('contenitore', MACG.k, 'macchina', [{ s: dove, id: s.id, n }]);
+  if (dove === 'in' && m.on > 0 && m.o && m.o !== M.out(s.id))
+    UI.toast(`Prima prendi ${ITEMS[m.o].n.toLowerCase()} che è pronto: poi si comincia.`);
   AU.play('blip');
   macSim(b);
   macRidisegna();

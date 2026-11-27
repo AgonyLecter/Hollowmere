@@ -49,7 +49,8 @@ for (const id in NONNO) ITEMS[id] = Object.assign({ t: 'arredo', v: 0, nonno: 1 
 }
 
 // l'ingombro dei mobili segue il disegno (un tappeto largo tre caselle occupa tre caselle, e non sborda dalla
-// stanza); chi è visto dall'alto (letti, tappeti, tavoli) gira di un quarto, i mobili «vivi» non si girano
+// stanza); solo quello che sta piatto a terra (disegnato dall'alto: i tappeti) gira di un quarto, gli altri si
+// specchiano; i mobili «vivi» non si girano
 Ext.on('arte', () => {
   for (const id of Object.keys(ITEMS)) {
     const it = ITEMS[id];
@@ -60,7 +61,7 @@ Ext.on('arte', () => {
         h = it.flat ? Math.max(1, Math.round(ih(im) / 16)) : 1;
       if (w > 1 || h > 1) it.fp = [w, h];
     }
-    if (it.flat || /^(letto|tavolo)/.test(id)) it.ruota = 'quarto';
+    if (it.flat) it.ruota = 'quarto';
     if (typeof ARR_VIVI !== 'undefined' && ARR_VIVI.has(id)) it.noGira = 1;
   }
 });
