@@ -263,6 +263,7 @@ const NET = {
       });
       this.saveOk = Date.now();
       this.saveErr = null;
+      this.scheda(st);
     } catch (e) {
       this.saveErr = (e && (e.code || e.message)) || 'errore';
       console.warn(e);
@@ -270,6 +271,20 @@ const NET = {
         this._warned = 1;
         UI.toast('Il salvataggio online non è riuscito: resta su questo dispositivo.', 'bad');
       }
+    }
+  },
+  // la scheda leggera per la regia (fusco.html): nome, giorno, capitolo, ora. Così la regia non scarica i
+  // salvataggi completi di tutti. Se le regole non hanno ancora il ramo «schede», pazienza: il salvataggio è fatto.
+  async scheda(st) {
+    try {
+      await this.api.set(this.r('schede/' + st.pid), {
+        name: String(st.name || '').slice(0, 20),
+        day: +st.day || 0,
+        ch: +st.chapter || 0,
+        ts: st.ts
+      });
+    } catch (e) {
+      atteso(e);
     }
   },
   async load(pid) {

@@ -25,10 +25,24 @@
         }
       },
       "players": {
-        ".read": true,
+        ".read": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true",
         "$pid": {
+          ".read": true,
           ".write": "auth != null && root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid",
           ".validate": "newData.hasChildren(['name','ts','save']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('save').isString() && newData.child('save').val().length < 300000"
+        }
+      },
+      "schede": {
+        ".read": "auth != null && root.child('hollowmere/admin/' + auth.uid).val() === true",
+        ".indexOn": [
+          "ts"
+        ],
+        "$pid": {
+          ".write": "auth != null && (root.child('hollowmere/proprietari/' + $pid + '/uid').val() === auth.uid || root.child('hollowmere/admin/' + auth.uid).val() === true)",
+          ".validate": "newData.hasChildren(['name','ts']) && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('ts').isNumber() && (!newData.child('day').exists() || newData.child('day').isNumber()) && (!newData.child('ch').exists() || newData.child('ch').isNumber())",
+          "$altro": {
+            ".validate": "$altro === 'name' || $altro === 'ts' || $altro === 'day' || $altro === 'ch'"
+          }
         }
       },
       "villaggi": {

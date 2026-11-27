@@ -25,4 +25,18 @@ module.exports = async function (t, { ROOT }) {
   t.true('regole: trovati i messaggi del gioco', usati.size >= 10);
   const mancano = [...usati].filter(x => !ammessi.has(x)).sort();
   t.eq('regole: ogni messaggio tra villaggi è ammesso dalle regole', mancano.join(', '), '');
+  // i salvataggi si leggono uno alla volta (col codice), mai tutti insieme: l'elenco intero solo all'admin
+  const admin = x => typeof x === 'string' && /hollowmere\/admin\//.test(x);
+  t.true('regole: l’elenco dei salvataggi non è leggibile da tutti', admin(H.players['.read']));
+  t.true('regole: un salvataggio si legge col suo codice (visite)', H.players.$pid['.read'] === true);
+  t.true(
+    'regole: le schede leggere per la regia le legge solo l’admin',
+    !!H.schede && admin(H.schede['.read'])
+  );
+  // la regia legge le schede, non i salvataggi completi
+  const fusco = fs.readFileSync(path.join(ROOT, 'fusco.html'), 'utf8');
+  t.true(
+    'regole: la regia non resta in ascolto sui salvataggi completi',
+    !/onValue\([^;]*R\('players'\)/.test(fusco)
+  );
 };
