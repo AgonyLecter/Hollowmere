@@ -89,6 +89,10 @@ function estrai(file) {
           ));
       // le conversazioni fra abitanti: «tra» sono i nomi, e ogni riga è «chi: battuta» (si mostra solo la battuta)
       const tra = padre && padre.type === 'Property' && padre.value === n && (padre.key.name || padre.key.value) === 'tra';
+      // (anche nella forma corta t('agatha clara', 'agatha: …', …): il primo argomento sono i nomi)
+      const nomi =
+        padre && padre.type === 'CallExpression' && padre.arguments[0] === n && /^[a-z]+( [a-z]+)+$/.test(n.value);
+      if (nomi) return;
       const v = /^[a-z]+: /.test(n.value) ? n.value.replace(/^[a-z]+: /, '') : n.value;
       if (!tecnico && !tra) for (const p of pezziHtml(v)) chiavi.add(p);
     } else if (n.type === 'TemplateLiteral') {
