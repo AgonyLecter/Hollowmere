@@ -181,7 +181,7 @@ Object.assign(TRAD.en, {
   'Due randagi': 'Two strays',
   'Davanti alla porta, al riparo dal vento, un cucciolo e un gattino. Ti guardano tutti e due. Uno può restare con te.':
     'In front of the door, sheltering from the wind, a puppy and a kitten. They both look at you. One can stay with you.',
-  "Com'è": 'What it looks like',
+  "Com'è": "What it's like",
   'Come si chiama': "What it's called",
   'Portalo a casa': 'Take it home',
   '{0} è tuo. {1} lo prende Agatha: dice che starà benissimo.': "{0} is yours. Agatha takes {1}: she says it'll be very happy.",

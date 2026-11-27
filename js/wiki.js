@@ -974,7 +974,7 @@ const Wiki = {
     `;
     const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hollowmere — Wiki</title><style>${css}</style></head><body class="${o.spoiler ? '' : 'nospoil'}">${copertina}${body}</body></html>`;
 
-    return html;
+    return typeof trHtml === 'function' ? trHtml(html) : html;
   },
   apri() {
     if (document.getElementById('wiki')) return;

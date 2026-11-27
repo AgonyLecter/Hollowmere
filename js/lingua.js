@@ -221,3 +221,25 @@ function linguaScegli(l) {
   } catch (e) {}
   location.reload();
 }
+// ---------- una pagina intera fatta di HTML (la wiki, che si apre in un riquadro a parte) ----------
+function trHtml(html) {
+  if (LINGUA === 'it' || typeof DOMParser === 'undefined') return html;
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.documentElement.lang = LINGUA;
+    const w = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+    for (let n; (n = w.nextNode()); ) {
+      const p = n.parentElement;
+      if (p && /^(SCRIPT|STYLE)$/.test(p.tagName)) continue;
+      const t = tr(n.nodeValue);
+      if (t !== n.nodeValue) n.nodeValue = t;
+    }
+    for (const el of doc.querySelectorAll('[title],[alt]'))
+      for (const a of ['title', 'alt']) if (el.hasAttribute(a)) el.setAttribute(a, tr(el.getAttribute(a)));
+    doc.title = tr(doc.title);
+    return '<!doctype html>' + doc.documentElement.outerHTML;
+  } catch (e) {
+    console.error(e);
+    return html;
+  }
+}
