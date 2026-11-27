@@ -42,7 +42,7 @@ module.exports = async function (t, { browser }) {
   t.true('all’incudine Brom propone i miglioramenti degli attrezzi', incudine);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
-  // la cassa dei minerali: si compra l'oro (due al giorno), anche se le rocce del villaggio non ne danno
+  // la cassa dei minerali: si compra l'oro (tre al giorno: un lingotto), anche se le rocce del villaggio non ne danno
   const minerali = await page.evaluate(() => {
     UI.close && UI.close();
     const st = G.st;
@@ -61,8 +61,12 @@ module.exports = async function (t, { browser }) {
     UI.close();
     return r;
   });
-  t.eq('dalla cassa dei minerali di Brom si compra l’oro, due al giorno', minerali.presi, 2);
-  t.eq('e lo si paga', minerali.soldi, 5000 - 2 * 340);
+  t.eq(
+    'dalla cassa dei minerali di Brom si compra l’oro, tre al giorno (un lingotto d’oro)',
+    minerali.presi,
+    3
+  );
+  t.eq('e lo si paga', minerali.soldi, 5000 - 3 * 340);
   const pomeriggio = await page.evaluate(() => {
     const st = G.st;
     st.time = 14 * 60;

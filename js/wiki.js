@@ -63,8 +63,15 @@ const Wiki = {
       SEASON_LEN,
       CHORES,
       JUICY,
-      TRAG
+      TRAG,
+      MACH,
+      FUSIONE,
+      DOVE_MAT: typeof DOVE_MAT !== 'undefined' ? DOVE_MAT : {},
+      FUC_MIN: typeof FUC_MIN !== 'undefined' ? FUC_MIN : []
     };
+    D.macNeed = macNeed;
+    D.macOutN = macOutN;
+    D.NAT_MACH = typeof NAT_MACH !== 'undefined' ? NAT_MACH : {};
     D.icons = {};
     for (const k of Object.keys(ICON)) D.icons[k] = url(ICON[k]);
     D.portraits = {};
@@ -181,12 +188,22 @@ const Wiki = {
     for (const t of D.ore) for (const [x] of t) F(x, 'miniera');
     F('essenza', 'miniera (Ombre scacciate)');
     F('stella', 'stelle cadenti');
-    for (const k of Object.keys(I)) {
-      if (k.startsWith('cons_')) F(k, 'barattolo');
-      if (k.startsWith('succo_')) F(k, 'botte');
+    // le macchine: per ogni cosa che si può metterci dentro, quello che esce (fornace, barattolo, botte, mulino,
+    // frantoio, alambicco…), così ogni prodotto nuovo ha la sua fonte senza scriverla a mano
+    for (const [mid, M] of Object.entries(D.MACH)) {
+      if (!I[mid]) continue;
+      for (const k of Object.keys(I)) {
+        let o = null;
+        try {
+          o = M.ok(k) ? M.out(k) : null;
+        } catch (e) {
+          o = null;
+        }
+        if (o && I[o]) F(o, `${I[mid].n.toLowerCase()} (${D.macNeed(M, k)}× ${nm(k).toLowerCase()})`);
+      }
     }
-    F('lingotto', 'fornace (5 ferro)');
-    F('farina', 'mulino');
+    for (const [k, t] of Object.entries(D.DOVE_MAT)) if (I[k]) for (const p of t.split('; ')) F(k, p);
+    for (const [k] of D.FUC_MIN) F(k, 'cassa dei minerali di Brom');
     F('miele', 'apiario');
     for (const c of D.CRAFTS) F(c.id, D.STAZIONI.incudine.cats[c.cat] ? 'incudine' : 'banco da lavoro');
     for (const c of COOK) F(c.id, 'cucina');
@@ -275,7 +292,11 @@ const Wiki = {
               piccone: 'nella Valle',
               pala: 'arredi di Agatha (150)',
               canna: 'bottega di Nora (250)',
-              attrezzi_oro: 'banco: 2 oro + 2 lingotti'
+              attrezzi_oro:
+                'banco: ' +
+                Object.entries((D.CRAFTS.find(c => c.id === 'attrezzi_oro') || { c: {} }).c)
+                  .map(([x, q]) => q + '× ' + nm(x).toLowerCase())
+                  .join(' + ')
             }[k]
           }</td></tr>`
       )
@@ -587,7 +608,11 @@ const Wiki = {
       ['fibra', 'Strappa le erbacce. Con 5 fibre fai 2 concimi, con 3 fibre il fieno.'],
       ['fieno', "Banco (3 fibre) o Elio (15). Il cibo d'inverno degli animali; il silos lo conserva."],
       ['ferro', 'Miniera, a tutti i piani. Teo lo vende a 35.'],
-      ['lingotto', 'Fornace: 5 ferro + 1 legna → 1 lingotto in un’ora e mezza. Teo lo vende a 85.'],
+      ...Object.entries(D.FUSIONE).map(([k, f]) => [
+        f.out,
+        `Fornace: ${f.n}× ${nm(k).toLowerCase()} + 1 legna → 1 ${nm(f.out).toLowerCase()} in ${Math.floor(f.min / 60)} h${f.min % 60 ? ' ' + (f.min % 60) + ' min' : ''}.` +
+          (f.out === 'lingotto' ? ' Teo lo vende a 85, Brom a 190.' : '')
+      ]),
       ['farina', 'Mulino: grano, mais, patate o castagne.']
     ]
       .map(([k, d]) => `<tr><td>${ic(k)}</td><td><b>${esc(nm(k))}</b></td><td>${esc(d)}</td></tr>`)
@@ -598,7 +623,22 @@ const Wiki = {
     ${oreRow(D.ore[0], '1–9')}${oreRow(D.ore[1], '10–19')}${oreRow(D.ore[2], '20–39')}${oreRow(D.ore[3], '40 e oltre')}</table>
     <h3>Minerali e gemme</h3>
     <table><tr><th></th><th>Minerale</th><th>Vale</th><th>Note</th></tr>
-    ${['ferro', 'quarzo', 'rame', 'nichel', 'oro', 'ametista', 'diamante', 'essenza', 'stella']
+    ${[
+      'ferro',
+      'lingotto',
+      'quarzo',
+      'rame',
+      'lingotto_rame',
+      'nichel',
+      'lingotto_nichel',
+      'oro',
+      'lingotto_oro',
+      'ametista',
+      'diamante',
+      'essenza',
+      'stella'
+    ]
+      .filter(k => I[k])
       .map(
         k =>
           `<tr><td>${ic(k)}</td><td><b>${esc(nm(k))}</b></td><td>${sc(I[k].v)}</td><td class="small">${esc(I[k].d || [...(fonti[k] || [])].join(', '))}</td></tr>`
@@ -633,7 +673,9 @@ const Wiki = {
       .join('')}
     <h3>Le macchine</h3>
     <table><tr><th></th><th>Macchina</th><th>Cosa fa</th></tr>
-    <tr><td>${ic('fornace')}</td><td><b>Fornace</b></td><td>5 ferro + 1 legna → 1 lingotto, in un'ora e mezza.</td></tr>
+    <tr><td>${ic('fornace')}</td><td><b>Fornace</b></td><td>Con 1 legna per volta: ${Object.entries(D.FUSIONE)
+      .map(([k, f]) => `${it(k, f.n)} → ${it(f.out)}`)
+      .join(' · ')}. Il ferro ci mette un'ora e mezza, l'oro due ore e mezza.</td></tr>
     <tr><td>${ic('barattolo')}</td><td><b>Barattolo</b></td><td>Qualsiasi raccolto, frutto o selvatico → <b>conserva</b> in tre ore. Vale di più del raccolto crudo.</td></tr>
     <tr><td>${ic('botte')}</td><td><b>Botte</b></td><td>Frutta e bacche → <b>succo</b> in otto ore: ${D.JUICY.map(x => it(x)).join(' ')}</td></tr>
     <tr><td>${ic('apiario')}</td><td><b>Apiario</b></td><td>Miele ogni tre giorni (non d'inverno).</td></tr>
@@ -642,6 +684,9 @@ const Wiki = {
     <tr><td>${ic('silos')}</td><td><b>Silos</b></td><td>Conserva il fieno: ${esc(D.FUNC.silos.lv.join(' → '))}.</td></tr>
     <tr><td>${ic('pozzogrande')}</td><td><b>Pozzo grande</b></td><td>Annaffia da solo intorno: ${esc(D.FUNC.pozzogrande.lv.join(' → '))}.</td></tr>
     <tr><td>${ic('irrigatore')}</td><td><b>Irrigatori</b></td><td>Annaffiano le zolle vicine ogni mattina (il grande più lontano).</td></tr>
+    ${Object.entries(D.NAT_MACH)
+      .map(([k, M]) => `<tr><td>${ic(k)}</td><td><b>${esc(M.n)}</b></td><td>${esc(M.d)}</td></tr>`)
+      .join('')}
     </table>
     <p class="small">Migliorare un edificio funzionale: liv. 2 = 1.500 scudi + ${list(D.FUNC_UP[2].c)} · liv. 3 = 4.000 scudi + ${list(D.FUNC_UP[3].c)}.</p>
     <h3>La casa</h3>
@@ -929,7 +974,7 @@ const Wiki = {
     `;
     const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hollowmere — Wiki</title><style>${css}</style></head><body class="${o.spoiler ? '' : 'nospoil'}">${copertina}${body}</body></html>`;
 
-    return html;
+    return typeof trHtml === 'function' ? trHtml(html) : html;
   },
   apri() {
     if (document.getElementById('wiki')) return;

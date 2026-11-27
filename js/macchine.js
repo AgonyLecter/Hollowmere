@@ -78,10 +78,16 @@ function skillsHTML() {
 
 // ---------- minerale, fornace, lingotti ----------
 Object.assign(ITEMS, {
-  ferro: { n: 'Minerale di ferro', t: 'res', d: 'Dalle rocce, a volte. Nella fornace diventa lingotto.' },
+  ferro: {
+    n: 'Minerale di ferro',
+    t: 'res',
+    v: 15,
+    d: 'Dalle rocce, a volte. Nella fornace diventa lingotto.'
+  },
   lingotto: {
     n: 'Lingotto di ferro',
     t: 'res',
+    v: 55,
     d: "Serve per le macchine, l'irrigatore grande e, all'incudine, per forgiare gli attrezzi."
   },
   // i metalli rari si fondono come il ferro: dalla roccia al lingotto, nella fornace

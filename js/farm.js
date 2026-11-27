@@ -18,7 +18,7 @@ const ITEMS = {
     t: 'seed',
     crop: 'fagioli',
     p: 60,
-    d: 'Rampicanti: dopo il primo raccolto ricrescono ogni notte.',
+    d: 'Rampicanti: dopo il primo raccolto ricrescono ogni due notti.',
     x: 'Si raccolgono più volte.'
   },
   s_cavolo: {
@@ -740,7 +740,7 @@ const ACT = {
     const it = selItem(),
       st = G.st;
     if (mailboxTake()) return;
-    if (it && ITEMS[it.id].t === 'crop') {
+    if (it && vendibile(it.id)) {
       const v = Mercato.vendi(it.id, it.n);
       st.shipped.push([it.id, it.n, v]);
       UI.toast(`Spedite ${it.n} × ${ITEMS[it.id].n} (+${SC(v)} domattina)`);
@@ -751,7 +751,7 @@ const ACT = {
     }
     const tot = st.shipped.reduce((a, [id, n, v]) => a + (v ?? sellPrice(id) * n), 0);
     narr(
-      `La cassetta delle spedizioni. Tieni in mano un raccolto per metterlo dentro.\nDomattina verrà pagato. Nessuno ha mai visto chi lo ritira.${st.demand ? `\nOggi si paga di più: ${PL[st.demand]} (+40%).` : ''}${tot ? `\n(Oggi: ${SC(tot)})` : ''}`
+      `La cassetta delle spedizioni. Tieni in mano quello che vuoi vendere (raccolti, minerali, lingotti…) per metterlo dentro.\nDomattina verrà pagato. Nessuno ha mai visto chi lo ritira.${st.demand ? `\nOggi si paga di più: ${PL[st.demand]} (+40%).` : ''}${tot ? `\n(Oggi: ${SC(tot)})` : ''}`
     );
   },
   scare: async () => {

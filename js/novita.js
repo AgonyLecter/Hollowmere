@@ -700,6 +700,39 @@ const NOVITA = [
         t: 'I mobili si posano sopra i <b>tappeti</b>: un tavolino in mezzo al tappeto grande, il letto con il tappeto ai piedi. Con <b>Ruota</b> i tappeti girano di un quarto, letti e tavoli si specchiano (girati di lato avevano le gambe all’insù). E se nella <b>fornace</b> c’è ancora un lingotto diverso pronto, te lo dice: prendilo e riparte.'
       }
     ]
+  },
+  {
+    id: 'equilibrio',
+    v: 63,
+    n: 'Prezzi e raccolti più giusti',
+    steps: [
+      {
+        t: 'Le colture semplici rendono di più: <b>grano, orzo, ceci, lenticchie, sedano, pastinaca, radicchio</b>, i fiori e le altre che prima valevano poco. Il <b>grano</b> al mulino dà due farine, e la <b>farina</b> vale qualcosa. I <b>fagioli</b> ricrescono ogni due notti, come gli altri rampicanti (prima ogni notte).'
+      },
+      {
+        t: 'Il <b>frantoio</b> chiede meno: 3 olive, 2 noci o 1 girasole, e l’olio vale di più. Statua, fontana, alambicco e irrigatori della serra vogliono <b>un solo lingotto</b> raro, e Brom tiene <b>tre pepite d’oro</b> al giorno: quanto basta per un lingotto. Anche il ferro e il suo lingotto ora si vendono.'
+      }
+    ]
+  },
+  {
+    id: 'cassetta_tutto',
+    v: 64,
+    n: 'La cassetta prende tutto',
+    steps: [
+      {
+        t: 'Nella <b>cassetta delle spedizioni</b> adesso va tutto quello che ha un prezzo, non solo i raccolti: minerali, lingotti, diamanti, farina, coloranti, il pane del forno. Tienilo in mano e metti dentro. Ottavio invece compra ancora solo raccolti, uova e latte, ma paga di più.'
+      }
+    ]
+  },
+  {
+    id: 'dove_amico',
+    v: 65,
+    n: 'Dov’è il tuo amico',
+    steps: [
+      {
+        t: 'Quando vai a trovare qualcuno e non lo vedi, il gioco ti dice perché: è <b>in casa</b> (o nella serra, in miniera…), vi siete <b>visitati nello stesso momento</b> (ognuno nel villaggio vuoto dell’altro: torni a casa uno dei due), oppure <b>non sta giocando</b>. E chi riceve una visita legge dove si trova l’ospite.'
+      }
+    ]
   }
 ];
 for (const g of NOVITA) if (!GUIDES.some(x => x.id === g.id)) GUIDES.push(g);

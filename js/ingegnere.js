@@ -43,7 +43,18 @@ LOOKS[ING] = {
 };
 
 // i regali: metalli e cristalli sì, fiori no («fanno polline negli ingranaggi»)
-LIKES[ING] = { lingotto: 3, nichel: 3, quarzo: 2, ametista: 2, rame: 2, oro: 2, ferro: 1 };
+LIKES[ING] = {
+  lingotto: 3,
+  lingotto_rame: 3,
+  lingotto_nichel: 3,
+  lingotto_oro: 3,
+  nichel: 3,
+  quarzo: 2,
+  ametista: 2,
+  rame: 2,
+  oro: 2,
+  ferro: 1
+};
 DISLIKES[ING] = ['lavanda', 'girasole', 'viola', 'calendula'];
 
 // ---------- i congegni ----------

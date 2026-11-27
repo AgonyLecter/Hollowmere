@@ -16,7 +16,7 @@ const NEWCROPS = {
   },
   zucchina: { n: 'Zucchina', pl: 'zucchine', sg: 'una zucchina', s: [3], days: 4, re: 2, v: 45, p: 40 },
   girasole: { n: 'Girasole', pl: 'girasoli', sg: 'un girasole', s: [3], days: 6, v: 110, p: 50 },
-  grano: { n: 'Grano', pl: 'covoni di grano', sg: 'un covone di grano', s: [0, 2], days: 5, v: 40, p: 25 },
+  grano: { n: 'Grano', pl: 'covoni di grano', sg: 'un covone di grano', s: [0, 2], days: 5, v: 70, p: 25 },
   mirtilli: {
     n: 'Mirtilli',
     pl: 'cestini di mirtilli',
@@ -33,7 +33,7 @@ const NEWCROPS = {
     sg: 'un mazzo di lavanda',
     s: [2, 3],
     days: 4,
-    v: 65,
+    v: 75,
     p: 40
   },
   cavolfiore: { n: 'Cavolfiore', pl: 'cavolfiori', sg: 'un cavolfiore', s: [1], days: 5, v: 130, p: 55 },
@@ -43,7 +43,7 @@ const NEWCROPS = {
     sg: 'un mazzo di ravanelli',
     s: [2, 0],
     days: 2,
-    v: 35,
+    v: 40,
     p: 20
   }
 };
@@ -59,7 +59,7 @@ ITEMS.s_girasole.x = 'Alto come una porta. Le api lo adorano.';
 ITEMS.s_grano.x = 'Al mulino diventa farina.';
 ITEMS.s_ravanello.x = "Il più svelto dell'orto: due notti.";
 // il grano si macina
-if (typeof MILL !== 'undefined') MILL.grano = [1, 1];
+if (typeof MILL !== 'undefined') MILL.grano = [1, 2]; // il grano è fatto per il mulino: un covone, due farine
 if (ITEMS.mulino)
   ITEMS.mulino.d = 'Macina grano, mais, patate e castagne in farina. Con la farina, ricette nuove.';
 

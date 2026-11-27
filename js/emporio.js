@@ -172,7 +172,7 @@ function empNota(id) {
   }
   if (d.t !== 'seed') return d.d;
   const c = CROPS[d.crop];
-  return `Matura in ${c.days} notti${c.re ? ', poi ricresce ogni notte' : ''} · vale ${CZ(ITEMS[d.crop].v)}`;
+  return `Matura in ${c.days} notti${c.re ? ', poi ricresce ' + (c.re > 1 ? `ogni ${c.re} notti` : 'ogni notte') : ''} · vale ${CZ(ITEMS[d.crop].v)}`;
 }
 function empCompra(titolo, ids) {
   const st = G.st,
