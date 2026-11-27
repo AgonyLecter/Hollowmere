@@ -87,7 +87,10 @@ function estrai(file) {
           /^(querySelector(All)?|getElementById|\$|segnala|rete|atteso|addEventListener|getItem|setItem)$/.test(
             padre.callee.name || (padre.callee.property && padre.callee.property.name) || ''
           ));
-      if (!tecnico) for (const p of pezziHtml(n.value)) chiavi.add(p);
+      // le conversazioni fra abitanti: «tra» sono i nomi, e ogni riga è «chi: battuta» (si mostra solo la battuta)
+      const tra = padre && padre.type === 'Property' && padre.value === n && (padre.key.name || padre.key.value) === 'tra';
+      const v = /^[a-z]+: /.test(n.value) ? n.value.replace(/^[a-z]+: /, '') : n.value;
+      if (!tecnico && !tra) for (const p of pezziHtml(v)) chiavi.add(p);
     } else if (n.type === 'TemplateLiteral') {
       for (const p of pezziTemplate(n, src)) chiavi.add(p);
     }
