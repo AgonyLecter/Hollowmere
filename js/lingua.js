@@ -31,6 +31,12 @@ function trSchemi() {
   const D = TRAD[LINGUA] || {},
     idx = new Map(),
     liberi = [];
+  // le richieste scritte con {it} e {r} (riempite dal codice prima di arrivare qui) valgono anche con {0} e {1}
+  for (const k of Object.keys(D))
+    if (/\{(it|r)\}/.test(k)) {
+      const a = k.replace('{it}', '{0}').replace('{r}', '{1}');
+      if (D[a] == null) D[a] = D[k].replace('{it}', '{0}').replace('{r}', '{1}');
+    }
   for (const k of Object.keys(D)) {
     if (!/\{\d+\}/.test(k)) continue;
     const parti = k.split(/\{(\d+)\}/),
