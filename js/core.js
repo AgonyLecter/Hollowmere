@@ -110,19 +110,29 @@ const Ext = {
     return fn;
   },
   // dopo: in ordine di iscrizione
+  // ogni iscritto gira per conto suo: se uno va in errore, gli altri girano lo stesso (prima un errore di un file
+  // fermava tutti quelli iscritti dopo, per esempio la serra, che è tra gli ultimi) e l'errore va in ERRORI,
+  // così si vede anche dal telefono (menu Salvataggio)
+  _uno(punto, f, a) {
+    try {
+      return f(...a);
+    } catch (e) {
+      segnala(e, punto);
+    }
+  },
   run(punto, ...a) {
-    for (const f of this._h[punto] || []) f(...a);
+    for (const f of this._h[punto] || []) this._uno(punto, f, a);
   },
   // prima: dall'ultimo iscritto al primo (come quando ognuno avvolgeva il precedente)
   runPrima(punto, ...a) {
     const L = this._h[punto] || [];
-    for (let i = L.length - 1; i >= 0; i--) L[i](...a);
+    for (let i = L.length - 1; i >= 0; i--) this._uno(punto, L[i], a);
   },
   // intercetta: dall'ultimo iscritto al primo, si ferma al primo che restituisce un valore vero
   intercetta(punto, ...a) {
     const L = this._h[punto] || [];
     for (let i = L.length - 1; i >= 0; i--) {
-      const r = L[i](...a);
+      const r = this._uno(punto, L[i], a);
       if (r) return r;
     }
     return false;
@@ -130,7 +140,7 @@ const Ext = {
   // somma: ogni iscritto aggiunge un numero
   somma(punto, ...a) {
     let s = 0;
-    for (const f of this._h[punto] || []) s += f(...a) || 0;
+    for (const f of this._h[punto] || []) s += this._uno(punto, f, a) || 0;
     return s;
   },
   // avvolgere: un file aggiunge comportamento attorno a una funzione di un altro file, decidendo se e quando
@@ -163,8 +173,17 @@ const Ext = {
 // schermo intero, audio già chiuso) e va bene così. Gli ultimi errori restano in ERRORI (menu Salvataggio).
 const ERRORI = [];
 function segnala(e, dove) {
-  ERRORI.push({ dove, msg: String((e && e.message) || e).slice(0, 160), t: Date.now() });
-  if (ERRORI.length > 20) ERRORI.shift();
+  const msg = String((e && e.message) || e).slice(0, 160),
+    u = ERRORI[ERRORI.length - 1];
+  // lo stesso errore a ogni fotogramma: una riga sola, che conta le volte (e la console non si riempie)
+  if (u && u.dove === dove && u.msg === msg) {
+    u.n = (u.n || 1) + 1;
+    u.t = Date.now();
+    if (u.n % 600) return;
+  } else {
+    ERRORI.push({ dove, msg, t: Date.now() });
+    if (ERRORI.length > 20) ERRORI.shift();
+  }
   console.error('Hollowmere · ' + dove + ':', e);
 }
 function rete(e, dove) {

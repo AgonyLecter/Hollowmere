@@ -1237,7 +1237,7 @@ function loop(now) {
     else if (G.mode === 'title') updateTitle(dt);
     render();
   } catch (e) {
-    console.error(e);
+    segnala(e, 'ciclo'); // finisce anche nel menu Salvataggio: dal telefono la console non si vede
   }
   try {
     AU.setMode(chooseMusic());

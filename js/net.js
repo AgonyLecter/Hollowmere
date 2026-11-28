@@ -368,7 +368,7 @@ function netDiag() {
           )
         : '… nessun salvataggio online ancora in questa sessione',
     // gli ultimi errori (da copiare quando si segnala un problema)
-    ...ERRORI.slice(-5).map(x => ko(esc(x.dove + ': ' + x.msg)))
+    ...ERRORI.slice(-5).map(x => ko(esc(x.dove + ': ' + x.msg + (x.n > 1 ? ' (×' + x.n + ')' : ''))))
   ];
   Ext.run('netDiag', L, ok, ko); // gli altri file aggiungono le loro righe (la presenza: mp.js)
   return L.join('<br>');
